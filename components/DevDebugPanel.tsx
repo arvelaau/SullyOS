@@ -234,7 +234,7 @@ const DevDebugPanel: React.FC = () => {
                 : current.captureLogs.filter((item) => item !== category),
         };
         setFlags(writeDevDebugFlags(next));
-        trackEvent('勾选调试日志类别', { 类别: category, 状态: checked ? '勾选' : '取消' });
+        trackEvent('Toggle Debug Log Category', { Category: category, Status: checked ? 'Checked' : 'Unchecked' });
     };
     const resetFlags = () => {
         // 重置 = 回默认（总开关关 + 清空勾选）+ 清空所有日志，比「全不勾」更彻底。
@@ -242,14 +242,14 @@ const DevDebugPanel: React.FC = () => {
         // 是为了「即便上次就是 false」时也保证清干净（重置语义包含清理日志）。
         setFlags(writeDevDebugFlags(DEFAULT_DEV_DEBUG_FLAGS));
         clearDevDebugLog();
-        trackEvent('重置调试面板', { 范围: '开关与日志' });
+        trackEvent('Reset Debug Panel', { Scope: 'Toggles & Logs' });
     };
     const handleForceClose = () => {
         // 「关闭」= 收起 + 位置回默认（纯内存）+ 强制关掉；任意分支生效，里面的开关另存不动。
         setOpen(false);
         setFloatingPosition(getDefaultFloatingPosition());
         closeDevDebug();
-        trackEvent('强制关闭调试面板');
+        trackEvent('Force Close Debug Panel');
     };
     const handleBlobGc = async () => {
         if (blobGcRunning) return;
@@ -270,7 +270,7 @@ const DevDebugPanel: React.FC = () => {
         if (!text) return;
         await navigator.clipboard.writeText(text);
         setCopied(true);
-        trackEvent('导出调试日志', { 方式: '复制' });
+        trackEvent('Export Debug Log', { Method: 'Copy' });
         window.setTimeout(() => setCopied(false), 1200);
     };
     const downloadLog = async () => {
@@ -281,9 +281,9 @@ const DevDebugPanel: React.FC = () => {
             content: text,
             fileName: `devdebug-log-${__BUILD_BRANCH__}-${stamp}.json`,
             mimeType: 'application/json;charset=utf-8',
-            shareTitle: 'SullyOS 调试日志',
+            shareTitle: 'SullyOS Debug Log',
         });
-        trackEvent('导出调试日志', { 方式: result === 'shared' ? '分享' : '下载' });
+        trackEvent('Export Debug Log', { Method: result === 'shared' ? 'Share' : 'Download' });
     };
     const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
         if (open || (event.pointerType === 'mouse' && event.button !== 0)) return;
@@ -345,7 +345,7 @@ const DevDebugPanel: React.FC = () => {
             return;
         }
         setOpen(true);
-        trackEvent('打开调试面板');
+        trackEvent('Open Debug Panel');
     };
 
     if (!available) return null;
@@ -366,7 +366,7 @@ const DevDebugPanel: React.FC = () => {
             {!open && (
                 <button
                     type="button"
-                    aria-label="打开调试面板"
+                    aria-label="Open debug panel"
                     onClick={handleFloatingClick}
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
@@ -387,7 +387,7 @@ const DevDebugPanel: React.FC = () => {
                 <section
                     className="flex w-[min(342px,calc(100vw-32px))] flex-col overflow-hidden rounded-2xl border border-white/12 bg-zinc-950/90 text-white shadow-2xl backdrop-blur-xl"
                     style={{ maxHeight: panelMaxHeight }}
-                    aria-label="开发调试面板"
+                    aria-label="Developer debug panel"
                 >
                     <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
                         <div className="flex min-w-0 items-center gap-2">
@@ -403,7 +403,7 @@ const DevDebugPanel: React.FC = () => {
                         </div>
                         <button
                             type="button"
-                            aria-label="关闭调试面板"
+                            aria-label="Close debug panel"
                             onClick={() => setOpen(false)}
                             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/70 active:scale-95"
                         >
@@ -413,30 +413,30 @@ const DevDebugPanel: React.FC = () => {
 
                     <div className="flex-1 overflow-y-auto px-4">
                         <ToggleRow
-                            title="跳过 Prompt Build"
-                            detail="只发送聊天历史。"
+                            title="Skip Prompt Build"
+                            detail="Only send chat history."
                             checked={flags.skipPromptBuild}
                             onChange={(checked) => updateFlag('skipPromptBuild', checked)}
                         />
                         <div className="h-px bg-white/10" />
                         <ToggleRow
-                            title="暂停情绪副评估"
-                            detail="主回复仍照常发送，但不启动本地或 Instant Push 的 emotion eval。"
+                            title="Pause emotion side-eval"
+                            detail="The main reply still sends normally, but local or Instant Push emotion eval won't start."
                             checked={flags.skipEmotionEval}
                             onChange={(checked) => updateFlag('skipEmotionEval', checked)}
                         />
                         <div className="h-px bg-white/10" />
                         <ToggleRow
-                            title="合并 system 为一条"
-                            detail="排查中转对多条 system 的计量/兼容问题；开着会让前缀缓存失效。"
+                            title="Merge system messages into one"
+                            detail="For debugging metering/compat issues with relay providers on multiple system messages; leaving this on invalidates prefix caching."
                             checked={flags.mergeSystemMessages}
                             onChange={(checked) => updateFlag('mergeSystemMessages', checked)}
                         />
                         <div className="h-px bg-white/10" />
                         {/* 只是入口：打开后由 Amsg2DebugPanel 自己在页面上挂小窗，本面板不渲染它的内容。 */}
                         <ToggleRow
-                            title="amsg2 任务观察窗"
-                            detail="右上角常驻小窗：任务倒计时、cron 实际触发时刻、通道 trace。"
+                            title="amsg2 task observer window"
+                            detail="Persistent window in the top-right: task countdowns, actual cron trigger times, channel trace."
                             checked={flags.amsg2Panel}
                             onChange={(checked) => updateFlag('amsg2Panel', checked)}
                         />
@@ -445,11 +445,11 @@ const DevDebugPanel: React.FC = () => {
                         {/* 记录日志：总开关；打开后才露出 类型 / 记录完整 / 复制 / 下载 一整套 —— 关掉时整段收起。
                             true→false 时清空日志这一步在 writeDevDebugFlags 数据层做，这里走通用 updateFlag。 */}
                         <ToggleRow
-                            title="记录日志"
+                            title="Record logs"
                             checked={flags.captureEnabled}
                             onChange={(checked) => {
                                 updateFlag('captureEnabled', checked);
-                                trackEvent('切换调试日志录制', { 状态: checked ? '开' : '关' });
+                                trackEvent('Toggle Debug Log Recording', { Status: checked ? 'On' : 'Off' });
                             }}
                         />
                         {flags.captureEnabled && (
@@ -469,29 +469,29 @@ const DevDebugPanel: React.FC = () => {
                                         onClick={copyLog}
                                         disabled={logCount === 0}
                                         icon={<ClipboardText size={13} weight="bold" />}
-                                        label={copied ? '已复制' : logCount > 0 ? `复制 (${logCount})` : '暂无日志'}
+                                        label={copied ? 'Copied' : logCount > 0 ? `Copy (${logCount})` : 'No logs yet'}
                                     />
                                     <LogActionButton
                                         onClick={downloadLog}
                                         disabled={logCount === 0}
                                         icon={<DownloadSimple size={13} weight="bold" />}
-                                        label="下载"
+                                        label="Download"
                                     />
                                     {/* 「清空」只清日志，不动开关 / 勾选；区别于「重置」（连开关一起回默认）和关掉总开关（清完后类型 UI 也收起）。 */}
                                     <LogActionButton
                                         onClick={() => {
                                             clearDevDebugLog();
-                                            trackEvent('重置调试面板', { 范围: '仅日志' });
+                                            trackEvent('Reset Debug Panel', { Scope: 'Logs Only' });
                                         }}
                                         disabled={logCount === 0}
                                         icon={<Trash size={13} weight="bold" />}
-                                        label="清空"
+                                        label="Clear"
                                     />
                                 </div>
                                 <div className="h-px bg-white/10" />
                                 <ToggleRow
-                                    title="记录完整内容"
-                                    detail="只对新条目生效"
+                                    title="Record full content"
+                                    detail="Only applies to new entries"
                                     checked={flags.exposeLogDetail}
                                     onChange={(checked) => updateFlag('exposeLogDetail', checked)}
                                 />
@@ -507,23 +507,23 @@ const DevDebugPanel: React.FC = () => {
                                     onClick={handleBlobGc}
                                     disabled={blobGcRunning}
                                     icon={<Broom size={13} weight="bold" />}
-                                    label={blobGcRunning ? '清理中…' : '清理孤儿图片'}
+                                    label={blobGcRunning ? 'Cleaning…' : 'Clean Up Orphan Images'}
                                 />
                             </div>
                             {blobGcResult && (
                                 <div className="mt-2 text-[11px] leading-relaxed text-white/55">
                                     {blobGcResult.kind === 'error' ? (
-                                        `清理出错：${blobGcResult.message}`
+                                        `Cleanup error: ${blobGcResult.message}`
                                     ) : (
                                         <>
-                                            已清理 {blobGcResult.deleted} · 保留 {blobGcResult.kept} · 边界豁免 {blobGcResult.keptBoundary}
+                                            Cleaned {blobGcResult.deleted} · Kept {blobGcResult.kept} · Boundary-exempt {blobGcResult.keptBoundary}
                                             {blobGcResult.aborted && (
-                                                <><br />引用面枚举或 blob 表扫描出错，本轮已放弃、未删除任何东西。</>
+                                                <><br />Reference-surface enumeration or blob table scan failed — this run was aborted, nothing was deleted.</>
                                             )}
                                             {/* keptBoundary 是唯一报警信号：deleted:0 和「真没垃圾」同形，
                                                 它接近保留数 = 某个引用面混进了杂散令牌前缀文本，GC 整轮空转。 */}
                                             {blobGcResult.keptBoundary > 0 && (
-                                                <><br />注意：边界豁免 &gt; 0，可能有引用面混进了杂散的令牌前缀文本；若它接近保留数，说明 GC 整轮空转，需要排查。</>
+                                                <><br />Note: boundary-exempt &gt; 0 — a reference surface may have picked up stray token-prefix text; if it's close to the kept count, the GC run is effectively a no-op and needs investigating.</>
                                             )}
                                         </>
                                     )}
@@ -539,7 +539,7 @@ const DevDebugPanel: React.FC = () => {
                             className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-3 text-[11px] font-bold text-white/70 active:scale-95"
                         >
                             <Power size={13} weight="bold" />
-                            关闭
+                            Close
                         </button>
                         <button
                             type="button"
@@ -547,7 +547,7 @@ const DevDebugPanel: React.FC = () => {
                             className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-3 text-[11px] font-bold text-white/70 active:scale-95"
                         >
                             <ArrowsClockwise size={13} weight="bold" />
-                            重置
+                            Reset
                         </button>
                     </div>
                 </section>

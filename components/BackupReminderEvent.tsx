@@ -25,8 +25,8 @@ export const BackupReminderPopup: React.FC<BackupReminderPopupProps> = ({ onDism
     const interval = getBackupReminderState().intervalDays;
     // 顶部那句"多久没备份了"——从未备份 vs 已过 N 天，说人话。
     const gapLine = days == null
-        ? '你还没有导出过备份'
-        : `距离上次备份已经过去 ${days} 天`;
+        ? "You haven't exported a backup yet"
+        : `${days} days since your last backup`;
 
     return (
         <div className="fixed inset-0 z-[9998] flex items-center justify-center p-5 animate-fade-in">
@@ -42,7 +42,7 @@ export const BackupReminderPopup: React.FC<BackupReminderPopupProps> = ({ onDism
                                 strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
-                    <h2 className="text-xl font-extrabold text-white drop-shadow-sm">该备份啦</h2>
+                    <h2 className="text-xl font-extrabold text-white drop-shadow-sm">Time to back up!</h2>
                     <p className="text-[12px] text-white/90 mt-1 font-medium">{gapLine}</p>
                 </div>
 
@@ -50,22 +50,22 @@ export const BackupReminderPopup: React.FC<BackupReminderPopupProps> = ({ onDism
                 <div className="px-6 pt-5 pb-2 space-y-3">
                     <div className="bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-100 rounded-2xl p-4 space-y-2.5">
                         <p className="text-[13px] text-slate-700 leading-relaxed">
-                            <strong>您本周没有进行备份，请注意。</strong>
+                            <strong>You haven't backed up this week — please take note.</strong>
                         </p>
                         <p className="text-[12.5px] text-slate-600 leading-relaxed">
-                            糯米机的数据完全掌握在<strong className="text-rose-500">您自己手中</strong>——
-                            角色、聊天记录、记忆、设置全都只存在这台设备的浏览器里，我们看不到、也帮不了你找回。
+                            Mochi Machine's data is entirely in <strong className="text-rose-500">your own hands</strong> —
+                            characters, chat history, memories, and settings all live only in this device's browser. We can't see it, and we can't help you get it back.
                         </p>
                         <p className="text-[12.5px] text-slate-600 leading-relaxed">
-                            一旦清理浏览器缓存、卸载重装、换手机，或者遇到系统抽风，
-                            <strong className="text-rose-500">没有备份就意味着这些全部丢失，无法恢复</strong>。
+                            If you clear your browser cache, uninstall and reinstall, switch phones, or run into a system hiccup,
+                            <strong className="text-rose-500"> no backup means all of it is gone for good, unrecoverable</strong>.
                         </p>
                         <p className="text-[12px] text-slate-500 leading-relaxed">
-                            请养成定期导出的习惯，把 ZIP 存到网盘 / 电脑 / 云备份，给自己留条后路 💛
+                            Make a habit of exporting regularly — save the ZIP to cloud storage, your computer, or a cloud backup, and give yourself a safety net 💛
                         </p>
                     </div>
                     <p className="text-[10.5px] text-slate-400 text-center leading-relaxed">
-                        当前每 {interval} 天提醒一次，可在「设置 → 备份与恢复」里调整频率
+                        Currently reminding every {interval} days — adjust the frequency in 「Settings → Backup & Restore」
                     </p>
                 </div>
 
@@ -75,13 +75,13 @@ export const BackupReminderPopup: React.FC<BackupReminderPopupProps> = ({ onDism
                         onClick={onGoBackup}
                         className="w-full py-3.5 font-bold rounded-2xl text-sm text-white bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg shadow-rose-200 active:scale-95 transition-transform"
                     >
-                        立即备份
+                        Back Up Now
                     </button>
                     <button
                         onClick={onDismiss}
                         className="w-full py-2.5 text-slate-400 font-medium text-[12px] active:scale-95 transition-transform"
                     >
-                        知道了，稍后再说
+                        Got it, maybe later
                     </button>
                 </div>
             </div>

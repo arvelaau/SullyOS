@@ -75,16 +75,16 @@ interface UpdatePopupProps {
 }
 
 const COLLABORATION_FEATURES = [
-    { icon: Briefcase, eyebrow: '两种协同模式', text: '保留完整陪伴上下文，或只带核心关系与少量相关记忆。' },
-    { icon: FileText, eyebrow: '真正交付文件', text: '读取 Word / PDF，制作并分享文档，也能把成果交回日常聊天。' },
-    { icon: FolderOpen, eyebrow: '制作、预览、安装', text: '气泡、白框、界面、日记本、角色卡与世界书都能边聊边做。' },
+    { icon: Briefcase, eyebrow: 'Two collaboration modes', text: 'Keep the full companion context, or bring along just the core relationship and a bit of relevant memory.' },
+    { icon: FileText, eyebrow: 'Real file delivery', text: 'Reads Word / PDF, creates and shares documents, and can hand the results back into everyday chat.' },
+    { icon: FolderOpen, eyebrow: 'Create, preview, install', text: 'Bubbles, whiteboxes, UI skins, journals, character cards, and worldbooks — all makeable while you chat.' },
 ] as const;
 
 const CollaborationUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
     const { openApp } = useOS();
 
     React.useEffect(() => {
-        trackEvent('弹出版本更新提醒', { 版本: CHANGELOG_2026_08_30 });
+        trackEvent('Show Version Update Reminder', { Version: CHANGELOG_2026_08_30 });
     }, []);
 
     const markSeen = () => markUpdateSeen(UPDATE_NOTIFICATION_KEY_2026_08_30);
@@ -92,19 +92,19 @@ const CollaborationUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }
         markSeen();
         openApp(AppID.Chat);
         onExit();
-        trackEvent('点立刻体验', { 版本: CHANGELOG_2026_08_30 });
+        trackEvent('Tap Try It Now', { Version: CHANGELOG_2026_08_30 });
     };
     const handleGuide = () => {
         markSeen();
         try { sessionStorage.setItem(FAQ_TARGET_SECTION_KEY, CHANGELOG_2026_08_30); } catch { /* 打开手册首页 */ }
         openApp(AppID.FAQ);
         onExit();
-        trackEvent('查看更新说明', { 版本: CHANGELOG_2026_08_30 });
+        trackEvent('View Update Notes', { Version: CHANGELOG_2026_08_30 });
     };
     const handleDismiss = () => {
         markSeen();
         onDone();
-        trackEvent('跳过本次更新说明', { 版本: CHANGELOG_2026_08_30 });
+        trackEvent('Skip This Update Notice', { Version: CHANGELOG_2026_08_30 });
     };
 
     return (
@@ -130,9 +130,9 @@ const CollaborationUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }
                         <span className="rounded-full border border-[#8e89ff]/40 px-2.5 py-1 text-[9px] font-bold tracking-[.12em] text-[#c5c2ff]">NEW</span>
                     </div>
                     <div className="collaboration-update-reveal relative mt-8 max-w-[17rem]" style={{ animationDelay: '90ms' }}>
-                        <p className="mb-2 text-[10px] font-semibold tracking-[.18em] text-[#9f9aff]">陪伴之外，一起把事情做好</p>
-                        <h2 id="collaboration-update-title" className="text-[28px] font-black leading-[1.22] tracking-[-.04em]">角色现在有了<br />自己的协同工作台。</h2>
-                        <p className="mt-3 text-[12px] leading-6 text-[#c9cad2]">还是同一个人，只是把更多注意力放在制作、检查和交付上。</p>
+                        <p className="mb-2 text-[10px] font-semibold tracking-[.18em] text-[#9f9aff]">Beyond companionship — getting things done together</p>
+                        <h2 id="collaboration-update-title" className="text-[28px] font-black leading-[1.22] tracking-[-.04em]">Your character now has<br />their own collaboration workspace.</h2>
+                        <p className="mt-3 text-[12px] leading-6 text-[#c9cad2]">Still the same person — just paying more attention to making, checking, and delivering.</p>
                     </div>
                 </div>
 
@@ -147,14 +147,14 @@ const CollaborationUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }
                     </div>
 
                     <div className="collaboration-update-reveal mt-3 border-l-2 border-[#6d67e8] bg-[#f0efff] px-3 py-2.5 text-[11px] leading-5 text-[#555172]" style={{ animationDelay: '370ms' }}>
-                        入口：打开一位角色的 <b>ChatApp</b>，点输入框左侧的 <b>＋</b>，在加号菜单第一页选择 <b>「协同工作」</b>。
+                        Entry: open a character's <b>ChatApp</b>, tap the <b>＋</b> to the left of the input field, and pick <b>「Collaboration」</b> on the first page of the plus menu.
                     </div>
 
                     <div className="collaboration-update-reveal mt-5" style={{ animationDelay: '430ms' }}>
-                        <button type="button" onClick={handleOpenChat} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25242d] px-5 py-3.5 text-[13px] font-extrabold text-white transition-transform active:scale-[.975]">打开 ChatApp <ArrowRight size={16} weight="bold" /></button>
+                        <button type="button" onClick={handleOpenChat} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25242d] px-5 py-3.5 text-[13px] font-extrabold text-white transition-transform active:scale-[.975]">Open ChatApp <ArrowRight size={16} weight="bold" /></button>
                         <div className="mt-1.5 grid grid-cols-2 gap-2">
-                            <button type="button" onClick={handleGuide} className="rounded-xl py-2.5 text-[11px] font-semibold text-[#585465] active:bg-[#efedf0]">查看完整说明</button>
-                            <button type="button" onClick={handleDismiss} className="rounded-xl py-2.5 text-[11px] font-semibold text-[#8b8990] active:bg-[#efedf0]">稍后看看</button>
+                            <button type="button" onClick={handleGuide} className="rounded-xl py-2.5 text-[11px] font-semibold text-[#585465] active:bg-[#efedf0]">View Full Notes</button>
+                            <button type="button" onClick={handleDismiss} className="rounded-xl py-2.5 text-[11px] font-semibold text-[#8b8990] active:bg-[#efedf0]">Maybe Later</button>
                         </div>
                     </div>
                 </div>
@@ -166,13 +166,13 @@ const CollaborationUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }
 const LIVE2D_FEATURES = [
     {
         icon: VideoCamera,
-        eyebrow: '视频通话',
-        text: '电话里切到「视频」，VRM / Live2D 会跟着台词做表情与动作。',
+        eyebrow: 'Video Call',
+        text: 'Switch to 「Video」 during a call, and VRM / Live2D will animate expressions and motion along with the dialogue.',
     },
     {
         icon: Sparkle,
-        eyebrow: 'L2D 陪伴桌面',
-        text: '在外观里启用「触感陪伴」，让角色常驻桌面、回应触摸并切换专属框架。',
+        eyebrow: 'L2D Companion Desktop',
+        text: 'Enable 「Touch Companion」 in Appearance to keep your character on the desktop, responding to touch and switching between dedicated frames.',
     },
 ] as const;
 
@@ -180,7 +180,7 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
     const { openApp } = useOS();
 
     React.useEffect(() => {
-        trackEvent('弹出版本更新提醒', { 版本: CHANGELOG_2026_08_10 });
+        trackEvent('Show Version Update Reminder', { Version: CHANGELOG_2026_08_10 });
     }, []);
 
     const handleGuide = () => {
@@ -190,13 +190,13 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
         } catch { /* storage 不可用时仍可打开使用手册首页 */ }
         openApp(AppID.FAQ);
         onExit();
-        trackEvent('点立刻体验', { 版本: CHANGELOG_2026_08_10 });
+        trackEvent('Tap Try It Now', { Version: CHANGELOG_2026_08_10 });
     };
 
     const handleDismiss = () => {
         markUpdateSeen(UPDATE_NOTIFICATION_KEY_2026_08_10);
         onDone();
-        trackEvent('跳过本次更新说明', { 版本: CHANGELOG_2026_08_10 });
+        trackEvent('Skip This Update Notice', { Version: CHANGELOG_2026_08_10 });
     };
 
     return (
@@ -250,12 +250,12 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                     </div>
 
                     <div className="live2d-update-reveal relative mt-8 max-w-[14.5rem]" style={{ animationDelay: '145ms' }}>
-                        <p className="mb-2 text-[10px] font-semibold tracking-[0.22em] text-[#74d8c4]">从一张头像，到真实在场</p>
+                        <p className="mb-2 text-[10px] font-semibold tracking-[0.22em] text-[#74d8c4]">From a single avatar to a real presence</p>
                         <h2 id="live2d-update-title" className="text-[27px] font-black leading-[1.22] tracking-[-0.035em]">
-                            这一次，ta 真正<br />出现在屏幕里。
+                            This time, they truly<br />appear on your screen.
                         </h2>
                         <p className="mt-3 text-[12px] leading-6 text-[#c5d4dc]">
-                            一套模型，两种新的陪伴方式。
+                            One model, two new ways to be together.
                         </p>
                     </div>
                 </div>
@@ -280,7 +280,7 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                     </div>
 
                     <p className="live2d-update-reveal mt-2 border-l-2 border-[#62cbb5] pl-3 text-[10px] leading-[1.7] text-[#7a878f]" style={{ animationDelay: '410ms' }}>
-                        模型入口在「电话」的视频模式；桌面入口在「外观 → 触感陪伴」。
+                        Find the model in 「Call」's video mode; find the desktop companion in 「Appearance → Touch Companion」.
                     </p>
 
                     <div className="live2d-update-reveal mt-5" style={{ animationDelay: '480ms' }}>
@@ -289,7 +289,7 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                             onClick={handleGuide}
                             className="live2d-update-action flex w-full items-center justify-center gap-2 rounded-2xl bg-[#176f60] px-5 py-3.5 text-[13px] font-extrabold tracking-[0.04em] text-white shadow-[0_10px_24px_rgba(23,111,96,0.25)] transition-transform duration-200 active:scale-[0.975]"
                         >
-                            查看本次更新
+                            View This Update
                             <ArrowRight size={16} weight="bold" />
                         </button>
                         <button
@@ -297,7 +297,7 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                             onClick={handleDismiss}
                             className="live2d-update-action mt-1.5 w-full py-2.5 text-[11px] font-semibold text-[#89949a] transition-colors active:text-[#4d585d]"
                         >
-                            稍后看看
+                            Maybe Later
                         </button>
                     </div>
                 </div>
@@ -309,18 +309,18 @@ const Live2DUpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
 const AMSG2_FEATURES = [
     {
         icon: BellRinging,
-        eyebrow: '到点就响',
-        text: 'App 关着、手机锁着，消息一样送得到。',
+        eyebrow: 'Rings right on time',
+        text: 'Messages still get through even with the app closed and the phone locked.',
     },
     {
         icon: ChatTeardropDots,
-        eyebrow: '说一声就行',
-        text: '「明早八点叫我」，ta 自己把任务排上。',
+        eyebrow: 'Just say the word',
+        text: '"Wake me up at 8am tomorrow" — and they schedule it themselves.',
     },
     {
         icon: PaperPlaneTilt,
-        eyebrow: '话没说完',
-        text: '后台顺手排下一条，事办完了回来报备。',
+        eyebrow: 'To be continued',
+        text: 'The next message gets queued in the background, and they report back once it\'s done.',
     },
 ] as const;
 
@@ -328,7 +328,7 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
     const { openApp } = useOS();
 
     React.useEffect(() => {
-        trackEvent('弹出版本更新提醒', { 版本: CHANGELOG_2026_08_03 });
+        trackEvent('Show Version Update Reminder', { Version: CHANGELOG_2026_08_03 });
     }, []);
 
     const handleGuide = () => {
@@ -339,13 +339,13 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
         } catch { /* storage 不可用就退回 FAQ 首页，别拦着跳转 */ }
         openApp(AppID.FAQ);
         onExit();
-        trackEvent('点立刻体验', { 版本: CHANGELOG_2026_08_03 });
+        trackEvent('Tap Try It Now', { Version: CHANGELOG_2026_08_03 });
     };
 
     const handleDismiss = () => {
         markUpdateSeen(UPDATE_NOTIFICATION_KEY_2026_08_03);
         onDone();
-        trackEvent('跳过本次更新说明', { 版本: CHANGELOG_2026_08_03 });
+        trackEvent('Skip This Update Notice', { Version: CHANGELOG_2026_08_03 });
     };
 
     return (
@@ -390,16 +390,16 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
 
                     <div className="amsg-brief-reveal relative flex items-center justify-between" style={{ animationDelay: '90ms' }}>
                         <p className="text-[9px] font-bold tracking-[0.32em] text-[#93a9ff]">LOCK SCREEN · 02:47</p>
-                        <span className="rounded-full border border-[#93a9ff]/45 px-2.5 py-1 text-[9px] font-bold tracking-[0.16em] text-[#b9c6ff]">NEW · 主动消息</span>
+                        <span className="rounded-full border border-[#93a9ff]/45 px-2.5 py-1 text-[9px] font-bold tracking-[0.16em] text-[#b9c6ff]">NEW · Proactive Messages</span>
                     </div>
 
                     <div className="amsg-brief-reveal relative mt-7" style={{ animationDelay: '150ms' }}>
-                        <p className="mb-2 text-[10px] font-semibold tracking-[0.24em] text-[#8fa4f5]">主动消息 2.0</p>
+                        <p className="mb-2 text-[10px] font-semibold tracking-[0.24em] text-[#8fa4f5]">Proactive Messages 2.0</p>
                         <h2 id="amsg-brief-title" className="max-w-[18rem] text-[27px] font-black leading-[1.25] tracking-[-0.035em]">
-                            这回换 ta<br />自己挑时间找你。
+                            This time, they're<br />the ones picking when to reach out.
                         </h2>
                         <p className="mt-3 text-[12px] leading-6 text-[#c6cce6]">
-                            消息在后台生成、直接推到手机，你不用一直开着 App。
+                            Messages are generated in the background and pushed straight to your phone — no need to keep the app open.
                         </p>
                     </div>
 
@@ -415,7 +415,7 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                                 <p className="truncate text-[11px] font-bold text-white">Sully</p>
                                 <span className="shrink-0 text-[9px] text-[#aab4d8]">02:47</span>
                             </div>
-                            <p className="mt-0.5 text-[11px] leading-4 text-[#dfe4f7]">汤炖好了，说好要叫你的——起来喝一口再睡。</p>
+                            <p className="mt-0.5 text-[11px] leading-4 text-[#dfe4f7]">The soup's ready — I said I'd wake you. Get up and have a bit before you sleep.</p>
                         </div>
                     </div>
 
@@ -443,7 +443,7 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                     </div>
 
                     <p className="amsg-brief-reveal mt-2 border-l-2 border-[#8fa4f5] pl-3 text-[10px] leading-[1.7] text-[#848a9d]" style={{ animationDelay: '500ms' }}>
-                        要用得先自己搭一个小后端，全程在网页上点，大约 15 分钟；步骤和边界都写在说明里。
+                        To use this you'll need to set up a small backend first — all done by clicking through a webpage, about 15 minutes. Steps and limits are all in the guide.
                     </p>
 
                     <div className="amsg-brief-reveal mt-5" style={{ animationDelay: '560ms' }}>
@@ -452,7 +452,7 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                             onClick={handleGuide}
                             className="amsg-brief-action flex w-full items-center justify-center gap-2 rounded-2xl bg-[#3f5fd4] px-5 py-3.5 text-[13px] font-extrabold tracking-[0.05em] text-white shadow-[0_10px_24px_rgba(63,95,212,0.28)] transition-transform duration-200 active:scale-[0.975]"
                         >
-                            看看怎么开
+                            See How to Set It Up
                             <ArrowRight size={16} weight="bold" />
                         </button>
                         <button
@@ -460,7 +460,7 @@ const Amsg2UpdatePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit }) => {
                             onClick={handleDismiss}
                             className="amsg-brief-action mt-1.5 w-full py-2.5 text-[11px] font-semibold text-[#8b90a2] transition-colors active:text-[#4a4f60]"
                         >
-                            先不折腾
+                            Not Right Now
                         </button>
                     </div>
                 </div>
@@ -473,13 +473,13 @@ const NetworkTransitNoticePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit 
     const { openApp } = useOS();
 
     React.useEffect(() => {
-        trackEvent('弹出联网方式说明', { 版本: 'network-transit-2026-08' });
+        trackEvent('Show Network Transit Notice', { Version: 'network-transit-2026-08' });
     }, []);
 
     const handleDismiss = () => {
         markUpdateSeen(NETWORK_TRANSIT_NOTICE_KEY_2026_08);
         onDone();
-        trackEvent('知悉联网方式说明', { 去向: '关闭' });
+        trackEvent('Acknowledge Network Transit Notice', { Destination: 'Close' });
     };
 
     const handleSettings = () => {
@@ -487,7 +487,7 @@ const NetworkTransitNoticePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit 
         requestProxyWorkerSettingsFocus();
         openApp(AppID.Settings);
         onExit();
-        trackEvent('知悉联网方式说明', { 去向: '设置' });
+        trackEvent('Acknowledge Network Transit Notice', { Destination: 'Settings' });
     };
 
     return (
@@ -504,41 +504,41 @@ const NetworkTransitNoticePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit 
             <section className="relative flex max-h-full w-full max-w-[23rem] flex-col overflow-hidden rounded-[2rem] bg-[#f8fafc] text-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.4)] ring-1 ring-white/30">
                 <header className="shrink-0 bg-[linear-gradient(145deg,#334155,#475569)] px-6 pb-5 pt-6 text-white">
                     <div className="mb-3 inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[9px] font-bold tracking-[0.16em] text-slate-200 ring-1 ring-white/15">
-                        例行维护 · 说明补充
+                        Routine Maintenance · Clarification
                     </div>
                     <h2 id="network-transit-notice-title" className="text-[21px] font-black tracking-[-0.02em]">
-                        关于部分联网功能
+                        About Some Network Features
                     </h2>
                     <p className="mt-2 text-[11px] leading-5 text-slate-300">
-                        这次只补充此前写得不够清楚的联网路径，功能和使用方式没有变化。
+                        This just clarifies network paths that weren't explained clearly before — nothing about how the features work or how you use them has changed.
                     </p>
                 </header>
 
                 <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-6 py-5 text-[12px] leading-[1.75]">
                     <p>
-                        例行排查中，我们发现部分功能对“请求会怎么走”的说明不够清楚。静态网页下，以下入口会在你实际启用或使用时经过网络 Worker：
+                        During a routine review, we found that some features didn't clearly explain "how the request travels." Since this is a static webpage, the following entry points route through a network Worker when you actually enable or use them:
                     </p>
                     <ul className="space-y-1.5 rounded-2xl bg-white px-3.5 py-3 text-[11px] leading-[1.65] ring-1 ring-slate-200/70">
-                        <li><b>聊天 / 实时感知：</b>Brave 联网搜索与新闻、Notion / 飞书日记、网页链接读取</li>
-                        <li><b>音乐 App：</b>网易云登录状态、搜索、歌单与播放相关请求</li>
-                        <li><b>小红书 Lite：</b>登录校验、搜索浏览、互动与发布</li>
-                        <li><b>语音 / 写歌：</b>Fish Audio 语音合成、Replicate / ACE-Step</li>
-                        <li><b>点单：</b>麦当劳与瑞幸 MCP</li>
-                        <li><b>云备份：</b>WebDAV；GitHub 的 Worker 中转路径当前默认关闭，仅在你手动开启后使用</li>
+                        <li><b>Chat / Real-time Awareness:</b> Brave web search &amp; news, Notion / Feishu journal, web link reading</li>
+                        <li><b>Music App:</b> NetEase Cloud Music login status, search, playlists, and playback-related requests</li>
+                        <li><b>Xiaohongshu Lite:</b> login verification, search &amp; browse, interactions, and posting</li>
+                        <li><b>Voice / Songwriting:</b> Fish Audio speech synthesis, Replicate / ACE-Step</li>
+                        <li><b>Ordering:</b> McDonald's and Luckin MCP</li>
+                        <li><b>Cloud Backup:</b> WebDAV; the GitHub Worker relay path is off by default and only used after you manually enable it</li>
                     </ul>
                     <p>
-                        这些请求经过 Worker，只是为了替静态网页完成跨域请求并把结果返回。项目代码不会将请求内容写入数据库、对象存储或业务日志；转发完成后，项目侧没有可供回看或恢复的内容副本。Worker 源码公开可查。
+                        These requests pass through the Worker solely to complete cross-origin requests on behalf of the static webpage and return the results. The project's code never writes request content to a database, object storage, or application logs; once forwarding is complete, there's no copy left on the project side to look back at or recover. The Worker's source code is public.
                     </p>
                     <div className="rounded-2xl bg-sky-50 px-3.5 py-3 text-[11px] leading-[1.7] text-sky-900 ring-1 ring-sky-100">
                         <p>
-                            这和你平时使用<b>联网搜索、第三方登录或在线音乐</b>时的接口请求相近：只有主动使用对应功能时，当次必要数据才会经过服务端，不会把 SullyOS 的聊天记录或本地资料整体上传。
+                            This is similar to the API requests you already make when using <b>web search, third-party logins, or online music</b> elsewhere: only the data necessary for that one use passes through the server when you actively use the feature — your SullyOS chat history or local data is never uploaded wholesale.
                         </p>
                         <p className="mt-1.5">
-                            如果你平时能够接受 API 中转站，可以把它作为参照：API 中转站能够接触完整的模型请求与聊天内容；这里的 Worker 只接触对应功能的当次请求，并在转发后不保留请求内容。
+                            If you're already comfortable with API relay services, use that as a reference point: an API relay can see the complete model request and chat content, whereas this Worker only ever sees the single request for that specific feature, and keeps nothing after forwarding it.
                         </p>
                     </div>
                     <p className="text-[11px] text-slate-500">
-                        介意中转的话，可以关闭对应功能，或在设置中换成自己部署的 Worker。
+                        If you'd rather avoid the relay, you can turn off the corresponding feature or switch to your own self-hosted Worker in Settings.
                     </p>
                 </div>
 
@@ -548,14 +548,14 @@ const NetworkTransitNoticePopup: React.FC<UpdatePopupProps> = ({ onDone, onExit 
                         onClick={handleSettings}
                         className="rounded-2xl bg-slate-100 px-3 py-3 text-[11px] font-bold text-slate-600 transition-transform active:scale-[0.98]"
                     >
-                        查看代理设置
+                        View Proxy Settings
                     </button>
                     <button
                         type="button"
                         onClick={handleDismiss}
                         className="rounded-2xl bg-slate-700 px-3 py-3 text-[12px] font-extrabold text-white shadow-lg shadow-slate-300 transition-transform active:scale-[0.98]"
                     >
-                        我知道了
+                        Got It
                     </button>
                 </footer>
             </section>

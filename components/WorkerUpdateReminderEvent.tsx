@@ -37,7 +37,7 @@ const WORKER_UPDATE_SNOOZE_KEY = 'sullyos_worker_update_snooze_until';
 export const markWorkerBuildSeen = (): void => {
   try {
     localStorage.setItem(WORKER_UPDATE_SEEN_KEY, INSTANT_WORKER_VERSION);
-    trackEvent('标记 Worker 已部署新版');
+    trackEvent('Mark Worker Deployed New Version');
   } catch { /* ignore */ }
 };
 
@@ -56,7 +56,7 @@ export const snoozeWorkerUpdateReminder = (days = 3): void => {
 export const rearmWorkerUpdateReminder = (): void => {
   try {
     localStorage.removeItem(WORKER_UPDATE_SEEN_KEY);
-    trackEvent('探测到 Worker 版本漂移');
+    trackEvent('Detected Worker Version Drift');
   } catch { /* ignore */ }
 };
 
@@ -88,28 +88,28 @@ export const WorkerUpdateReminderPopup: React.FC<WorkerUpdateReminderPopupProps>
   const [copyError, setCopyError] = useState('');
 
   React.useEffect(() => {
-    trackEvent('弹出 Worker 更新提醒');
+    trackEvent('Show Worker Update Reminder');
   }, []);
 
   const cfg = loadInstantConfig();
   const dashboardUrl = buildCloudflareDashboardUrl(cfg.workerUrl);
   // workers.dev 子域才能推出确切的 worker name; 自定义域 / 反代退化成 workers 列表页。
   const dashboardLabel = dashboardUrl.includes('/services/view/')
-    ? '打开我的 Worker'
-    : '打开 Worker 列表';
+    ? 'Open My Worker'
+    : 'Open Worker List';
 
   const handleCopy = async () => {
     setCopyStatus('loading');
     try {
       await copyInstantWorkerBundleToClipboard();
       setCopyStatus('done');
-      trackEvent('复制最新 Worker 代码', { 结果: '成功', 入口: '更新提醒弹窗' });
+      trackEvent('Copy Latest Worker Code', { Result: 'Success', Entry: 'Update Reminder Popup' });
       setTimeout(() => setCopyStatus((s) => (s === 'done' ? 'idle' : s)), 2500);
     } catch (e) {
       const err = e as { message?: string } | null;
-      setCopyError(err?.message ?? '未知错误');
+      setCopyError(err?.message ?? 'Unknown error');
       setCopyStatus('error');
-      trackEvent('复制最新 Worker 代码', { 结果: '失败', 入口: '更新提醒弹窗' });
+      trackEvent('Copy Latest Worker Code', { Result: 'Failure', Entry: 'Update Reminder Popup' });
     }
   };
 
@@ -117,23 +117,23 @@ export const WorkerUpdateReminderPopup: React.FC<WorkerUpdateReminderPopupProps>
     // 不在这里 markWorkerBuildSeen —— 用户可能只是先打开 dashboard, 还没真粘贴部署。
     // 等他再次回来发"对比已部署"时若一致, 那个流程会顺其自然不再触发提醒。
     window.open(dashboardUrl, '_blank', 'noopener,noreferrer');
-    trackEvent('打开 Worker 控制台');
+    trackEvent('Open Worker Console');
   };
 
   const handleLater = () => {
     // 只贪睡, 不 markSeen —— 否则用户点完就永远想不起来更新, worker 长期漂在旧版
     snoozeWorkerUpdateReminder();
-    trackEvent('稍后处理 Worker 更新');
+    trackEvent('Snooze Worker Update');
     onClose();
   };
 
   const copyButtonLabel = copyStatus === 'loading'
-    ? '复制中…'
+    ? 'Copying…'
     : copyStatus === 'done'
-      ? '✓ 已复制'
+      ? '✓ Copied'
       : copyStatus === 'error'
-        ? '重试复制'
-        : '复制最新代码';
+        ? 'Retry Copy'
+        : 'Copy Latest Code';
 
   return (
     <div className="fixed inset-0 z-[9998] flex items-center justify-center p-5 animate-fade-in">
@@ -145,30 +145,30 @@ export const WorkerUpdateReminderPopup: React.FC<WorkerUpdateReminderPopupProps>
             alt="worker update"
             className="w-10 h-10 mx-auto mb-2"
           />
-          <h2 className="text-lg font-extrabold text-slate-800">Worker 后端有更新</h2>
-          <p className="text-[11px] text-slate-400 mt-1">最新版本 {INSTANT_WORKER_VERSION} · Instant Push</p>
+          <h2 className="text-lg font-extrabold text-slate-800">Worker backend has an update</h2>
+          <p className="text-[11px] text-slate-400 mt-1">Latest version {INSTANT_WORKER_VERSION} · Instant Push</p>
         </div>
 
         <div className="px-6 pb-4 space-y-3">
           <div className="bg-gradient-to-br from-indigo-50 to-sky-50 border border-indigo-100 rounded-2xl p-4 space-y-2">
             <p className="text-[13px] text-slate-700 leading-relaxed">
-              推送 worker 有新版本，需要你同步一下：
+              The push worker has a new version — you'll need to sync it:
             </p>
             <p className="text-[12px] text-slate-600 leading-relaxed">
-              <strong>Deno 部署</strong>：进 Playground 重新部署一次（保存即可），loader 会自动拉到最新代码。
+              <strong>Deno deployment</strong>: go to the Playground and redeploy once (just save) — the loader will automatically pull the latest code.
             </p>
-            <p className="text-[12px] text-slate-600 leading-relaxed"><strong>Cloudflare 部署</strong>：</p>
+            <p className="text-[12px] text-slate-600 leading-relaxed"><strong>Cloudflare deployment</strong>:</p>
             <ol className="text-[12px] text-slate-600 leading-relaxed list-decimal pl-5 space-y-0.5">
-              <li>点下面「复制最新代码」</li>
-              <li>打开你的 Cloudflare worker 编辑界面</li>
-              <li>全选粘贴覆盖，点 Deploy</li>
+              <li>Tap 「Copy Latest Code」below</li>
+              <li>Open your Cloudflare worker editor</li>
+              <li>Select all, paste to overwrite, and click Deploy</li>
             </ol>
             <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
-              如果不方便现在处理，新代码也已经同步到「设置 → Instant 消息设置」里，
-              随时按提示操作即可。
+              If now isn't a good time, the new code is also synced to 「Settings → Instant Message Settings」 —
+              just follow the prompts there whenever you're ready.
             </p>
             {copyStatus === 'error' && (
-              <p className="text-[11px] text-rose-500 leading-relaxed">复制失败：{copyError}</p>
+              <p className="text-[11px] text-rose-500 leading-relaxed">Copy failed: {copyError}</p>
             )}
           </div>
         </div>
@@ -195,7 +195,7 @@ export const WorkerUpdateReminderPopup: React.FC<WorkerUpdateReminderPopupProps>
             onClick={handleLater}
             className="w-full py-2.5 text-slate-400 font-medium text-[12px]"
           >
-            稍后处理
+            Later
           </button>
         </div>
       </div>

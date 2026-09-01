@@ -41,7 +41,7 @@ const BuildBadge: React.FC = () => {
     const lines: Array<{ text: string; cls: string }> = [
         { text: `sw@${swVersion}`, cls: 'text-[9px] tracking-wider' },
         { text: buildLabel, cls: 'text-[9px] tracking-wider' },
-        { text: '开发中内容，不代表最终效果', cls: 'text-[8px] tracking-normal text-white/35' },
+        { text: 'Work in progress, not final', cls: 'text-[8px] tracking-normal text-white/35' },
     ];
     const lastIdx = lines.length - 1;
 

@@ -30,7 +30,7 @@ interface GenEntry { kind: GenKind; charId: string; charName: string; startedAt:
 // 两处必须一起改——不然横幅和徽章会一前一后灭，看着像出了两次故障。
 const TTL_MS: Record<GenKind, number> = { reply: 6 * 60_000, emotion: 2 * 60_000 };
 
-const LABEL: Record<GenKind, string> = { reply: '正在回应', emotion: '正在感受' };
+const LABEL: Record<GenKind, string> = { reply: 'Responding', emotion: 'Sensing' };
 
 // 即时对话待收条目的兜底 TTL：worker fire 上限 + 一分钟推送在途（与 useChatAI 的
 // cloudEvalTimeoutMs 同一来源推导，worker 调预算两边一起动）。正常熄灭不靠它——
@@ -114,7 +114,7 @@ const ChatBroadcast: React.FC = () => {
     const cur = [...visible].sort((a, b) =>
         (a.kind === b.kind ? a.startedAt - b.startedAt : (a.kind === 'reply' ? 1 : -1))
     )[visible.length - 1];
-    const extra = visible.length > 1 ? ` 等 ${visible.length} 项` : '';
+    const extra = visible.length > 1 ? ` and ${visible.length - 1} more` : '';
 
     const jump = () => {
         try {

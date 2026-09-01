@@ -13,20 +13,20 @@ export const QixiLaunchPopup: React.FC<QixiLaunchPopupProps> = ({ onClose }) => 
     const { openApp } = useOS();
 
     useEffect(() => {
-        trackEvent('弹出七夕特别活动提醒', { 日期: '2026-08-19', 时区: 'Asia/Shanghai' });
+        trackEvent('Show Qixi Special Event Reminder', { Date: '2026-08-19', Timezone: 'Asia/Shanghai' });
     }, []);
 
     const dismiss = () => {
         markQixiLaunchPopupSeen();
         onClose();
-        trackEvent('收下七夕特别活动提醒', { 去向: '关闭' });
+        trackEvent('Dismiss Qixi Special Event Reminder', { Destination: 'Close' });
     };
 
     const openQixi = () => {
         markQixiLaunchPopupSeen();
         onClose();
         openApp(AppID.SpecialMoments);
-        trackEvent('点七夕特别活动提醒', { 去向: '特别时光' });
+        trackEvent('Tap Qixi Special Event Reminder', { Destination: 'Special Moments' });
     };
 
     return (
@@ -40,7 +40,7 @@ export const QixiLaunchPopup: React.FC<QixiLaunchPopupProps> = ({ onClose }) => 
                 aria-labelledby="qixi-launch-title"
                 aria-describedby="qixi-launch-description"
             >
-                <button type="button" className="qixi-launch-close" aria-label="关闭七夕活动提醒" onClick={dismiss}>×</button>
+                <button type="button" className="qixi-launch-close" aria-label="Close Qixi event reminder" onClick={dismiss}>×</button>
 
                 <div className="qixi-launch-date"><span>BEIJING</span><b>2026 · 08 · 19</b></div>
 
@@ -53,22 +53,22 @@ export const QixiLaunchPopup: React.FC<QixiLaunchPopupProps> = ({ onClose }) => 
                 </div>
 
                 <div className="qixi-launch-copy">
-                    <p>七 月 初 七 · 一 次 性 推 送</p>
-                    <h2 id="qixi-launch-title"><small>有一条消息</small>掉进了星夜。</h2>
+                    <p>QIXI EVE · ONE-TIME ALERT</p>
+                    <h2 id="qixi-launch-title"><small>A message</small>fell into the starry night.</h2>
                     <div id="qixi-launch-description">
-                        <strong>ta 也正在另一边找你。</strong>
-                        <span>今夜，去「特别时光」选择一个想见的人。</span>
+                        <strong>They're looking for you too, on the other side.</strong>
+                        <span>Tonight, go to 「Special Moments」and choose someone you want to see.</span>
                     </div>
                 </div>
 
                 <footer>
                     <button type="button" className="qixi-launch-primary" onClick={openQixi}>
-                        <span>去赴约</span><i aria-hidden="true">✦</i>
+                        <span>Go meet them</span><i aria-hidden="true">✦</i>
                     </button>
-                    <button type="button" className="qixi-launch-later" onClick={dismiss}>先把这封信收好</button>
+                    <button type="button" className="qixi-launch-later" onClick={dismiss}>Save this letter for later</button>
                 </footer>
 
-                <p className="qixi-launch-note">活动之后仍可从桌面「特别时光」进入</p>
+                <p className="qixi-launch-note">Still available from 「Special Moments」on the desktop after the event</p>
             </section>
         </div>
     );

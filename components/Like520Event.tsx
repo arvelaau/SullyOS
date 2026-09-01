@@ -102,9 +102,9 @@ export interface ChibiResult {
 }
 
 const TUCAO_OPTIONS: { key: Like520TucaoKey; label: string }[] = [
-    { key: 'becamesmall', label: '你怎么变小了！' },
-    { key: 'cute', label: '你今天好可爱！' },
-    { key: 'yangcheng_meta', label: '这什么天杀的养成游戏' },
+    { key: 'becamesmall', label: 'Why did you shrink!' },
+    { key: 'cute', label: "You're so cute today!" },
+    { key: 'yangcheng_meta', label: 'What kind of cursed sim game is this' },
 ];
 
 // ============================================================
@@ -246,7 +246,7 @@ export const CreatorIframe: React.FC<CreatorIframeProps> = ({ mode, charName, pr
         <iframe
             ref={iframeRef}
             src={CHAR_CREATOR_URL}
-            title={mode === 'char' ? '捏 char chibi' : '捏 user chibi'}
+            title={mode === 'char' ? 'Sculpt char chibi' : 'Sculpt user chibi'}
             className="w-full h-full border-0"
             style={{ background: 'linear-gradient(180deg, #FFF1E6 0%, #FFE4EC 100%)' }}
         />
@@ -1407,7 +1407,7 @@ const WishPaperOverlay: React.FC<{
                     <div className={`l520-wish-line ${wishLine.length > 36 ? 'long' : ''}`}>{wishLine}</div>
                 </div>
                 <div className="l520-wish-hint" onClick={onDismiss} style={{ cursor: 'pointer' }}>
-                    — 轻 触 任 意 处 继 续 —
+                    — touch anywhere to continue —
                 </div>
             </div>
         </div>
@@ -1486,9 +1486,9 @@ const EyesOpeningOverlay: React.FC<{ onDone: () => void }> = ({ onDone }) => {
                 textAlign: 'center',
                 lineHeight: 2,
             }}>
-                <div style={{ fontSize: 10, letterSpacing: 10, marginBottom: 6 }}>—— 慢慢 ——</div>
-                <div>睁&nbsp;开&nbsp;眼&nbsp;睛</div>
-                <div style={{ fontSize: 10, letterSpacing: 4, marginTop: 12, opacity: 0.6 }}>（点击跳过）</div>
+                <div style={{ fontSize: 10, letterSpacing: 10, marginBottom: 6 }}>—— slowly ——</div>
+                <div>Open your eyes</div>
+                <div style={{ fontSize: 10, letterSpacing: 4, marginTop: 12, opacity: 0.6 }}>(tap to skip)</div>
             </div>
         </div>
     );
@@ -1573,8 +1573,8 @@ const EyesClosingOverlay: React.FC<{ onDone: () => void }> = ({ onDone }) => {
                 lineHeight: 2,
                 pointerEvents: 'none',
             }}>
-                <div style={{ fontSize: 10, letterSpacing: 10, marginBottom: 6 }}>—— 慢慢 ——</div>
-                <div>闭&nbsp;上&nbsp;眼&nbsp;睛</div>
+                <div style={{ fontSize: 10, letterSpacing: 10, marginBottom: 6 }}>—— slowly ——</div>
+                <div>Close your eyes</div>
                 <div style={{ fontSize: 9, letterSpacing: 4, marginTop: 14, opacity: 0.55 }}>see you ~</div>
             </div>
         </div>
@@ -1599,11 +1599,11 @@ type Y520Stage =
     | 'self_reveal_hint'
     | 'self_reveal_choose';
 
-const SELF_REVEAL_HINT_LINES = ['（你下意识低头看了看自己——）'];
+const SELF_REVEAL_HINT_LINES = ['（Without thinking, you glance down at yourself——）'];
 const SELF_REVEAL_OPTIONS: { key: string; label: string }[] = [
-    { key: 'eh', label: '「诶？」' },
+    { key: 'eh', label: '「Eh?」' },
     { key: 'silence', label: '「……」' },
-    { key: 'look', label: '（你仔细看了看）' },
+    { key: 'look', label: '（You look closer）' },
 ];
 
 interface Y520SceneProps {
@@ -1784,8 +1784,8 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
             const triggerReact = (touchIdx + 1) % 3 === 0;
             if (triggerReact) {
                 setStats(s => ({ ...s, mood: Math.min(100, s.mood + 3), love: Math.min(100, s.love + 2) }));
-                spawnScore('+ 悦 · 情', cx, cy - 40);
-                const reacts = ['…心动了', '再一次嘛', '你的手好温', '♡', '…嗯'];
+                spawnScore('+ Joy · Love', cx, cy - 40);
+                const reacts = ['…my heart skipped', 'do it again', 'your hand feels warm', '♡', '…mm'];
                 spawnReact(reacts[Math.floor(Math.random() * reacts.length)], cx, cy - 80);
             } else {
                 setStats(s => ({ ...s, mood: Math.min(100, s.mood + 1) }));
@@ -1804,10 +1804,10 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
     const remainingAnchors = callA.anchors.length - usedAnchors.size;
 
     const renderHint = () => {
-        if (stage === 'tucao_choose') return '请于上方做出抉择';
-        if (stage === 'anchor_action_choose') return '请于上方做出抉择';
+        if (stage === 'tucao_choose') return 'Make your choice above';
+        if (stage === 'anchor_action_choose') return 'Make your choice above';
         if (stage === 'self_reveal_choose') return '……';
-        if (stage === 'free' && !allAnchorsUsed) return `轻拥${charName}，或自礼匣中取一件`;
+        if (stage === 'free' && !allAnchorsUsed) return `Embrace ${charName}, or take something from the gift box`;
         if (stage === 'free' && allAnchorsUsed) return '……';
         return '……';
     };
@@ -1851,7 +1851,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
                 <div className="l520-header-row">
                     <div className="l520-occasion">
                         <span className="num">520</span>
-                        <span style={{ fontFamily: "'Noto Serif SC', serif", fontSize: 11, letterSpacing: 2 }}>限定典藏</span>
+                        <span style={{ fontFamily: "'Noto Serif SC', serif", fontSize: 11, letterSpacing: 2 }}>Limited Edition</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <div className="l520-charpill">
@@ -1870,10 +1870,10 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
                 </div>
                 <div className="l520-stats">
                     {([
-                        { k: 'mood', label: '悦', cls: 'mood' },
-                        { k: 'love', label: '情', cls: 'love' },
-                        { k: 'food', label: '膳', cls: 'food' },
-                        { k: 'energy', label: '神', cls: 'energy' },
+                        { k: 'mood', label: 'M', cls: 'mood' },
+                        { k: 'love', label: 'L', cls: 'love' },
+                        { k: 'food', label: 'F', cls: 'food' },
+                        { k: 'energy', label: 'E', cls: 'energy' },
                     ] as const).map(s => (
                         <div key={s.k} className="l520-stat">
                             <span className="l520-stat-label">{s.label}</span>
@@ -1935,7 +1935,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
                     }}
                 >
                     <svg viewBox="0 0 24 24"><path d="M4 6 C4 5, 5 4, 6 4 L18 4 C19 4, 20 5, 20 6 L20 14 C20 15, 19 16, 18 16 L9 16 L5 19 L5 16 C4.5 16, 4 15.5, 4 15 Z" /></svg>
-                    <span>絮&nbsp;语</span>
+                    <span>Chat</span>
                 </button>
                 <button
                     className="l520-act primary"
@@ -1943,7 +1943,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
                     onClick={(e) => petCharacter({ clientX: (e as any).clientX, clientY: (e as any).clientY })}
                 >
                     <svg viewBox="0 0 24 24"><path d="M12 20 C 6 16, 3 12, 3 9 C 3 6, 5 4, 7.5 4 C 9.5 4, 11 5, 12 7 C 13 5, 14.5 4, 16.5 4 C 19 4, 21 6, 21 9 C 21 12, 18 16, 12 20 Z" /></svg>
-                    <span>轻&nbsp;拥</span>
+                    <span>Embrace</span>
                 </button>
                 <button
                     className="l520-act"
@@ -1951,7 +1951,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
                     onClick={() => setDrawerOpen(true)}
                 >
                     <svg viewBox="0 0 24 24"><path d="M3 8 L21 8 L21 20 L3 20 Z M3 8 L12 4 L21 8 M12 4 L12 20 M8 14 L16 14" /></svg>
-                    <span>礼&nbsp;匣</span>
+                    <span>Gift Box</span>
                     {remainingAnchors > 0 && <span className="badge">{remainingAnchors}</span>}
                 </button>
             </div>
@@ -1970,7 +1970,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
                     <div className="l520-drawer" data-stop-advance="1">
                         <div className="l520-drawer-handle" />
                         <div className="l520-drawer-head">
-                            <h4>礼&nbsp;匣</h4>
+                            <h4>Gift Box</h4>
                             <div className="sub">L A &nbsp; B O Î T E &nbsp; À &nbsp; T R É S O R</div>
                             <div className="line">❦</div>
                         </div>
@@ -1998,7 +1998,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
             {/* Centered choice overlays */}
             {stage === 'tucao_choose' && (
                 <OrnateChoice
-                    title="今日，你的反应是"
+                    title="Today, your reaction is"
                     sub="— Choose Thy Reaction —"
                     options={TUCAO_OPTIONS.map(o => ({ key: o.key, label: `「${o.label}」` }))}
                     onPick={(k) => pickTucao(k as Like520TucaoKey)}
@@ -2006,7 +2006,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
             )}
             {stage === 'anchor_action_choose' && activeAnchor && (
                 <OrnateChoice
-                    title={`你 要 ${activeAnchor.item_label}`}
+                    title={`You want ${activeAnchor.item_label}`}
                     sub="— Choose Thy Gesture —"
                     options={activeAnchor.user_action_options.map((label, i) => ({ key: String(i), label }))}
                     onPick={(k) => pickUserAction(activeAnchor.user_action_options[Number(k)])}
@@ -2014,7 +2014,7 @@ const Y520Scene: React.FC<Y520SceneProps> = ({ callA, charName, charAvatar, char
             )}
             {stage === 'self_reveal_choose' && (
                 <OrnateChoice
-                    title="你 的 反 应"
+                    title="Your Reaction"
                     sub="— Choose Thy Awakening —"
                     options={SELF_REVEAL_OPTIONS}
                     onPick={pickSelfReveal}
@@ -2120,7 +2120,7 @@ const WakeUpView: React.FC<{
                         pointerEvents: 'none',
                     }}
                 >
-                    醒 · 来
+                    Wake · Up
                 </div>
             )}
 
@@ -2339,7 +2339,7 @@ const EndingScreen: React.FC<{
                     onClick={onNext}
                     className="mt-10 px-8 py-2.5 rounded-full bg-white/15 backdrop-blur text-white text-sm tracking-widest border border-white/30 active:scale-95 transition-transform animate-fade-in"
                 >
-                    继 续
+                    Continue
                 </button>
             )}
         </div>
@@ -2353,7 +2353,7 @@ const EndingScreen: React.FC<{
 const ExitButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     <button
         onClick={onClick}
-        title="关闭"
+        title="Close"
         style={{
             position: 'absolute', top: 'calc(10px + var(--safe-top))', right: 10, zIndex: 50,
             width: 30, height: 30, borderRadius: '50%',
@@ -2397,12 +2397,12 @@ const LetterView: React.FC<{ text: string; onNext: () => void; onClose: () => vo
             // 不再突变
             const canvas = await html2canvas(target, { backgroundColor: '#fefbf4', scale: 2, useCORS: true });
             const blob = await new Promise<Blob>((resolve, reject) => {
-                canvas.toBlob((result: Blob | null) => result ? resolve(result) : reject(new Error('信件图片生成失败')), 'image/png');
+                canvas.toBlob((result: Blob | null) => result ? resolve(result) : reject(new Error('Letter image generation failed')), 'image/png');
             });
             await shareOrDownloadBlob({
                 blob,
                 fileName: `520_letter_${Date.now()}.png`,
-                shareTitle: '520 特别信件',
+                shareTitle: '520 Special Letter',
             });
         } catch (e) {
             console.error('[520] letter save failed', e);
@@ -2434,7 +2434,7 @@ const LetterView: React.FC<{ text: string; onNext: () => void; onClose: () => vo
                         <span className="lp-tl" />
                         <span className="lp-tr" />
                         <div className="l520-letter-header">
-                            <div className="l520-letter-eyebrow">致 · 我的</div>
+                            <div className="l520-letter-eyebrow">To · My</div>
                             <div className="l520-letter-title">{userName}</div>
                             <div className="l520-letter-divider">❦ ⸙ ❦</div>
                         </div>
@@ -2482,9 +2482,9 @@ const LetterView: React.FC<{ text: string; onNext: () => void; onClose: () => vo
                             boxShadow: '0 3px 8px rgba(157,107,120,0.12)',
                         }}
                     >
-                        {saving ? '⏳ 出件中…' : '存 为 图 片'}
+                        {saving ? '⏳ Exporting…' : 'Save as Image'}
                     </button>
-                    <button className="l520-letter-accept" onClick={onNext} style={{ margin: 0 }}>收&nbsp;下</button>
+                    <button className="l520-letter-accept" onClick={onNext} style={{ margin: 0 }}>Accept</button>
                 </div>
             </div>
         </div>
@@ -2593,24 +2593,24 @@ const PuzzleView: React.FC<{
             <AmbientLayer />
             <ExitButton onClick={onClose} />
             <div style={{ flex: 1, overflowY: 'auto', padding: 'calc(24px + var(--safe-top)) 16px calc(24px + var(--safe-bottom))', position: 'relative', zIndex: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 420, margin: '0 auto' }}>
-                <div style={{ color: '#7a2e3a', fontFamily: "'Noto Serif SC', serif", fontSize: 13, letterSpacing: 5, marginBottom: 4 }}>♥ 拼 图 卡 片 ♥</div>
+                <div style={{ color: '#7a2e3a', fontFamily: "'Noto Serif SC', serif", fontSize: 13, letterSpacing: 5, marginBottom: 4 }}>♥ Puzzle Card ♥</div>
                 <div style={{ color: '#9D7585', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 11, letterSpacing: 3, marginBottom: 14 }}>{title}</div>
                 {photoUrl ? (
                     <img
                         src={photoUrl}
-                        alt="合照"
+                        alt="photo together"
                         draggable={false}
                         style={{ width: '100%', display: 'block', borderRadius: 16, boxShadow: '0 12px 32px rgba(199, 97, 130, 0.22), 0 0 0 1px rgba(184, 146, 63, 0.4)' }}
                     />
                 ) : (
-                    <div style={{ width: '100%', aspectRatio: '1200 / 780', borderRadius: 16, background: 'linear-gradient(180deg, #FFE0E8, #FFD3DC)', display: 'grid', placeItems: 'center', color: '#9D7585', fontSize: 11, letterSpacing: 4 }}>{composing ? '正在合成…' : '合成失败'}</div>
+                    <div style={{ width: '100%', aspectRatio: '1200 / 780', borderRadius: 16, background: 'linear-gradient(180deg, #FFE0E8, #FFD3DC)', display: 'grid', placeItems: 'center', color: '#9D7585', fontSize: 11, letterSpacing: 4 }}>{composing ? 'Compositing…' : 'Compositing failed'}</div>
                 )}
-                <div style={{ color: '#9D7585', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 10.5, letterSpacing: 2, marginTop: 6 }}>长按图片保存到相册</div>
-                <div style={{ color: '#5C3A4A', fontStyle: 'italic', fontSize: 13, marginTop: 14, textAlign: 'center' }}>「这很像我们耶。」</div>
+                <div style={{ color: '#9D7585', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 10.5, letterSpacing: 2, marginTop: 6 }}>Press and hold the image to save it to your gallery</div>
+                <div style={{ color: '#5C3A4A', fontStyle: 'italic', fontSize: 13, marginTop: 14, textAlign: 'center' }}>「This really looks like us.」</div>
                 <button
                     onClick={onDone}
                     style={{ marginTop: 22, padding: '11px 32px', borderRadius: 9999, background: 'linear-gradient(90deg, #FFB6C8, #F18AAA)', color: '#fff', fontWeight: 700, border: 'none', boxShadow: '0 6px 14px rgba(199,97,130,0.35)', cursor: 'pointer' }}
-                >完成 ♥</button>
+                >Done ♥</button>
             </div>
         </div>
     );
@@ -2721,7 +2721,7 @@ const DoneView: React.FC<{
                     letterSpacing: 4,
                     textIndent: 4,
                     marginBottom: 14,
-                }}>感觉做了一场不错的梦</h2>
+                }}>It felt like a pretty good dream</h2>
 
                 {/* 寄语 */}
                 <div style={{
@@ -2743,9 +2743,9 @@ const DoneView: React.FC<{
                         margin: 0,
                         letterSpacing: 0.5,
                     }}>
-                        醒过来之后，<br />
-                        身上还带着一点 ta 的温度。<br />
-                        ——好像 ta 还在看着。
+                        After waking up,<br />
+                        a bit of their warmth still lingers.<br />
+                        ——It's like they're still watching.
                     </p>
                 </div>
 
@@ -2769,10 +2769,10 @@ const DoneView: React.FC<{
                         letterSpacing: 4,
                         textIndent: 4,
                     }}
-                >回到日常</button>
+                >Back to Everyday</button>
 
                 <div style={{ marginTop: 10, fontSize: 10, color: '#9D7585', letterSpacing: 1 }}>
-                    ta 一直在的 ♥
+                    They're always there ♥
                 </div>
             </div>
         </div>
@@ -2786,7 +2786,7 @@ const DoneView: React.FC<{
 const LoadingView: React.FC<{ hint?: string }> = ({ hint }) => (
     <div className="flex flex-col items-center justify-center min-h-full px-6 py-12 max-w-md mx-auto">
         <div className="text-2xl mb-4 animate-pulse">♥</div>
-        <div className="text-[#9D7585] text-xs tracking-widest">{hint ?? '正在准备这个下午…'}</div>
+        <div className="text-[#9D7585] text-xs tracking-widest">{hint ?? 'Preparing this afternoon…'}</div>
     </div>
 );
 
@@ -3030,7 +3030,7 @@ const BGMToggle: React.FC = () => {
         <div style={{ position: 'relative', display: 'inline-block' }}>
             <button
                 onClick={handleClick}
-                title={muted ? '播放 BGM' : '静音'}
+                title={muted ? 'Play BGM' : 'Mute'}
                 style={{
                     background: muted
                         ? 'linear-gradient(180deg, rgba(255,248,236,0.95), rgba(245,234,212,0.85))'
@@ -3089,7 +3089,7 @@ const BGMToggle: React.FC = () => {
                             pointerEvents: 'none',
                         }}
                     >
-                        ♪ 这里有音乐 · 嫌吵就点 ↑
+                        ♪ There's music here · tap ↑ if it's too much
                     </div>
                 </>
             )}
@@ -3181,7 +3181,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
             setCallA(result);
         } catch (err: any) {
             console.error('[520] Call A failed:', err);
-            setErrorMsg(`生成剧本失败：${err?.message || '请重试'}`);
+            setErrorMsg(`Failed to generate the script: ${err?.message || 'please try again'}`);
             setPhase('error');
         }
     }, [char, userProfile, apiConfig]);
@@ -3196,8 +3196,8 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
         } catch (err) {
             console.error('[520] Call B failed:', err);
             setCallB({
-                wake_up: ['……我们好像一起做了一个梦呀。', '不过，不是坏的那种。'],
-                letter: '（信生成出了点小问题。这是一段属于你的、未完成的话——但它一直在。）',
+                wake_up: ['……It feels like we had a dream together.', "But not the bad kind."],
+                letter: "(Something went a little wrong generating the letter. This is an unfinished line meant for you—but it's still here.)",
             });
         }
     }, [char, userProfile, apiConfig]);
@@ -3312,7 +3312,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
     if (!char) {
         return (
             <div className="fixed inset-0 z-[9997] flex items-center justify-center bg-[#FFF1E6]">
-                <div className="text-[#9D7585]">角色不存在</div>
+                <div className="text-[#9D7585]">Character not found</div>
             </div>
         );
     }
@@ -3323,7 +3323,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                 <div className="text-[#C76182] mb-3">⚠</div>
                 <div className="text-[#5C3A4A] text-sm text-center mb-6">{errorMsg}</div>
                 <button onClick={onClose} className="px-7 py-2.5 rounded-full bg-white text-[#C76182] text-sm font-bold border border-[#FFB6C8] active:scale-95 transition-transform">
-                    关闭
+                    Close
                 </button>
             </div>
         );
@@ -3357,20 +3357,20 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                             <span className="cc-tr" />
                             <div className="l520-choice-head">
                                 <div className="ornament">❦ ⸙ ❦</div>
-                                <h3>这个下午已经度过过</h3>
+                                <h3>You've already spent this afternoon</h3>
                                 <div className="sub">— Your Treasured Moment —</div>
                             </div>
                             <button className="l520-choice-row" onClick={() => pickMode('replay')}>
                                 <span className="num">I</span>
-                                <span className="text">重 看 — 把那个下午再过一遍</span>
+                                <span className="text">Watch Again — relive that afternoon</span>
                             </button>
                             <button className="l520-choice-row" onClick={() => pickMode('skip-to-letter')}>
                                 <span className="num">II</span>
-                                <span className="text">看 信 — 直接打开 ta 写的信</span>
+                                <span className="text">Read the Letter — open what they wrote</span>
                             </button>
                             <button className="l520-choice-row" onClick={() => pickMode('fresh')}>
                                 <span className="num">III</span>
-                                <span className="text">重 来 — 清掉记录，重新做一次</span>
+                                <span className="text">Start Over — clear the record, do it again</span>
                             </button>
                             <button
                                 onClick={onClose}
@@ -3388,7 +3388,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                                     cursor: 'pointer',
                                 }}
                             >
-                                — 关 闭 —
+                                — close —
                             </button>
                         </div>
                     </div>
@@ -3403,22 +3403,22 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
             {phase === 'intro' && (
                 <div className="flex flex-col items-center justify-center min-h-full px-8 py-16 max-w-md mx-auto">
                     <div className="text-[10px] tracking-[8px] text-[#C76182] mb-3">5 · 2 · 0</div>
-                    <div className="text-[#C76182] text-xl font-bold mb-1 tracking-widest">特别活动</div>
+                    <div className="text-[#C76182] text-xl font-bold mb-1 tracking-widest">Special Event</div>
                     <div className="text-[#5C3A4A] text-lg leading-relaxed text-center my-8">
-                        如果<span className="mx-1 text-[#C76182]">{char.name}</span>变得小小的，<br />
-                        那ta会是——？
+                        If <span className="mx-1 text-[#C76182]">{char.name}</span> became small,<br />
+                        what would they be like——?
                     </div>
                     <button
                         onClick={() => { startCallA(); setPhase('char_creator'); }}
                         className="mt-6 px-10 py-3 rounded-full bg-gradient-to-r from-[#FFB6C8] to-[#F18AAA] text-white font-bold shadow-lg active:scale-95 transition-transform"
                     >
-                        开始装扮 ♥
+                        Start Dressing Up ♥
                     </button>
                     <button
                         onClick={onClose}
                         className="mt-4 text-xs text-[#9D7585]"
                     >
-                        以后再说
+                        Maybe later
                     </button>
                 </div>
             )}
@@ -3440,7 +3440,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                 </div>
             )}
 
-            {phase === 'loading_a' && <LoadingView hint="ta 在准备这个下午…" />}
+            {phase === 'loading_a' && <LoadingView hint="They're getting this afternoon ready…" />}
 
             {phase === 'yangcheng' && callA && charChibi && (
                 <Y520Scene
@@ -3496,7 +3496,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                 />
             )}
 
-            {phase === 'loading_b' && <LoadingView hint="醒过来之前…" />}
+            {phase === 'loading_b' && <LoadingView hint="Before waking up…" />}
 
             {phase === 'wake_up' && callB && (
                 <WakeUpView
@@ -3510,7 +3510,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                 <LetterView
                     text={callB.letter}
                     charName={char.name}
-                    userName={userProfile.name || '你'}
+                    userName={userProfile.name || 'you'}
                     onClose={onClose}
                     onNext={() => {
                         saveRecord();
@@ -3533,7 +3533,7 @@ export const Like520Session: React.FC<SessionProps> = ({ charId, onClose }) => {
                 <DoneView
                     charName={char.name}
                     charAvatar={char.avatar}
-                    userName={userProfile.name || '你'}
+                    userName={userProfile.name || 'you'}
                     charChibi={charChibi?.transparentDataUrl}
                     userChibi={userChibi?.transparentDataUrl}
                     onClose={onClose}
@@ -3568,20 +3568,20 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
         setLocalModel(preset.config.model);
         setLocalStream(preset.config.stream === true);
         setTestResult(null);
-        addToast(`已加载预设: ${preset.name}`, 'info');
+        addToast(`Preset loaded: ${preset.name}`, 'info');
     };
 
     const handleSave = () => {
         updateApiConfig({ baseUrl: localUrl, apiKey: localKey, model: localModel, stream: localStream });
-        setStatusMsg('配置已保存');
-        addToast('API 配置已保存', 'success');
+        setStatusMsg('Configuration saved');
+        addToast('API configuration saved', 'success');
         setTimeout(() => setStatusMsg(''), 2000);
     };
 
     const fetchModels = async () => {
-        if (!localUrl) { setStatusMsg('请先填写 URL'); return; }
+        if (!localUrl) { setStatusMsg('Please fill in the URL first'); return; }
         setIsLoadingModels(true);
-        setStatusMsg('正在连接...');
+        setStatusMsg('Connecting...');
         try {
             const baseUrl = localUrl.replace(/\/+$/, '');
             const response = await fetch(`${baseUrl}/models`, {
@@ -3595,11 +3595,11 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
                 const models = list.map((m: any) => m.id || m);
                 setAvailableModels(models);
                 if (models.length > 0 && !models.includes(localModel)) setLocalModel(models[0]);
-                setStatusMsg(`获取到 ${models.length} 个模型`);
+                setStatusMsg(`Found ${models.length} models`);
                 setShowModelList(true);
-            } else { setStatusMsg('格式不兼容'); }
+            } else { setStatusMsg('Incompatible format'); }
         } catch {
-            setStatusMsg('连接失败');
+            setStatusMsg('Connection failed');
         } finally {
             setIsLoadingModels(false);
         }
@@ -3623,13 +3623,13 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
             if (res.ok) {
                 const data = await safeResponseJson(res);
                 const reply = data.choices?.[0]?.message?.content || '';
-                setTestResult(`✅ 连接成功 — 模型回复: "${reply.slice(0, 30)}"`);
+                setTestResult(`✅ Connected — model replied: "${reply.slice(0, 30)}"`);
             } else {
                 const text = await res.text().catch(() => '');
                 setTestResult(`❌ HTTP ${res.status}: ${text.slice(0, 100)}`);
             }
         } catch (err: any) {
-            setTestResult(`❌ 连接失败: ${err.message}`);
+            setTestResult(`❌ Connection failed: ${err.message}`);
         } finally {
             setTesting(false);
         }
@@ -3648,14 +3648,14 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
             <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-pink-200/50 overflow-hidden animate-slide-up max-h-[85vh] flex flex-col">
                 <div className="px-6 pt-6 pb-2 text-center shrink-0">
                     <div className="text-2xl mb-1">🔧</div>
-                    <h3 className="text-lg font-bold text-slate-800">API 配置</h3>
-                    <p className="text-[11px] text-slate-400 mt-1">配置完成后即可前往今天的特别活动</p>
+                    <h3 className="text-lg font-bold text-slate-800">API Configuration</h3>
+                    <p className="text-[11px] text-slate-400 mt-1">Once configured, you're ready for today's special event</p>
                 </div>
 
                 <div className="px-6 py-4 space-y-4 overflow-y-auto no-scrollbar flex-1">
                     {apiPresets.length > 0 && (
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block pl-1">我的预设</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block pl-1">My Presets</label>
                             <div className="flex gap-2 flex-wrap">
                                 {apiPresets.map(preset => (
                                     <button
@@ -3681,7 +3681,7 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
                     <div>
                         <div className="flex justify-between items-center mb-1.5 pl-1">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model</label>
-                            <button onClick={fetchModels} disabled={isLoadingModels} className="text-[10px] text-pink-500 font-bold">{isLoadingModels ? 'Fetching...' : '刷新模型列表'}</button>
+                            <button onClick={fetchModels} disabled={isLoadingModels} className="text-[10px] text-pink-500 font-bold">{isLoadingModels ? 'Fetching...' : 'Refresh Model List'}</button>
                         </div>
                         <input type="text" value={localModel} onChange={(e) => setLocalModel(e.target.value)} placeholder="gpt-4o-mini" className="w-full bg-white/50 border border-slate-200/60 rounded-xl px-4 py-2.5 text-sm font-mono focus:bg-white transition-all" />
 
@@ -3697,7 +3697,7 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
                     </div>
 
                     <button onClick={handleSave} className="w-full py-3 rounded-2xl font-bold text-white shadow-lg shadow-pink-200 bg-gradient-to-r from-[#FFB6C8] to-[#F18AAA] active:scale-95 transition-all">
-                        {statusMsg || '保存配置'}
+                        {statusMsg || 'Save Configuration'}
                     </button>
 
                     <button
@@ -3709,7 +3709,7 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
                                 : 'border-pink-300 text-pink-500 bg-pink-50 hover:bg-pink-100'
                         }`}
                     >
-                        {testing ? '测试中...' : '🧪 测试连接'}
+                        {testing ? 'Testing...' : '🧪 Test Connection'}
                     </button>
 
                     {testResult && (
@@ -3723,10 +3723,10 @@ const Like520InlineApiSetup: React.FC<{ onDone: () => void; onBack: () => void }
 
                 <div className="px-6 pb-6 pt-2 flex gap-3 shrink-0">
                     <button onClick={onBack} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl active:scale-95 transition-transform text-sm">
-                        返回
+                        Back
                     </button>
                     <button onClick={handleContinue} className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-pink-200 active:scale-95 transition-transform text-sm">
-                        前往活动 ♥
+                        Go to Event ♥
                     </button>
                 </div>
             </div>
@@ -3783,13 +3783,13 @@ export const Like520Controller: React.FC<Like520ControllerProps> = ({ onClose, i
     if (stage === 'popup') {
         const charName = defaultChar?.name || (characters.length === 0 ? '' : '...');
         const popupHeading = defaultChar
-            ? (isSullyDefault ? 'Sully 好像有事找你？' : `${charName} 好像有事找你？`)
-            : '特别活动';
+            ? (isSullyDefault ? 'Sully seems to want something?' : `${charName} seems to want something?`)
+            : 'Special Event';
         const popupBody = defaultChar
             ? (isSullyDefault
-                ? 'ta 突然变得小小的——\n要不要去看看？'
-                : `${charName} 今天有点不一样——\nta 突然变得小小的。`)
-            : '今天是 5 月 20 号——\n但还没有可以陪你的角色。';
+                ? 'They suddenly became tiny——\nwant to go take a look?'
+                : `${charName} is a little different today——\nthey suddenly became tiny.`)
+            : "It's May 20th——\nbut you don't have a character to spend it with yet.";
 
         return (
             <div className="fixed inset-0 z-[9998] flex items-center justify-center p-5 animate-fade-in">
@@ -3806,8 +3806,8 @@ export const Like520Controller: React.FC<Like520ControllerProps> = ({ onClose, i
                         <p className="text-[12px] text-slate-500 mt-3 leading-relaxed whitespace-pre-line">{popupBody}</p>
                         <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">
                             {defaultChar && !isSullyDefault
-                                ? '（想换个 ta？桌面「特别时光」里所有 ta 都在）'
-                                : '（这条提醒只会出现一次，活动随时可以在桌面「特别时光」里找到）'}
+                                ? '（Want someone else? All of them are in 「Special Moments」 on the desktop）'
+                                : '（This reminder only shows once — the event is always in 「Special Moments」 on the desktop）'}
                         </p>
                     </div>
 
@@ -3817,7 +3817,7 @@ export const Like520Controller: React.FC<Like520ControllerProps> = ({ onClose, i
                             disabled={!defaultCharId}
                             className="w-full py-3.5 bg-gradient-to-r from-[#FFB6C8] to-[#F18AAA] text-white font-bold rounded-2xl shadow-lg shadow-pink-200 active:scale-95 transition-transform text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <span>确&nbsp;定</span>
+                            <span>Confirm</span>
                             <span>♥</span>
                         </button>
 
@@ -3825,14 +3825,14 @@ export const Like520Controller: React.FC<Like520ControllerProps> = ({ onClose, i
                             onClick={goToApi}
                             className="w-full py-3 bg-pink-50 text-pink-500 font-semibold rounded-2xl text-sm active:scale-95 transition-transform"
                         >
-                            API 配置
+                            API Configuration
                         </button>
 
                         <button
                             onClick={dismiss}
                             className="w-full py-2 text-slate-400 text-xs"
                         >
-                            不感兴趣
+                            Not Interested
                         </button>
                     </div>
                 </div>
@@ -3863,12 +3863,12 @@ export const Like520Controller: React.FC<Like520ControllerProps> = ({ onClose, i
                 <div className="absolute inset-0 bg-black/40 backdrop-blur" onClick={onClose} />
                 <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/40 overflow-hidden max-h-[80vh] flex flex-col">
                     <div className="px-6 pt-6 pb-3 text-center shrink-0">
-                        <h3 className="text-lg font-bold text-[#5C3A4A]">选一个 ta</h3>
-                        <p className="text-[11px] text-[#9D7585] mt-1">一起度过这个下午</p>
+                        <h3 className="text-lg font-bold text-[#5C3A4A]">Pick someone</h3>
+                        <p className="text-[11px] text-[#9D7585] mt-1">to spend this afternoon with</p>
                     </div>
                     <div className="px-4 pb-4 overflow-y-auto flex-1">
                         {characters.length === 0 ? (
-                            <div className="text-center text-sm text-[#9D7585] py-8">还没有角色呢</div>
+                            <div className="text-center text-sm text-[#9D7585] py-8">No characters yet</div>
                         ) : (
                             <div className="grid grid-cols-2 gap-3">
                                 {characters.map(c => (

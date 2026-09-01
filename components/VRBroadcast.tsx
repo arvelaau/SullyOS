@@ -9,10 +9,10 @@ import React, { useEffect, useRef, useState } from 'react';
 interface ActiveSession { charId: string; charName: string; room: string; novelTitle?: string; }
 
 const ROOM_LABEL: Record<string, { name: string }> = {
-    library: { name: '图书馆' },
-    music: { name: '听歌房' },
-    guestbook: { name: '留言簿' },
-    gym: { name: '活动场' },
+    library: { name: 'Library' },
+    music: { name: 'Music Room' },
+    guestbook: { name: 'Guestbook' },
+    gym: { name: 'Activity Ground' },
 };
 
 const VRBroadcast: React.FC = () => {
@@ -41,8 +41,8 @@ const VRBroadcast: React.FC = () => {
 
     if (active.length === 0) return null;
     const cur = active[active.length - 1];
-    const room = ROOM_LABEL[cur.room] || { name: '彼方' };
-    const extra = active.length > 1 ? ` 等 ${active.length} 人` : '';
+    const room = ROOM_LABEL[cur.room] || { name: 'Beyond' };
+    const extra = active.length > 1 ? ` and ${active.length - 1} others` : '';
 
     return (
         <div className="fixed left-1/2 -translate-x-1/2 z-[999] pointer-events-none"
@@ -65,8 +65,8 @@ const VRBroadcast: React.FC = () => {
                 }} />
                 <span className="relative text-[12px] opacity-80" style={{ filter: 'drop-shadow(0 0 5px rgba(180,195,255,.6))' }}>✦</span>
                 <span className="relative text-[11px] tracking-[0.04em] text-white/90 whitespace-nowrap font-light">
-                    <span className="text-amber-200/90 font-normal">{cur.charName}</span>{extra} 正漫游于彼方 · {room.name}
-                    {cur.novelTitle ? ` 读《${cur.novelTitle}》` : ''}
+                    <span className="text-amber-200/90 font-normal">{cur.charName}</span>{extra} {active.length > 1 ? 'are' : 'is'} wandering in Beyond · {room.name}
+                    {cur.novelTitle ? ` reading 《${cur.novelTitle}》` : ''}
                 </span>
                 <span className="relative flex gap-1">
                     {[0, 1, 2].map(i => (

@@ -16,7 +16,7 @@ const WorldBroadcast: React.FC = () => {
         const onStart = (e: Event) => {
             const d = (e as CustomEvent).detail || {};
             clearHide();
-            setGen({ worldId: d.worldId, worldName: d.worldName || '家园', storyTime: d.storyTime, done: 0, total: d.total || 1 });
+            setGen({ worldId: d.worldId, worldName: d.worldName || 'Homeland', storyTime: d.storyTime, done: 0, total: d.total || 1 });
         };
         const onBeat = (e: Event) => {
             const d = (e as CustomEvent).detail || {};
@@ -47,10 +47,10 @@ const WorldBroadcast: React.FC = () => {
     if (!gen) return null;
     const pct = Math.round((gen.done / Math.max(1, gen.total)) * 100);
     const label = gen.chapter
-        ? `结第 ${gen.chapter} 卷总结中…`
+        ? `Wrapping up chapter ${gen.chapter}…`
         : gen.charName
-            ? `正在演绎 ${gen.charName} · ${gen.done}/${gen.total}`
-            : '世界引擎运转中…';
+            ? `Portraying ${gen.charName} · ${gen.done}/${gen.total}`
+            : 'World engine running…';
 
     return (
         <div className="fixed left-1/2 -translate-x-1/2 z-[999] pointer-events-none" style={{ top: 'calc(var(--safe-top) + 6px)' }}>

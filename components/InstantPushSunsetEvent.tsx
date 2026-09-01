@@ -53,7 +53,7 @@ interface InstantPushSunsetPopupProps {
 
 export const InstantPushSunsetPopup: React.FC<InstantPushSunsetPopupProps> = ({ onClose }) => {
   React.useEffect(() => {
-    trackEvent('弹出 Instant Push 下线通知');
+    trackEvent('Show Instant Push Sunset Notice');
   }, []);
 
   const dismiss = () => {
@@ -62,7 +62,7 @@ export const InstantPushSunsetPopup: React.FC<InstantPushSunsetPopupProps> = ({ 
   };
 
   const handleOpenGuide = () => {
-    trackEvent('打开 Instant Push 迁移教程');
+    trackEvent('Open Instant Push Migration Guide');
     window.open(INSTANT_PUSH_MIGRATION_GUIDE_URL, '_blank', 'noopener,noreferrer');
     dismiss();
   };
@@ -77,33 +77,33 @@ export const InstantPushSunsetPopup: React.FC<InstantPushSunsetPopupProps> = ({ 
             alt="instant push sunset"
             className="w-10 h-10 mx-auto mb-2"
           />
-          <h2 className="text-lg font-extrabold text-slate-800">Instant Push 要下线了</h2>
-          <p className="text-[11px] text-slate-400 mt-1">{INSTANT_PUSH_SUNSET_DATE} 起不再维护</p>
+          <h2 className="text-lg font-extrabold text-slate-800">Instant Push is being sunset</h2>
+          <p className="text-[11px] text-slate-400 mt-1">No longer maintained starting {INSTANT_PUSH_SUNSET_DATE}</p>
         </div>
 
         <div className="px-6 pb-4 space-y-3">
           <div className="bg-gradient-to-br from-amber-50 to-rose-50 border border-amber-100 rounded-2xl p-4 space-y-2">
             <p className="text-[13px] text-slate-700 leading-relaxed">
-              聊天上云这条路交给<strong>主动消息 2.0 · 即时对话</strong>了。它能做的事把
-              Instant Push 全包住，还多出一截：
+              Cloud-based chat is now handled by <strong>Proactive Message 2.0 · Instant Chat</strong>. It covers
+              everything Instant Push could do, and then some:
             </p>
             <ul className="text-[12px] text-slate-600 leading-relaxed list-disc pl-5 space-y-1">
               <li>
-                <strong>部署简单得多</strong>：填一枚 Cloudflare Token 点一下就装好后端，
-                不用再复制 bundle 代码去粘贴，也不用自己盯着 Worker 版本手动更新。
+                <strong>Much simpler to set up</strong>: just enter a Cloudflare Token and the backend installs with one click —
+                no more copying bundle code to paste in, no more manually tracking Worker versions.
               </li>
               <li>
-                <strong>聊天照样上云</strong>：发完就能退出，回复在云端生成好推给你；
-                当时没收到的，下次上线自动补回来。
+                <strong>Chat still runs in the cloud</strong>: send a message and close the app — the reply gets
+                generated in the cloud and pushed to you; anything missed gets delivered automatically next time you're online.
               </li>
               <li>
-                <strong>还有 Instant Push 没有的</strong>：定时主动消息、云端跑 MCP 工具、
-                天气热搜节日感知。
+                <strong>Plus things Instant Push never had</strong>: scheduled proactive messages, cloud-run MCP tools,
+                weather/trending-topic/holiday awareness.
               </li>
             </ul>
             <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
-              迁过去不用动聊天记录和角色，跟着下面的教程配一遍就行。
-              {INSTANT_PUSH_SUNSET_DATE} 之后 Instant Push 这条路不再维护。
+              Migrating won't touch your chat history or characters — just follow the guide below to set it up.
+              After {INSTANT_PUSH_SUNSET_DATE}, Instant Push will no longer be maintained.
             </p>
           </div>
         </div>
@@ -113,13 +113,13 @@ export const InstantPushSunsetPopup: React.FC<InstantPushSunsetPopupProps> = ({ 
             onClick={handleOpenGuide}
             className="w-full py-3.5 font-bold rounded-2xl text-sm transition-transform active:scale-95 bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-lg shadow-amber-200"
           >
-            看迁移教程 →
+            View Migration Guide →
           </button>
           <button
             onClick={dismiss}
             className="w-full py-2.5 text-slate-400 font-medium text-[12px]"
           >
-            知道了（今天不再提醒）
+            Got it (don't remind me again today)
           </button>
         </div>
       </div>

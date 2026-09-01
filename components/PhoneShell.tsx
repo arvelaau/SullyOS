@@ -255,12 +255,12 @@ const getPendingImportMarker = (): ImportRecoveryMarker | null => {
 
 const getImportPhaseLabel = (phase?: string) => {
   switch (phase) {
-    case 'parsing': return '解析备份文件';
-    case 'assets': return '恢复备份素材';
-    case 'database': return '写入数据库';
-    case 'settings': return '恢复系统设置';
-    case 'error': return '导入报错';
-    default: return '导入流程';
+    case 'parsing': return 'Parsing backup file';
+    case 'assets': return 'Restoring backup assets';
+    case 'database': return 'Writing to database';
+    case 'settings': return 'Restoring system settings';
+    case 'error': return 'Import error';
+    default: return 'Import process';
   }
 };
 
@@ -273,28 +273,28 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
       {/* Header */}
       <div className="pt-7 pb-3 px-6 text-center">
         <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4e2.png" alt="announcement" className="w-8 h-8 mb-2" />
-        <h2 className="text-lg font-extrabold text-slate-800">免责声明</h2>
-        <p className="text-[11px] text-slate-400 mt-1">Disclaimer · 手抓糯米机 (SullyOS)</p>
+        <h2 className="text-lg font-extrabold text-slate-800">Disclaimer</h2>
+        <p className="text-[11px] text-slate-400 mt-1">Disclaimer · Hand-Grabbed Mochi Machine (SullyOS)</p>
       </div>
 
       {/* Content */}
       <div className="px-6 pb-4 max-h-[55vh] overflow-y-auto no-scrollbar space-y-3">
         <p className="text-[13px] text-slate-600 leading-relaxed">
-          本项目「手抓糯米机 (SullyOS)」是一个<strong className="text-slate-800">完全开源、免费</strong>的软件，仅供个人学习、研究与技术交流使用。
+          This project, 「Hand-Grabbed Mochi Machine (SullyOS)」, is a <strong className="text-slate-800">completely open-source, free</strong> piece of software, intended only for personal learning, research, and technical exchange.
         </p>
         <ul className="text-[12px] text-slate-500 leading-relaxed space-y-1.5 list-none">
-          <li className="flex gap-2"><span className="shrink-0">•</span><span>本软件不提供任何明示或暗示的担保，作者不对使用本软件产生的任何后果承担责任。</span></li>
-          <li className="flex gap-2"><span className="shrink-0">•</span><span>用户应自行承担使用本软件的一切风险，包括但不限于数据丢失、设备损坏等。</span></li>
-          <li className="flex gap-2"><span className="shrink-0">•</span><span>本软件生成的任何 AI 内容均不代表作者立场，用户需自行判断内容的准确性与合规性。</span></li>
-          <li className="flex gap-2"><span className="shrink-0">•</span><span>禁止将本软件用于任何违反当地法律法规的用途。</span></li>
+          <li className="flex gap-2"><span className="shrink-0">•</span><span>This software comes with no warranty of any kind, express or implied. The author is not liable for any consequences arising from its use.</span></li>
+          <li className="flex gap-2"><span className="shrink-0">•</span><span>Users assume all risk from using this software, including but not limited to data loss and device damage.</span></li>
+          <li className="flex gap-2"><span className="shrink-0">•</span><span>Any AI-generated content from this software does not represent the author's views; users must judge its accuracy and compliance for themselves.</span></li>
+          <li className="flex gap-2"><span className="shrink-0">•</span><span>Using this software for any purpose that violates local laws or regulations is prohibited.</span></li>
         </ul>
 
         {/* Highlighted warning */}
         <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mt-3">
           <p className="text-[13px] font-bold text-red-600 text-center leading-relaxed">
-            本程序完全免费！<br />
-            如果您是通过<span className="underline decoration-2 decoration-red-400">付费购买</span>获得此程序的，说明您已被倒卖欺骗。<br />
-            请向售卖者维权追责！
+            This program is completely free!<br />
+            If you obtained it through a <span className="underline decoration-2 decoration-red-400">paid purchase</span>, you've been scammed by a reseller.<br />
+            Please seek accountability from the seller!
           </p>
         </div>
       </div>
@@ -305,7 +305,7 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
           onClick={onAccept}
           className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 active:scale-95 transition-transform text-sm"
         >
-          我已知悉，继续使用
+          I understand, continue
         </button>
       </div>
     </div>
@@ -337,15 +337,15 @@ const ImportRecoveryPopup: React.FC<{
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
       <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/30 overflow-hidden animate-slide-up">
         <div className="pt-7 pb-3 px-6 text-center">
-          <h2 className="text-lg font-extrabold text-slate-800">{hasError ? '上次导入失败了' : '上次导入被中断了'}</h2>
-          <p className="text-[11px] text-slate-400 mt-1">{hasError ? '错误信息已记录在本机' : '数据还没有完整恢复'}</p>
+          <h2 className="text-lg font-extrabold text-slate-800">{hasError ? 'Your last import failed' : 'Your last import was interrupted'}</h2>
+          <p className="text-[11px] text-slate-400 mt-1">{hasError ? 'Error details have been saved locally' : 'The data has not been fully restored yet'}</p>
         </div>
 
         <div className="px-6 pb-4 space-y-3 max-h-[58vh] overflow-y-auto no-scrollbar">
           <p className="text-[13px] text-slate-600 leading-relaxed">
             {hasError
-              ? '系统检测到上一次导入过程中发生了错误。请重新导入同一个备份文件，避免数据只恢复了一半。'
-              : '系统检测到上一次导入没有走到完成步骤，可能是浏览器或系统在导入过程中强制重启了。请重新导入同一个备份文件，避免数据只恢复了一半。'}
+              ? 'The system detected an error during the last import. Please re-import the same backup file to avoid ending up with only half the data restored.'
+              : 'The system detected that the last import never reached the completion step — the browser or system may have force-restarted mid-import. Please re-import the same backup file to avoid ending up with only half the data restored.'}
           </p>
           {hasError && (
             <div className="bg-red-50 border border-red-200 rounded-2xl p-3 text-[12px] text-red-700 leading-relaxed whitespace-pre-wrap break-words select-text">
@@ -353,16 +353,16 @@ const ImportRecoveryPopup: React.FC<{
             </div>
           )}
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[12px] text-amber-700 leading-relaxed">
-            <div>中断阶段：{phaseLabel}</div>
-            {marker.current && <div>当前部分：{marker.current}</div>}
-            {hasItemProgress && <div>条目进度：{marker.itemDone || 0}/{marker.itemTotal}</div>}
-            {hasAssetProgress && <div>素材进度：{marker.assetDone || 0}/{marker.assetTotal}</div>}
+            <div>Interrupted at: {phaseLabel}</div>
+            {marker.current && <div>Current section: {marker.current}</div>}
+            {hasItemProgress && <div>Item progress: {marker.itemDone || 0}/{marker.itemTotal}</div>}
+            {hasAssetProgress && <div>Asset progress: {marker.assetDone || 0}/{marker.assetTotal}</div>}
             {marker.currentFile && (
-              <div className="break-all">当前文件：{marker.currentFile}{currentFileSize ? ` · ${currentFileSize}` : ''}</div>
+              <div className="break-all">Current file: {marker.currentFile}{currentFileSize ? ` · ${currentFileSize}` : ''}</div>
             )}
-            {startedAt && <div>开始时间：{startedAt}</div>}
-            {updatedAt && <div>最后进度：{updatedAt}</div>}
-            {marker.source && <div className="break-all">备份文件：{marker.source}{sourceSize ? ` · ${sourceSize}` : ''}</div>}
+            {startedAt && <div>Started at: {startedAt}</div>}
+            {updatedAt && <div>Last progress: {updatedAt}</div>}
+            {marker.source && <div className="break-all">Backup file: {marker.source}{sourceSize ? ` · ${sourceSize}` : ''}</div>}
           </div>
         </div>
 
@@ -371,13 +371,13 @@ const ImportRecoveryPopup: React.FC<{
             onClick={onLater}
             className="py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl active:scale-95 transition-transform text-sm"
           >
-            稍后再说
+            Later
           </button>
           <button
             onClick={onReimport}
             className="py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 active:scale-95 transition-transform text-sm"
           >
-            去重新导入
+            Re-import Now
           </button>
         </div>
       </div>
@@ -401,32 +401,32 @@ const AppLoadingFallback: React.FC<{ onReturn?: () => void; animationEnabled?: b
     // Suspense 会永远停在这一屏（不报错 → 错误边界不触发 → 不会自动刷新），用户狂点中心光点却毫无反应。
     // 超过 STALL_MS 仍未加载完 → 把「看着像按钮其实不是」的光点换成真正可点的「刷新/返回」按钮，
     // 既明确告诉用户该点哪里，又把静默卡死变成一键可恢复。只动占位 UI，不碰 import 逻辑。
-    const stall = setTimeout(() => { setStalled(true); trackEvent('App 加载卡死超时'); }, 15_000);
+    const stall = setTimeout(() => { setStalled(true); trackEvent('App Load Stall Timeout'); }, 15_000);
     return () => { if (t) clearTimeout(t); clearTimeout(stall); };
   }, [animationEnabled]);
   if (stalled) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900/95 text-white p-6 text-center space-y-4" style={{ animation: 'appLoadIn 320ms ease-out both' }}>
         <style>{`@keyframes appLoadIn{from{opacity:0}to{opacity:1}}`}</style>
-        <h2 className="text-base font-bold">加载有点慢…</h2>
+        <h2 className="text-base font-bold">Loading is taking a while…</h2>
         <p className="text-xs text-slate-300 max-w-xs leading-relaxed">
-          首次打开会下载并解析功能代码；网络波动或设备性能较低都可能变慢。页面仍在继续加载，若长时间没有恢复再刷新。
+          First-time opening downloads and parses the feature code; network hiccups or a lower-end device can slow this down. The page is still loading — only refresh if it doesn't recover after a while.
         </p>
         <div className="flex flex-col gap-3 w-full max-w-xs">
           <button
             type="button"
-            onClick={() => { trackEvent('卡死页点刷新恢复'); window.location.reload(); }}
+            onClick={() => { trackEvent('Tap Refresh on Stall Screen'); window.location.reload(); }}
             className="w-full px-6 py-3 bg-red-600 rounded-full font-bold text-sm shadow-lg active:scale-95 transition-transform"
           >
-            刷新恢复
+            Refresh
           </button>
           {onReturn && (
             <button
               type="button"
-              onClick={() => { onReturn(); trackEvent('从卡死页返回桌面'); }}
+              onClick={() => { onReturn(); trackEvent('Return to Desktop from Stall Screen'); }}
               className="w-full px-4 py-2 bg-slate-700 rounded-full text-xs font-bold active:scale-95 transition-transform"
             >
-              返回桌面
+              Return to Desktop
             </button>
           )}
         </div>
@@ -588,10 +588,10 @@ const PhoneShell: React.FC = () => {
       ? phase
       : 'other';
     const hasError = !!importRecoveryMarker?.error;
-    trackEvent('弹出上次导入未完成提醒', { kind: hasError ? '失败' : '中断', stage });
-    trackEvent('弹出导入中断恢复提醒', {
-      中断类型: hasError ? '导入失败' : '导入被中断',
-      中断阶段: getImportPhaseLabel(phase),
+    trackEvent('Show Unfinished Import Reminder', { kind: hasError ? 'Failure' : 'Interrupted', stage });
+    trackEvent('Show Import Interruption Recovery Reminder', {
+      'Interruption Type': hasError ? 'Import Failed' : 'Import Interrupted',
+      'Interruption Stage': getImportPhaseLabel(phase),
     });
   }, [showDisclaimer, showImportRecoveryPrompt, importRecoveryMarker]);
 
@@ -599,7 +599,7 @@ const PhoneShell: React.FC = () => {
     setImportRecoveryDismissed(true);
     setImportRecoveryMarker(null);
     openApp(AppID.Settings);
-    trackEvent('点去重新导入', { kind: importRecoveryMarker?.error ? '失败' : '中断' });
+    trackEvent('Tap Re-import Now', { kind: importRecoveryMarker?.error ? 'Failure' : 'Interrupted' });
   };
 
   // 「致用户的一封信」已下线：常量置 false，保留变量让下面弹窗链的条件继续成立（恒真/恒不显示）。
@@ -699,20 +699,20 @@ const PhoneShell: React.FC = () => {
     if (shouldShowBackupReminder()) {
       setShowBackupReminder(true);
       // 只报「从未备份 / 已过期」这一个二选一，不报具体天数、也不报用户设的提醒间隔。
-      trackEvent('弹出该备份啦提醒', { state: daysSinceLastBackup() == null ? '从未备份' : '已过期' });
+      trackEvent('Show Time to Back Up Reminder', { state: daysSinceLastBackup() == null ? 'Never backed up' : 'Overdue' });
     }
   }, [showDisclaimer, showImportRecoveryPrompt, showAuthorLetter, showUpdateNotification, showQixiLaunchPopup, showLike520Popup, showInstantPushSunset, showWorkerUpdateReminder, isDataLoaded, isLocked]);
 
   const dismissBackupReminder = () => {
     markBackupReminderShown();
     setShowBackupReminder(false);
-    trackEvent('点知道了稍后再说');
+    trackEvent('Tap Got It, Later');
   };
   const goBackupFromReminder = () => {
     markBackupReminderShown();
     setShowBackupReminder(false);
     openApp(AppID.Settings);
-    trackEvent('点立即备份');
+    trackEvent('Tap Back Up Now');
   };
 
   // Web browsers normally interpret an edge-swipe/back shortcut as leaving SullyOS.
@@ -915,7 +915,7 @@ const PhoneShell: React.FC = () => {
            </div>
            {acnhSkin ? (
                <div className="text-lg tracking-widest opacity-90 mt-2 text-xs font-bold flex items-center justify-center gap-1.5">
-                   <span>🍃</span><span>无人岛生活</span><span>🍃</span>
+                   <span>🍃</span><span>Deserted Island Life</span><span>🍃</span>
                </div>
            ) : (
                <div className="text-lg tracking-widest opacity-90 mt-2 uppercase text-xs font-bold">SullyOS Simulation</div>
@@ -931,10 +931,10 @@ const PhoneShell: React.FC = () => {
                     <div className="flex-1 min-w-0 text-white text-left">
                         <div className="font-bold text-sm flex justify-between">
                             <span>{unreadChar ? unreadChar.name : 'Message'}</span>
-                            <span className="text-[10px] opacity-70">刚刚</span>
+                            <span className="text-[10px] opacity-70">Just now</span>
                         </div>
                         <div className="text-xs opacity-90 truncate">
-                            {unreadCount > 1 ? `收到 ${unreadCount} 条新消息` : '发来了一条新消息'}
+                            {unreadCount > 1 ? `Received ${unreadCount} new messages` : 'Sent a new message'}
                         </div>
                     </div>
                 </div>
@@ -1058,8 +1058,8 @@ const PhoneShell: React.FC = () => {
               className="absolute top-7 left-0 w-full z-[55] flex items-center justify-center gap-2 bg-emerald-500 text-white text-xs font-bold py-1.5 animate-pulse cursor-pointer active:bg-emerald-600 transition-colors"
             >
               <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-              <span>通话中 · {suspendedCall.charName}</span>
-              <span className="opacity-70">点击返回</span>
+              <span>In call · {suspendedCall.charName}</span>
+              <span className="opacity-70">Tap to return</span>
             </button>
           )}
 
@@ -1103,8 +1103,8 @@ const PhoneShell: React.FC = () => {
            onLater={() => {
              setImportRecoveryDismissed(true);
              setImportRecoveryMarker(null);
-             trackEvent('点稍后再说放着不管', { kind: importRecoveryMarker?.error ? '失败' : '中断' });
-             trackEvent('导入恢复提醒选稍后再说', { 中断阶段: getImportPhaseLabel(importRecoveryMarker?.phase) });
+             trackEvent('Tap Later, Leave It', { kind: importRecoveryMarker?.error ? 'Failure' : 'Interrupted' });
+             trackEvent('Import Recovery Reminder: Chose Later', { 'Interruption Stage': getImportPhaseLabel(importRecoveryMarker?.phase) });
            }}
            onReimport={handleReimportFromRecovery}
          />

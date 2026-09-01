@@ -82,25 +82,25 @@ const TaskRow: React.FC<{ view: Amsg2DebugTaskView; nowMs: number }> = ({ view, 
     return (
         <div style={{ borderTop: `1px solid ${C.line}`, padding: '5px 0' }}>
             {occurrenceMs == null ? (
-                <div style={{ color: C.red }}>触发时间解析不了：{task.firstSendTime}</div>
+                <div style={{ color: C.red }}>Could not parse trigger time: {task.firstSendTime}</div>
             ) : dead ? (
                 // 只说「已过点」，不说「未发」：这个面板是纯本地派生、不查远端，发没发它并不知道。
                 // 断言成「未发」会把排查带偏——实测就有过任务其实早被 worker 消费掉、面板却写着未发。
                 // 要分辨发没发，看设置面板里那条任务的进度（它会拿远端底账对账）。
                 <div style={{ color: C.dim }}>
-                    {view.charName} · {state === 'cancelled' ? '已取消' : '已过点'} · 原定 {hhmmss(occurrenceMs)}
+                    {view.charName} · {state === 'cancelled' ? 'Cancelled' : 'Past due'} · Originally {hhmmss(occurrenceMs)}
                 </div>
             ) : (
                 <>
                     <div style={{ fontSize: 17, fontWeight: 700, color }}>
                         {formatCountdown(occurrenceMs - nowMs)}
-                        {state === 'firing' && <span style={{ fontSize: 11 }}> 触发窗口内</span>}
+                        {state === 'firing' && <span style={{ fontSize: 11 }}> in trigger window</span>}
                     </div>
                     {/* 「开跑」不是「送达」：cron 到点只负责把任务捞起来开始生成，
                         消息还要等 LLM 出完内容才推出去。 */}
                     <div style={{ color: C.dim }}>
-                        {view.charName} · {cronTickMs != null ? hhmmss(cronTickMs) : '—'} 开跑
-                        {!view.charEnabled && <span style={{ color: C.red }}> [已关]</span>}
+                        {view.charName} · {cronTickMs != null ? hhmmss(cronTickMs) : '—'} started
+                        {!view.charEnabled && <span style={{ color: C.red }}> [off]</span>}
                     </div>
                 </>
             )}
@@ -320,7 +320,7 @@ const Amsg2DebugPanel: React.FC = () => {
                 backdropFilter: 'blur(4px)',
             }}
             role="dialog"
-            aria-label="amsg2 调试面板"
+            aria-label="amsg2 debug panel"
         >
             {/* 标题栏固定，内容区自己滚——不然列表一长，切全屏 / 关闭的按钮就滚没了。
                 这一整条同时是拖动把手：touchAction none 让手机上按住横竖拖都归我们，不被页面滚动抢走。 */}
@@ -340,23 +340,23 @@ const Amsg2DebugPanel: React.FC = () => {
                     <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <HeaderButton
                             onClick={() => setFullscreen((v) => !v)}
-                            label={fullscreen ? '缩回小窗' : '铺满全屏'}
+                            label={fullscreen ? 'Collapse to window' : 'Expand to fullscreen'}
                         >
                             {fullscreen ? <CornersIn size={13} weight="bold" /> : <CornersOut size={13} weight="bold" />}
                         </HeaderButton>
-                        <HeaderButton onClick={close} label="关闭 amsg2 调试面板">
+                        <HeaderButton onClick={close} label="Close amsg2 debug panel">
                             <X size={13} weight="bold" />
                         </HeaderButton>
                     </span>
                 </div>
                 <div style={{ color: C.dim, marginBottom: 6 }}>
-                    now {hhmmss(nowMs)} · cron 每整分 · 待触发 {liveCount}/{views.length}
+                    now {hhmmss(nowMs)} · cron every minute · pending {liveCount}/{views.length}
                 </div>
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 {views.length === 0 ? (
-                    <div style={{ color: C.dim }}>（无 amsg2 任务）</div>
+                    <div style={{ color: C.dim }}>(no amsg2 tasks)</div>
                 ) : (
                     views.map((view) => (
                         <TaskRow key={`${view.charId}:${view.task.taskUuid}`} view={view} nowMs={nowMs} />
@@ -377,7 +377,7 @@ const Amsg2DebugPanel: React.FC = () => {
                 >
                     <span>
                         <b>trace</b>
-                        <span style={{ color: C.dim, fontSize: 11 }}> 最近 {TRACE_SHOWN} 条 · 无条件记录</span>
+                        <span style={{ color: C.dim, fontSize: 11 }}> last {TRACE_SHOWN} · unconditional log</span>
                     </span>
                     {/* 下面列表只显示得下几行，缓冲里其实攒着两百条。远端排障要的是「一小时前
                         那会儿发生了什么」，全靠这个按钮把它们交出来。 */}
@@ -393,13 +393,13 @@ const Amsg2DebugPanel: React.FC = () => {
                             flexShrink: 0,
                         }}
                     >
-                        {traceExport === 'copied' ? '已复制'
-                            : traceExport === 'failed' ? '复制失败'
-                                : traceTotal === 0 ? '暂无' : `复制全部 (${traceTotal})`}
+                        {traceExport === 'copied' ? 'Copied'
+                            : traceExport === 'failed' ? 'Copy failed'
+                                : traceTotal === 0 ? 'None yet' : `Copy All (${traceTotal})`}
                     </button>
                 </div>
                 {traces.length === 0 ? (
-                    <div style={{ color: C.dim, fontSize: 11 }}>（暂无）</div>
+                    <div style={{ color: C.dim, fontSize: 11 }}>(none yet)</div>
                 ) : (
                     traces.map((entry, index) => (
                         <div
