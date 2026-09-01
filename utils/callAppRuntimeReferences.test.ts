@@ -59,9 +59,9 @@ describe('CallApp runtime references', () => {
     expect(source).toContain('callPreferences.idleNudgeEnabled');
     expect(preferenceSource).toContain('characterInitiative: true');
     expect(preferenceSource).toContain('idleNudgeEnabled: false');
-    expect(preferenceSheetSource).toContain('谁先开口');
-    expect(preferenceSheetSource).toContain('对方先说');
-    expect(preferenceSheetSource).toContain('我先说');
+    expect(preferenceSheetSource).toContain('Who speaks first');
+    expect(preferenceSheetSource).toContain('They speak first');
+    expect(preferenceSheetSource).toContain('I speak first');
   });
 
   it('keeps call autoplay separate from ChatApp and defers TTS when it is disabled', () => {
@@ -79,8 +79,8 @@ describe('CallApp runtime references', () => {
     expect(source).toContain("trackEvent('按需生成并播放通话语音')");
     expect(source).toContain('shouldKeepNativeCallAudio');
     expect(source).not.toContain('<audio');
-    expect(preferenceSheetSource).toContain('不改变聊天页的语音设置');
-    expect(preferenceSheetSource).toContain('语音和视频通话都只在你点“播放语音”时才生成');
+    expect(preferenceSheetSource).toContain("the chat page's voice settings are unchanged");
+    expect(preferenceSheetSource).toContain('voice and video calls only generate audio when you tap "Play Voice"');
   });
 
   it('announces the call update once and spotlights the lower-left preferences entry', () => {
@@ -94,10 +94,10 @@ describe('CallApp runtime references', () => {
     expect(preferenceSource).toContain("CALL_UPDATE_ANNOUNCEMENT_KEY = 'sully-call-update-preferences-2026-08-v2'");
     expect(announcementSource).toContain('data-testid="call-update-announcement"');
     expect(announcementSource).toContain('data-testid="call-settings-spotlight"');
-    expect(announcementSource).toContain('通话偏好现在有三项');
-    expect(announcementSource).toContain('可以设置谁先开口');
-    expect(announcementSource).toContain('两种通话都不会提前生成语音');
-    expect(announcementSource).toContain('沉默后主动接话改为按需开启');
+    expect(announcementSource).toContain('Call preferences now has three options');
+    expect(announcementSource).toContain('You can set who speaks first');
+    expect(announcementSource).toContain('neither call type pre-generates voice');
+    expect(announcementSource).toContain('Speaking up after silence is now opt-in');
   });
 
   it('offers game-like video layouts and a collapsible immersive subtitle', () => {
@@ -230,12 +230,12 @@ describe('CallApp runtime references', () => {
     expect(source).toContain("selectedVisualSource !== 'model'");
     expect(source).toContain('staticPortraitValue={staticVideoPortrait}');
     expect(guideSource).toContain('data-testid="call-setup-guide"');
-    expect(guideSource).toContain("['upload', '静态图片']");
-    expect(guideSource).toContain("['date', '见面立绘']");
-    expect(guideSource).toContain('校准构图、动作与真·衣橱');
-    expect(guideSource).toContain('下次打开仍从关闭开始');
-    expect(guideSource).toContain('本地情绪只注入');
-    expect(guideSource).toContain('静态机位永远不随消息发送');
+    expect(guideSource).toContain("['upload', 'Static image']");
+    expect(guideSource).toContain("['date', 'Date portrait']");
+    expect(guideSource).toContain('Calibrate framing, actions and the real wardrobe');
+    expect(guideSource).toContain('it starts off again next time');
+    expect(guideSource).toContain('Local emotion only injects');
+    expect(guideSource).toContain('Static shot is never sent with messages');
     expect(stageSource).toContain('testId="video-call-static-portrait-stage"');
     expect(stageSource).toContain('staticAvatarActive ? `static-${staticAvatarSource}`');
   });
@@ -264,7 +264,7 @@ describe('CallApp runtime references', () => {
 
     expect(source).toContain('setPendingVRoidImport({ file, characterId: character.id, projectFile: false })');
     expect(source).toContain('const confirmVRoidImport = async () =>');
-    expect(warningSource).toContain('并不是本次版本的开发重点');
-    expect(warningSource).toContain('可能存在各种 Bug');
+    expect(warningSource).toContain("isn't the focus of this release");
+    expect(warningSource).toContain('may have various bugs');
   });
 });

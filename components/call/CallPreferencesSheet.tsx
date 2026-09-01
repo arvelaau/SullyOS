@@ -42,14 +42,14 @@ const CallPreferencesSheet: React.FC<CallPreferencesSheetProps> = ({
         <header className="flex items-start justify-between gap-4">
           <div>
             <div className={`text-[9px] font-semibold tracking-[0.28em] ${lightTheme ? 'text-[#262239]/45' : 'text-white/35'}`}>CALL PREFERENCES</div>
-            <h2 id="call-preferences-title" className={`mt-1 text-lg font-semibold ${lightTheme ? 'text-[#262239]' : 'text-white/90'}`}>通话偏好</h2>
-            <p className={`mt-1 text-[11px] leading-5 ${lightTheme ? 'text-[#262239]/60' : 'text-white/40'}`}>只影响语音和视频通话，不改变聊天页的语音设置。</p>
+            <h2 id="call-preferences-title" className={`mt-1 text-lg font-semibold ${lightTheme ? 'text-[#262239]' : 'text-white/90'}`}>Call Preferences</h2>
+            <p className={`mt-1 text-[11px] leading-5 ${lightTheme ? 'text-[#262239]/60' : 'text-white/40'}`}>Only affects voice and video calls — the chat page's voice settings are unchanged.</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition active:scale-90 ${lightTheme ? 'border-[#262239]/12 bg-[#262239]/[0.04] text-[#262239]/60' : 'border-white/12 bg-white/[0.04] text-white/55'}`}
-            aria-label="关闭通话偏好"
+            aria-label="Close call preferences"
           >
             <X size={15} weight="bold" />
           </button>
@@ -65,14 +65,14 @@ const CallPreferencesSheet: React.FC<CallPreferencesSheetProps> = ({
                 <Phone size={17} weight="fill" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className={`block text-[13px] font-medium ${lightTheme ? 'text-[#262239]/90' : 'text-white/85'}`}>谁先开口</span>
-                <span className={`mt-0.5 block text-[10px] leading-4 ${lightTheme ? 'text-[#262239]/55' : 'text-white/38'}`}>选择电话接通后由谁先说第一句话。</span>
+                <span className={`block text-[13px] font-medium ${lightTheme ? 'text-[#262239]/90' : 'text-white/85'}`}>Who speaks first</span>
+                <span className={`mt-0.5 block text-[10px] leading-4 ${lightTheme ? 'text-[#262239]/55' : 'text-white/38'}`}>Choose who says the first word once the call connects.</span>
               </span>
             </div>
-            <div className="ml-12 mt-3 grid grid-cols-2 gap-2" role="group" aria-label="谁先开口">
+            <div className="ml-12 mt-3 grid grid-cols-2 gap-2" role="group" aria-label="Who speaks first">
               {([
-                { value: true, label: '对方先说' },
-                { value: false, label: '我先说' },
+                { value: true, label: 'They speak first' },
+                { value: false, label: 'I speak first' },
               ]).map(option => {
                 const selected = preferences.characterInitiative === option.value;
                 return (
@@ -101,14 +101,14 @@ const CallPreferencesSheet: React.FC<CallPreferencesSheetProps> = ({
               <SpeakerHigh size={17} weight="fill" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className={`block text-[13px] font-medium ${lightTheme ? 'text-[#262239]/90' : 'text-white/85'}`}>自动播放语音</span>
-              <span className={`mt-0.5 block text-[10px] leading-4 ${lightTheme ? 'text-[#262239]/55' : 'text-white/38'}`}>默认开启并沿用你的选择。关掉后，语音和视频通话都只在你点“播放语音”时才生成，避免额外消耗额度。</span>
+              <span className={`block text-[13px] font-medium ${lightTheme ? 'text-[#262239]/90' : 'text-white/85'}`}>Auto-play voice</span>
+              <span className={`mt-0.5 block text-[10px] leading-4 ${lightTheme ? 'text-[#262239]/55' : 'text-white/38'}`}>On by default and remembers your choice. When off, voice and video calls only generate audio when you tap "Play Voice", saving on usage.</span>
             </span>
             <button
               type="button"
               role="switch"
               aria-checked={preferences.voiceAutoPlay}
-              aria-label="自动播放语音"
+              aria-label="Auto-play voice"
               onClick={() => onChange({ ...preferences, voiceAutoPlay: !preferences.voiceAutoPlay })}
               className="relative h-7 w-12 shrink-0 rounded-full border transition-all duration-200 active:scale-95"
               style={preferences.voiceAutoPlay
@@ -130,14 +130,14 @@ const CallPreferencesSheet: React.FC<CallPreferencesSheetProps> = ({
               <ChatCircleDots size={17} weight="fill" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className={`block text-[13px] font-medium ${lightTheme ? 'text-[#262239]/90' : 'text-white/85'}`}>沉默后主动接话</span>
-              <span className={`mt-0.5 block text-[10px] leading-4 ${lightTheme ? 'text-[#262239]/55' : 'text-white/38'}`}>按需开启。通话安静较久时，对方最多主动接话两次；默认关闭，不会自行发起请求。</span>
+              <span className={`block text-[13px] font-medium ${lightTheme ? 'text-[#262239]/90' : 'text-white/85'}`}>Speak up after silence</span>
+              <span className={`mt-0.5 block text-[10px] leading-4 ${lightTheme ? 'text-[#262239]/55' : 'text-white/38'}`}>Opt-in. If the call goes quiet for a while, they will speak up at most twice on their own; off by default, so nothing happens automatically.</span>
             </span>
             <button
               type="button"
               role="switch"
               aria-checked={preferences.idleNudgeEnabled}
-              aria-label="沉默后主动接话"
+              aria-label="Speak up after silence"
               onClick={() => onChange({ ...preferences, idleNudgeEnabled: !preferences.idleNudgeEnabled })}
               className="relative h-7 w-12 shrink-0 rounded-full border transition-all duration-200 active:scale-95"
               style={preferences.idleNudgeEnabled
@@ -157,7 +157,7 @@ const CallPreferencesSheet: React.FC<CallPreferencesSheetProps> = ({
           onClick={onOpenSystemSettings}
           className={`mt-3 flex w-full items-center justify-center gap-2 py-2 text-[11px] transition active:opacity-60 ${lightTheme ? 'text-[#262239]/55' : 'text-white/42'}`}
         >
-          <Gear size={14} weight="fill" /> 更多语音与 API 设置
+          <Gear size={14} weight="fill" /> More voice & API settings
         </button>
       </section>
     </div>

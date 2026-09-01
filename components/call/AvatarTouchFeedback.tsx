@@ -119,7 +119,7 @@ const AvatarTouchFeedback: React.FC<AvatarTouchFeedbackProps> = ({
               boxShadow: `0 8px 28px rgba(0,0,0,.24), 0 0 18px ${accentColor}33`,
               animation: 'sully-touch-float-copy 1650ms cubic-bezier(.2,.8,.2,1) both',
             }}
-          >~ ♥ 你戳了戳 {characterName} 的{effect.label} ♥ ~</span>
+          >~ ♥ you poked {characterName}'s {effect.label} ♥ ~</span>
         </React.Fragment>
       );
     })}

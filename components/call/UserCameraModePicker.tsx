@@ -21,10 +21,10 @@ const MODES: Array<{
   tag: string;
   description: string;
 }> = [
-  { id: 'off', index: '0', title: '关闭', tag: 'DEFAULT', description: '不打开摄像头，也不添加任何视觉上下文' },
-  { id: 'fake', index: '1', title: '假摄像头', tag: 'STILL', description: '放一张自己的图片，只让通话截图更好看' },
-  { id: 'emotion', index: '2', title: '本地情绪', tag: 'LOCAL', description: '本机识别表情，只提交一小段情绪文字' },
-  { id: 'snapshot', index: '3', title: '每轮快照', tag: 'VISION', description: '发送时取一帧；记录只保留最近 3 轮，旧图显示 [图片]' },
+  { id: 'off', index: '0', title: 'Off', tag: 'DEFAULT', description: 'Camera stays off, no visual context added' },
+  { id: 'fake', index: '1', title: 'Fake camera', tag: 'STILL', description: 'Use a photo of yourself, just to make call screenshots look nicer' },
+  { id: 'emotion', index: '2', title: 'Local emotion', tag: 'LOCAL', description: 'Recognizes expressions locally, only submits a short emotion text' },
+  { id: 'snapshot', index: '3', title: 'Snapshot per turn', tag: 'VISION', description: 'Captures a frame when sending; history keeps only the last 3 turns, older images show [Image]' },
 ];
 
 const UserCameraModePicker: React.FC<UserCameraModePickerProps> = ({
@@ -51,7 +51,7 @@ const UserCameraModePicker: React.FC<UserCameraModePickerProps> = ({
 
   return (
     <div className="absolute inset-0 z-[180] flex items-end bg-black/66 backdrop-blur-sm" data-testid="user-camera-mode-picker">
-      <button type="button" aria-label="关闭用户摄像头方式" className="absolute inset-0" disabled={busy} onClick={onClose} />
+      <button type="button" aria-label="Close user camera mode" className="absolute inset-0" disabled={busy} onClick={onClose} />
       <div
         ref={dialogRef}
         role="dialog"
@@ -67,11 +67,11 @@ const UserCameraModePicker: React.FC<UserCameraModePickerProps> = ({
           <div className="flex items-start justify-between gap-4">
             <div>
               <span className="text-[9px] font-semibold tracking-[0.24em] opacity-40">USER CAMERA / PRIVACY</span>
-              <h2 id="user-camera-mode-title" className="mt-1 text-[18px] font-semibold">选择你的画面方式</h2>
+              <h2 id="user-camera-mode-title" className="mt-1 text-[18px] font-semibold">Choose how you appear</h2>
             </div>
-            <button type="button" onClick={onClose} disabled={busy} className="rounded-full border border-current/10 px-3 py-1.5 text-[11px] opacity-55 transition active:scale-95">完成</button>
+            <button type="button" onClick={onClose} disabled={busy} className="rounded-full border border-current/10 px-3 py-1.5 text-[11px] opacity-55 transition active:scale-95">Done</button>
           </div>
-          <p className="mt-2 text-[11px] leading-5 opacity-48">模式默认关闭；假摄像头静态图绝不会发送。只有你主动选择的情绪文字或单帧快照会进入当前请求；快照会在本机记录中保留最近 3 轮。</p>
+          <p className="mt-2 text-[11px] leading-5 opacity-48">Mode is off by default; the fake camera's static image is never sent. Only emotion text or a single-frame snapshot you actively choose enters the current request; snapshots are kept for the last 3 turns in local history.</p>
         </div>
 
         <div className="border-y border-current/10">
@@ -97,10 +97,10 @@ const UserCameraModePicker: React.FC<UserCameraModePickerProps> = ({
                     <span className="text-[14px] font-medium">{option.title}</span>
                     <span className="text-[8px] tracking-[0.18em] opacity-35">{option.tag}</span>
                   </span>
-                  <span className="mt-0.5 block text-[10px] leading-4 opacity-48">{fakeNeedsImage ? '先选择一张本机图片，再作为你的静态画面' : option.description}</span>
+                  <span className="mt-0.5 block text-[10px] leading-4 opacity-48">{fakeNeedsImage ? 'Choose a local image first to use as your static picture' : option.description}</span>
                 </span>
                 <span className="min-w-[3rem] text-right text-[10px] font-medium" style={{ color: active ? accentColor : undefined, opacity: active ? 1 : 0.34 }}>
-                  {busy && option.id !== 'off' ? '准备中' : active ? '使用中' : fakeNeedsImage ? '选图片' : '选择'}
+                  {busy && option.id !== 'off' ? 'Preparing' : active ? 'In use' : fakeNeedsImage ? 'Choose image' : 'Choose'}
                 </span>
               </button>
             );
@@ -109,8 +109,8 @@ const UserCameraModePicker: React.FC<UserCameraModePickerProps> = ({
 
         {hasFakeImage && (
           <div className="flex items-center justify-end gap-4 px-5 pt-3 text-[10px]">
-            <button type="button" onClick={onChooseFakeImage} className="opacity-55 transition active:opacity-35">更换静态图片</button>
-            <button type="button" onClick={onRemoveFakeImage} className="text-rose-400/75 transition active:opacity-45">移除图片</button>
+            <button type="button" onClick={onChooseFakeImage} className="opacity-55 transition active:opacity-35">Change static image</button>
+            <button type="button" onClick={onRemoveFakeImage} className="text-rose-400/75 transition active:opacity-45">Remove image</button>
           </div>
         )}
       </div>

@@ -546,7 +546,7 @@ const VRMAvatarCanvas: React.FC<VRMAvatarCanvasProps> = ({
         const vrm = gltf.userData.vrm as VRM | undefined;
         if (!vrm) {
           onLoadingChange?.(false);
-          onError?.('这个文件是 glTF，但没有找到 VRM 人形数据。');
+          onError?.('This file is glTF, but no VRM humanoid data was found.');
           return;
         }
 
@@ -591,7 +591,7 @@ const VRMAvatarCanvas: React.FC<VRMAvatarCanvasProps> = ({
       error => {
         if (disposed) return;
         onLoadingChange?.(false);
-        const message = error instanceof Error ? error.message : '模型解析失败';
+        const message = error instanceof Error ? error.message : 'Model failed to parse';
         onError?.(message);
       },
     );
@@ -614,7 +614,7 @@ const VRMAvatarCanvas: React.FC<VRMAvatarCanvasProps> = ({
     };
   }, [modelUrl, onError, onLoadingChange, maxFps]);
 
-  return <div ref={hostRef} className="absolute inset-0 touch-none" aria-label="VRM 角色舞台" />;
+  return <div ref={hostRef} className="absolute inset-0 touch-none" aria-label="VRM character stage" />;
 };
 
 export default VRMAvatarCanvas;

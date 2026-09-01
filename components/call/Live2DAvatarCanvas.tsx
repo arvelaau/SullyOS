@@ -257,7 +257,7 @@ export const prepareLive2DTextureAssets = async (urls: string[]): Promise<void> 
     if (isUsableLive2DTexture(texture)) return;
 
     await resetInvalidLive2DTextureAsset(url);
-    throw new Error(`Live2D 贴图 ${index + 1} 解码失败，渲染器未返回有效纹理。`);
+    throw new Error(`Live2D texture ${index + 1} failed to decode — the renderer didn't return a valid texture.`);
   }));
 };
 
@@ -760,7 +760,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
     const action = configRef.current.actions.find(item => item.id === manualAction.id && item.permission !== 'blocked');
     if (action) {
       if (hostRef.current) hostRef.current.dataset.live2dLastAction = action.id;
-      void triggerAction(action, true).catch(error => onErrorRef.current?.(error instanceof Error ? error.message : '动作播放失败'));
+      void triggerAction(action, true).catch(error => onErrorRef.current?.(error instanceof Error ? error.message : 'Action failed to play'));
     }
   }, [manualAction]);
 
@@ -800,7 +800,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
     };
     const onDocumentVisibilityChange = () => syncTickerVisibility();
 
-    onLoadingChangeRef.current?.(true, '正在启动 Cubism 引擎…');
+    onLoadingChangeRef.current?.(true, 'Starting the Cubism engine…');
     onErrorRef.current?.('');
 
     const boot = async () => {
@@ -816,7 +816,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
       try {
         await ensureLive2DCubismCore();
         if (disposed) return;
-        onLoadingChangeRef.current?.(true, '引擎已就绪，正在准备 Live2D 渲染器…');
+        onLoadingChangeRef.current?.(true, 'Engine ready, preparing the Live2D renderer…');
         const { configureCubismSDK, Live2DModel, Live2DPlugin } = await preloadLive2DRuntime();
         registerLive2DPlugin(Live2DPlugin as Parameters<typeof extensions.add>[0]);
         // The stage renders a single model. Reserving 128 MB for Cubism's
@@ -862,7 +862,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
         }
         syncTickerVisibility();
 
-        onLoadingChangeRef.current?.(true, '正在准备模型缓存…');
+        onLoadingChangeRef.current?.(true, 'Preparing model cache…');
         const source = await sourcePromise;
         sourceAdopted = true;
         cleanupPackage = source.cleanup;
@@ -876,11 +876,11 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
         acquireTextureLeases(packageTextureUrls);
         texturesLeased = true;
 
-        onLoadingChangeRef.current?.(true, '正在解码 Live2D 贴图…');
+        onLoadingChangeRef.current?.(true, 'Decoding Live2D textures…');
         await prepareLive2DTextureAssets(packageTextureUrls);
         if (disposed) return;
 
-        onLoadingChangeRef.current?.(true, '缓存已就绪，正在创建 Cubism 角色…');
+        onLoadingChangeRef.current?.(true, 'Cache ready, creating the Cubism character…');
         const cubismStartedAt = window.performance.now();
         const model = await Live2DModel.from(source.settings as any, {
           idleMotionGroup: 'Idle',
@@ -902,7 +902,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
           ?.findIndex(texture => !isUsableLive2DTexture(texture)) ?? -1;
         if (invalidTextureIndex >= 0) {
           model.destroy({ children: true, texture: false });
-          throw new Error(`Live2D 贴图 ${invalidTextureIndex + 1} 加载为空，已阻止进入渲染阶段。`);
+          throw new Error(`Live2D texture ${invalidTextureIndex + 1} loaded empty — blocked from entering the render stage.`);
         }
         const cubismCoreCompatibility = bridgeCubism6RenderOrders(model);
         const cubismMaskCompatibility = enableCubism5HighPrecisionMasks(model);
@@ -950,7 +950,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
         internal = (model as any).internalModel;
         const core = internal?.coreModel;
         if (!internal || !core || typeof internal.getIdSafe !== 'function') {
-          throw new Error('无法取得 Live2D 参数控制器。');
+          throw new Error('Could not get the Live2D parameter controller.');
         }
         const idCache = new Map<string, unknown>();
         const current: Record<string, number> = {};
@@ -1496,7 +1496,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
           cubismMs: Math.round(cubismMs),
           bootTotalMs: Math.round(window.performance.now() - bootStartedAt),
         });
-        onLoadingChangeRef.current?.(false, '角色已就绪');
+        onLoadingChangeRef.current?.(false, 'Character ready');
         onReadyRef.current?.();
 
         model.once('destroy', () => {
@@ -1506,11 +1506,12 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
       } catch (error) {
         if (!disposed) {
           onLoadingChangeRef.current?.(false);
-          const rawMessage = error instanceof Error ? error.message : 'Live2D 模型加载失败';
-          // Pixi 的贴图加载失败原文只有一句 [Loader.load] Failed to load <url>，
-          // 翻译成用户能行动的提示，同时保留前缀方便排查。
+          const rawMessage = error instanceof Error ? error.message : 'Live2D model failed to load';
+          // Pixi's texture-load failure message is just [Loader.load] Failed to
+          // load <url> — translate it into an actionable hint while keeping the
+          // prefix for troubleshooting.
           const message = /\[Loader\.load\]/.test(rawMessage)
-            ? `贴图加载失败（${rawMessage.replace(/\s+/g, ' ').slice(0, 120)}…）。请点击重新加载再试；若仍失败，多半是贴图过大或格式异常，建议把纹理导出为 4096 以下的 PNG 后重新导入。`
+            ? `Texture failed to load (${rawMessage.replace(/\s+/g, ' ').slice(0, 120)}…). Tap Reload to try again; if it still fails, the texture is likely too large or in an unsupported format — try exporting it as a PNG under 4096px and re-importing.`
             : rawMessage;
           onErrorRef.current?.(message);
         }
@@ -1561,7 +1562,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
     : [];
 
   return (
-    <div ref={hostRef} className="absolute inset-0 overflow-hidden" aria-label="Live2D 角色舞台">
+    <div ref={hostRef} className="absolute inset-0 overflow-hidden" aria-label="Live2D character stage">
       {touchRegionEditingZone && touchRegionBounds && (
         <div
           className="absolute inset-0 z-10 touch-none cursor-crosshair"
@@ -1570,7 +1571,7 @@ const Live2DAvatarCanvas: React.FC<Live2DAvatarCanvasProps> = ({
           onPointerUp={event => finishTouchRegion(event, true)}
           onPointerCancel={event => finishTouchRegion(event, false)}
           data-testid="live2d-touch-region-editor"
-          aria-label={`正在圈选${avatarTouchZoneToastLabel(touchRegionEditingZone)}触摸区域`}
+          aria-label={`Drawing touch region for ${avatarTouchZoneToastLabel(touchRegionEditingZone)}`}
         >
           <div
             className="pointer-events-none absolute border border-dashed border-white/30"
