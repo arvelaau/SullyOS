@@ -57,10 +57,10 @@ const HandbookPageCard: React.FC<PageCardProps> = ({
     // 类型 → 胶带 + 文案
     const tape = (() => {
         switch (page.type) {
-            case 'user_diary':     return { color: 'lemon' as const,  pattern: 'heart' as const, label: '我 的 一 天 ♡' };
-            case 'character_life': return { color: 'rose' as const,   pattern: 'star' as const,  label: char ? `${char.name} ★` : '小生活' };
-            case 'user_note':      return { color: 'mint' as const,   pattern: 'dot' as const,   label: '我 写 的' };
-            case 'free':           return { color: 'lavender' as const, pattern: 'plain' as const, label: '便 签' };
+            case 'user_diary':     return { color: 'lemon' as const,  pattern: 'heart' as const, label: 'My Day ♡' };
+            case 'character_life': return { color: 'rose' as const,   pattern: 'star' as const,  label: char ? `${char.name} ★` : 'Little Life' };
+            case 'user_note':      return { color: 'mint' as const,   pattern: 'dot' as const,   label: 'What I Wrote' };
+            case 'free':           return { color: 'lavender' as const, pattern: 'plain' as const, label: 'Note' };
         }
     })();
 
@@ -122,7 +122,7 @@ const HandbookPageCard: React.FC<PageCardProps> = ({
                                         className="text-[10px] mt-0.5"
                                         style={{ ...SERIF_STACK, color: PAPER_TONES.inkSoft }}
                                     >
-                                        ta 的今天
+Their day
                                     </div>
                                 </div>
                                 <BowSticker size={22} color={PAPER_TONES.accentRose} />
@@ -152,7 +152,7 @@ const HandbookPageCard: React.FC<PageCardProps> = ({
                             >
                                 {page.content || (
                                     <span style={{ color: PAPER_TONES.inkSoft, fontStyle: 'italic', opacity: 0.6 }}>
-                                        ta 今天还没有故事…
+They don't have a story today yet…
                                     </span>
                                 )}
                             </p>
@@ -228,7 +228,7 @@ const HandbookPageCard: React.FC<PageCardProps> = ({
                     >
                         {page.content || (
                             <span style={{ color: PAPER_TONES.inkSoft, fontStyle: 'italic', opacity: 0.6 }}>
-                                这一页还是空白的…
+This page is still blank…
                             </span>
                         )}
                     </p>
@@ -273,7 +273,7 @@ const ActionRow: React.FC<{
                     className="text-[11px] px-2 py-1 rounded active:scale-95 transition flex items-center gap-1"
                     style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}
                 >
-                    <X className="w-3 h-3" /> 取消
+                    <X className="w-3 h-3" /> Cancel
                 </button>
                 <button
                     onClick={onSave}
@@ -285,19 +285,19 @@ const ActionRow: React.FC<{
                         boxShadow: '0 1px 3px rgba(122,90,114,0.18)',
                     }}
                 >
-                    <FloppyDisk className="w-3 h-3" /> 收下 ♡
+                    <FloppyDisk className="w-3 h-3" /> Keep ♡
                 </button>
             </>
         ) : (
             <>
                 {onRegenerate && (
-                    <IconBtn onClick={onRegenerate} disabled={isRegenerating} title="再写一次"
+                    <IconBtn onClick={onRegenerate} disabled={isRegenerating} title="Write again"
                              Icon={ArrowsClockwise} spin={isRegenerating} />
                 )}
-                <IconBtn onClick={onStartEdit} title="改写" Icon={PencilSimple} />
-                <IconBtn onClick={onToggleExclude} title={excluded ? '让它入册' : '不入册'}
+                <IconBtn onClick={onStartEdit} title="Rewrite" Icon={PencilSimple} />
+                <IconBtn onClick={onToggleExclude} title={excluded ? 'Include it' : 'Exclude it'}
                          Icon={excluded ? EyeSlash : Eye} />
-                <IconBtn onClick={onDelete} title="撕掉这页" Icon={Trash} danger />
+                <IconBtn onClick={onDelete} title="Tear out this page" Icon={Trash} danger />
             </>
         )}
     </div>
@@ -329,14 +329,14 @@ const IconBtn: React.FC<{
 
 // ─── PaperPicker:编辑模式下的纸张 swatch 横条 ──────
 const PAPER_SWATCH_OPTIONS: { kind: keyof typeof PAPERS; label: string }[] = [
-    { kind: 'plain', label: '素' },
-    { kind: 'lined', label: '横线' },
-    { kind: 'grid', label: '方格' },
-    { kind: 'dot', label: '点阵' },
-    { kind: 'cream', label: '奶油' },
-    { kind: 'mint', label: '薄荷' },
-    { kind: 'rose', label: '樱粉' },
-    { kind: 'sky', label: '雾蓝' },
+    { kind: 'plain', label: 'Plain' },
+    { kind: 'lined', label: 'Lined' },
+    { kind: 'grid', label: 'Grid' },
+    { kind: 'dot', label: 'Dot' },
+    { kind: 'cream', label: 'Cream' },
+    { kind: 'mint', label: 'Mint' },
+    { kind: 'rose', label: 'Rose' },
+    { kind: 'sky', label: 'Sky' },
 ];
 
 const PaperPicker: React.FC<{
@@ -348,7 +348,7 @@ const PaperPicker: React.FC<{
             className="text-[10px] tracking-widest shrink-0 mr-1"
             style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}
         >
-            ◆ 纸
+◆ Paper
         </span>
         {PAPER_SWATCH_OPTIONS.map(opt => {
             const p = PAPERS[opt.kind];

@@ -85,7 +85,7 @@ const TrackerSection: React.FC<Props> = ({ tracker, onAddToast }) => {
         await DB.saveTrackerEntry(entry);
         await refresh();
         setOpenDate(null);
-        onAddToast?.(existing ? '更新好啦 ♡' : '记下啦 ♡', 'success');
+        onAddToast?.(existing ? 'Updated ♡' : 'Logged ♡', 'success');
     };
 
     const handleDelete = async () => {
@@ -95,7 +95,7 @@ const TrackerSection: React.FC<Props> = ({ tracker, onAddToast }) => {
         await DB.deleteTrackerEntry(existing.id);
         await refresh();
         setOpenDate(null);
-        onAddToast?.('已撕掉这天 ♡', 'info');
+        onAddToast?.('Torn out that day ♡', 'info');
     };
 
     return (
@@ -142,7 +142,7 @@ const TrackerSection: React.FC<Props> = ({ tracker, onAddToast }) => {
                             </div>
                         </div>
                         <WashiTape color="cream" pattern="dot" rotate={6}>
-                            {entries.length} 次
+                            {entries.length}×
                         </WashiTape>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ const TrackerSection: React.FC<Props> = ({ tracker, onAddToast }) => {
                     className="text-center py-10 text-sm"
                     style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}
                 >
-                    翻开中…
+Opening…
                 </div>
             ) : (
                 <div
@@ -169,7 +169,7 @@ const TrackerSection: React.FC<Props> = ({ tracker, onAddToast }) => {
                         renderCell={renderCell}
                         onCellTap={(d) => setOpenDate(d)}
                         accentColor={tracker.color}
-                        title="点格子打卡 · 留白也可以 ♡"
+                        title="Tap a cell to check in · blank is fine too ♡"
                     />
                 </div>
             )}

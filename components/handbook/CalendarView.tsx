@@ -13,7 +13,7 @@ import React from 'react';
 import { PAPER_TONES, CUTE_STACK, DISPLAY_STACK, MONO_STACK } from './paper';
 import { CaretLeft, CaretRight, ArrowCounterClockwise } from '@phosphor-icons/react';
 
-const WEEK_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEK_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTH_LABELS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function pad2(n: number): string { return String(n).padStart(2, '0'); }
@@ -105,7 +105,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     onClick={goPrevMonth}
                     className="w-8 h-8 flex items-center justify-center rounded-full active:scale-95 transition"
                     style={{ background: 'rgba(253,246,231,0.7)', color: PAPER_TONES.ink }}
-                    aria-label="上一月"
+                    aria-label="Previous month"
                 >
                     <CaretLeft className="w-3.5 h-3.5" weight="bold" />
                 </button>
@@ -143,8 +143,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                         onClick={goToday}
                         className="w-8 h-8 flex items-center justify-center rounded-full active:scale-95 transition"
                         style={{ background: 'rgba(253,246,231,0.7)', color: PAPER_TONES.ink }}
-                        aria-label="回到今天"
-                        title="回到今天"
+                        aria-label="Back to today"
+                        title="Back to today"
                     >
                         <ArrowCounterClockwise className="w-3.5 h-3.5" weight="bold" />
                     </button>
@@ -152,7 +152,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                         onClick={goNextMonth}
                         className="w-8 h-8 flex items-center justify-center rounded-full active:scale-95 transition"
                         style={{ background: 'rgba(253,246,231,0.7)', color: PAPER_TONES.ink }}
-                        aria-label="下一月"
+                        aria-label="Next month"
                     >
                         <CaretRight className="w-3.5 h-3.5" weight="bold" />
                     </button>
@@ -228,7 +228,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 className="text-[10px] text-center mt-3 italic"
                 style={{ ...CUTE_STACK, color: PAPER_TONES.inkFaint }}
             >
-                点哪天 · 写哪天 ♡
+Tap a day · write that day ♡
             </div>
         </div>
     );

@@ -86,7 +86,7 @@ const HandbookSideTabs: React.FC<Props> = ({
     const tabs: TabSpec[] = [
         {
             key: 'today',
-            label: '今日',
+            label: 'Today',
             icon: '✦',
             color: '#fff8fb',
             isActive: activeSection.kind === 'today',
@@ -105,7 +105,7 @@ const HandbookSideTabs: React.FC<Props> = ({
     return (
         <div
             className="absolute top-20 right-0 z-30 flex flex-col gap-2 pointer-events-none"
-            aria-label="手账分区标签"
+            aria-label="Handbook section tabs"
         >
             <div className="pointer-events-auto flex flex-col gap-2">
                 {tabs.map(t => (
@@ -123,8 +123,8 @@ const HandbookSideTabs: React.FC<Props> = ({
                         clipPath: 'polygon(40% 0, 100% 0, 100% 100%, 40% 100%, 0 50%)',
                         paddingLeft: 10,
                     }}
-                    title="新建 tracker"
-                    aria-label="新建 tracker"
+                    title="New tracker"
+                    aria-label="New tracker"
                 >
                     <span style={{ ...SERIF_STACK, color: PAPER_TONES.inkSoft, fontSize: 14, fontWeight: 700 }}>
                         +

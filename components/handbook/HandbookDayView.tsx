@@ -110,10 +110,10 @@ const EmptyDay: React.FC = () => (
         style={{ color: PAPER_TONES.inkSoft }}
     >
         <Notebook className="w-12 h-12 mb-3 opacity-40" weight="thin" />
-        <div className="text-[14px]" style={CUTE_STACK}>这一页 · 还是空白 ♡</div>
+        <div className="text-[14px]" style={CUTE_STACK}>This page · still blank ♡</div>
         <div className="text-[11px] mt-2 opacity-70 leading-relaxed px-8" style={CUTE_STACK}>
-            点下方书签让 AI 替你写一份草稿<br />
-            或者按 + 自己写一页
+            Tap the bookmark below to have AI draft one for you<br />
+            or press + to write your own page
         </div>
     </div>
 );

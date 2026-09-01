@@ -166,7 +166,7 @@ const GratitudeSlot: React.FC<{ payload: Extract<SlotPayload, { kind: 'gratitude
                     ...HANDWRITTEN_STACK, fontSize: 12, color: pal.accent, fontWeight: 700,
                     letterSpacing: '0.1em',
                 }}>
-                    今日感恩 ♡
+Today's Gratitude ♡
                 </span>
             </div>
             <ul className="space-y-0.5 list-none m-0 p-0">
@@ -257,7 +257,7 @@ const PhotoSlot: React.FC<{
                     <div className="absolute inset-0 flex items-center justify-center" style={{
                         ...HANDWRITTEN_STACK, fontSize: 11, color: PAPER_TONES.inkFaint,
                     }}>
-                        贴一张今日照片
+Add a photo from today
                     </div>
                 )}
             </div>
@@ -353,7 +353,7 @@ const SlotRenderer: React.FC<SlotRendererProps> = ({ placement, fragment, page, 
         );
     }
 
-    const authorName = page.charId ? (char?.name || '某角色') : userName;
+    const authorName = page.charId ? (char?.name || 'A Character') : userName;
     const text = fragment?.text || '';
     const payload = fragment?.payload;
     const skin = placement.skinVariant || (fragment as any)?.skinVariant;

@@ -36,10 +36,10 @@ const COLOR_SWATCHES = [
 const ICON_SUGGEST = ['🌸','🌷','🌼','🌻','🌹','🍰','🍵','💧','🪶','📖','✨','🤒','💖','🐱','☕','🌙','🍓','🌿','📷','🏃'];
 
 const FIELD_KINDS: { kind: TrackerFieldKind; label: string; hint: string }[] = [
-    { kind: 'rating',  label: '评分',     hint: '1~5 星 / 5 个 emoji' },
-    { kind: 'text',    label: '一句话',   hint: '随手写一句' },
-    { kind: 'number',  label: '数字',     hint: '比如杯数 / 体重' },
-    { kind: 'boolean', label: '是 / 否',  hint: '简单打个钩' },
+    { kind: 'rating',  label: 'Rating',     hint: '1-5 stars / 5 emoji' },
+    { kind: 'text',    label: 'One line',   hint: 'Jot down a quick note' },
+    { kind: 'number',  label: 'Number',     hint: 'e.g. cups / weight' },
+    { kind: 'boolean', label: 'Yes / No',  hint: 'Just check a box' },
 ];
 
 const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCancel, onCreated }) => {
@@ -77,11 +77,11 @@ const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCanc
                     return {
                         key: 'rating', label, kind: 'rating', required: true, min: 1, max: 5,
                         choices: [
-                            { value: '1', label: '差', emoji: '·' },
-                            { value: '2', label: '一般', emoji: '◦' },
-                            { value: '3', label: '中', emoji: '◐' },
-                            { value: '4', label: '好', emoji: '●' },
-                            { value: '5', label: '极好', emoji: '★' },
+                            { value: '1', label: 'Bad', emoji: '·' },
+                            { value: '2', label: 'Fair', emoji: '◦' },
+                            { value: '3', label: 'Okay', emoji: '◐' },
+                            { value: '4', label: 'Good', emoji: '●' },
+                            { value: '5', label: 'Great', emoji: '★' },
                         ],
                     };
                 case 'number':
@@ -90,7 +90,7 @@ const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCanc
                     return { key: 'has', label, kind: 'boolean', required: true };
                 case 'text':
                 default:
-                    return { key: 'note', label, kind: 'text', required: true, placeholder: '一句话就好…' };
+                    return { key: 'note', label, kind: 'text', required: true, placeholder: 'Just a line is fine…' };
             }
         })();
         const tracker: Tracker = {
@@ -142,13 +142,13 @@ const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCanc
                 {/* 标题 */}
                 <div className="px-5 pt-2 pb-2 text-center">
                     <WashiTape color="lavender" pattern="star" rotate={-1.5}>
-                        新 建 Tracker ♡
+                        New Tracker ♡
                     </WashiTape>
                     <div
                         className="text-[11px] mt-3"
                         style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}
                     >
-                        从模板挑一个 · 或者从零造一个属于你的
+                        Pick from a template · or build your own from scratch
                     </div>
                 </div>
 
@@ -164,7 +164,7 @@ const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCanc
                             border: `1.5px solid ${PAPER_TONES.accentLavender}`,
                         }}
                     >
-                        ✦ 模 板
+                        ✦ Templates
                     </button>
                     <button
                         onClick={() => setTab('custom')}
@@ -176,7 +176,7 @@ const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCanc
                             border: `1.5px solid ${PAPER_TONES.accentLavender}`,
                         }}
                     >
-                        ✦ 从 零 造
+                        ✦ Build From Scratch
                     </button>
                 </div>
 
@@ -213,7 +213,7 @@ const TrackerCreateSheet: React.FC<Props> = ({ visible, existingTrackers, onCanc
                             border: `1.5px solid ${PAPER_TONES.spine}`,
                         }}
                     >
-                        <X className="w-3.5 h-3.5" /> 关上
+                        <X className="w-3.5 h-3.5" /> Close
                     </button>
                 </div>
             </div>
@@ -270,7 +270,7 @@ const TemplateGallery: React.FC<{
                         {added ? (
                             <span className="flex items-center gap-1 text-[10px] font-bold" style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}>
                                 <Check className="w-3 h-3" weight="bold" />
-                                已添加
+                                Added
                             </span>
                         ) : (
                             <span
@@ -282,7 +282,7 @@ const TemplateGallery: React.FC<{
                                 }}
                             >
                                 <Plus className="w-3 h-3" weight="bold" />
-                                启用
+                                Enable
                             </span>
                         )}
                     </div>
@@ -304,12 +304,12 @@ const CustomBuilder: React.FC<{
     <div className="px-5 pb-3 space-y-4">
         {/* 名字 */}
         <div>
-            <Label>这个 tracker 叫什么</Label>
+            <Label>What's this tracker called</Label>
             <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="今天有没有偏头痛 / 今天读了多久书 …"
+                placeholder="Did I get a migraine today / how long did I read …"
                 className="w-full outline-none rounded-lg px-3 py-2.5"
                 style={{
                     ...SERIF_STACK,
@@ -323,7 +323,7 @@ const CustomBuilder: React.FC<{
 
         {/* 图标 */}
         <div>
-            <Label>挑个图标</Label>
+            <Label>Pick an icon</Label>
             <div className="flex flex-wrap gap-2">
                 {ICON_SUGGEST.map(em => (
                     <button
@@ -343,7 +343,7 @@ const CustomBuilder: React.FC<{
 
         {/* 颜色 */}
         <div>
-            <Label>挑个颜色</Label>
+            <Label>Pick a color</Label>
             <div className="flex flex-wrap gap-2">
                 {COLOR_SWATCHES.map(s => (
                     <button
@@ -363,7 +363,7 @@ const CustomBuilder: React.FC<{
 
         {/* 主字段 */}
         <div>
-            <Label>每天打卡时,需要填什么</Label>
+            <Label>What to fill in each check-in</Label>
             <div className="grid grid-cols-2 gap-2 mb-2">
                 {FIELD_KINDS.map(fk => {
                     const active = fieldKind === fk.kind;
@@ -391,7 +391,7 @@ const CustomBuilder: React.FC<{
                 type="text"
                 value={fieldLabel}
                 onChange={e => setFieldLabel(e.target.value)}
-                placeholder={`字段标签(留空就用"${name || '名字'}")`}
+                placeholder={`Field label (leave blank to use "${name || 'name'}")`}
                 className="w-full outline-none rounded-lg px-3 py-2"
                 style={{
                     ...SERIF_STACK,
@@ -422,7 +422,7 @@ const CustomBuilder: React.FC<{
                     PREVIEW
                 </div>
                 <div className="text-[14px] font-bold" style={{ ...SERIF_STACK, color: PAPER_TONES.ink }}>
-                    {name || '(还没起名)'}
+                    {name || '(no name yet)'}
                 </div>
             </div>
             <SparkleDot size={12} color={color} />
@@ -441,7 +441,7 @@ const CustomBuilder: React.FC<{
             }}
         >
             <Sparkle weight="fill" className="w-4 h-4" />
-            创 建 ♡
+            Create ♡
         </button>
     </div>
 );

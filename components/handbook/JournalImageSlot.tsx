@@ -104,7 +104,7 @@ const JournalImageSlot: React.FC<Props> = ({ seed, src, caption, frame = 'polaro
                         letterSpacing: '0.3em',
                     }}
                 >
-                    {onPick ? '+ 添 加 图 片' : 'IMAGE'}
+                    {onPick ? '+ ADD IMAGE' : 'IMAGE'}
                 </span>
             </span>
         </button>

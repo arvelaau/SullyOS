@@ -281,8 +281,8 @@ const HandbookCover: React.FC<CoverProps> = ({
                                 style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}
                             >
                                 {todayEntry
-                                    ? `今天已经记下 ${todayEntry.pages.length} 页 ♡`
-                                    : `今天还没翻开 · 想写就写`}
+                                    ? `Already logged ${todayEntry.pages.length} pages today ♡`
+                                    : `Not opened yet today · write whenever you like`}
                             </div>
                             <div className="flex gap-2">
                                 <button
@@ -297,7 +297,7 @@ const HandbookCover: React.FC<CoverProps> = ({
                                     }}
                                 >
                                     <Sparkle weight="fill" className="w-3.5 h-3.5" />
-                                    {generating ? '正在落笔…' : 'AI 替我写一份'}
+                                    {generating ? 'Writing…' : 'Let AI write one for me'}
                                 </button>
                                 <button
                                     onClick={() => onOpenDate(today)}
@@ -309,7 +309,7 @@ const HandbookCover: React.FC<CoverProps> = ({
                                         border: `1.5px solid ${PAPER_TONES.accentMint}`,
                                     }}
                                 >
-                                    翻开
+                                    Open
                                 </button>
                             </div>
                         </div>
@@ -345,15 +345,15 @@ const HandbookCover: React.FC<CoverProps> = ({
                         color: PAPER_TONES.inkFaint,
                     }}
                 >
-                    PAST ENTRIES · 回 望
+                    PAST ENTRIES · LOOK BACK
                 </div>
 
                 {otherEntries.length === 0 ? (
                     <div className="text-center py-10" style={{ color: PAPER_TONES.inkSoft }}>
                         <Notebook className="w-9 h-9 mx-auto mb-2 opacity-40" weight="thin" />
-                        <div className="text-[13px]" style={CUTE_STACK}>之前还没有记过</div>
+                        <div className="text-[13px]" style={CUTE_STACK}>No entries yet</div>
                         <div className="text-[11px] mt-1 opacity-70" style={CUTE_STACK}>
-                            没关系 · 想翻的时候再翻 ♡
+                            That's okay · flip through whenever you like ♡
                         </div>
                     </div>
                 ) : (
@@ -391,7 +391,7 @@ const HandbookCover: React.FC<CoverProps> = ({
                                             ...CUTE_STACK,
                                         }}
                                     >
-                                        {visibleCount}页 ♡
+                                        {visibleCount}p ♡
                                     </div>
 
                                     <div
@@ -423,7 +423,14 @@ const HandbookCover: React.FC<CoverProps> = ({
                                                     color: PAPER_TONES.inkSoft,
                                                 }}
                                             >
-                                                {monthEn(e.date)} · 周{dayOfWeekZh(e.date)}
+                                                {monthEn(e.date)} · {
+                                                    dayOfWeekZh(e.date) === '日' ? 'Sun' :
+                                                    dayOfWeekZh(e.date) === '一' ? 'Mon' :
+                                                    dayOfWeekZh(e.date) === '二' ? 'Tue' :
+                                                    dayOfWeekZh(e.date) === '三' ? 'Wed' :
+                                                    dayOfWeekZh(e.date) === '四' ? 'Thu' :
+                                                    dayOfWeekZh(e.date) === '五' ? 'Fri' : 'Sat'
+                                                }
                                             </span>
                                             <CaretRight className="w-3 h-3 ml-auto" style={{ color: PAPER_TONES.inkSoft }} />
                                         </div>

@@ -136,8 +136,8 @@ const TrackerEntrySheet: React.FC<Props> = ({
                 return (
                     <div className="flex gap-2">
                         {[
-                            { val: true, label: '是 ♡', emoji: '✓' },
-                            { val: false, label: '没有', emoji: '·' },
+                            { val: true, label: 'Yes ♡', emoji: '✓' },
+                            { val: false, label: 'No', emoji: '·' },
                         ].map(opt => {
                             const active = v === opt.val;
                             return (
@@ -164,7 +164,7 @@ const TrackerEntrySheet: React.FC<Props> = ({
                     <textarea
                         value={v ?? ''}
                         onChange={e => setField(field.key, e.target.value)}
-                        placeholder={field.placeholder || '一句话就好…'}
+                        placeholder={field.placeholder || 'Just a line is fine…'}
                         rows={2}
                         className="w-full outline-none resize-none rounded-lg px-3 py-2"
                         style={{
@@ -203,7 +203,7 @@ const TrackerEntrySheet: React.FC<Props> = ({
                             : <div className="w-16 h-16 flex items-center justify-center text-2xl" style={{ color: PAPER_TONES.inkFaint }}>📷</div>
                         }
                         <span className="text-[12px]" style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}>
-                            {v ? '换一张' : '点这里拍/选'}
+                            {v ? 'Change photo' : 'Tap to shoot/choose'}
                         </span>
                     </label>
                 );
@@ -280,7 +280,7 @@ const TrackerEntrySheet: React.FC<Props> = ({
                     {existingEntry && onDelete && (
                         <button
                             onClick={() => {
-                                if (confirm('删除这天的打卡?')) onDelete();
+                                if (confirm('Delete this check-in?')) onDelete();
                             }}
                             className="px-3 py-3 rounded-full active:scale-95 transition"
                             style={{
@@ -288,7 +288,7 @@ const TrackerEntrySheet: React.FC<Props> = ({
                                 background: '#fff',
                                 border: '1.5px solid #f0c0d0',
                             }}
-                            aria-label="删除"
+                            aria-label="Delete"
                         >
                             <Trash className="w-4 h-4" weight="bold" />
                         </button>
@@ -303,7 +303,7 @@ const TrackerEntrySheet: React.FC<Props> = ({
                             border: `1.5px solid ${PAPER_TONES.spine}`,
                         }}
                     >
-                        <X className="w-3.5 h-3.5" /> 算了
+                        <X className="w-3.5 h-3.5" /> Never mind
                     </button>
                     <button
                         onClick={handleSave}
@@ -316,7 +316,7 @@ const TrackerEntrySheet: React.FC<Props> = ({
                         }}
                     >
                         <FloppyDisk weight="fill" className="w-3.5 h-3.5" />
-                        {existingEntry ? '更新 ♡' : '收下 ♡'}
+                        {existingEntry ? 'Update ♡' : 'Keep ♡'}
                     </button>
                 </div>
             </div>

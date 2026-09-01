@@ -245,7 +245,7 @@ export const DialogueBubble: React.FC<{
 // 一些预设的萌系小词,在 day 视图里随机选用
 export const KAWAII_INTERJECTIONS = [
     'かわいい…', '今日も♡', 'うまい!', 'ぐぅ…', 'すきっ', 'よしっ',
-    '嘿嘿', '哇~', '完了完了', '芜湖', '嘻嘻', '叮~', '(･ω･)',
+    'hehe', 'wow~', 'oh nooo~', 'woohoo!', 'teehee', 'ding~', '(･ω･)',
     'ʕ•ᴥ•ʔ', '★ ★ ★', '♡ ♡', '...', '?',
 ];
 

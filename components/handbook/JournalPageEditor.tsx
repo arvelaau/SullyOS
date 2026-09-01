@@ -32,14 +32,14 @@ interface Props {
 }
 
 const PAPER_OPTIONS: { kind: keyof typeof PAPERS; label: string }[] = [
-    { kind: 'plain', label: '素' },
-    { kind: 'lined', label: '横线' },
-    { kind: 'grid', label: '方格' },
-    { kind: 'dot', label: '点阵' },
-    { kind: 'cream', label: '奶油' },
-    { kind: 'mint', label: '薄荷' },
-    { kind: 'rose', label: '樱粉' },
-    { kind: 'sky', label: '雾蓝' },
+    { kind: 'plain', label: 'Plain' },
+    { kind: 'lined', label: 'Lined' },
+    { kind: 'grid', label: 'Grid' },
+    { kind: 'dot', label: 'Dot' },
+    { kind: 'cream', label: 'Cream' },
+    { kind: 'mint', label: 'Mint' },
+    { kind: 'rose', label: 'Rose' },
+    { kind: 'sky', label: 'Sky' },
 ];
 
 const JournalPageEditor: React.FC<Props> = ({
@@ -57,10 +57,10 @@ const JournalPageEditor: React.FC<Props> = ({
 
     const titleParts = (() => {
         switch (page.type) {
-            case 'user_diary':     return { kicker: 'MY · DIARY',     title: '我 的 一 天' };
-            case 'character_life': return { kicker: 'CO · LIFESTREAM', title: char ? `${char.name} · 的 今 天` : '小生活' };
-            case 'user_note':      return { kicker: 'NOTE',           title: '便 笺' };
-            case 'free':           return { kicker: 'FREE',           title: '便 签' };
+            case 'user_diary':     return { kicker: 'MY · DIARY',     title: 'My Day' };
+            case 'character_life': return { kicker: 'CO · LIFESTREAM', title: char ? `${char.name} · Today` : 'Little Life' };
+            case 'user_note':      return { kicker: 'NOTE',           title: 'Note' };
+            case 'free':           return { kicker: 'FREE',           title: 'Note' };
         }
     })();
 
@@ -130,7 +130,7 @@ const JournalPageEditor: React.FC<Props> = ({
                                     className="text-[10px] tracking-widest shrink-0 mr-1"
                                     style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft }}
                                 >
-                                    ◆ 纸
+                                    ◆ Paper
                                 </span>
                                 {PAPER_OPTIONS.map(opt => {
                                     const p = PAPERS[opt.kind];
@@ -224,7 +224,7 @@ const JournalPageEditor: React.FC<Props> = ({
                         >
                             {page.content || (
                                 <span style={{ color: PAPER_TONES.inkSoft, fontStyle: 'italic', opacity: 0.6 }}>
-                                    这一页还是空白的…
+This page is still blank…
                                 </span>
                             )}
                         </p>
@@ -246,7 +246,7 @@ const JournalPageEditor: React.FC<Props> = ({
                                 className="px-3 py-2 rounded-full text-[12px] active:scale-95 transition flex items-center gap-1"
                                 style={{ ...CUTE_STACK, color: PAPER_TONES.inkSoft, background: '#fff', border: `1.5px solid ${PAPER_TONES.spine}` }}
                             >
-                                <X className="w-3 h-3" /> 取消
+                                <X className="w-3 h-3" /> Cancel
                             </button>
                             <button
                                 onClick={() => { onSave(draft, draftPaper); setEditing(false); }}
@@ -258,7 +258,7 @@ const JournalPageEditor: React.FC<Props> = ({
                                     boxShadow: '0 1px 3px rgba(122,90,114,0.18)',
                                 }}
                             >
-                                <FloppyDisk className="w-3.5 h-3.5" /> 收下 ♡
+                                <FloppyDisk className="w-3.5 h-3.5" /> Keep ♡
                             </button>
                         </>
                     ) : (
@@ -272,7 +272,7 @@ const JournalPageEditor: React.FC<Props> = ({
                                     boxShadow: '0 1px 3px rgba(122,90,114,0.18)',
                                 }}
                             >
-                                <PencilSimple className="w-3.5 h-3.5" weight="bold" /> 改写
+                                <PencilSimple className="w-3.5 h-3.5" weight="bold" /> Rewrite
                             </button>
                             {onRegenerate && (
                                 <button
@@ -282,7 +282,7 @@ const JournalPageEditor: React.FC<Props> = ({
                                     style={{ ...CUTE_STACK, color: PAPER_TONES.ink, background: '#fff', border: `1.5px solid ${PAPER_TONES.spine}` }}
                                 >
                                     <ArrowsClockwise className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin' : ''}`} weight="bold" />
-                                    {isRegenerating ? '正在写…' : '再写一次'}
+                                    {isRegenerating ? 'Writing…' : 'Write again'}
                                 </button>
                             )}
                             <button
@@ -291,8 +291,8 @@ const JournalPageEditor: React.FC<Props> = ({
                                 style={{ ...CUTE_STACK, color: PAPER_TONES.ink, background: '#fff', border: `1.5px solid ${PAPER_TONES.spine}` }}
                             >
                                 {page.excluded
-                                    ? <><EyeSlash className="w-3.5 h-3.5" weight="bold" /> 不入册</>
-                                    : <><Eye className="w-3.5 h-3.5" weight="bold" /> 入册</>
+                                    ? <><EyeSlash className="w-3.5 h-3.5" weight="bold" /> Excluded</>
+                                    : <><Eye className="w-3.5 h-3.5" weight="bold" /> Included</>
                                 }
                             </button>
                             <button
@@ -303,7 +303,7 @@ const JournalPageEditor: React.FC<Props> = ({
                                     background: '#fff', border: `1.5px solid #f5d0d8`,
                                 }}
                             >
-                                <Trash className="w-3.5 h-3.5" weight="bold" /> 撕掉
+                                <Trash className="w-3.5 h-3.5" weight="bold" /> Tear out
                             </button>
                         </>
                     )}

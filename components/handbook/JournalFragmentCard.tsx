@@ -126,7 +126,7 @@ const JournalFragmentCard: React.FC<Props> = ({ fragment, page, char, role, isHe
     const palIdx = Math.floor(seedFloat(seedKey, 13) * STICKY_PALETTES.length);
     const stickyColor = STICKY_PALETTES[palIdx];
 
-    const authorLabel = isUser ? '我' : (char?.name || '');
+    const authorLabel = isUser ? 'Me' : (char?.name || '');
 
     const richProps = {
         text,
@@ -300,7 +300,7 @@ const JournalFragmentCard: React.FC<Props> = ({ fragment, page, char, role, isHe
                     >
                         {text}
                     </span>
-                    {authorLabel && authorLabel !== '我' && (
+                    {authorLabel && authorLabel !== 'Me' && (
                         <span
                             style={{
                                 ...HANDWRITTEN_STACK,
