@@ -59,7 +59,7 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain('data-testid="companion-app-star-panel"');
     expect(source).toContain('INSTALLED_APPS');
     expect(source).toContain("label: app.name");
-    expect(constantsSource).toContain("{ id: AppID.Songwriting, name: '写歌'");
+    expect(constantsSource).toContain("{ id: AppID.Songwriting, name: 'Songwriting'");
   });
   it('renders an ornate flat action rail and clips only the dialogue background', () => {
     const source = readFileSync(path.resolve(__dirname, '../components/os/CompanionHome.tsx'), 'utf8');
