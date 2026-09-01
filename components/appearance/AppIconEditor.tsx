@@ -31,9 +31,9 @@ const AppIconEditor: React.FC = () => {
     try {
       await injectPwaIcon(blobRef);
     } catch (e) {
-      console.warn('[AppIconEditor] injectPwaIcon 失败', e);
+      console.warn('[AppIconEditor] injectPwaIcon failed', e);
     }
-    addToast('PWA 图标已更新 ✨', 'success');
+    addToast('PWA icon updated ✨', 'success');
   }, [setCustomIcon, addToast]);
 
   // ── 上传 ───────────────────────────────────────────────────
@@ -47,7 +47,7 @@ const AppIconEditor: React.FC = () => {
       const ref = await putImageBlob(blob);
       await saveIcon(ref);
     } catch (err: any) {
-      addToast(err.message || '图片处理失败', 'error');
+      addToast(err.message || 'Image processing failed', 'error');
     } finally {
       setProcessing(false);
       // 清掉 input 以便再次选同一文件时仍触发 onChange
@@ -63,21 +63,21 @@ const AppIconEditor: React.FC = () => {
 
     // 基础校验
     if (!/^https?:\/\//i.test(trimmed)) {
-      addToast('请输入有效的 http/https 链接', 'error');
+      addToast('Please enter a valid http/https link', 'error');
       return;
     }
     if (trimmed.length > 2048) {
-      addToast('链接太长，最多 2048 个字符', 'error');
+      addToast('Link too long, 2048 characters max', 'error');
       return;
     }
 
     setProcessing(true);
     try {
       const resp = await fetch(trimmed, { mode: 'cors' });
-      if (!resp.ok) throw new Error(`服务器返回 ${resp.status}`);
+      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
       const contentType = resp.headers.get('content-type') || '';
       if (!contentType.startsWith('image/')) {
-        throw new Error('链接指向的不是图片（Content-Type: ' + contentType + '）');
+        throw new Error('The link does not point to an image (Content-Type: ' + contentType + ')');
       }
       const fetchedBlob = await resp.blob();
       // 通过 processImageToBlob 统一压缩到 512px
@@ -87,7 +87,7 @@ const AppIconEditor: React.FC = () => {
       await saveIcon(ref);
       setUrlInput('');
     } catch (err: any) {
-      addToast(err.message || '获取图片失败', 'error');
+      addToast(err.message || 'Failed to fetch image', 'error');
     } finally {
       setProcessing(false);
     }
@@ -98,7 +98,7 @@ const AppIconEditor: React.FC = () => {
   const handleReset = useCallback(async () => {
     await setCustomIcon(PWA_ICON_APP_ID, undefined);
     clearPwaIcon();
-    addToast('PWA 图标已恢复默认', 'info');
+    addToast('PWA icon restored to default', 'info');
   }, [setCustomIcon, addToast]);
 
   // ── 渲染 ───────────────────────────────────────────────────
@@ -110,14 +110,14 @@ const AppIconEditor: React.FC = () => {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-primary">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
         </svg>
-        <span className="text-sm font-medium text-slate-700">PWA 应用图标</span>
+        <span className="text-sm font-medium text-slate-700">PWA app icon</span>
       </div>
 
       {/* 当前图标预览 */}
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm bg-slate-100 shrink-0">
           {previewUrl ? (
-            <img src={previewUrl} className="w-full h-full object-cover" alt="当前 PWA 图标" />
+            <img src={previewUrl} className="w-full h-full object-cover" alt="Current PWA icon" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-8 h-8 text-slate-300">
@@ -128,7 +128,7 @@ const AppIconEditor: React.FC = () => {
         </div>
         <div className="min-w-0">
           <div className="text-xs text-slate-500">
-            {currentValue ? '已设置自定义图标' : '使用默认图标'}
+            {currentValue ? 'Custom icon set' : 'Using default icon'}
           </div>
           {currentValue && (
             <button
@@ -136,7 +136,7 @@ const AppIconEditor: React.FC = () => {
               className="text-xs text-red-400 hover:text-red-500 mt-1"
               disabled={processing}
             >
-              重置为默认
+              Reset to default
             </button>
           )}
         </div>
@@ -152,7 +152,7 @@ const AppIconEditor: React.FC = () => {
               : 'text-slate-400'
           }`}
         >
-          上传图片
+          Upload image
         </button>
         <button
           onClick={() => setMode('url')}
@@ -162,7 +162,7 @@ const AppIconEditor: React.FC = () => {
               : 'text-slate-400'
           }`}
         >
-          填入链接
+          Enter link
         </button>
       </div>
 
@@ -181,10 +181,10 @@ const AppIconEditor: React.FC = () => {
             disabled={processing}
             className="w-full py-3 px-4 border-2 border-dashed border-slate-200 rounded-xl text-sm text-slate-400 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
           >
-            {processing ? '处理中…' : '点击选择图片'}
+            {processing ? 'Processing…' : 'Tap to select image'}
           </button>
           <div className="text-[10px] text-slate-400 mt-1.5 text-center">
-            支持 PNG / JPEG / WebP，自动缩放到 512px
+            Supports PNG / JPEG / WebP, auto-scaled to 512px
           </div>
         </div>
       )}
@@ -207,11 +207,11 @@ const AppIconEditor: React.FC = () => {
               disabled={processing || !urlInput.trim()}
               className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-xl disabled:opacity-40 transition-opacity"
             >
-              {processing ? '…' : '确认'}
+              {processing ? '…' : 'Confirm'}
             </button>
           </div>
           <div className="text-[10px] text-slate-400 text-center">
-            输入图床直链（PNG / JPEG），自动抓取并压缩
+            Enter a direct image-host link (PNG / JPEG), auto-fetched and compressed
           </div>
         </div>
       )}
@@ -220,26 +220,26 @@ const AppIconEditor: React.FC = () => {
       {isStandalone ? (
         <div className="rounded-xl border-2 border-red-300 bg-red-50 p-4 space-y-2">
           <div className="text-sm font-bold text-red-600 text-center">
-            ⚠️ 删掉重装会丢数据 ⚠️
+            ⚠️ Deleting and reinstalling loses data ⚠️
           </div>
           <div className="text-xs text-red-500 leading-relaxed space-y-1.5">
             <p>
-              主屏图标只在「添加到主屏幕」那一刻读取一次，装完之后改不了。
-              要看到新图标，<strong>只能删掉 App 重新「添加到主屏幕」</strong>。
+              The home-screen icon is only read once, at the moment you tap "Add to Home Screen" — it can't be changed after that.
+              To see the new icon, <strong>you have to delete the app and "Add to Home Screen" again</strong>.
             </p>
             <p className="text-red-600 font-bold">
-              注意：装成 App 的 SullyOS，数据是单独的一份——跟浏览器里打开的不通，跟别的 PWA 也互相隔离。删掉 App，这一份数据就跟着没了。
+              Note: SullyOS installed as an app keeps its own separate data — it isn't shared with the browser tab, and it's isolated from other PWAs too. Deleting the app deletes this data along with it.
             </p>
             <p className="text-red-600 font-bold">
-              删之前一定要先备份：设置 → 备份 → 导出，重装完再导入。
+              Back up before deleting: Settings → Backup → Export, then import again after reinstalling.
             </p>
           </div>
         </div>
       ) : (
         <div className="rounded-xl bg-blue-50 border border-blue-200 p-3">
           <div className="text-xs text-blue-600 leading-relaxed">
-            ✨ 标签页图标已更新。下次「添加到主屏幕」时就会用新图标啦～
-            已经装好的 App 不受影响。
+            ✨ The tab icon has been updated. The new icon will be used next time you "Add to Home Screen" ～
+            Apps already installed are not affected.
           </div>
         </div>
       )}

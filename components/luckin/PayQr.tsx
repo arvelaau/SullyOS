@@ -33,7 +33,7 @@ const PayQr: React.FC<{ payUrl?: string; qrImageUrl?: string; size?: number }> =
             return (
                 <a href={payUrl || qrImageUrl} target="_blank" rel="noreferrer"
                     className="block text-center px-3 py-2 bg-[#0B1F3A] text-white text-[12px] font-bold rounded-xl active:scale-95">
-                    去微信支付 →
+                    Pay with WeChat →
                 </a>
             );
         }
@@ -43,12 +43,12 @@ const PayQr: React.FC<{ payUrl?: string; qrImageUrl?: string; size?: number }> =
     return (
         <div className="flex flex-col items-center gap-1.5">
             <div className="bg-white p-2 rounded-xl border border-[#E6DFCF]" style={{ width: size + 16, height: size + 16 }}>
-                <img src={imgSrc} alt="支付二维码" className="w-full h-full object-contain" referrerPolicy="no-referrer"
+                <img src={imgSrc} alt="Payment QR code" className="w-full h-full object-contain" referrerPolicy="no-referrer"
                     onError={() => { if (dataUrl && imgSrc !== dataUrl) { /* already on fallback */ } else if (qrImageUrl) setGenFailed(true); }} />
             </div>
-            <div className="text-[11px] text-[#0B1F3A]/70 font-bold">微信扫码支付</div>
+            <div className="text-[11px] text-[#0B1F3A]/70 font-bold">Scan with WeChat to pay</div>
             {payUrl && (
-                <a href={payUrl} target="_blank" rel="noreferrer" className="text-[10px] text-[#16386F] underline">手机上点这里直接用微信打开</a>
+                <a href={payUrl} target="_blank" rel="noreferrer" className="text-[10px] text-[#16386F] underline">On mobile? Tap here to open WeChat directly</a>
             )}
         </div>
     );

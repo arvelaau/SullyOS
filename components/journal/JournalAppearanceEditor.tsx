@@ -28,14 +28,14 @@ import { JournalThemeThumbnail } from './JournalThemeArtwork';
 
 const CSS_SNIPPETS = [
     {
-        name: '纸张直角',
+        name: 'Square paper corners',
         code: `.sully-journal-paper{
   border-radius:4px!important;
   box-shadow:0 18px 48px rgba(20,14,10,.28)!important;
 }`,
     },
     {
-        name: '更像手写',
+        name: 'More handwritten',
         code: `.sully-journal-textarea{
   font-family:"Kaiti SC","STKaiti",serif!important;
   font-size:17px!important;
@@ -44,7 +44,7 @@ const CSS_SNIPPETS = [
 }`,
     },
     {
-        name: '隐藏纸纹',
+        name: 'Hide paper texture',
         code: `.sully-journal-texture{display:none!important;}`,
     },
 ];
@@ -207,7 +207,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
         }
         await updateTheme({ journalAppearance: { ...draft } });
         onCancelPreview();
-        addToast('交换日记样式已保存', 'success');
+        addToast('Exchange diary style saved', 'success');
         setOpen(false);
     };
 
@@ -218,7 +218,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
             return;
         }
         onStartPreview({ ...draft });
-        addToast('已进入日记本预览，可自由翻页；顶部救援条可随时撤销', 'info');
+        addToast('Now previewing the journal; feel free to flip pages — the rescue bar at the top can undo anytime', 'info');
         setOpen(false);
     };
 
@@ -226,7 +226,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
         await updateTheme({ journalAppearance: undefined });
         onCancelPreview();
         setDraft(normalizeAppearance());
-        addToast('已还原交换日记原版样式', 'success');
+        addToast('Restored the original exchange diary style', 'success');
         setOpen(false);
     };
 
@@ -239,7 +239,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
             setCopied(true);
             window.setTimeout(() => setCopied(false), 1400);
         } else {
-            addToast('复制失败，请手动选择提示词', 'error');
+            addToast('Copy failed, please select the prompt manually', 'error');
         }
     };
 
@@ -253,7 +253,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
     const makeStandalone = () => {
         const standalone = flattenJournalAppearance(draft);
         setDraft(standalone);
-        addToast('已转为独立 CSS，不再依赖内置主题', 'success');
+        addToast('Converted to standalone CSS, no longer depends on the built-in theme', 'success');
     };
 
     const importCss = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,7 +262,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
         try {
             const css = (await file.text()).replace(/^\uFEFF/, '').trim();
             if (!css) {
-                addToast('CSS 文件是空的', 'error');
+                addToast('CSS file is empty', 'error');
                 return;
             }
             const importedValidation = validateScopedCss(
@@ -276,9 +276,9 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                 return;
             }
             setDraft({ preset: 'original', customCss: css });
-            addToast('CSS 已导入并转为独立样式', 'success');
+            addToast('CSS imported and converted to a standalone style', 'success');
         } catch {
-            addToast('CSS 文件读取失败', 'error');
+            addToast('Failed to read CSS file', 'error');
         } finally {
             event.target.value = '';
         }
@@ -287,7 +287,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
     const exportCss = async () => {
         const css = resolveJournalAppearanceCss(draft);
         if (!css.trim()) {
-            addToast('当前是原版样式，没有可导出的 CSS', 'info');
+            addToast('Currently the original style, nothing to export', 'info');
             return;
         }
         const date = new Date();
@@ -298,11 +298,11 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                 content: css,
                 fileName,
                 mimeType: 'text/css;charset=utf-8',
-                shareTitle: 'SullyOS 交换日记样式',
+                shareTitle: 'SullyOS Exchange Diary Style',
             });
-            addToast(result === 'shared' ? '已打开 CSS 分享面板' : '完整 CSS 已导出', 'success');
+            addToast(result === 'shared' ? 'CSS share panel opened' : 'Full CSS exported', 'success');
         } catch (error: any) {
-            if (error?.name !== 'AbortError') addToast('CSS 导出失败，请重试', 'error');
+            if (error?.name !== 'AbortError') addToast('CSS export failed, please try again', 'error');
         }
     };
 
@@ -329,12 +329,12 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                 <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-stone-200/80 bg-[#fbfaf8]/95 px-5 py-4 backdrop-blur">
                     <div>
                         <div className="text-[10px] font-bold uppercase tracking-[.22em] text-amber-600/70">Exchange diary skin</div>
-                        <h2 className="mt-0.5 text-base font-black">交换日记美化</h2>
+                        <h2 className="mt-0.5 text-base font-black">Exchange Diary Skin</h2>
                     </div>
                     <button
                         onClick={closePanel}
                         className="grid h-9 w-9 place-items-center rounded-full bg-stone-100 text-stone-500 active:scale-90"
-                        aria-label="关闭交换日记样式设置"
+                        aria-label="Close exchange diary style settings"
                     >
                         <X size={17} />
                     </button>
@@ -342,8 +342,8 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
 
                 <div className="space-y-7 p-5">
                     <section>
-                        <h3 className="text-sm font-bold">默认主题</h3>
-                        <p className="mt-1 text-[11px] text-slate-400">先选择主题和 CSS，再点底部“预览并浏览”；保存后才会对所有角色生效。</p>
+                        <h3 className="text-sm font-bold">Default theme</h3>
+                        <p className="mt-1 text-[11px] text-slate-400">Pick a theme and CSS first, then tap "Preview & browse" at the bottom; it only takes effect for all characters after saving.</p>
                         <div className="mt-3 grid grid-cols-2 gap-2.5">
                             {JOURNAL_APPEARANCE_PRESETS.map(preset => {
                                 const selected = (draft.preset || 'original') === preset.id;
@@ -372,15 +372,15 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                     <section>
                         <div className="mb-3 flex items-start justify-between gap-3">
                             <div>
-                                <h3 className="text-sm font-bold">自定义 CSS</h3>
-                                <p className="mt-1 text-[11px] text-slate-400">叠加在主题之后，只作用于交换日记，不会影响其它 App。</p>
+                                <h3 className="text-sm font-bold">Custom CSS</h3>
+                                <p className="mt-1 text-[11px] text-slate-400">Layered on top of the theme, only affects the exchange diary, won't affect other apps.</p>
                             </div>
                             <button
                                 onClick={copyPrompt}
                                 className="flex shrink-0 items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-700"
                             >
                                 {copied ? <Check size={13} /> : <Copy size={13} />}
-                                {copied ? '已复制' : '复制 AI 提示词'}
+                                {copied ? 'Copied' : 'Copy AI prompt'}
                             </button>
                         </div>
 
@@ -397,25 +397,25 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                                 className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white px-2 text-[10px] font-bold text-slate-600"
                             >
                                 <UploadSimple size={14} />
-                                导入 CSS
+                                Import CSS
                             </button>
                             <button
                                 onClick={exportCss}
                                 className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white px-2 text-[10px] font-bold text-slate-600"
                             >
                                 <DownloadSimple size={14} />
-                                导出完整 CSS
+                                Export full CSS
                             </button>
                             <button
                                 onClick={makeStandalone}
                                 disabled={(draft.preset || 'original') === 'original'}
                                 className="min-h-11 rounded-xl border border-stone-200 bg-white px-2 text-[10px] font-bold text-slate-600 disabled:bg-stone-100 disabled:text-stone-400"
                             >
-                                {(draft.preset || 'original') === 'original' ? '已独立使用' : '转为独立 CSS'}
+                                {(draft.preset || 'original') === 'original' ? 'Already standalone' : 'Convert to standalone CSS'}
                             </button>
                         </div>
                         <p className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-[10px] leading-4 text-emerald-700">
-                            导出会把内置主题展开成完整 CSS；导入后自动切到“原本琥珀”，只运行文件里的样式。导入仅替换当前预览，点击“保存样式”后才正式生效。
+                            Exporting expands the built-in theme into full CSS; importing automatically switches to "Original Amber" and only runs the styles in the file. Importing only replaces the current preview — it only takes effect for real after tapping "Save style".
                         </p>
 
                         <div className="mb-3 flex gap-2 overflow-x-auto no-scrollbar">
@@ -432,7 +432,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                                 onClick={() => setDraft(current => ({ ...current, customCss: '' }))}
                                 className="shrink-0 rounded-xl border border-stone-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-400"
                             >
-                                清空 CSS
+                                Clear CSS
                             </button>
                         </div>
 
@@ -451,14 +451,14 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                         )}
 
                         <details className="mt-3 text-[11px] text-slate-500">
-                            <summary className="cursor-pointer font-bold">查看完整 CSS 钩子</summary>
+                            <summary className="cursor-pointer font-bold">View all CSS hooks</summary>
                             <div className="mt-2 space-y-2 rounded-xl bg-stone-100 px-3 py-3 font-mono text-[10px] leading-5">
                                 {JOURNAL_CUSTOM_CSS_SELECTOR_GROUPS.map(group => (
                                     <p key={group.label}>
-                                        <b className="font-sans">{group.label}：</b>{group.selectors.join(' / ')}
+                                        <b className="font-sans">{group.label}:</b>{group.selectors.join(' / ')}
                                     </p>
                                 ))}
-                                <p className="font-sans text-slate-400">复制给 AI 的提示词包含上面全部选择器和安全限制。</p>
+                                <p className="font-sans text-slate-400">The AI prompt copied above includes all these selectors and the safety restrictions.</p>
                             </div>
                         </details>
                     </section>
@@ -470,7 +470,7 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                         className="flex h-12 items-center gap-1.5 rounded-2xl bg-stone-100 px-3 text-[11px] font-bold text-stone-500"
                     >
                         <ArrowCounterClockwise size={15} />
-                        恢复默认
+                        Restore default
                     </button>
                     <button
                         onClick={startPreview}
@@ -478,14 +478,14 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                         className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-amber-300 bg-amber-50 px-2 text-[11px] font-bold text-amber-800 disabled:opacity-40"
                     >
                         <Eye size={15} />
-                        预览并浏览
+                        Preview & browse
                     </button>
                     <button
                         onClick={save}
                         disabled={!validation.isValid}
                         className="h-12 rounded-2xl bg-stone-900 px-2 text-[11px] font-bold text-white disabled:opacity-40"
                     >
-                        保存样式
+                        Save style
                     </button>
                 </div>
             </div>
@@ -522,8 +522,8 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                 <div className="preview-copy">
                     <Eye size={18} weight="bold" />
                     <div>
-                        <span>正在预览日记本美化</span>
-                        <small>可以自由翻页；目前没有写入正式设置</small>
+                        <span>Previewing journal skin</span>
+                        <small>Feel free to flip pages; nothing has been written to the real settings yet</small>
                     </div>
                 </div>
                 <div className="preview-actions">
@@ -535,17 +535,17 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                             setOpen(true);
                         }}
                     >
-                        返回编辑
+                        Back to editing
                     </button>
                     <button
                         type="button"
                         className="preview-cancel"
                         onClick={() => {
                             onCancelPreview();
-                            addToast('已撤销日记本预览，正式样式没有改动', 'success');
+                            addToast('Journal preview undone, the real style is unchanged', 'success');
                         }}
                     >
-                        一键撤销
+                        Undo
                     </button>
                 </div>
             </div>
@@ -574,9 +574,9 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                 type="button"
                 id="sully-journal-saved-style-rescue"
                 onClick={reset}
-                aria-label="日记美化挡住了设置按钮，一键恢复原版"
+                aria-label="Journal skin is blocking the settings button, restore original with one tap"
             >
-                ⟲ 日记美化急救：恢复原版
+                ⟲ Journal skin rescue: restore original
             </button>
         </>,
         document.body,
@@ -598,8 +598,8 @@ const JournalAppearanceButton: React.FC<JournalAppearanceButtonProps> = ({
                         ? 'border-white/10 bg-white/10 text-white/75 hover:bg-white/15'
                         : 'border-amber-900/10 bg-white/45 text-amber-900 hover:bg-white/70'
                 }`}
-                title="交换日记样式"
-                aria-label="打开交换日记样式设置"
+                title="Exchange diary style"
+                aria-label="Open exchange diary style settings"
             >
                 <GearSix size={compact ? 15 : 17} weight="bold" />
             </button>

@@ -74,11 +74,11 @@ const PerCharAvatarPicker: React.FC = () => {
         if (!editingId) return;
         const url = urlDraft.trim();
         if (!isValidHttpImageUrl(url)) {
-            addToast('URL 无效，请填写 http(s) 图片直链', 'error');
+            addToast('Invalid URL, please enter a direct http(s) image link', 'error');
             return;
         }
         setOverride(editingId, url);
-        addToast('已设置该角色的聊天头像', 'success');
+        addToast('Chat avatar set for this character', 'success');
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +90,7 @@ const PerCharAvatarPicker: React.FC = () => {
             // 本地上传的图存令牌（图床外链那条路不经过这里，原样存字符串即可）
             setOverride(editingId, await migrateDataUrlToRef(base64));
             setUrlDraft('');
-            addToast('已设置该角色的聊天头像', 'success');
+            addToast('Chat avatar set for this character', 'success');
         } catch (err: any) {
             addToast(err.message, 'error');
         }
@@ -114,23 +114,23 @@ const PerCharAvatarPicker: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     </svg>
                 </span>
-                <h2 className="text-sm font-bold text-slate-700">分角色聊天头像</h2>
+                <h2 className="text-sm font-bold text-slate-700">Per-character chat avatar</h2>
             </div>
             <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
-                和不同角色聊天时，「你」可以顶着不同的头像。这里不设置的角色，用上面的整体头像；群聊始终用整体头像。
+                Chatting with different characters, "you" can show a different avatar for each. Characters not set here use the overall avatar above; group chats always use the overall avatar.
             </p>
 
             {characters.length > PAGE_SIZE && (
                 <input
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); setPage(0); }}
-                    placeholder="搜索角色…"
+                    placeholder="Search characters…"
                     className="w-full mb-3 bg-slate-50 focus:bg-white border border-slate-100 focus:border-primary/30 rounded-2xl px-4 py-2 text-xs text-slate-700 outline-none transition-all placeholder:text-slate-300"
                 />
             )}
 
             {filtered.length === 0 ? (
-                <div className="py-8 text-center text-[11px] text-slate-300">没有叫这个名字的角色</div>
+                <div className="py-8 text-center text-[11px] text-slate-300">No character with that name</div>
             ) : (
                 <div
                     onTouchStart={(e) => { swipeStartX.current = e.touches[0]?.clientX ?? null; }}
@@ -173,15 +173,15 @@ const PerCharAvatarPicker: React.FC = () => {
                     {pageCount > 1 && (
                         <div className="mt-3 flex items-center justify-center gap-3">
                             <button onClick={() => goPage(safePage - 1)} disabled={safePage === 0}
-                                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-500 transition-all active:scale-90 disabled:opacity-30" aria-label="上一页">‹</button>
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-500 transition-all active:scale-90 disabled:opacity-30" aria-label="Previous page">‹</button>
                             <div className="flex items-center gap-1.5">
                                 {Array.from({ length: pageCount }, (_, i) => (
-                                    <button key={i} onClick={() => goPage(i)} aria-label={`第 ${i + 1} 页`}
+                                    <button key={i} onClick={() => goPage(i)} aria-label={`Page ${i + 1}`}
                                         className={`rounded-full transition-all ${i === safePage ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-slate-200 hover:bg-slate-300'}`} />
                                 ))}
                             </div>
                             <button onClick={() => goPage(safePage + 1)} disabled={safePage === pageCount - 1}
-                                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-500 transition-all active:scale-90 disabled:opacity-30" aria-label="下一页">›</button>
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-500 transition-all active:scale-90 disabled:opacity-30" aria-label="Next page">›</button>
                         </div>
                     )}
                 </div>
@@ -195,8 +195,8 @@ const PerCharAvatarPicker: React.FC = () => {
                         onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-start justify-between mb-3">
                             <div>
-                                <div className="text-sm font-bold text-slate-800">和 {editingChar.name} 聊天时，你的头像</div>
-                                <div className="mt-0.5 text-[10px] text-slate-400">只影响这个角色的私聊；其他聊天不变。</div>
+                                <div className="text-sm font-bold text-slate-800">Your avatar when chatting with {editingChar.name}</div>
+                                <div className="mt-0.5 text-[10px] text-slate-400">Only affects this character's private chat; other chats are unaffected.</div>
                             </div>
                             <button onClick={() => setEditingId(null)} className="px-2 text-xl leading-none text-slate-400 hover:text-slate-600">×</button>
                         </div>
@@ -209,36 +209,36 @@ const PerCharAvatarPicker: React.FC = () => {
                             <span className="text-slate-300 text-lg">×</span>
                             <div className="flex flex-col items-center gap-1">
                                 <TokenImg value={editingOverride || userProfile.avatar} className={`w-16 h-16 rounded-full object-cover bg-slate-100 ${editingOverride ? 'ring-2 ring-primary' : 'ring-2 ring-slate-200'}`} alt="" />
-                                <span className="text-[10px] text-slate-400">{editingOverride ? '已单独设置' : '整体头像（默认）'}</span>
+                                <span className="text-[10px] text-slate-400">{editingOverride ? 'Set individually' : 'Overall avatar (default)'}</span>
                             </div>
                         </div>
 
                         <div className="rounded-2xl bg-slate-50 p-3 mb-2">
-                            <div className="text-[11px] font-bold text-slate-600 mb-1.5">图床链接（推荐）</div>
+                            <div className="text-[11px] font-bold text-slate-600 mb-1.5">Image-host link (recommended)</div>
                             <div className="flex gap-2">
                                 <input
                                     value={urlDraft}
                                     onChange={(e) => setUrlDraft(e.target.value)}
-                                    placeholder="https://… 图片直链"
+                                    placeholder="https://… direct image link"
                                     className="flex-1 min-w-0 bg-white border border-slate-200 focus:border-primary/40 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition-all placeholder:text-slate-300"
                                 />
-                                <button onClick={applyUrl} className="shrink-0 rounded-xl bg-primary px-3 py-2 text-[11px] font-bold text-white active:scale-95 transition-transform">使用</button>
+                                <button onClick={applyUrl} className="shrink-0 rounded-xl bg-primary px-3 py-2 text-[11px] font-bold text-white active:scale-95 transition-transform">Use</button>
                             </div>
                             <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
-                                推荐链接：不占本地空间，备份更小更快；「纯文字备份」也只有链接能把图带走（本地上传的图会被剥掉）。
+                                A link is recommended: it doesn't take up local space and keeps backups smaller and faster; a "text-only backup" can only carry the image along via a link (locally uploaded images get stripped).
                             </p>
                         </div>
 
                         <div className="flex gap-2">
                             <button onClick={() => uploadRef.current?.click()}
                                 className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-[11px] font-bold text-slate-600 active:scale-[0.98] transition-transform">
-                                本地上传（存进本机）
+                                Upload locally (stored on this device)
                             </button>
                             {editingOverride && (
                                 <button
-                                    onClick={() => { setOverride(editingChar.id, undefined); setUrlDraft(''); addToast('已恢复整体头像', 'success'); }}
+                                    onClick={() => { setOverride(editingChar.id, undefined); setUrlDraft(''); addToast('Restored to overall avatar', 'success'); }}
                                     className="flex-1 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-[11px] font-bold text-rose-500 active:scale-[0.98] transition-transform">
-                                    恢复整体头像
+                                    Restore overall avatar
                                 </button>
                             )}
                         </div>

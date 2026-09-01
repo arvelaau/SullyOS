@@ -17,14 +17,14 @@ interface Props {
 
 // Category definitions with icons and colors
 const CATEGORIES: Record<string, { icon: string; label: string; color: string; gradient: string }> = {
-    food: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f354.png', label: '餐饮', color: '#FF7043', gradient: 'from-orange-400 to-red-500' },
-    transport: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f697.png', label: '交通', color: '#42A5F5', gradient: 'from-blue-400 to-indigo-500' },
-    shopping: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f6cd.png', label: '购物', color: '#AB47BC', gradient: 'from-purple-400 to-pink-500' },
-    entertainment: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3ae.png', label: '娱乐', color: '#66BB6A', gradient: 'from-green-400 to-teal-500' },
-    bills: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4f1.png', label: '账单', color: '#FFA726', gradient: 'from-yellow-400 to-orange-500' },
-    health: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f48a.png', label: '医疗', color: '#EF5350', gradient: 'from-red-400 to-rose-500' },
-    education: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4da.png', label: '学习', color: '#5C6BC0', gradient: 'from-indigo-400 to-purple-500' },
-    other: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4e6.png', label: '其他', color: '#78909C', gradient: 'from-gray-400 to-slate-500' }
+    food: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f354.png', label: 'Food', color: '#FF7043', gradient: 'from-orange-400 to-red-500' },
+    transport: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f697.png', label: 'Transport', color: '#42A5F5', gradient: 'from-blue-400 to-indigo-500' },
+    shopping: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f6cd.png', label: 'Shopping', color: '#AB47BC', gradient: 'from-purple-400 to-pink-500' },
+    entertainment: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3ae.png', label: 'Entertainment', color: '#66BB6A', gradient: 'from-green-400 to-teal-500' },
+    bills: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4f1.png', label: 'Bills', color: '#FFA726', gradient: 'from-yellow-400 to-orange-500' },
+    health: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f48a.png', label: 'Health', color: '#EF5350', gradient: 'from-red-400 to-rose-500' },
+    education: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4da.png', label: 'Education', color: '#5C6BC0', gradient: 'from-indigo-400 to-purple-500' },
+    other: { icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4e6.png', label: 'Other', color: '#78909C', gradient: 'from-gray-400 to-slate-500' }
 };
 
 const BankAnalytics: React.FC<Props> = ({ transactions, goals, currency, onDeleteTx, apiConfig, dailyBudget = 100 }) => {
@@ -64,13 +64,13 @@ const BankAnalytics: React.FC<Props> = ({ transactions, goals, currency, onDelet
     const handleExportCSV = async () => {
         if (transactions.length === 0) return;
         const BOM = '\uFEFF';
-        const header = '日期,时间,金额,备注,分类\n';
+        const header = 'Date,Time,Amount,Note,Category\n';
         const rows = transactions
             .sort((a, b) => b.timestamp - a.timestamp)
             .map(tx => {
                 const date = tx.dateStr;
                 const time = new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const cat = CATEGORIES[categorizedTx[tx.id] || guessCategory(tx.note)]?.label || '其他';
+                const cat = CATEGORIES[categorizedTx[tx.id] || guessCategory(tx.note)]?.label || 'Other';
                 const note = tx.note.replace(/,/g, '，').replace(/"/g, '""');
                 return `${date},${time},${formatMoney(tx.amount)},"${note}",${cat}`;
             })
@@ -78,9 +78,9 @@ const BankAnalytics: React.FC<Props> = ({ transactions, goals, currency, onDelet
         const csv = BOM + header + rows;
         await shareOrDownloadFile({
             content: csv,
-            fileName: `记账记录_${new Date().toISOString().split('T')[0]}.csv`,
+            fileName: `bank-records_${new Date().toISOString().split('T')[0]}.csv`,
             mimeType: 'text/csv;charset=utf-8',
-            shareTitle: 'SullyOS 记账记录',
+            shareTitle: 'SullyOS Bank Records',
         });
     };
 
@@ -186,9 +186,9 @@ ${txList}
                     {/* Period Selector */}
                     <div className="flex bg-white/10 backdrop-blur-sm p-1 rounded-2xl mb-5">
                         {[
-                            { key: 'today', label: '今日', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2600.png' },
-                            { key: 'week', label: '本周', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c6.png' },
-                            { key: 'month', label: '本月', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c5.png' }
+                            { key: 'today', label: 'Today', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2600.png' },
+                            { key: 'week', label: 'This Week', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c6.png' },
+                            { key: 'month', label: 'This Month', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c5.png' }
                         ].map(p => (
                             <button
                                 key={p.key}
@@ -208,13 +208,13 @@ ${txList}
                     {/* Main Stats */}
                     <div className="text-center mb-4">
                         <div className="text-xs text-white/60 uppercase tracking-widest mb-1">
-                            {viewMode === 'today' ? '今日支出' : viewMode === 'week' ? '本周支出' : '本月支出'}
+                            {viewMode === 'today' ? 'Spent Today' : viewMode === 'week' ? 'Spent This Week' : 'Spent This Month'}
                         </div>
                         <div className="text-5xl font-black text-white font-mono tracking-tight">
                             {currency}{totalSpent.toFixed(0)}
                         </div>
                         <div className="text-sm text-white/50 mt-1">
-                            共 {filteredTx.length} 笔
+                            {filteredTx.length} transactions
                         </div>
                     </div>
 
@@ -229,7 +229,7 @@ ${txList}
                                 <div className="flex items-center gap-2">
                                     <img src={budgetStatus === 'good' ? 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4aa.png' : 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f631.png'} className="w-6 h-6" alt="" />
                                     <span className="text-sm text-white font-medium">
-                                        {budgetStatus === 'good' ? '预算还剩' : '已超支'}
+                                        {budgetStatus === 'good' ? 'Budget Remaining' : 'Over Budget'}
                                     </span>
                                 </div>
                                 <span className={`text-2xl font-black font-mono ${budgetStatus === 'good' ? 'text-green-300' : 'text-red-300'}`}>
@@ -245,7 +245,7 @@ ${txList}
                                 ></div>
                             </div>
                             <div className="text-[10px] text-white/50 mt-1 text-right">
-                                预算 {currency}{dailyBudget}
+                                Budget {currency}{dailyBudget}
                             </div>
                         </div>
                     )}
@@ -263,7 +263,7 @@ ${txList}
                         <div className="flex items-center justify-between mb-3 relative z-10">
                             <div className="flex items-center gap-2">
                                 <span className="w-8 h-8 bg-gradient-to-br from-[#FFD54F] to-[#FFB300] rounded-xl flex items-center justify-center text-lg shadow-md"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f916.png" className="w-5 h-5" alt="" /></span>
-                                <span className="text-sm font-bold text-[#5D4037]">AI 消费分析</span>
+                                <span className="text-sm font-bold text-[#5D4037]">AI Spending Analysis</span>
                             </div>
                             <button
                                 onClick={analyzeWithAI}
@@ -277,9 +277,9 @@ ${txList}
                                 {isAnalyzing ? (
                                     <span className="flex items-center gap-1.5">
                                         <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                        分析中
+                                        Analyzing
                                     </span>
-                                ) : '生成总结'}
+                                ) : 'Generate Summary'}
                             </button>
                         </div>
 
@@ -290,7 +290,7 @@ ${txList}
                             </div>
                         ) : (
                             <div className="text-center py-4 text-[#BCAAA4] text-xs">
-                                点击"生成总结"让 AI 分析你的消费习惯
+                                Tap "Generate Summary" to have AI analyze your spending habits
                             </div>
                         )}
                     </div>
@@ -301,7 +301,7 @@ ${txList}
                     <div className="bg-white rounded-3xl p-5 shadow-md border border-[#E8DCC8]">
                         <div className="flex items-center gap-2 mb-4">
                             <span className="w-8 h-8 bg-gradient-to-br from-[#AB47BC] to-[#7B1FA2] rounded-xl flex items-center justify-center text-lg shadow-md"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4ca.png" className="w-5 h-5" alt="" /></span>
-                            <span className="text-sm font-bold text-[#5D4037]">消费分类</span>
+                            <span className="text-sm font-bold text-[#5D4037]">Spending by Category</span>
                         </div>
 
                         <div className="space-y-3">
@@ -313,7 +313,7 @@ ${txList}
                                             <div className="flex items-center gap-2">
                                                 <img src={cat.icon} className="w-5 h-5" alt="" />
                                                 <span className="text-sm font-bold text-[#5D4037]">{cat.label}</span>
-                                                <span className="text-[10px] text-[#A1887F] bg-[#FDF6E3] px-2 py-0.5 rounded-full">{count}笔</span>
+                                                <span className="text-[10px] text-[#A1887F] bg-[#FDF6E3] px-2 py-0.5 rounded-full">{count} txns</span>
                                             </div>
                                             <span className="font-mono font-bold text-[#5D4037]">{currency}{total.toFixed(0)}</span>
                                         </div>
@@ -338,12 +338,12 @@ ${txList}
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <span className="w-8 h-8 bg-gradient-to-br from-[#66BB6A] to-[#43A047] rounded-xl flex items-center justify-center text-lg shadow-md"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4dd.png" className="w-5 h-5" alt="" /></span>
-                            <span className="text-sm font-bold text-[#5D4037]">消费明细</span>
+                            <span className="text-sm font-bold text-[#5D4037]">Transaction Details</span>
                         </div>
                         {transactions.length > 0 && (
                             <button onClick={handleExportCSV} className="flex items-center gap-1 px-3 py-1.5 bg-[#FDF6E3] hover:bg-[#FFF8E1] border border-[#E8DCC8] rounded-xl text-[10px] font-bold text-[#8D6E63] active:scale-95 transition-all">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                                导出全部CSV
+Export All as CSV
                             </button>
                         )}
                     </div>
@@ -352,9 +352,9 @@ ${txList}
                         <div className="text-center py-12">
                             <div className="mb-3 opacity-40"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4ed.png" className="w-16 h-16 mx-auto" alt="" /></div>
                             <div className="text-sm text-[#A1887F]">
-                                {viewMode === 'today' ? '今天还没有消费记录' : viewMode === 'week' ? '本周暂无记录' : '本月暂无记录'}
+                                {viewMode === 'today' ? 'No spending recorded today yet' : viewMode === 'week' ? 'No records this week' : 'No records this month'}
                             </div>
-                            <div className="text-xs text-[#BCAAA4] mt-1">点击右上角开始记账吧！</div>
+                            <div className="text-xs text-[#BCAAA4] mt-1">Tap the top-right button to start tracking!</div>
                         </div>
                     ) : (
                         <div className="space-y-3 max-h-[400px] overflow-y-auto no-scrollbar">
@@ -396,7 +396,7 @@ ${txList}
 
                         <div className="flex items-center gap-2 mb-3 relative z-10">
                             <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3af.png" className="w-5 h-5" alt="" />
-                            <span className="text-sm font-bold">储蓄进度</span>
+                            <span className="text-sm font-bold">Savings Progress</span>
                         </div>
 
                         <div className="text-3xl font-black font-mono mb-3 relative z-10">{currency}{totalSaved.toFixed(0)}</div>
@@ -404,7 +404,7 @@ ${txList}
                         {nextGoal && (
                             <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 relative z-10">
                                 <div className="flex justify-between text-xs mb-2">
-                                    <span className="opacity-80">下一目标: {nextGoal.name}</span>
+                                    <span className="opacity-80">Next goal: {nextGoal.name}</span>
                                     <span className="font-bold">{currency}{formatMoney(nextGoal.targetAmount - nextGoal.currentAmount)}</span>
                                 </div>
                                 <div className="h-2 bg-black/20 rounded-full overflow-hidden">

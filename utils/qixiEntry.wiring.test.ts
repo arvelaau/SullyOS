@@ -80,11 +80,11 @@ describe('Qixi entry confirmation and color selection wiring', () => {
     });
 
     it('shows the User purchase and Char independent self-purchase in the market', () => {
-        expect(componentSource).toContain('<small>你挑中</small>');
-        expect(componentSource).toContain('<small>另一边偷偷自购</small>');
+        expect(componentSource).toContain('<small>You pick</small>');
+        expect(componentSource).toContain('<small>The other side secretly buys their own</small>');
         expect(componentSource).toContain("currentSceneId === 'offerings' || currentSceneId === 'nightMarket'");
         expect(componentSource).toContain("['offerings', 'nightMarket'].includes(currentSceneId)");
-        expect(componentSource).toContain("nightMarket: '从摊位上挑一件你真的想买的商品'");
-        expect(componentSource).toContain("currentSceneId === 'lostLayer' ? '另一层挤了进来' : '另一层传来'");
+        expect(componentSource).toContain("nightMarket: 'Pick something from the stalls you really want to buy'");
+        expect(componentSource).toContain("currentSceneId === 'lostLayer' ? 'The other layer pushed its way in' : 'From the other layer'");
     });
 });

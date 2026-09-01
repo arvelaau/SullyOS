@@ -55,10 +55,10 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
     useEffect(() => { setIsEditing(false); }, [char.id]);
 
     const saveDraft = () => {
-        if (!draft.trim()) { addToast('档案内容不能为空', 'error'); return; }
+        if (!draft.trim()) { addToast('Profile content can\'t be empty', 'error'); return; }
         updateCharacter(char.id, { writerPersona: draft.trim(), writerPersonaGeneratedAt: Date.now() });
         setIsEditing(false);
-        addToast('创作档案已保存', 'success');
+        addToast('Writing profile saved', 'success');
     };
 
     if (isEditing) {
@@ -66,11 +66,11 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
             <div className="bg-gradient-to-b from-slate-50 to-white border-b border-black/5 overflow-hidden">
                 <div className="max-h-[45vh] overflow-y-auto p-4 overscroll-contain">
                     <textarea value={draft} onChange={e => setDraft(e.target.value)} className="w-full h-56 bg-white border border-slate-200 rounded-2xl p-3 text-sm leading-relaxed resize-none outline-none focus:border-slate-400" />
-                    <button onClick={() => setDraft(analyzeWriterPersonaSimple(char))} className="text-xs text-slate-400 underline mt-1">重置为自动分析</button>
+                    <button onClick={() => setDraft(analyzeWriterPersonaSimple(char))} className="text-xs text-slate-400 underline mt-1">Reset to auto-analysis</button>
                 </div>
                 <div className="px-4 py-3 border-t border-slate-100 bg-white/80 flex gap-2">
-                    <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-100 text-slate-500 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform">取消</button>
-                    <button onClick={saveDraft} className="flex-1 bg-slate-800 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform">保存</button>
+                    <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-100 text-slate-500 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform">Cancel</button>
+                    <button onClick={saveDraft} className="flex-1 bg-slate-800 text-white py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform">Save</button>
                 </div>
             </div>
         );
@@ -79,7 +79,7 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
     return (
         <div className="bg-gradient-to-b from-slate-50 to-white border-b border-black/5 overflow-hidden">
             <div className="max-h-[45vh] overflow-y-auto p-4 space-y-3 overscroll-contain">
-                {sections.length === 0 ? <div className="text-center py-8 text-slate-400 text-sm">暂无详细风格数据<br/><span className="text-xs">点击下方按钮生成</span></div> :
+                {sections.length === 0 ? <div className="text-center py-8 text-slate-400 text-sm">No detailed style data yet<br/><span className="text-xs">Tap the button below to generate</span></div> :
                     sections.map((sec, idx) => (
                         <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                             <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100"><span className="text-base">{sec.icon}</span><h4 className="text-sm font-bold text-slate-800">{sec.title}</h4></div>
@@ -89,31 +89,31 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
                 }
             </div>
             <div className="px-4 py-3 border-t border-slate-100 bg-white/80 flex gap-2">
-                <button onClick={() => { setDraft(rawPersona); setIsEditing(true); }} disabled={isTyping} className="flex-1 bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 disabled:opacity-50">手动编辑</button>
+                <button onClick={() => { setDraft(rawPersona); setIsEditing(true); }} disabled={isTyping} className="flex-1 bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 disabled:opacity-50">Edit manually</button>
                 <button onClick={async () => {
-                    if(!targetCharId) return; 
-                    setConfirmDialog({ 
-                        isOpen: true, 
-                        title: '重新生成风格', 
-                        message: '确定要重新分析该角色的写作人格吗？这将消耗一定量的 Token。', 
-                        variant: 'info', 
-                        confirmText: '重新生成', 
-                        onConfirm: async () => { 
-                            setConfirmDialog(null); 
-                            addToast('正在分析...', 'info'); 
-                            setIsTyping(true); 
-                            try { 
-                                await generateWriterPersonaDeep(char, userProfile, apiConfig, updateCharacter, true); 
-                                addToast('风格已更新', 'success'); 
-                            } catch (e) { 
-                                addToast('失败', 'error'); 
-                            } finally { 
-                                setIsTyping(false); 
-                            } 
-                        } 
-                    }); 
+                    if(!targetCharId) return;
+                    setConfirmDialog({
+                        isOpen: true,
+                        title: 'Regenerate style',
+                        message: 'Re-analyze this character\'s writing persona? This will consume some tokens.',
+                        variant: 'info',
+                        confirmText: 'Regenerate',
+                        onConfirm: async () => {
+                            setConfirmDialog(null);
+                            addToast('Analyzing...', 'info');
+                            setIsTyping(true);
+                            try {
+                                await generateWriterPersonaDeep(char, userProfile, apiConfig, updateCharacter, true);
+                                addToast('Style updated', 'success');
+                            } catch (e) {
+                                addToast('Failed', 'error');
+                            } finally {
+                                setIsTyping(false);
+                            }
+                        }
+                    });
                 }} disabled={isTyping} className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50">
-                    {isTyping ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <>深度分析写作风格</>}
+                    {isTyping ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <>Deep-analyze writing style</>}
                 </button>
             </div>
         </div>
@@ -196,7 +196,7 @@ const NovelWriter: React.FC<NovelWriterProps> = ({
             const end = summaryIndices[ci];
             const chapterSegs = segments.slice(start, end).filter(s => s.type === 'story');
             chapters.push({
-                title: `第 ${ci + 1} 章`,
+                title: `Chapter ${ci + 1}`,
                 segments: chapterSegs,
                 summary: segments[summaryIndices[ci]].content
             });
@@ -277,11 +277,11 @@ const NovelWriter: React.FC<NovelWriterProps> = ({
                     return next;
                 });
             } else { throw new Error(`API Error: ${response.status}`); }
-        } catch (e: any) { addToast('请求失败: ' + e.message, 'error'); } finally { setIsTyping(false); }
+        } catch (e: any) { addToast('Request failed: ' + e.message, 'error'); } finally { setIsTyping(false); }
     };
 
     const handleSend = async () => {
-        if (!targetCharId) { addToast('请先选择一个角色', 'error'); return; }
+        if (!targetCharId) { addToast('Please select a character first', 'error'); return; }
         const selectedChar = characters.find(c => c.id === targetCharId);
         if (!selectedChar) return;
 
@@ -308,10 +308,10 @@ const NovelWriter: React.FC<NovelWriterProps> = ({
             const last = newSegments[newSegments.length - 1];
             if (last.authorId !== 'user') { newSegments.pop(); deletedCount++; } else { break; }
         }
-        if (deletedCount === 0) { addToast('没有可重随的 AI 内容', 'info'); return; }
+        if (deletedCount === 0) { addToast('No AI content to reroll', 'info'); return; }
         setSegments(newSegments);
         updateNovel(activeBook.id, { segments: newSegments });
-        addToast('正在重随...', 'info');
+        addToast('Rerolling...', 'info');
         await runGeneration(selectedChar, "", newSegments);
     };
 
@@ -333,8 +333,8 @@ const NovelWriter: React.FC<NovelWriterProps> = ({
     const handleDeleteSegment = (id: string) => {
         setConfirmDialog({
             isOpen: true,
-            title: '删除段落',
-            message: '确定要删除这个段落吗？',
+            title: 'Delete paragraph',
+            message: 'Are you sure you want to delete this paragraph?',
             variant: 'danger',
             onConfirm: () => {
                 const newSegments = segments.filter(s => s.id !== id);
@@ -349,7 +349,7 @@ const NovelWriter: React.FC<NovelWriterProps> = ({
     const handleGenerateChapterSummary = async () => {
         setIsGeneratingSummary(true);
         setShowSummaryModal(true);
-        setSummaryContent('正在回顾本章节内容...');
+        setSummaryContent('Reviewing this chapter\'s content...');
         try {
             let startIndex = 0;
             let lastSummaryIdx = -1;
@@ -362,7 +362,7 @@ const NovelWriter: React.FC<NovelWriterProps> = ({
             const chapterText = currentChapterSegs.map(s => s.content).join('\n\n');
 
             if (!chapterText.trim()) {
-                setSummaryContent('本章似乎还没有足够的内容来生成总结。');
+                setSummaryContent('This chapter doesn\'t seem to have enough content to summarize yet.');
                 setIsGeneratingSummary(false);
                 return;
             }
@@ -399,12 +399,12 @@ ${chapterText.substring(0, 200000)}
             if (response.ok) {
                 const data = await safeResponseJson(response);
                 setSummaryContent(data.choices[0].message.content);
-            } else { setSummaryContent('生成失败，请重试。'); }
-        } catch (e: any) { setSummaryContent(`错误: ${e.message}`); } finally { setIsGeneratingSummary(false); }
+            } else { setSummaryContent('Generation failed, please retry.'); }
+        } catch (e: any) { setSummaryContent(`Error: ${e.message}`); } finally { setIsGeneratingSummary(false); }
     };
 
     const confirmChapterSummary = async () => {
-        const summarySeg: NovelSegment = { id: `seg-summary-${Date.now()}`, role: 'analyst', type: 'analysis', authorId: 'system', content: summaryContent, focus: 'chapter_summary', timestamp: Date.now(), meta: { reaction: '本章结束', suggestion: '新章节开始' } };
+        const summarySeg: NovelSegment = { id: `seg-summary-${Date.now()}`, role: 'analyst', type: 'analysis', authorId: 'system', content: summaryContent, focus: 'chapter_summary', timestamp: Date.now(), meta: { reaction: 'Chapter ended', suggestion: 'New chapter begins' } };
         const newSegments = [...segments, summarySeg];
         setSegments(newSegments);
         await updateNovel(activeBook.id, { segments: newSegments });
@@ -422,7 +422,7 @@ ${chapterText.substring(0, 200000)}
         }
         setShowSummaryModal(false);
         setSummaryContent('');
-        addToast('章节已归档，记忆已同步', 'success');
+        addToast('Chapter archived, memory synced', 'success');
     };
 
     // --- 历史章节多选 → 转发到聊天 ---
@@ -440,7 +440,7 @@ ${chapterText.substring(0, 200000)}
     };
 
     const openForwardModal = () => {
-        if (selectedChapterIds.size === 0) { addToast('请先选择要转发的章节', 'error'); return; }
+        if (selectedChapterIds.size === 0) { addToast('Please select chapters to forward first', 'error'); return; }
         // 默认勾上共创者——他们是最需要"记得这本书"的人
         setForwardTargets(new Set(activeBook.collaboratorIds.filter(id => characters.some(c => c.id === id))));
         setForwardGroupId(GROUP_FILTER_ALL);
@@ -472,15 +472,15 @@ ${chapterText.substring(0, 200000)}
                     charId: t.id,
                     role: 'user',
                     type: 'novel_card',
-                    content: `[笔友会小说]《${activeBook.title}》${chapters.length > 1 ? `${chapters.length} 章归档` : `第 ${chapters[0].index} 章归档`}`,
+                    content: `[Pen Pal Novel]《${activeBook.title}》${chapters.length > 1 ? `${chapters.length} chapters archived` : `Chapter ${chapters[0].index} archived`}`,
                     metadata: { novel },
                 });
             }
-            addToast(`已转发到 ${targets.length} 位角色的聊天`, 'success');
+            addToast(`Forwarded to ${targets.length} characters' chats`, 'success');
             setShowForwardModal(false);
             setSelectedChapterIds(new Set());
         } catch (e: any) {
-            addToast(`转发失败: ${e.message}`, 'error');
+            addToast(`Forward failed: ${e.message}`, 'error');
         } finally {
             setIsForwarding(false);
         }
@@ -488,7 +488,7 @@ ${chapterText.substring(0, 200000)}
 
     return (
         <div className={`h-full w-full flex flex-col font-serif ${activeTheme.bg} transition-colors duration-500 relative`}>
-            <ConfirmDialog isOpen={!!confirmDialog} title={confirmDialog?.title || ''} message={confirmDialog?.message || ''} variant={confirmDialog?.variant} confirmText={confirmDialog?.confirmText || (confirmDialog?.onConfirm ? '确认' : 'OK')} onConfirm={confirmDialog?.onConfirm || (() => setConfirmDialog(null))} onCancel={() => setConfirmDialog(null)} />
+            <ConfirmDialog isOpen={!!confirmDialog} title={confirmDialog?.title || ''} message={confirmDialog?.message || ''} variant={confirmDialog?.variant} confirmText={confirmDialog?.confirmText || (confirmDialog?.onConfirm ? 'Confirm' : 'OK')} onConfirm={confirmDialog?.onConfirm || (() => setConfirmDialog(null))} onCancel={() => setConfirmDialog(null)} />
 
             {/* Header */}
             {/* Removed 'sticky top-0' to fix layout overlap. It is now a standard flex child. */}
@@ -504,13 +504,13 @@ ${chapterText.substring(0, 200000)}
                     <div className="flex flex-col items-center cursor-pointer active:opacity-70 transition-opacity" onClick={onOpenSettings}>
                         <span className={`font-bold text-base ${activeTheme.text} truncate max-w-[150px]`}>{activeBook.title}</span>
                         <div className="flex items-center gap-2">
-                            <span className={`text-[10px] opacity-60 ${activeTheme.text}`}>第 {chapterCount} 章</span>
+                            <span className={`text-[10px] opacity-60 ${activeTheme.text}`}>Chapter {chapterCount}</span>
                             {lastTokenUsage && <span className={`text-[9px] px-1.5 py-0.5 rounded opacity-50 font-mono border border-current ${activeTheme.text}`}>{lastTokenUsage}</span>}
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
-                        <button onClick={() => setShowHistoryModal(true)} className={`p-2 rounded-full hover:bg-black/5 transition-colors ${activeTheme.text}`} title="历史章节"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg></button>
-                        <button onClick={handleGenerateChapterSummary} disabled={isTyping} className={`p-2 rounded-full hover:bg-black/5 transition-colors ${activeTheme.text}`} title="结束本章"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" /></svg></button>
+                        <button onClick={() => setShowHistoryModal(true)} className={`p-2 rounded-full hover:bg-black/5 transition-colors ${activeTheme.text}`} title="Past chapters"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg></button>
+                        <button onClick={handleGenerateChapterSummary} disabled={isTyping} className={`p-2 rounded-full hover:bg-black/5 transition-colors ${activeTheme.text}`} title="End this chapter"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" /></svg></button>
                     </div>
                 </div>
                 <div className="px-4 pb-3 flex gap-3 overflow-x-auto no-scrollbar">
@@ -530,7 +530,7 @@ ${chapterText.substring(0, 200000)}
                     <div className="flex items-center gap-3 overflow-x-auto no-scrollbar flex-1 mr-4">
                         <div className="flex items-center gap-2 shrink-0">
                             {targetChar && <TokenImg value={targetChar.avatar} className="w-6 h-6 rounded-full object-cover" />}
-                            <span className="text-xs font-bold text-slate-700">{targetChar?.name ? `${targetChar.name}的风格` : '未选择角色'}</span>
+                            <span className="text-xs font-bold text-slate-700">{targetChar?.name ? `${targetChar.name}'s style` : 'No character selected'}</span>
                         </div>
                         <div className="flex-1 flex gap-2 overflow-x-auto no-scrollbar">
                             {targetChar && extractWritingTags(targetChar).slice(0, 3).map((tag, idx) => {
@@ -542,7 +542,7 @@ ${chapterText.substring(0, 200000)}
                             })}
                         </div>
                     </div>
-                    <button onClick={() => setIsStyleExpanded(!isStyleExpanded)} className="shrink-0 text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-full hover:bg-slate-50 text-slate-600 flex items-center gap-1 transition-colors">详情 <span className={`transform transition-transform ${isStyleExpanded ? 'rotate-180' : ''}`}>▼</span></button>
+                    <button onClick={() => setIsStyleExpanded(!isStyleExpanded)} className="shrink-0 text-[10px] bg-white border border-slate-200 px-2 py-1 rounded-full hover:bg-slate-50 text-slate-600 flex items-center gap-1 transition-colors">Details <span className={`transform transition-transform ${isStyleExpanded ? 'rotate-180' : ''}`}>▼</span></button>
                 </div>
                 <div className={`transition-all duration-300 ease-out overflow-hidden ${isStyleExpanded ? 'max-h-[60vh] opacity-100' : 'max-h-0 opacity-0'}`}>
                     {targetChar ? <PersonaPanel 
@@ -555,13 +555,13 @@ ${chapterText.substring(0, 200000)}
                         addToast={addToast}
                         apiConfig={apiConfig}
                         updateCharacter={updateCharacter}
-                    /> : <div className="p-4 text-center text-xs text-slate-400">请先选择一个角色</div>}
+                    /> : <div className="p-4 text-center text-xs text-slate-400">Please select a character first</div>}
                 </div>
             </div>
 
             {/* Content Stream */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-40" ref={scrollRef}>
-                {displaySegments.length === 0 && <div className="text-center py-20 opacity-40"><p className="text-sm italic font-serif">第 {chapterCount} 章<br/>提笔写下新的开始...</p></div>}
+                {displaySegments.length === 0 && <div className="text-center py-20 opacity-40"><p className="text-sm italic font-serif">Chapter {chapterCount}<br/>Pick up the pen and begin...</p></div>}
                 {displaySegments.map(seg => {
                     const isUser = seg.authorId === 'user';
                     const char = !isUser ? characters.find(c => c.id === seg.authorId) : null;
@@ -577,7 +577,7 @@ ${chapterText.substring(0, 200000)}
                         <div key={seg.id} className={`p-6 rounded-sm shadow-sm leading-loose text-justify text-[17px] relative group transition-all ${activeTheme.paper} ${activeTheme.text} ${isUser ? 'border-l-4 border-slate-300' : ''}`}>
                             {hoverMenu}
                             <div className="absolute -top-3 left-4 bg-white/90 border border-black/5 px-2 py-0.5 rounded text-[9px] font-sans font-bold uppercase tracking-wider text-slate-500 shadow-sm flex items-center gap-1.5">
-                                {isUser ? null : <TokenImg value={char?.avatar} className="w-3 h-3 rounded-full object-cover" />}<span>{isUser ? '我 (User)' : char?.name} 执笔</span>{!isUser && seg.meta?.mood && <span className="bg-slate-100 px-1.5 rounded text-[9px] text-slate-600 normal-case">{seg.meta.mood}</span>}
+                                {isUser ? null : <TokenImg value={char?.avatar} className="w-3 h-3 rounded-full object-cover" />}<span>{isUser ? 'Me (User)' : char?.name} writing</span>{!isUser && seg.meta?.mood && <span className="bg-slate-100 px-1.5 rounded text-[9px] text-slate-600 normal-case">{seg.meta.mood}</span>}
                             </div>
                             <div className="whitespace-pre-wrap">{seg.content}</div>
                         </div>
@@ -590,8 +590,8 @@ ${chapterText.substring(0, 200000)}
                     );
                     if (role === 'analyst') return (
                         <div key={seg.id} className="mx-4 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-xl border border-slate-200 p-4 text-xs font-sans text-slate-600 shadow-sm group relative">
-                            {hoverMenu}<div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f9e0.png" alt="" className="w-5 h-5" /><span className="font-bold text-slate-800">{char?.name} 的分析</span>{seg.focus && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">{seg.focus}</span>}</div>
-                            {seg.meta?.reaction && <div className="mb-2 pb-2 border-b border-dashed border-slate-200"><span className="text-slate-400 text-[10px] uppercase">第一反应</span><p className="text-sm font-bold text-slate-700 mt-0.5">"{seg.meta.reaction}"</p></div>}<p className="leading-relaxed whitespace-pre-wrap">{seg.content}</p>
+                            {hoverMenu}<div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-200"><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f9e0.png" alt="" className="w-5 h-5" /><span className="font-bold text-slate-800">{char?.name}'s analysis</span>{seg.focus && <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">{seg.focus}</span>}</div>
+                            {seg.meta?.reaction && <div className="mb-2 pb-2 border-b border-dashed border-slate-200"><span className="text-slate-400 text-[10px] uppercase">First reaction</span><p className="text-sm font-bold text-slate-700 mt-0.5">"{seg.meta.reaction}"</p></div>}<p className="leading-relaxed whitespace-pre-wrap">{seg.content}</p>
                         </div>
                     );
                     return null;
@@ -602,39 +602,39 @@ ${chapterText.substring(0, 200000)}
             {/* Input */}
             <div className={`absolute bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200 z-30 transition-transform duration-300 font-sans shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-safe`}>
                 <div className="flex gap-2 px-4 py-2 text-xs border-b border-slate-100 overflow-x-auto no-scrollbar">
-                    <button onClick={() => setGenOptions({...genOptions, write: !genOptions.write})} className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${genOptions.write ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>续写正文</button>
-                    <button onClick={() => setGenOptions({...genOptions, comment: !genOptions.comment})} className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${genOptions.comment ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>角色吐槽</button>
-                    <button onClick={() => setGenOptions({...genOptions, analyze: !genOptions.analyze})} className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${genOptions.analyze ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>深度分析</button>
+                    <button onClick={() => setGenOptions({...genOptions, write: !genOptions.write})} className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${genOptions.write ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>Continue writing</button>
+                    <button onClick={() => setGenOptions({...genOptions, comment: !genOptions.comment})} className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${genOptions.comment ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>Character commentary</button>
+                    <button onClick={() => setGenOptions({...genOptions, analyze: !genOptions.analyze})} className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${genOptions.analyze ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>Deep analysis</button>
                 </div>
                 <div className="p-3 flex gap-2 items-end">
-                    <textarea value={inputText} onChange={e => setInputText(e.target.value)} placeholder={genOptions.write ? (inputText.trim() ? "输入剧情大纲..." : "输入指令或留空AI续写...") : "输入讨论内容..."} className="flex-1 bg-slate-100 rounded-2xl px-4 py-3 text-sm text-slate-700 outline-none resize-none max-h-32 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 transition-all" rows={1} style={{ minHeight: '44px' }} />
+                    <textarea value={inputText} onChange={e => setInputText(e.target.value)} placeholder={genOptions.write ? (inputText.trim() ? "Enter a plot outline..." : "Enter instructions, or leave blank for AI to continue...") : "Enter discussion content..."} className="flex-1 bg-slate-100 rounded-2xl px-4 py-3 text-sm text-slate-700 outline-none resize-none max-h-32 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 transition-all" rows={1} style={{ minHeight: '44px' }} />
                     {canReroll && !isTyping && !inputText.trim() && <button onClick={handleReroll} className={`w-11 h-11 rounded-full flex items-center justify-center text-slate-500 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all shrink-0`}><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg></button>}
                     <button onClick={handleSend} disabled={isTyping || (!inputText.trim() && !genOptions.write)} className={`w-11 h-11 rounded-full flex items-center justify-center text-white shadow-md active:scale-95 transition-all shrink-0 ${inputText.trim() || genOptions.write ? activeTheme.button : 'bg-slate-300'}`}><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" /></svg></button>
                 </div>
             </div>
 
             {/* Modals */}
-            <Modal isOpen={isEditModalOpen} title="编辑段落" onClose={() => setIsEditModalOpen(false)} footer={<button onClick={saveSegmentEdit} className="w-full py-3 bg-slate-800 text-white font-bold rounded-2xl">保存</button>}>
+            <Modal isOpen={isEditModalOpen} title="Edit paragraph" onClose={() => setIsEditModalOpen(false)} footer={<button onClick={saveSegmentEdit} className="w-full py-3 bg-slate-800 text-white font-bold rounded-2xl">Save</button>}>
                 <textarea value={editSegmentContent} onChange={e => setEditSegmentContent(e.target.value)} className="w-full h-48 bg-slate-100 rounded-xl p-3 text-sm resize-none focus:outline-none leading-relaxed" />
             </Modal>
-            <Modal isOpen={showSummaryModal} title="章节总结" onClose={() => setShowSummaryModal(false)} footer={isGeneratingSummary ? <div className="w-full py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl text-center">AI生成中...</div> : <button onClick={confirmChapterSummary} className="w-full py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg">确认归档并开启新章</button>}>
-                <textarea value={summaryContent} onChange={e => setSummaryContent(e.target.value)} className="w-full h-64 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm resize-none focus:outline-none leading-relaxed" placeholder="总结生成中..." />
+            <Modal isOpen={showSummaryModal} title="Chapter summary" onClose={() => setShowSummaryModal(false)} footer={isGeneratingSummary ? <div className="w-full py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl text-center">AI generating...</div> : <button onClick={confirmChapterSummary} className="w-full py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg">Confirm archive and start new chapter</button>}>
+                <textarea value={summaryContent} onChange={e => setSummaryContent(e.target.value)} className="w-full h-64 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm resize-none focus:outline-none leading-relaxed" placeholder="Generating summary..." />
             </Modal>
-            <Modal isOpen={showHistoryModal} title="历史章节" onClose={() => { setShowHistoryModal(false); setSelectedChapterIds(new Set()); }}>
+            <Modal isOpen={showHistoryModal} title="Past chapters" onClose={() => { setShowHistoryModal(false); setSelectedChapterIds(new Set()); }}>
                 {historicalSummaries.length > 0 && (
                     <div className="flex items-center justify-between mb-3 px-1">
                         <button onClick={toggleSelectAllChapters} className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition-colors">
                             <span className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${allChaptersSelected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300 bg-white'}`}>{allChaptersSelected && <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" /></svg>}</span>
-                            {allChaptersSelected ? '取消全选' : '全选'}
+                            {allChaptersSelected ? 'Deselect all' : 'Select all'}
                         </button>
                         <button onClick={openForwardModal} disabled={selectedChapterIds.size === 0} className="text-[10px] bg-indigo-500 text-white px-3 py-1.5 rounded-lg font-bold shadow-sm hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" /></svg>
-                            转发到聊天 ({selectedChapterIds.size})
+                            Forward to chat ({selectedChapterIds.size})
                         </button>
                     </div>
                 )}
                 <div className="max-h-[55vh] overflow-y-auto space-y-4 p-1">
-                    {historicalSummaries.length === 0 && <div className="text-center text-slate-400 py-4 text-xs">暂无历史章节</div>}
+                    {historicalSummaries.length === 0 && <div className="text-center text-slate-400 py-4 text-xs">No past chapters yet</div>}
                     {historicalSummaries.map((s, i) => {
                         const selected = selectedChapterIds.has(s.id);
                         return (
@@ -642,9 +642,9 @@ ${chapterText.substring(0, 200000)}
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${selected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300 bg-white'}`}>{selected && <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" /></svg>}</span>
-                                        <div className="font-bold text-sm text-slate-700">第 {i + 1} 章</div>
+                                        <div className="font-bold text-sm text-slate-700">Chapter {i + 1}</div>
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); setReadingChapterIndex(i); setShowHistoryModal(false); }} className="text-[10px] bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-100 border border-indigo-100 transition-colors">阅读原文</button>
+                                    <button onClick={(e) => { e.stopPropagation(); setReadingChapterIndex(i); setShowHistoryModal(false); }} className="text-[10px] bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-100 border border-indigo-100 transition-colors">Read full text</button>
                                 </div>
                                 <div className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap line-clamp-4">{s.content}</div>
                             </div>
@@ -654,12 +654,12 @@ ${chapterText.substring(0, 200000)}
             </Modal>
 
             {/* 转发章节：选择目标角色（默认勾上共创者，也可以分享给圈外角色） */}
-            <Modal isOpen={showForwardModal} title="转发章节到聊天" onClose={() => setShowForwardModal(false)} footer={
+            <Modal isOpen={showForwardModal} title="Forward chapters to chat" onClose={() => setShowForwardModal(false)} footer={
                 <button onClick={handleForwardChapters} disabled={isForwarding || forwardTargets.size === 0} className="w-full py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg disabled:opacity-40 flex items-center justify-center gap-2">
-                    {isForwarding ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> 转发中...</> : `转发 ${selectedChapterIds.size} 章给 ${forwardTargets.size} 位角色`}
+                    {isForwarding ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Forwarding...</> : `Forward ${selectedChapterIds.size} chapters to ${forwardTargets.size} characters`}
                 </button>
             }>
-                <p className="text-xs text-slate-400 mb-3">章节归档会进入所选角色的聊天记录，之后聊天时 Ta 就"读过"这本书了。共创者已默认勾选。</p>
+                <p className="text-xs text-slate-400 mb-3">The chapter archive will be added to the selected characters' chat history, so they'll have "read" this book next time you chat. Co-authors are checked by default.</p>
                 <CharacterGroupFilterBar characters={characters} groups={characterGroups} value={forwardGroupId} onChange={setForwardGroupId} className="mb-3" />
                 <div className="max-h-[45vh] overflow-y-auto space-y-2 p-1">
                     {filterCharactersByGroup(characters, characterGroups, forwardGroupId).map(c => {
@@ -669,7 +669,7 @@ ${chapterText.substring(0, 200000)}
                             <button key={c.id} onClick={() => setForwardTargets(prev => { const n = new Set(prev); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })} className={`w-full flex items-center gap-3 p-3 rounded-xl border shadow-sm active:scale-[0.98] transition-all text-left ${checked ? 'bg-indigo-50/70 border-indigo-200' : 'bg-white border-slate-100 hover:border-slate-200'}`}>
                                 <TokenImg value={c.avatar} className="w-9 h-9 rounded-full object-cover" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-bold text-sm text-slate-700 flex items-center gap-2">{c.name}{isCollab && <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded-full font-bold">共创者</span>}</div>
+                                    <div className="font-bold text-sm text-slate-700 flex items-center gap-2">{c.name}{isCollab && <span className="text-[9px] bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded-full font-bold">Co-author</span>}</div>
                                 </div>
                                 <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${checked ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300 bg-white'}`}>{checked && <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" /></svg>}</span>
                             </button>
@@ -690,19 +690,19 @@ ${chapterText.substring(0, 200000)}
                                     <div key={seg.id} className={`${activeTheme.paper} p-5 rounded-sm leading-loose text-justify text-[15px] ${activeTheme.text} ${isUser ? 'border-l-4 border-slate-300' : ''}`}>
                                         <div className="text-[9px] font-sans font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
                                             {!isUser && char && <TokenImg value={char.avatar} className="w-3 h-3 rounded-full object-cover" />}
-                                            <span>{isUser ? '我' : char?.name} 执笔</span>
+                                            <span>{isUser ? 'Me' : char?.name} writing</span>
                                         </div>
                                         <div className="whitespace-pre-wrap font-serif">{seg.content}</div>
                                     </div>
                                 );
                             })}
                             <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mt-4">
-                                <div className="text-[10px] font-bold text-indigo-400 uppercase mb-2">章节总结</div>
+                                <div className="text-[10px] font-bold text-indigo-400 uppercase mb-2">Chapter summary</div>
                                 <div className="text-xs text-indigo-700 leading-relaxed whitespace-pre-wrap">{chapterContentList[readingChapterIndex].summary}</div>
                             </div>
                             <div className="flex justify-between pt-2">
-                                <button onClick={() => setReadingChapterIndex(Math.max(0, (readingChapterIndex ?? 0) - 1))} disabled={readingChapterIndex === 0} className="text-xs text-slate-400 disabled:opacity-30 px-3 py-1.5 rounded-lg hover:bg-slate-100">← 上一章</button>
-                                <button onClick={() => setReadingChapterIndex(Math.min(chapterContentList.length - 1, (readingChapterIndex ?? 0) + 1))} disabled={readingChapterIndex === chapterContentList.length - 1} className="text-xs text-slate-400 disabled:opacity-30 px-3 py-1.5 rounded-lg hover:bg-slate-100">下一章 →</button>
+                                <button onClick={() => setReadingChapterIndex(Math.max(0, (readingChapterIndex ?? 0) - 1))} disabled={readingChapterIndex === 0} className="text-xs text-slate-400 disabled:opacity-30 px-3 py-1.5 rounded-lg hover:bg-slate-100">← Previous chapter</button>
+                                <button onClick={() => setReadingChapterIndex(Math.min(chapterContentList.length - 1, (readingChapterIndex ?? 0) + 1))} disabled={readingChapterIndex === chapterContentList.length - 1} className="text-xs text-slate-400 disabled:opacity-30 px-3 py-1.5 rounded-lg hover:bg-slate-100">Next chapter →</button>
                             </div>
                         </>
                     )}

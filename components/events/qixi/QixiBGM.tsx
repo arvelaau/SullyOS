@@ -210,7 +210,7 @@ export function useQixiBGM(stage: string, sceneIndex: number) {
 }
 
 export const QixiBGMToggle: React.FC<{ muted: boolean; onToggle: () => void }> = ({ muted, onToggle }) => (
-    <button type="button" className={`q7-bgm ${muted ? 'is-muted' : ''}`} onClick={onToggle} aria-label={muted ? '播放七夕背景音乐' : '静音七夕背景音乐'} title={muted ? '播放 BGM' : '静音 BGM'}>
+    <button type="button" className={`q7-bgm ${muted ? 'is-muted' : ''}`} onClick={onToggle} aria-label={muted ? 'Play Qixi background music' : 'Mute Qixi background music'} title={muted ? 'Play BGM' : 'Mute BGM'}>
         <i>{muted ? '×' : '♪'}</i><span>{muted ? 'BGM OFF' : 'BGM'}</span>
     </button>
 );

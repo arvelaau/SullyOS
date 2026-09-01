@@ -77,6 +77,9 @@ const BankGameMenu: React.FC<Props> = ({
             newStaff.ownerCharId = selectedOwner;
             const owner = characters.find(c => c.id === selectedOwner);
             if (owner) {
+                // NOTE: not UI text — `personality` is read by BankShopScene.tsx to build the
+                // AI's in-scene narrative prompt ("Stay in character based on your personality").
+                // Left in Chinese intentionally; see translation report for BankGameMenu.tsx.
                 newStaff.personality = `${owner.name}的宝贝宠物，需要好好照顾！`;
             }
         }
@@ -96,8 +99,8 @@ const BankGameMenu: React.FC<Props> = ({
             {/* Premium Tab Bar */}
             <div className="flex bg-white/60 backdrop-blur-sm p-1.5 rounded-2xl shadow-sm border border-[#E8DCC8]">
                 {[
-                    { key: 'staff', label: '员工' },
-                    { key: 'goals', label: '目标' }
+                    { key: 'staff', label: 'Staff' },
+                    { key: 'goals', label: 'Goals' }
                 ].map(t => (
                     <button
                         key={t.key}
@@ -122,9 +125,9 @@ const BankGameMenu: React.FC<Props> = ({
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-bold text-[#5D4037] flex items-center gap-2">
                                 <span className="w-6 h-6 bg-gradient-to-br from-[#A5D6A7] to-[#66BB6A] rounded-lg flex items-center justify-center text-white text-xs">✓</span>
-                                在职员工
+                                Active Staff
                             </h4>
-                            <span className="text-[10px] text-[#A1887F]">点击头像编辑</span>
+                            <span className="text-[10px] text-[#A1887F]">Tap avatar to edit</span>
                         </div>
                         <div className="space-y-3">
                             {state.shop.staff.map(s => (
@@ -143,10 +146,10 @@ const BankGameMenu: React.FC<Props> = ({
                                             </div>
                                             <div>
                                                 <div className="font-bold text-[#5D4037] group-hover:text-[#FF7043] transition-colors">{s.name}</div>
-                                                <div className="text-[10px] text-[#A1887F] uppercase tracking-wider">{s.role === 'manager' ? '经理' : s.role === 'chef' ? '主厨' : '服务员'}</div>
+                                                <div className="text-[10px] text-[#A1887F] uppercase tracking-wider">{s.role === 'manager' ? 'Manager' : s.role === 'chef' ? 'Chef' : 'Waiter'}</div>
                                                 {/* Energy bar */}
                                                 <div className="mt-1.5 flex items-center gap-2">
-                                                    <span className="text-[9px] text-[#BCAAA4]">精力</span>
+                                                    <span className="text-[9px] text-[#BCAAA4]">Energy</span>
                                                     <div className="w-20 h-2 bg-[#EFEBE9] rounded-full overflow-hidden">
                                                         <div
                                                             className={`h-full rounded-full transition-all duration-500 ${s.fatigue > 80 ? 'bg-gradient-to-r from-red-400 to-red-500' : s.fatigue > 50 ? 'bg-gradient-to-r from-yellow-400 to-orange-400' : 'bg-gradient-to-r from-green-400 to-emerald-500'}`}
@@ -166,13 +169,13 @@ const BankGameMenu: React.FC<Props> = ({
                                                         : 'bg-gradient-to-r from-[#81C784] to-[#66BB6A] text-white shadow-md hover:shadow-lg active:scale-95'
                                                 }`}
                                             >
-                                                {s.fatigue === 0 ? '满血' : '休息'}
+                                                {s.fatigue === 0 ? 'Full' : 'Rest'}
                                             </button>
                                             <button
                                                 onClick={() => onFireStaff(s.id)}
                                                 className="px-3 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-500 active:scale-95 transition-all border border-red-100"
                                             >
-                                                解雇
+                                                Fire
                                             </button>
                                         </div>
                                     </div>
@@ -186,13 +189,13 @@ const BankGameMenu: React.FC<Props> = ({
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-bold text-[#5D4037] flex items-center gap-2">
                                 <span className="w-6 h-6 bg-gradient-to-br from-[#90CAF9] to-[#42A5F5] rounded-lg flex items-center justify-center text-white text-xs">+</span>
-                                人才市场
+                                Talent Market
                             </h4>
                             <button
                                 onClick={() => setShowCustomHire(!showCustomHire)}
                                 className="text-[10px] font-bold text-[#42A5F5] bg-[#E3F2FD] px-3 py-1.5 rounded-lg hover:bg-[#BBDEFB] transition-colors"
                             >
-                                {showCustomHire ? '收起' : <><Sparkle size={12} weight="fill" className="inline" /> 自定义招聘</>}
+                                {showCustomHire ? 'Collapse' : <><Sparkle size={12} weight="fill" className="inline" /> Custom Hire</>}
                             </button>
                         </div>
 
@@ -204,8 +207,8 @@ const BankGameMenu: React.FC<Props> = ({
                                     <div className="flex items-center gap-2">
                                         <PawPrint size={20} weight="fill" className="text-[#8D6E63]" />
                                         <div>
-                                            <div className="text-xs font-bold text-[#8D6E63]">宠物模式</div>
-                                            <div className="text-[9px] text-[#A1887F]">为角色招募专属宠物员工</div>
+                                            <div className="text-xs font-bold text-[#8D6E63]">Pet Mode</div>
+                                            <div className="text-[9px] text-[#A1887F]">Recruit a dedicated pet staff member for a character</div>
                                         </div>
                                     </div>
                                     <button
@@ -219,7 +222,7 @@ const BankGameMenu: React.FC<Props> = ({
                                 {/* Owner Selection (Pet Mode) */}
                                 {isPetMode && characters.length > 0 && (
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-[#A1887F] uppercase">选择主人</label>
+                                        <label className="text-[10px] font-bold text-[#A1887F] uppercase">Choose Owner</label>
                                         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                                             {characters.map(char => (
                                                 <button
@@ -245,14 +248,14 @@ const BankGameMenu: React.FC<Props> = ({
                                 <input
                                     value={customName}
                                     onChange={e => setCustomName(e.target.value)}
-                                    placeholder={isPetMode ? "宠物名字" : "员工姓名"}
+                                    placeholder={isPetMode ? "Pet's name" : "Staff name"}
                                     className="w-full bg-white rounded-xl px-4 py-2.5 text-sm border border-[#E8DCC8] outline-none focus:border-[#FF7043] transition-colors"
                                 />
 
                                 {/* Avatar Section with Mode Toggle */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-bold text-[#A1887F] uppercase">头像设置</label>
+                                        <label className="text-[10px] font-bold text-[#A1887F] uppercase">Avatar</label>
                                         <div className="flex bg-[#F5F0E8] p-0.5 rounded-lg">
                                             <button
                                                 type="button"
@@ -263,7 +266,7 @@ const BankGameMenu: React.FC<Props> = ({
                                                         : 'text-[#8D6E63]'
                                                 }`}
                                             >
-                                                <><LinkIcon size={10} weight="bold" className="inline" /> 图床URL</>
+                                                <><LinkIcon size={10} weight="bold" className="inline" /> Image URL</>
                                             </button>
                                             <button
                                                 type="button"
@@ -274,7 +277,7 @@ const BankGameMenu: React.FC<Props> = ({
                                                         : 'text-[#8D6E63]'
                                                 }`}
                                             >
-                                                <><Camera size={10} weight="bold" className="inline" /> 上传</>
+                                                <><Camera size={10} weight="bold" className="inline" /> Upload</>
                                             </button>
                                         </div>
                                     </div>
@@ -296,12 +299,12 @@ const BankGameMenu: React.FC<Props> = ({
                                                     type="url"
                                                     value={avatarUrl}
                                                     onChange={e => handleAvatarUrlChange(e.target.value)}
-                                                    placeholder="粘贴图床链接，如 https://..."
+                                                    placeholder="Paste an image URL, e.g. https://..."
                                                     className="w-full bg-white rounded-xl px-3 py-2 text-xs border border-[#E8DCC8] outline-none focus:border-[#42A5F5] transition-colors"
                                                 />
                                                 <div className="text-[9px] text-[#66BB6A] flex items-center gap-1">
                                                     <Check size={10} weight="bold" />
-                                                    <span>推荐使用图床，节省本地存储空间</span>
+                                                    <span>Using an image host saves local storage space</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -311,10 +314,10 @@ const BankGameMenu: React.FC<Props> = ({
                                                     onClick={() => avatarInputRef.current?.click()}
                                                     className="w-full py-2 bg-[#FDF6E3] border border-dashed border-[#BCAAA4] rounded-xl text-xs text-[#8D6E63] hover:bg-[#FFF8E1] hover:border-[#8D6E63] transition-all"
                                                 >
-                                                    <><Camera size={12} weight="bold" className="inline" /> 选择图片</>
+                                                    <><Camera size={12} weight="bold" className="inline" /> Choose Image</>
                                                 </button>
                                                 <div className="text-[9px] text-[#BCAAA4] mt-1 text-center">
-                                                    图片将占用本地存储
+                                                    The image will use local storage
                                                 </div>
                                                 <input
                                                     ref={avatarInputRef}
@@ -335,9 +338,9 @@ const BankGameMenu: React.FC<Props> = ({
                                         onChange={(e) => setCustomRole(e.target.value as any)}
                                         className="bg-white rounded-xl px-3 py-2 text-xs border border-[#E8DCC8] outline-none text-[#5D4037]"
                                     >
-                                        <option value="waiter">{isPetMode ? '店小二' : '服务员'}</option>
-                                        <option value="chef">{isPetMode ? '小帮厨' : '大厨'}</option>
-                                        <option value="manager">{isPetMode ? '吉祥物' : '经理'}</option>
+                                        <option value="waiter">{isPetMode ? 'Errand Runner' : 'Waiter'}</option>
+                                        <option value="chef">{isPetMode ? 'Sous Chef' : 'Chef'}</option>
+                                        <option value="manager">{isPetMode ? 'Mascot' : 'Manager'}</option>
                                     </select>
                                     <button
                                         onClick={handleCustomHire}
@@ -348,7 +351,7 @@ const BankGameMenu: React.FC<Props> = ({
                                                 : 'bg-gradient-to-r from-[#42A5F5] to-[#1E88E5] text-white hover:shadow-lg active:scale-95'
                                         }`}
                                     >
-                                        {isPetMode ? '领养 · 150 AP' : '雇佣 · 200 AP'}
+                                        {isPetMode ? 'Adopt · 150 AP' : 'Hire · 200 AP'}
                                     </button>
                                 </div>
 
@@ -356,7 +359,7 @@ const BankGameMenu: React.FC<Props> = ({
                                 {isPetMode && selectedOwner && (
                                     <div className="bg-[#FFF3E0] p-3 rounded-xl text-[10px] text-[#E65100] flex items-start gap-2">
                                         <Lightbulb size={16} weight="fill" className="text-[#E65100]" />
-                                        <span>当 {characters.find(c => c.id === selectedOwner)?.name} 来访时，会发现自己的宠物在这里打工，触发特殊互动！</span>
+                                        <span>When {characters.find(c => c.id === selectedOwner)?.name} visits, they'll discover their own pet working here, triggering a special interaction!</span>
                                     </div>
                                 )}
                             </div>
@@ -377,21 +380,21 @@ const BankGameMenu: React.FC<Props> = ({
                                         </div>
                                         <div>
                                             <div className="font-bold text-sm text-[#5D4037]">{s.name}</div>
-                                            <div className="text-[10px] text-[#A1887F] uppercase tracking-wider">{s.role === 'manager' ? '经理' : s.role === 'chef' ? '主厨' : '服务员'}</div>
+                                            <div className="text-[10px] text-[#A1887F] uppercase tracking-wider">{s.role === 'manager' ? 'Manager' : s.role === 'chef' ? 'Chef' : 'Waiter'}</div>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => onHireStaff({ ...s, id: `staff-${Date.now()}`, fatigue: 0, hireDate: Date.now() }, 200)}
                                         className="bg-gradient-to-r from-[#FF8A65] to-[#FF7043] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:shadow-lg active:scale-95 transition-all"
                                     >
-                                        雇佣 · 200 AP
+                                        Hire · 200 AP
                                     </button>
                                 </div>
                             ))}
                             {AVAILABLE_STAFF.every(s => state.shop.staff.find(exist => exist.name === s.name)) && !showCustomHire && (
                                 <div className="text-center py-8">
                                     <div className="mb-2 opacity-50"><Confetti size={40} weight="duotone" className="text-[#8D6E63] mx-auto" /></div>
-                                    <div className="text-xs text-[#A1887F]">全员已到齐！</div>
+                                    <div className="text-xs text-[#A1887F]">Everyone's on staff!</div>
                                 </div>
                             )}
                         </div>
@@ -403,9 +406,9 @@ const BankGameMenu: React.FC<Props> = ({
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-sm font-bold text-[#5D4037] flex items-center gap-2">
                                     <span className="w-6 h-6 bg-gradient-to-br from-[#EF9A9A] to-[#E57373] rounded-lg flex items-center justify-center text-white text-xs">✕</span>
-                                    已解雇员工
+                                    Fired Staff
                                 </h4>
-                                <span className="text-[10px] text-[#A1887F]">{(state.firedStaff || []).length} 人</span>
+                                <span className="text-[10px] text-[#A1887F]">{(state.firedStaff || []).length}</span>
                             </div>
                             <div className="space-y-2">
                                 {(state.firedStaff || []).map(s => (
@@ -419,7 +422,7 @@ const BankGameMenu: React.FC<Props> = ({
                                             </div>
                                             <div>
                                                 <div className="font-bold text-sm text-[#5D4037]">{s.name}</div>
-                                                <div className="text-[10px] text-[#A1887F] uppercase tracking-wider">{s.role === 'manager' ? '经理' : s.role === 'chef' ? '主厨' : '服务员'}</div>
+                                                <div className="text-[10px] text-[#A1887F] uppercase tracking-wider">{s.role === 'manager' ? 'Manager' : s.role === 'chef' ? 'Chef' : 'Waiter'}</div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -427,13 +430,13 @@ const BankGameMenu: React.FC<Props> = ({
                                                 onClick={() => onRehireStaff(s.id)}
                                                 className="px-3 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[#81C784] to-[#66BB6A] text-white shadow-md hover:shadow-lg active:scale-95 transition-all"
                                             >
-                                                重新聘用
+                                                Rehire
                                             </button>
                                             <button
                                                 onClick={() => onDeleteFiredStaff(s.id)}
                                                 className="px-3 py-2 rounded-xl text-xs font-bold bg-red-500 text-white hover:bg-red-600 active:scale-95 transition-all shadow-md"
                                             >
-                                                删除
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
@@ -453,15 +456,15 @@ const BankGameMenu: React.FC<Props> = ({
                         className="w-full py-4 border-2 border-dashed border-[#BCAAA4] text-[#8D6E63] rounded-2xl font-bold hover:bg-[#FDF6E3] hover:border-[#8D6E63] transition-all flex items-center justify-center gap-2"
                     >
                         <span className="w-6 h-6 bg-[#EFEBE9] rounded-full flex items-center justify-center text-sm">+</span>
-                        添加储蓄目标
+                        Add Savings Goal
                     </button>
 
                     {/* Goals List */}
                     {state.goals.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="mb-3 opacity-40"><Target size={56} weight="duotone" className="text-[#8D6E63] mx-auto" /></div>
-                            <div className="text-sm text-[#A1887F]">还没有储蓄目标</div>
-                            <div className="text-xs text-[#BCAAA4] mt-1">设定一个目标，开始攒钱吧！</div>
+                            <div className="text-sm text-[#A1887F]">No savings goals yet</div>
+                            <div className="text-xs text-[#BCAAA4] mt-1">Set a goal and start saving!</div>
                         </div>
                     ) : (
                         state.goals.map(g => {
@@ -494,7 +497,7 @@ const BankGameMenu: React.FC<Props> = ({
                                         </div>
 
                                         <div className="flex justify-between mt-2 text-[10px]">
-                                            <span className="text-[#A1887F]">已存 {state.config.currencySymbol}{g.currentAmount}</span>
+                                            <span className="text-[#A1887F]">Saved {state.config.currencySymbol}{g.currentAmount}</span>
                                             <span className="text-[#66BB6A] font-bold">{progress.toFixed(0)}%</span>
                                         </div>
                                     </div>

@@ -14,8 +14,8 @@ const LuckinHelpModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
                     <div className="flex items-center gap-2">
                         <span className="text-xl">🦌</span>
                         <div>
-                            <div className="text-[13px] font-bold text-white">瑞一杯 · 怎么用</div>
-                            <div className="text-[9px] text-white/70">跟麦当劳不太一样, 花 30 秒看下</div>
+                            <div className="text-[13px] font-bold text-white">瑞一杯 · How it works</div>
+                            <div className="text-[9px] text-white/70">A bit different from McDonald's — take 30 seconds to check it out</div>
                         </div>
                     </div>
                     <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white active:scale-90">✕</button>
@@ -24,36 +24,36 @@ const LuckinHelpModal: React.FC<{ open: boolean; onClose: () => void }> = ({ ope
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 text-[12px] text-slate-700 leading-relaxed">
                     {/* 核心 */}
                     <div className="bg-white rounded-xl border border-[#E6DFCF] p-3">
-                        <div className="text-[12px] font-bold text-[#0B1F3A] mb-1">☕ 直接跟 ta 说"哪家店的哪杯"</div>
-                        <div>瑞幸跟麦当劳不一样——<b>拉不到整本菜单</b>。你直接告诉角色想喝什么、在哪附近, ta 会自动找最匹配的门店、点好、出微信二维码扫码付。</div>
+                        <div className="text-[12px] font-bold text-[#0B1F3A] mb-1">☕ Just tell them "which drink at which store"</div>
+                        <div>Luckin works differently from McDonald's — <b>it can't pull the full menu</b>. Just tell the character what you want to drink and roughly where you are, and they'll automatically find the best-matching store, place the order, and bring up a WeChat QR code to pay.</div>
                         <div className="mt-2 bg-[#0B1F3A]/5 rounded-lg px-2.5 py-2 text-[11px] text-[#0B1F3A]">
-                            举例：<br />「帮我点一杯<b>花溪公园附近门店</b>的<b>无糖冰美式</b>」
+                            Example:<br />"Order me a <b>sugar-free iced Americano</b> from the store near <b>Huaxi Park</b>"
                         </div>
                     </div>
 
                     {/* 门店 */}
                     <div className="flex gap-2">
                         <span className="text-[15px] shrink-0">📍</span>
-                        <div><b>不指定门店</b>时, 角色按你<b>当前定位</b>选最近的店。<span className="text-amber-700">开着梯子定位可能不准</span> (启动时弹的定位框里能看精度, 不准就手选城市)。</div>
+                        <div>If you <b>don't specify a store</b>, the character picks the nearest one based on your <b>current location</b>. <span className="text-amber-700">Location may be inaccurate if you're on a VPN</span> (you can check the accuracy in the location popup that appears on launch — pick a city manually if it's off).</div>
                     </div>
 
                     {/* 自动选 */}
                     <div className="flex gap-2">
                         <span className="text-[15px] shrink-0">🎯</span>
-                        <div><b>不指定饮品 / 杯型 / 冷热</b>时, 角色会按对你的了解<b>自己拿主意</b> (越懂你点得越准, 不满意直接说"换一杯/要热的/大杯")。</div>
+                        <div>If you <b>don't specify the drink / size / hot-or-iced</b>, the character will <b>use their own judgment</b> based on how well they know you (the better they know you, the more accurate the order — if you don't like it, just say "switch it up / make it hot / large size").</div>
                     </div>
 
                     {/* 测试版优惠 */}
                     <div className="flex gap-2">
                         <span className="text-[15px] shrink-0">🧪</span>
-                        <div><b>目前是测试版</b>：用不了瑞幸官方的门店优惠, <b>只有你账号自己的券</b>能自动抵扣。</div>
+                        <div><b>This is currently a beta</b>: official Luckin store promotions can't be used — <b>only coupons on your own account</b> get auto-applied.</div>
                     </div>
 
-                    <div className="text-[10px] text-slate-400 text-center pt-1">下单 / 支付都在最后那张「结账卡」上点, 商品卡只是 ta 给你看的</div>
+                    <div className="text-[10px] text-slate-400 text-center pt-1">Ordering / payment both happen on the final "checkout card" — the item cards are just for the character to show you</div>
                 </div>
 
                 <div className="border-t border-[#DDD3BC] bg-gradient-to-r from-[#EFE9DC] to-[#E7DFC9] px-3 py-2.5 shrink-0">
-                    <button onClick={onClose} className="w-full px-3 py-2.5 bg-[#0B1F3A] text-white text-[13px] font-bold rounded-xl active:scale-95">知道啦, 开点</button>
+                    <button onClick={onClose} className="w-full px-3 py-2.5 bg-[#0B1F3A] text-white text-[13px] font-bold rounded-xl active:scale-95">Got it, let's order</button>
                 </div>
             </div>
         </div>
