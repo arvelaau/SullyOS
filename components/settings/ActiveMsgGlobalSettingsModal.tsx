@@ -124,10 +124,10 @@ let instantChatGateReported = false;
 
 /** 体检每一行的配色与那一列小字。unknown 用灰：查不出结论时别拿颜色暗示好坏。 */
 const DIAGNOSTIC_STYLES: Record<AmsgDiagnosticLevel, { dot: string; text: string; word: string }> = {
-  ok: { dot: 'bg-emerald-500', text: 'text-emerald-600', word: '正常' },
-  warn: { dot: 'bg-amber-500', text: 'text-amber-600', word: '注意' },
-  bad: { dot: 'bg-rose-500', text: 'text-rose-600', word: '有问题' },
-  unknown: { dot: 'bg-slate-300', text: 'text-slate-400', word: '查不到' },
+  ok: { dot: 'bg-emerald-500', text: 'text-emerald-600', word: 'OK' },
+  warn: { dot: 'bg-amber-500', text: 'text-amber-600', word: 'Note' },
+  bad: { dot: 'bg-rose-500', text: 'text-rose-600', word: 'Issue' },
+  unknown: { dot: 'bg-slate-300', text: 'text-slate-400', word: 'Unknown' },
 };
 
 /** 刚生成的密钥明文：输入框是 password 型，只能在这一处让用户看见并手动复制。 */
@@ -230,15 +230,15 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       // 跑着旧 worker 的表现是**静默错**（自述回写不落盘、任务重复推），用户不会来报，
       // 面板这一句提示是唯一的出口。这里数的就是「有多少人正跑着一个不该跑的版本」。
       if (shouldReport) {
-        trackEvent('探测 2.0 Worker 能力', {
-          result: !caps ? '端点不存在' : missingFeature ? '缺特性' : versionTooOld ? '版本过旧' : 'ok',
+        trackEvent('Probe 2.0 Worker Capabilities', {
+          result: !caps ? 'Endpoint not found' : missingFeature ? 'Missing feature' : versionTooOld ? 'Version too old' : 'ok',
         });
       }
     } catch {
       setWorkerOutdated(false);
       // 探测本身炸了（断网 / 地址不通）不亮牌，免得误报；但它跟「版本旧」是两回事，
       // 单独占一格，看分布时能一眼把这批人排除掉。
-      if (shouldReport) trackEvent('探测 2.0 Worker 能力', { result: '探测失败' });
+      if (shouldReport) trackEvent('Probe 2.0 Worker Capabilities', { result: 'Probe failed' });
     }
   };
 
@@ -269,11 +269,11 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const reportInstantChatGate = (gate: InstantChatGateInput, enabled: boolean) => {
     if (instantChatGateReported) return;
     instantChatGateReported = true;
-    trackEvent('即时对话能不能开', {
-      result: resolveInstantChatBlocker(gate) ?? '可以开',
+    trackEvent('Can Instant Chat Be Enabled', {
+      result: resolveInstantChatBlocker(gate) ?? 'Can enable',
       // 已经开着的人也报：他们卡住意味着「开的时候好好的，后来 Worker 退回旧版了」，
       // 那是一种发一条挂一条、但设置页还写着「已开启」的坏法。
-      state: enabled ? '已开着' : '还没开',
+      state: enabled ? 'Already on' : 'Not on yet',
     });
   };
 
@@ -308,7 +308,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const disableInstantPush = () => {
     saveInstantConfig({ ...loadInstantConfig(), enabled: false });
     setInstantOn(false);
-    addToast('已关闭 Instant Push，聊天回到本地直连。', 'success');
+    addToast('Instant Push has been turned off. Chat is back to local direct generation.', 'success');
   };
 
   useEffect(() => {
@@ -343,15 +343,15 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
    * 用户以为自己关掉了一切，实际只是把自己变成了看不见的那一方。
    */
   const confirmAndClearRemote = async (): Promise<boolean> => {
-    const ok = confirm('清空 Worker 地址会把远端还挂着的主动消息任务一并取消，确定吗？\n\n不取消的话，那些任务仍会按时触发并给你推送，而这边已经管不到它们了。');
+    const ok = confirm("Clearing the Worker address will also cancel any proactive message tasks still pending remotely. Are you sure?\n\nIf you don't cancel them, those tasks will still trigger and push to you on schedule, and you will no longer be able to manage them from here.");
     if (!ok) return false;
     const { total, failed, listed } = await cancelAllRemoteAmsgTasks();
     if (!listed) {
-      addToast('远端任务没能取消，可能还挂在那儿照常触发。建议把地址填回去，到角色的主动消息面板里逐个处理。', 'error');
+      addToast("Remote tasks could not be canceled and may still trigger as scheduled. Consider putting the address back and handling them one by one in the character's Proactive Message panel.", 'error');
     } else if (failed > 0) {
-      addToast(`还有 ${failed} 个远端任务取消失败，建议恢复地址后在面板处理。`, 'error');
+      addToast(`${failed} remote task(s) failed to cancel. Consider restoring the address and handling them in the panel.`, 'error');
     } else if (total > 0) {
-      addToast(`已取消远端 ${total} 个任务。`, 'info');
+      addToast(`Canceled ${total} remote task(s).`, 'info');
     }
     return true;
   };
@@ -396,13 +396,13 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       // 而这句 toast 已经报了「准备完成」。
       await ActiveMsgClient.registerPushSubscription();
       await refresh();
-      addToast('通知权限和推送订阅已准备完成。', 'success');
-      trackEvent('开启通知与推送订阅', { result: 'ok' });
+      addToast('Notification permission and push subscription are ready.', 'success');
+      trackEvent('Enable Notifications & Push Subscription', { result: 'ok' });
     } catch (error: any) {
-      addToast(error?.message || '创建推送订阅失败。', 'error');
+      addToast(error?.message || 'Failed to create push subscription.', 'error');
       // 只报抛错那一刻挂上的代号（源码里写死的枚举）。错误原文可能带 push endpoint，
       // 留在 toast 和 console 里，不进上报。
-      trackEvent('开启通知与推送订阅', { result: readAmsgFailKind(error) });
+      trackEvent('Enable Notifications & Push Subscription', { result: readAmsgFailKind(error) });
     } finally {
       setLoading(false);
     }
@@ -420,7 +420,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const handleOneClickDeploy = async (accountId?: string) => {
     const token = cfToken.trim();
     if (!token) {
-      addToast('先把 Cloudflare API Token 填进来。', 'error');
+      addToast('Enter your Cloudflare API Token first.', 'error');
       return;
     }
 
@@ -448,17 +448,17 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         // 这两种不是失败，是「还差一个信息」，界面上补个输入再点一次就能接着走。
         if (result.code === 'ACCOUNT_AMBIGUOUS') {
           setProvisionAccounts(result.accounts || []);
-          trackEvent('一键部署 2.0 后端', { result: '要选账号' });
+          trackEvent('One-Click Deploy 2.0 Backend', { result: 'Needs account selection' });
           return;
         }
         if (result.code === 'SUBDOMAIN_MISSING') {
           setNeedsSubdomain(true);
           setProvisionError(result.message);
-          trackEvent('一键部署 2.0 后端', { result: '要起子域名' });
+          trackEvent('One-Click Deploy 2.0 Backend', { result: 'Needs subdomain' });
           return;
         }
         setProvisionError(result.message);
-        trackEvent('一键部署 2.0 后端', { result: '失败' });
+        trackEvent('One-Click Deploy 2.0 Backend', { result: 'Failed' });
         return;
       }
 
@@ -491,25 +491,25 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       // 别在这儿说「装好了」就完事：地址还要几十秒才在各个边缘节点上生效，而上面那句
       // patchConfig 一落地，一键部署那张卡片就因为「地址已填」收起来了——进度条跟着消失，
       // 看上去像是全部办妥。用户于是去点「连接并启用」，撞上还没生效的地址。
-      addToast(`后端装好了：${result.workerUrl}。地址还要几十秒才生效，等它自己连上就行。`, 'success');
-      trackEvent('一键部署 2.0 后端', { result: '成功' });
+      addToast(`Backend deployed: ${result.workerUrl}. The address takes a few dozen seconds to become active — just wait for it to connect on its own.`, 'success');
+      trackEvent('One-Click Deploy 2.0 Backend', { result: 'Success' });
 
       // 刚建好的 workers.dev 地址要等一会儿才解析得到，等它活过来再建表。
-      setProvisionStep('等待 Worker 启动…');
+      setProvisionStep('Waiting for Worker to start…');
       const ready = await waitForWorkerReady(result.workerUrl);
       if (!ready) {
-        addToast('Worker 装好了，但地址还没生效。过一两分钟点一下「连接并启用」即可。', 'info');
+        addToast("Worker deployed, but the address isn't live yet. Tap \"Connect & Enable\" again in a minute or two.", 'info');
         return;
       }
-      setProvisionStep('正在建表…');
+      setProvisionStep('Creating tables…');
       const { warnings } = await ActiveMsgClient.connect();
       await refresh();
       warnings.forEach((warning) => addToast(warning.message, 'info'));
-      addToast('已连接成功，主动消息 2.0 可以用了。', 'success');
+      addToast('Connected successfully. Proactive Message 2.0 is ready to use.', 'success');
     } catch (error: any) {
       // 报错原文只进界面，不进上报（可能带地址、账号 id）。
-      setProvisionError(error?.message || '部署过程中出错了。');
-      trackEvent('一键部署 2.0 后端', { result: '失败' });
+      setProvisionError(error?.message || 'Something went wrong during deployment.');
+      trackEvent('One-Click Deploy 2.0 Backend', { result: 'Failed' });
     } finally {
       setProvisioning(false);
       setProvisionStep('');
@@ -518,7 +518,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
   const handleConnect = async () => {
     if (!config?.workerUrl.trim()) {
-      addToast('先把你部署的 Worker 地址填进来。', 'error');
+      addToast('Enter the address of your deployed Worker first.', 'error');
       return;
     }
 
@@ -531,7 +531,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       });
       const { warnings } = await ActiveMsgClient.connect();
       await refresh();
-      addToast('已连接成功，主动消息 2.0 可以用了。', 'success');
+      addToast('Connected successfully. Proactive Message 2.0 is ready to use.', 'success');
       // 连上了但有一块是哑的（最典型是 VAPID 没配齐：任务建得成、到点一条都推不出去，
       // 而界面上没有任何异常）。这类问题用户自己发现不了，连接这一刻不说就没人说了。
       warnings.forEach((warning) => addToast(warning.message, 'info'));
@@ -539,10 +539,10 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       // 也不报「之前配没配过 tenant」——那等于把两项凭据的配置状态压成一位发出去。
       // 失败代号是抛错时按 HTTP 状态挂上的字面量（见 activeMsgClient 的 AmsgFailKind），
       // 分开是因为「密钥对不上」和「D1 没绑」要用户去改的地方完全不同。
-      trackEvent('连接并启用主动消息 2.0', { result: 'ok' });
+      trackEvent('Connect & Enable Proactive Message 2.0', { result: 'ok' });
     } catch (error: any) {
-      addToast(error?.message || '连接失败。', 'error');
-      trackEvent('连接并启用主动消息 2.0', { result: readAmsgFailKind(error) });
+      addToast(error?.message || 'Connection failed.', 'error');
+      trackEvent('Connect & Enable Proactive Message 2.0', { result: readAmsgFailKind(error) });
     } finally {
       setLoading(false);
     }
@@ -576,7 +576,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           await refresh();
         } catch (error: any) {
           addToast(
-            `后端已更新，但紧接着的验证没过：${error?.message || '未知原因'}。手动点一下「重新连接并验证」。`,
+            `Backend updated, but the follow-up verification failed: ${error?.message || 'unknown reason'}. Tap "Reconnect & Verify" manually.`,
             'error',
           );
         }
@@ -586,12 +586,12 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         // 用户粘一枚 token 就好，不用去 Cloudflare 面板加变量。
         if (result.code === 'CF_TOKEN_MISSING') setAttachOpen(true);
       }
-      trackEvent('更新后端 Worker', {
+      trackEvent('Update Backend Worker', {
         result: result.ok ? 'ok' : result.supported ? 'failed' : 'unsupported',
       });
     } catch (error: any) {
-      addToast(error?.message || '更新失败。', 'error');
-      trackEvent('更新后端 Worker', { result: 'failed' });
+      addToast(error?.message || 'Update failed.', 'error');
+      trackEvent('Update Backend Worker', { result: 'failed' });
     } finally {
       setLoading(false);
     }
@@ -606,11 +606,11 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const handleAttachUpdateKey = async (accountId?: string) => {
     const token = attachToken.trim();
     if (!token) {
-      addToast('先把 Cloudflare API Token 填进来。', 'error');
+      addToast('Enter your Cloudflare API Token first.', 'error');
       return;
     }
     if (!config?.workerUrl.trim()) {
-      addToast('先把 Worker 地址填好。', 'error');
+      addToast('Fill in the Worker address first.', 'error');
       return;
     }
 
@@ -628,27 +628,27 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         if (result.code === 'SCRIPT_NAME_UNKNOWN') {
           setAttachNeedsScriptName(true);
           setAttachError(result.message);
-          trackEvent('补装后端更新能力', { result: '要填Worker名' });
+          trackEvent('Attach Backend Update Capability', { result: 'Needs Worker name' });
           return;
         }
         if (result.code === 'ACCOUNT_AMBIGUOUS') {
           setAttachAccounts(result.accounts || []);
-          trackEvent('补装后端更新能力', { result: '要选账号' });
+          trackEvent('Attach Backend Update Capability', { result: 'Needs account selection' });
           return;
         }
         setAttachError(result.message);
-        trackEvent('补装后端更新能力', { result: '失败' });
+        trackEvent('Attach Backend Update Capability', { result: 'Failed' });
         return;
       }
 
       setAttachToken('');
       setAttachAccounts(null);
       setAttachNeedsScriptName(false);
-      addToast('钥匙装好了，现在可以点上面的「更新 Worker」了。', 'success');
-      trackEvent('补装后端更新能力', { result: '成功' });
+      addToast('Key attached. You can now tap "Update Worker" above.', 'success');
+      trackEvent('Attach Backend Update Capability', { result: 'Success' });
     } catch (error: any) {
-      setAttachError(error?.message || '装钥匙时出错了。');
-      trackEvent('补装后端更新能力', { result: '失败' });
+      setAttachError(error?.message || 'Something went wrong while attaching the key.');
+      trackEvent('Attach Backend Update Capability', { result: 'Failed' });
     } finally {
       setAttaching(false);
     }
@@ -659,12 +659,12 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const handleCopyWorkerBundle = async () => {
     try {
       await ActiveMsgClient.copyWorkerBundleToClipboard();
-      addToast('Worker 代码已复制，去 CF 后台的 Edit code 里粘贴覆盖。', 'success');
-      trackEvent('复制 2.0 Worker 代码', { result: 'ok' });
+      addToast('Worker code copied. Paste it over the existing code in Edit code on the CF dashboard.', 'success');
+      trackEvent('Copy 2.0 Worker Code', { result: 'ok' });
     } catch (error: any) {
-      addToast(`复制失败（${error?.message || error}）。也可以从仓库 worker/amsg/worker.bundle.js 获取。`, 'error');
+      addToast(`Copy failed (${error?.message || error}). You can also get it from worker/amsg/worker.bundle.js in the repo.`, 'error');
       // 剪贴板 API 在非 HTTPS / 部分 WebView 里会直接抛，这条就是那批人的规模。
-      trackEvent('复制 2.0 Worker 代码', { result: 'failed' });
+      trackEvent('Copy 2.0 Worker Code', { result: 'failed' });
     }
   };
 
@@ -673,11 +673,11 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const handleCopyDenoProxy = async () => {
     try {
       await ActiveMsgClient.copyDenoProxyToClipboard();
-      addToast('代理代码已复制，贴进 Deno Playground 后记得改 UPSTREAM 那一行。', 'success');
-      trackEvent('复制 2.0 Deno 代理代码', { result: 'ok' });
+      addToast('Proxy code copied. After pasting it into a Deno Playground, remember to edit the UPSTREAM line.', 'success');
+      trackEvent('Copy 2.0 Deno Proxy Code', { result: 'ok' });
     } catch (error: any) {
-      addToast(`复制失败（${error?.message || error}）。也可以从仓库 worker/amsg/deno-proxy.ts 获取。`, 'error');
-      trackEvent('复制 2.0 Deno 代理代码', { result: 'failed' });
+      addToast(`Copy failed (${error?.message || error}). You can also get it from worker/amsg/deno-proxy.ts in the repo.`, 'error');
+      trackEvent('Copy 2.0 Deno Proxy Code', { result: 'failed' });
     }
   };
 
@@ -703,31 +703,32 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       await navigator.clipboard.writeText(text);
       addToast(
         copyWholeEnvLine
-          ? `已复制 ${envName} 整行，粘进 Worker 的 Variables 会自动填好名字和值。`
-          : `已复制 ${envName} 的值（不含变量名），直接粘进 Cloudflare 的值那一栏。`,
+          ? `Copied the whole ${envName} line — paste it into the Worker's Variables and the name and value will fill in automatically.`
+          : `Copied the value of ${envName} (without the variable name) — paste it directly into the value field on Cloudflare.`,
         'success',
       );
     } catch {
-      addToast(copyWholeEnvLine ? '已生成，请手动从下方复制整行。' : '已生成，请手动从下方复制。', 'info');
+      addToast(copyWholeEnvLine ? 'Generated. Copy the whole line manually from below.' : 'Generated. Copy it manually from below.', 'info');
     }
   };
 
   const handleGenerateMasterKey = () => {
     // 只报「生成了哪一个」。密钥本体只在这次面板打开期间存在于 state，前端不落盘，
     // 更不会进上报。
-    trackEvent('生成 2.0 Worker 密钥', { which: 'master_key' });
+    trackEvent('Generate 2.0 Worker Key', { which: 'master_key' });
     return revealAndCopy(ActiveMsgClient.generateMasterKey(), setGeneratedMasterKey, 'AMSG_MASTER_KEY');
   };
 
   const handleWipeCloudData = async () => {
     if (!confirm(
-      '确定清空云端数据？Worker D1 里属于你的这几样会一起删掉：\n\n'
-      + '· 已排程的主动消息任务（含角色自己排的）\n'
-      + '· 同步上去的角色上下文与工具凭据\n'
-      + '· 登记的 API 凭据\n'
-      + '· 推送订阅登记\n\n'
-      + '任务删了要重新排。角色上下文下次聊天会自动传回去，API 凭据下次排程/发消息时重新登记，'
-      + '工具凭据和推送订阅当场就补登记。'
+      "Clear cloud data? These items belonging to you in the Worker's D1 database will all be deleted:\n\n"
+      + '· Scheduled proactive message tasks (including ones the character scheduled itself)\n'
+      + '· Synced character context and tool credentials\n'
+      + '· Registered API credentials\n'
+      + '· Push subscription registration\n\n'
+      + 'Tasks will need to be rescheduled after deletion. Character context will sync back automatically on your next chat, '
+      + 'API credentials will re-register the next time a task is scheduled or a message is sent, '
+      + 'and tool credentials and the push subscription will be re-registered right away.'
     )) return;
     setLoading(true);
     try {
@@ -739,37 +740,37 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       // 含糊一句「部分失败」会让人不知道下一步该干嘛。
       const problems: string[] = [];
       if (!result.tasks.listed) {
-        problems.push('任务清单读不出来（换过 AMSG_MASTER_KEY 的话旧任务解不开就会这样），这些任务到点会失败，Worker 会在 7 天后自动清掉它们');
+        problems.push("Couldn't read the task list (this happens if AMSG_MASTER_KEY was changed and old tasks can no longer be decrypted) — these tasks will fail when they come due, and the Worker will auto-clean them after 7 days");
       } else if (result.tasks.failed > 0) {
-        problems.push(`${result.tasks.failed} 个任务没取消成功，建议到角色的主动消息面板里逐个处理`);
+        problems.push(`${result.tasks.failed} task(s) failed to cancel — consider handling them one by one in the character's Proactive Message panel`);
       }
       if (result.stateDeleted === null) {
-        problems.push('角色上下文没能删掉');
+        problems.push("Couldn't delete character context");
       } else if (!result.toolConfigRestored) {
-        problems.push('工具凭据没能补传回去，请到「实时感知」里重新保存一次配置，否则已排程的 AI 任务会一直失败');
+        problems.push('Failed to re-upload tool credentials — please save your configuration again in "Real-time Perception," otherwise scheduled AI tasks will keep failing');
       }
       if (result.llmCredentialsDeleted === null) {
         // 老 Worker 上压根没有这张表，这一句同样成立：那边确实没清成，而下次排程会
         // 走回「凭据冻结进任务」的老路，也就无所谓残留。
-        problems.push('登记的 API 凭据没能删掉（Worker 版本较旧的话本来就没有这一项）');
+        problems.push("Couldn't delete registered API credentials (if the Worker version is older, this table doesn't exist anyway)");
       }
       if (result.push === 'failed') {
-        problems.push('推送订阅没能收拾干净，建议到上面的推送区域重新订阅一次');
+        problems.push('Failed to clean up the push subscription — consider resubscribing in the push section above');
       }
 
       if (problems.length > 0) {
-        addToast(`云端数据没能全部清干净：${problems.join('；')}。`, 'error');
+        addToast(`Cloud data wasn't fully cleared: ${problems.join('; ')}.`, 'error');
       } else {
         const done = [
-          `任务 ${result.tasks.total} 个`,
-          `状态 ${result.stateDeleted} 条`,
-          `API 凭据 ${result.llmCredentialsDeleted} 行`,
+          `${result.tasks.total} task(s)`,
+          `${result.stateDeleted} state entr${result.stateDeleted === 1 ? 'y' : 'ies'}`,
+          `${result.llmCredentialsDeleted} API credential row(s)`,
         ];
-        if (result.push === 'reregistered') done.push('推送订阅已重新登记');
-        addToast(`已清空云端数据（${done.join('、')}）。`, 'success');
+        if (result.push === 'reregistered') done.push('push subscription re-registered');
+        addToast(`Cloud data cleared (${done.join(', ')}).`, 'success');
       }
     } catch (error: any) {
-      addToast(error?.message || '清空云端数据失败。', 'error');
+      addToast(error?.message || 'Failed to clear cloud data.', 'error');
     } finally {
       setLoading(false);
       void refresh();
@@ -783,16 +784,16 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const handleToggleInstantChat = async () => {
     const next = !config?.instantChatEnabled;
     // 开了又关是这条路上最值钱的信号：能开、开过、然后放弃了，跟「压根没开」不是一回事。
-    trackEvent('切换即时对话', { action: next ? '开' : '关' });
+    trackEvent('Toggle Instant Chat', { action: next ? 'on' : 'off' });
     patchConfig({ instantChatEnabled: next });
     await ActiveMsgStore.saveGlobalConfig({ instantChatEnabled: next });
-    addToast(next ? '已开启即时对话，之后的聊天在你的 Worker 上生成。' : '已关闭即时对话，聊天回到本地生成。', 'success');
+    addToast(next ? 'Instant Chat is on. Future chats will be generated on your Worker.' : 'Instant Chat is off. Chat is back to local generation.', 'success');
   };
 
   const handleGenerateServerToken = () => {
     const token = generateClientToken();
     patchConfig({ serverToken: token });
-    trackEvent('生成 2.0 Worker 密钥', { which: 'server_token' });
+    trackEvent('Generate 2.0 Worker Key', { which: 'server_token' });
     return revealAndCopy(token, setGeneratedServerToken, 'AMSG_SERVER_TOKEN');
   };
 
@@ -821,14 +822,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   return (
     <Modal
       isOpen={isOpen}
-      title="主动消息 2.0"
+      title="Proactive Message 2.0"
       onClose={onClose}
       footer={(
         <button
           onClick={onClose}
           className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl active:scale-95 transition-transform"
         >
-          关闭
+          Close
         </button>
       )}
     >
@@ -846,14 +847,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                 className="flex-1 flex items-center justify-between gap-2 text-left"
               >
                 <span className="flex items-center gap-2">
-                  <span className="font-bold text-slate-700">体检</span>
+                  <span className="font-bold text-slate-700">Health Check</span>
                   {diagnosticRows.length ? (
                     <span className={`text-xs font-bold ${DIAGNOSTIC_STYLES[diagnosticLevel].text}`}>
-                      {diagnosticLevel === 'ok' ? '都正常' : diagnosticLevel === 'bad' ? '有问题' : diagnosticLevel === 'warn' ? '有提醒' : '查不全'}
+                      {diagnosticLevel === 'ok' ? 'All good' : diagnosticLevel === 'bad' ? 'Issue found' : diagnosticLevel === 'warn' ? 'Note' : 'Incomplete'}
                     </span>
                   ) : null}
                 </span>
-                <span className="text-xs font-bold text-slate-400">{diagnosticsOpen ? '收起' : '展开'}</span>
+                <span className="text-xs font-bold text-slate-400">{diagnosticsOpen ? 'Collapse' : 'Expand'}</span>
               </button>
               {diagnosticsOpen ? (
                 <button
@@ -862,7 +863,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                   disabled={diagnosing}
                   className="shrink-0 px-3 py-1.5 text-[11px] rounded-xl font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform disabled:opacity-50"
                 >
-                  {diagnosing ? '检查中…' : '重新检查'}
+                  {diagnosing ? 'Checking…' : 'Recheck'}
                 </button>
               ) : null}
             </div>
@@ -890,7 +891,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
               </div>
             ) : (
               <p className="text-xs leading-relaxed text-slate-400">
-                {diagnosing ? '正在问 Worker…' : '还没有结果，点右上角检查一次。'}
+                {diagnosing ? 'Asking the Worker…' : 'No results yet — tap the check button in the top-right.'}
               </p>
             )}
           </div>
@@ -901,16 +902,16 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             没有报错也没有提示，只会表现成「这功能怎么不响」，这张卡就是收拾它的入口。 */}
         {instantOn ? (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
-            <div className="font-bold text-amber-900 text-sm">Instant Push 也开着</div>
+            <div className="font-bold text-amber-900 text-sm">Instant Push is also on</div>
             <p className="text-xs leading-relaxed text-amber-800">
-              检测到 Instant Push 还开着。即时对话已经覆盖了它的能力（发完就自由、云端跑工具、断网补收），两条路只能留一条。点下面把 Instant Push 关掉，聊天就交给 2.0。
+              Instant Push is detected as still on. Instant Chat already covers its capabilities (free once sent, tools run in the cloud, catch-up delivery when offline) — only one path can stay. Tap below to turn off Instant Push and hand chat over to 2.0.
             </p>
             <button
               type="button"
               onClick={disableInstantPush}
               className="w-full py-2.5 bg-amber-500 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform"
             >
-              关掉 Instant Push（保留它的配置）
+              Turn off Instant Push (keep its configuration)
             </button>
           </div>
         ) : null}
@@ -919,19 +920,20 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         {config.workerUrl?.trim() ? null : (
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-bold text-slate-700">一键部署（推荐）</span>
+            <span className="font-bold text-slate-700">One-Click Deploy (recommended)</span>
             <span className="shrink-0 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-              只要一枚 Token
+              Just one Token
             </span>
           </div>
 
           <p className="text-xs leading-relaxed text-slate-500">
-            在 Cloudflare 建一枚 API Token 粘进来，建数据库、传后端代码、写密钥、加定时触发
-            全都自动做完。不用 GitHub 账号，手机上也走得完。
+            Create an API Token on Cloudflare and paste it in — creating the database, uploading the
+            backend code, writing secrets, and adding the scheduled trigger all happen automatically.
+            No GitHub account needed, and it works on mobile too.
           </p>
 
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5">
-            <p className="text-[11px] font-bold text-slate-600">建 Token 时这三项权限都要勾上</p>
+            <p className="text-[11px] font-bold text-slate-600">Check all three permissions when creating the Token</p>
             <ul className="text-[11px] leading-relaxed text-slate-500 space-y-0.5 list-disc list-outside pl-4">
               <li>Account → <code className="font-mono">Workers Scripts</code> : Edit</li>
               <li>Account → <code className="font-mono">D1</code> : Edit</li>
@@ -941,10 +943,10 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
               href={CF_TOKEN_URL}
               target="_blank"
               rel="noreferrer"
-              onClick={() => trackEvent('打开 2.0 部署外链', { target: 'CF面板' })}
+              onClick={() => trackEvent('Open 2.0 Deploy Link', { target: 'CF Dashboard' })}
               className="inline-block mt-1 text-[11px] font-bold text-violet-600"
             >
-              ↗ 去 Cloudflare 建 Token
+              ↗ Go create a Token on Cloudflare
             </a>
           </div>
 
@@ -952,14 +954,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             type="password"
             value={cfToken}
             onChange={(e) => setCfToken(e.target.value)}
-            placeholder="粘贴 Cloudflare API Token"
+            placeholder="Paste Cloudflare API Token"
             autoComplete="off"
             className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-violet-400"
           />
 
           {provisionAccounts?.length ? (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-bold text-slate-600">这枚 Token 能用在多个账号上，装到哪个？</p>
+              <p className="text-[11px] font-bold text-slate-600">This Token can be used on multiple accounts — which one should it deploy to?</p>
               {provisionAccounts.map((account) => (
                 <button
                   key={account.id}
@@ -976,18 +978,18 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
           {needsSubdomain ? (
             <div className="space-y-1.5">
-              <p className="text-[11px] font-bold text-slate-600">给这个账号起一个 workers.dev 子域名</p>
+              <p className="text-[11px] font-bold text-slate-600">Give this account a workers.dev subdomain</p>
               <input
                 type="text"
                 value={desiredSubdomain}
                 onChange={(e) => setDesiredSubdomain(e.target.value)}
-                placeholder="例如 my-name（全 Cloudflare 唯一）"
+                placeholder="e.g. my-name (unique across all of Cloudflare)"
                 autoComplete="off"
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-violet-400"
               />
               <p className="text-[11px] leading-relaxed text-slate-400">
-                后端地址会长这样：<code className="font-mono">sullyos-amsg.你填的.workers.dev</code>。
-                这个名字定了就是这个账号所有 Worker 共用的，之后不好改。
+                The backend address will look like: <code className="font-mono">sullyos-amsg.your-name.workers.dev</code>.
+                Once set, this name is shared by every Worker on this account and is hard to change later.
               </p>
             </div>
           ) : null}
@@ -998,7 +1000,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             onClick={() => void handleOneClickDeploy()}
             className="w-full py-3 rounded-xl text-sm font-bold bg-violet-500 text-white active:scale-95 transition-transform disabled:opacity-50"
           >
-            {provisioning ? provisionStep || '部署中…' : '开始部署'}
+            {provisioning ? provisionStep || 'Deploying…' : 'Start deployment'}
           </button>
 
           {provisionError ? (
@@ -1006,9 +1008,10 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           ) : null}
 
           <p className="text-[10px] leading-relaxed text-slate-400">
-            浏览器不能直接调 Cloudflare 的接口（它不给跨域），所以这枚 Token 会经过本站的
-            网络代理 Worker 转发一次。部署完它会作为密钥存进<strong>你自己的</strong> Worker，
-            以后「更新后端」用的就是它；本页不保存。介意的话可以照下面的手动方式装。
+            The browser can't call Cloudflare's API directly (no cross-origin access), so this Token is
+            relayed once through this site's network proxy Worker. After deployment it's stored as a
+            secret in <strong>your own</strong> Worker and used later for "update backend"; this page
+            doesn't save it. If that's a concern, you can deploy manually using the steps below instead.
           </p>
         </div>
         )}
@@ -1018,50 +1021,53 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             type="button"
             onClick={() => setDeployOpen((prev) => {
               // 只在展开时记一笔：收起也记的话同一个人会被数两次，漏斗第一格直接虚高一倍。
-              if (!prev) trackEvent('展开 2.0 部署指引', { mode: '主流程' });
+              if (!prev) trackEvent('Expand 2.0 Deploy Guide', { mode: 'main flow' });
               return !prev;
             })}
             className="w-full flex items-center justify-between text-left"
           >
-            <span className="font-bold text-slate-700">手动部署 Worker（想自己一步步来）</span>
-            <span className="text-xs font-bold text-slate-400">{deployOpen ? '收起' : '展开'}</span>
+            <span className="font-bold text-slate-700">Deploy the Worker manually (step by step)</span>
+            <span className="text-xs font-bold text-slate-400">{deployOpen ? 'Collapse' : 'Expand'}</span>
           </button>
 
           {deployOpen ? (
             <div className="space-y-3">
               <p className="text-xs leading-relaxed text-slate-500">
-                全程在网页上点，不用装东西也不用敲命令，大约 15 分钟。第一次做建议直接照着
-                <strong>图文教程</strong>走，下面是简版。
+                All done by clicking through web pages, no installs or commands needed, about 15
+                minutes. First time doing this, we recommend following the <strong>illustrated walkthrough</strong>;
+                below is the short version.
               </p>
 
               <ol className="text-xs leading-relaxed text-slate-500 space-y-1.5 list-decimal list-outside pl-4">
                 <li>
-                  Fork 后端仓库 <code className="font-mono">sullyos-workers</code>
-                  （页面右上角 Fork → Create fork）。
+                  Fork the backend repo <code className="font-mono">sullyos-workers</code>
+                  {' '}(Fork → Create fork in the top-right of the page).
                 </li>
                 <li>
-                  CF 后台 Storage &amp; databases → <strong>D1 SQLite Database</strong> 建一个库，
-                  把它的 <strong>Database ID</strong> 复制下来。表不用建，下面点「连接」时会自动建好。
+                  In the CF dashboard, Storage &amp; databases → <strong>D1 SQLite Database</strong>, create a
+                  database and copy its <strong>Database ID</strong>. No need to create tables — they're
+                  built automatically when you click "Connect" below.
                 </li>
                 <li>
-                  CF 后台 Workers &amp; Pages → <strong>Create application</strong> →
-                  <strong> Continue with GitHub</strong>，选中你 fork 的仓库，然后填：
+                  In the CF dashboard, Workers &amp; Pages → <strong>Create application</strong> →
+                  <strong> Continue with GitHub</strong>, select your forked repo, then fill in:
                   <ul className="mt-1 space-y-0.5 list-disc list-outside pl-4">
-                    <li>Build command：<code className="font-mono">sh ./deploy-prepare.sh</code></li>
-                    <li>Advanced settings → Path：<code className="font-mono">/amsg</code></li>
+                    <li>Build command: <code className="font-mono">sh ./deploy-prepare.sh</code></li>
+                    <li>Advanced settings → Path: <code className="font-mono">/amsg</code></li>
                     <li>
-                      Advanced settings 里加一个构建变量
+                      In Advanced settings, add a build variable
                       <code className="font-mono"> D1_DATABASE_ID </code>
-                      = 上一步的 Database ID（<strong>别点 Encrypt</strong>，构建时要读它）
+                      = the Database ID from the previous step (<strong>don't click Encrypt</strong> — the build needs to read it)
                     </li>
                   </ul>
                 </li>
-                <li>部署完在 Settings → Variables and secrets 按下面的清单填密钥，再 Deploy 一次。</li>
+                <li>After deploying, fill in the secrets in Settings → Variables and secrets per the checklist below, then Deploy again.</li>
               </ol>
 
               <p className="text-[11px] leading-relaxed text-slate-400">
-                D1 绑定和「每分钟检查一次」的定时触发器都写在仓库里，会自动带上，不用手动加。
-                以后想更新，回你 fork 的仓库点一下 <strong>Sync fork</strong> 就行，CF 会自动重新部署。
+                The D1 binding and the "check every minute" cron trigger are both defined in the repo and
+                come along automatically — no need to add them by hand. To update later, just go to your
+                forked repo and click <strong>Sync fork</strong>; CF will redeploy automatically.
               </p>
 
               <div className="grid grid-cols-3 gap-2">
@@ -1071,33 +1077,33 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                   href={WORKERS_REPO_URL}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => trackEvent('打开 2.0 部署外链', { target: 'fork仓库' })}
+                  onClick={() => trackEvent('Open 2.0 Deploy Link', { target: 'fork repo' })}
                   className="py-2.5 rounded-xl text-xs font-bold bg-violet-500 text-white text-center active:scale-95 transition-transform"
                 >
-                  ↗ Fork 仓库
+                  ↗ Fork repo
                 </a>
                 <a
                   href={SETUP_WALKTHROUGH_URL}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => trackEvent('打开 2.0 部署外链', { target: '图文教程' })}
+                  onClick={() => trackEvent('Open 2.0 Deploy Link', { target: 'walkthrough' })}
                   className="py-2.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-600 text-center active:scale-95 transition-transform"
                 >
-                  ↗ 图文教程
+                  ↗ Walkthrough
                 </a>
                 <a
                   href={buildCloudflareDashboardUrl(config.workerUrl.trim() || undefined)}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => trackEvent('打开 2.0 部署外链', { target: 'CF面板' })}
+                  onClick={() => trackEvent('Open 2.0 Deploy Link', { target: 'CF Dashboard' })}
                   className="py-2.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-600 text-center active:scale-95 transition-transform"
                 >
-                  ↗ CF 面板
+                  ↗ CF Dashboard
                 </a>
               </div>
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2.5 text-xs">
-                <p className="font-bold text-slate-700">环境变量清单</p>
+                <p className="font-bold text-slate-700">Environment variable checklist</p>
 
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
@@ -1107,17 +1113,17 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                       onClick={() => void handleGenerateMasterKey()}
                       className="shrink-0 px-3 py-1.5 text-[11px] rounded-xl font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform"
                     >
-                      生成并复制
+                      Generate & copy
                     </button>
                   </div>
                   {generatedMasterKey ? (
                     <SecretReveal value={generatedMasterKey} />
                   ) : (
                     <p className="text-[11px] text-slate-400">
-                      加密任务内容用的密钥，只存在 Worker 侧。本页不保存。
+                      The key used to encrypt task content — it only exists on the Worker side. This page doesn't save it.
                       {copyWholeEnvLine
-                        ? <>复制出来是 <code className="font-mono">变量名=值</code> 整行，粘进 CF 的 Variables 会自动分好两栏。</>
-                        : <>复制出来只有值本身，直接粘进 CF 里那一项的值那一栏。</>}
+                        ? <>Copying gives you the whole <code className="font-mono">variable name=value</code> line — paste it into CF's Variables and it splits into two columns automatically.</>
+                        : <>Copying gives you just the value — paste it directly into the value field on CF.</>}
                     </p>
                   )}
                 </div>
@@ -1131,20 +1137,20 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                         onClick={onOpenVapid}
                         className="shrink-0 px-3 py-1.5 text-[11px] rounded-xl font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform"
                       >
-                        去推送凭据面板
+                        Go to push credentials panel
                       </button>
                     ) : null}
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    必须和「推送凭据 (VAPID)」面板里的是<strong>同一对</strong>（和 Instant Push 共用）——
-                    整个站点只有一个浏览器推送订阅，Worker 用别的密钥对签推送会 403。
+                    Must be <strong>the exact same pair</strong> as in the "Push Credentials (VAPID)" panel (shared with Instant Push) —
+                    the whole site has only one browser push subscription, and signing pushes with a different key pair from the Worker will 403.
                   </p>
                 </div>
 
                 <div className="space-y-1">
-                  <code className="font-mono text-[11px] text-slate-600">AMSG_SERVER_TOKEN（可选）</code>
+                  <code className="font-mono text-[11px] text-slate-600">AMSG_SERVER_TOKEN (optional)</code>
                   <p className="text-[11px] text-slate-400">
-                    防止别人滥用你的 Worker。值 = 下面「共享密钥」填的那串，两边一致即可；不配则端点全开。
+                    Prevents others from abusing your Worker. Value = the string filled in below under "Shared Secret" — just keep both sides matching; leaving it unset opens all endpoints.
                   </p>
                 </div>
               </div>
@@ -1153,31 +1159,31 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                 <button
                   type="button"
                   onClick={() => setPasteFallbackOpen((prev) => {
-                    if (!prev) trackEvent('展开 2.0 部署指引', { mode: '手动粘贴' });
+                    if (!prev) trackEvent('Expand 2.0 Deploy Guide', { mode: 'manual paste' });
                     return !prev;
                   })}
                   className="w-full flex items-center justify-between text-left text-[11px] font-bold text-slate-400"
                 >
-                  <span>没有 GitHub 账号？手动粘贴部署</span>
-                  <span>{pasteFallbackOpen ? '收起' : '展开'}</span>
+                  <span>No GitHub account? Deploy by manual paste</span>
+                  <span>{pasteFallbackOpen ? 'Collapse' : 'Expand'}</span>
                 </button>
 
                 {pasteFallbackOpen ? (
                   <div className="mt-2 space-y-2">
                     <ol className="text-[11px] leading-relaxed text-slate-500 space-y-1.5 list-decimal list-outside pl-4">
                       <li>
-                        点下面「复制 Worker 代码」，CF 后台 Create → Worker 建一个空 Worker，
-                        进 <strong>Edit code</strong> 全选粘贴覆盖，Deploy。
+                        Tap "Copy Worker Code" below, create an empty Worker via Create → Worker in the CF
+                        dashboard, go into <strong>Edit code</strong>, select all and paste over it, then Deploy.
                       </li>
                       <li>
-                        Settings → Bindings 加一个 <strong>D1 database</strong>，
-                        变量名必须是 <code className="font-mono">DB</code>。
+                        In Settings → Bindings, add a <strong>D1 database</strong>; the variable name
+                        must be <code className="font-mono">DB</code>.
                       </li>
                       <li>
-                        Settings → Trigger Events 加 <strong>Cron Trigger</strong>：
-                        <code className="font-mono"> * * * * * </code>（每分钟检查一次到点任务）。
+                        In Settings → Trigger Events, add a <strong>Cron Trigger</strong>:
+                        <code className="font-mono"> * * * * * </code> (checks for due tasks every minute).
                       </li>
-                      <li>Settings → Variables and secrets 按上面的清单填密钥，然后重新 Deploy 一次。</li>
+                      <li>In Settings → Variables and secrets, fill in the secrets per the checklist above, then Deploy again.</li>
                     </ol>
 
                     <button
@@ -1185,12 +1191,13 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                       onClick={() => void handleCopyWorkerBundle()}
                       className="w-full py-2.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform"
                     >
-                      复制 Worker 代码
+                      Copy Worker Code
                     </button>
 
                     <p className="text-[11px] leading-relaxed text-slate-400">
-                      这条路每次 Worker 更新都要重新粘一遍，D1 绑定和定时触发器也得自己加，容易漏。
-                      能用 GitHub 的话还是走上面的 fork 流程。
+                      With this path, you'll need to re-paste every time the Worker updates, and you'll
+                      have to add the D1 binding and cron trigger yourself — easy to miss a step. If you
+                      can use GitHub, the fork flow above is preferred.
                     </p>
                   </div>
                 ) : null}
@@ -1201,30 +1208,31 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <span className="font-bold text-slate-700">当前状态</span>
+            <span className="font-bold text-slate-700">Current Status</span>
             <span className={`text-xs font-bold ${isConnected ? 'text-emerald-600' : 'text-amber-600'}`}>
-              {isConnected ? '已连接' : '未连接'}
+              {isConnected ? 'Connected' : 'Not connected'}
             </span>
           </div>
 
           {workerOutdated ? (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-xs leading-relaxed text-amber-700">
-              Worker 上跑的还是旧版代码，缺少新特性（大上下文云端存储、服务端工具循环等）。
-              回你 fork 的 <code className="font-mono">sullyos-workers</code> 仓库点一下
-              <strong> Sync fork</strong>，CF 会自动重新部署（当初是手动粘贴部署的话，
-              去下方「部署 Worker」里重新复制一次代码粘贴覆盖）。已有数据和任务不受影响。
+              The Worker is still running old code and is missing new features (large-context cloud
+              storage, server-side tool loop, etc.). Go to your forked <code className="font-mono">sullyos-workers</code> repo
+              and click <strong>Sync fork</strong> — CF will redeploy automatically (if you deployed by
+              manual paste originally, go re-copy the code and paste it over in "Deploy Worker" below).
+              Existing data and tasks are not affected.
             </div>
           ) : null}
 
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block pl-1">
-              Worker 地址
+              Worker Address
             </label>
             <input
               type="text"
               value={config.workerUrl}
               onChange={(event) => patchConfig({ workerUrl: event.target.value })}
-              placeholder="https://amsg.你的账号.workers.dev"
+              placeholder="https://amsg.your-account.workers.dev"
               className="w-full bg-white/70 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-mono"
             />
 
@@ -1232,35 +1240,36 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
               <button
                 type="button"
                 onClick={() => setDenoProxyOpen((prev) => {
-                  if (!prev) trackEvent('展开 2.0 部署指引', { mode: 'Deno 代理' });
+                  if (!prev) trackEvent('Expand 2.0 Deploy Guide', { mode: 'Deno proxy' });
                   return !prev;
                 })}
                 className="w-full flex items-center justify-between text-left text-[11px] font-bold text-slate-400"
               >
-                <span>这个地址连不上？在外面套一层 Deno</span>
-                <span>{denoProxyOpen ? '收起' : '展开'}</span>
+                <span>Can't reach this address? Put a Deno layer in front of it</span>
+                <span>{denoProxyOpen ? 'Collapse' : 'Expand'}</span>
               </button>
 
               {denoProxyOpen ? (
                 <div className="mt-2 space-y-2">
                   <p className="text-[11px] leading-relaxed text-slate-500">
-                    <code className="font-mono">workers.dev</code> 这个域名在国内连不上。
-                    办法是给它套一个门面：Worker 和数据全都留在 Cloudflare 不动，
-                    只在外面加一层只管转发的 Deno，然后把地址换成 Deno 那个。
+                    The domain <code className="font-mono">workers.dev</code> is unreachable from within
+                    mainland China. The fix is to put a facade in front of it: the Worker and its data
+                    stay on Cloudflare untouched, you add a pure-forwarding Deno layer in front, and then
+                    switch the address to the Deno one.
                   </p>
 
                   <ol className="text-[11px] leading-relaxed text-slate-500 space-y-1.5 list-decimal list-outside pl-4">
                     <li>
-                      去 Deno 控制台点右上角 <strong>New Playground</strong>。
+                      Go to the Deno console and click <strong>New Playground</strong> in the top-right.
                     </li>
                     <li>
-                      点下面「复制 Deno 代理代码」，在 Playground 里全选粘贴覆盖，
-                      把开头 <code className="font-mono">UPSTREAM</code> 那一行改成你上面填的
-                      Cloudflare 地址，然后 Deploy。
+                      Tap "Copy Deno Proxy Code" below, select all and paste it over the code in the
+                      Playground, change the <code className="font-mono">UPSTREAM</code> line at the top
+                      to the Cloudflare address you filled in above, then Deploy.
                     </li>
                     <li>
-                      把 Deploy 后拿到的 <code className="font-mono">https://xxx.deno.net</code> 地址
-                      填回上面的输入框，替换掉原来那个。
+                      Take the <code className="font-mono">https://xxx.deno.net</code> address you get
+                      after deploying and fill it into the input box above, replacing the original one.
                     </li>
                   </ol>
 
@@ -1270,24 +1279,24 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                       onClick={() => void handleCopyDenoProxy()}
                       className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform"
                     >
-                      复制 Deno 代理代码
+                      Copy Deno Proxy Code
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        trackEvent('打开 Deno 控制台');
+                        trackEvent('Open Deno Console');
                         window.open('https://console.deno.com', '_blank');
                       }}
                       className="shrink-0 px-3 py-2.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform"
                     >
-                      去 Deno
+                      Go to Deno
                     </button>
                   </div>
 
                   <p className="text-[11px] leading-relaxed text-slate-400">
-                    收消息不走这一层——推送是 Cloudflare 直接发给手机的，
-                    所以这层就算挂了也只影响你打开这个面板改配置。
-                    部署好后打开 <code className="font-mono">/__proxy-health</code> 能看它活着没。
+                    Receiving messages doesn't go through this layer — push is sent directly from
+                    Cloudflare to your phone, so even if this layer goes down it only affects opening this
+                    panel to change settings. Once deployed, open <code className="font-mono">/__proxy-health</code> to check whether it's alive.
                   </p>
                 </div>
               ) : null}
@@ -1296,14 +1305,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block pl-1">
-              共享密钥（可选）
+              Shared Secret (optional)
             </label>
             <div className="flex gap-2">
               <input
                 type="password"
                 value={config.serverToken || ''}
                 onChange={(event) => patchConfig({ serverToken: event.target.value })}
-                placeholder="worker 配了 AMSG_SERVER_TOKEN 才需要填"
+                placeholder="Only needed if the Worker has AMSG_SERVER_TOKEN configured"
                 className="flex-1 bg-white/70 border border-slate-200 rounded-2xl px-4 py-3 text-sm"
               />
               <button
@@ -1311,7 +1320,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                 onClick={() => void handleGenerateServerToken()}
                 className="shrink-0 px-3 py-3 text-xs rounded-2xl font-bold bg-white border border-slate-200 text-slate-600 active:scale-95 transition-transform"
               >
-                随机
+                Random
               </button>
             </div>
             {generatedServerToken ? (
@@ -1331,12 +1340,12 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             className="w-full py-3 bg-slate-900 text-white font-bold rounded-2xl active:scale-95 transition-transform disabled:opacity-50"
           >
             {provisioning
-              ? provisionStep || '部署中…'
-              : loading ? '处理中...' : isConnected ? '重新连接并验证' : '连接并启用'}
+              ? provisionStep || 'Deploying…'
+              : loading ? 'Processing...' : isConnected ? 'Reconnect & Verify' : 'Connect & Enable'}
           </button>
 
           <p className="text-xs leading-relaxed text-slate-500">
-            「连接」会自动在你的 D1 里把表建好（幂等，重复点没关系），不用手动执行 SQL。
+            "Connect" automatically creates the tables in your D1 database (idempotent — clicking it again is fine), no need to run SQL by hand.
           </p>
 
           {isConnected ? (
@@ -1356,54 +1365,56 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                 }`}
               >
                 {loading
-                  ? '处理中...'
+                  ? 'Processing...'
                   : workerVersion?.state === 'outdated'
-                    ? `更新 Worker 到 ${workerVersion.expected}`
-                    : '重新检查并更新 Worker'}
+                    ? `Update Worker to ${workerVersion.expected}`
+                    : 'Recheck & Update Worker'}
               </button>
               {workerVersion?.state === 'outdated' ? (
                 <p className="text-xs leading-relaxed text-emerald-700">
-                  你这台 Worker 上跑的是
-                  {workerVersion.deployed ? <code className="font-mono"> {workerVersion.deployed} </code> : '更早的版本'}
-                  ，更新后即时对话才走得上新的生成通道。
+                  Your Worker is currently running
+                  {workerVersion.deployed ? <code className="font-mono"> {workerVersion.deployed} </code> : ' an earlier version'}
+                  {' '}— update it so Instant Chat can use the new generation channel.
                 </p>
               ) : workerVersion?.state === 'current' ? (
                 <p className="text-xs leading-relaxed text-slate-500">
-                  后端已经是最新版（<code className="font-mono">{workerVersion.expected}</code>）。
+                  The backend is already up to date (<code className="font-mono">{workerVersion.expected}</code>).
                 </p>
               ) : null}
               <p className="text-xs leading-relaxed text-slate-500">
-                后端自己去取最新代码覆盖自己，你排好的任务和填过的密钥都不动，更新完会自动验证一次。
-                用一键部署装的可以直接点；老办法装的第一次点会提示补一把钥匙，就在下面补。
+                The backend fetches and overwrites itself with the latest code — your scheduled tasks and
+                saved secrets are untouched, and it auto-verifies once the update is done. If you deployed
+                via One-Click Deploy you can tap it directly; if you deployed the old way, the first tap
+                will prompt you to attach a key — do that below.
               </p>
               {selfUpdateHash ? (
                 <p className="text-xs leading-relaxed text-emerald-600">
-                  当前后端代码指纹：<code className="font-mono">{selfUpdateHash}</code>
+                  Current backend code fingerprint: <code className="font-mono">{selfUpdateHash}</code>
                 </p>
               ) : null}
 
               {attachOpen ? (
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2.5">
-                  <p className="text-[11px] font-bold text-slate-600">给这台后端补一把更新用的钥匙</p>
+                  <p className="text-[11px] font-bold text-slate-600">Attach an update key to this backend</p>
                   <p className="text-[11px] leading-relaxed text-slate-500">
-                    建一枚只勾 <strong>Account → Workers Scripts : Edit</strong> 的 Cloudflare API Token
-                    粘进来（<strong>Start Date 留空</strong>），SullyOS 会把它写进你这台 Worker。
-                    做完一次以后更新就都是点上面那个按钮了。
+                    Create a Cloudflare API Token with only <strong>Account → Workers Scripts : Edit</strong> checked
+                    and paste it in (<strong>leave Start Date empty</strong>); SullyOS will write it into your
+                    Worker. Once done, future updates are just a tap of the button above.
                   </p>
                   <a
                     href={CF_TOKEN_URL}
                     target="_blank"
                     rel="noreferrer"
-                    onClick={() => trackEvent('打开 2.0 部署外链', { target: 'CF面板' })}
+                    onClick={() => trackEvent('Open 2.0 Deploy Link', { target: 'CF Dashboard' })}
                     className="inline-block text-[11px] font-bold text-violet-600"
                   >
-                    ↗ 去 Cloudflare 建 Token
+                    ↗ Go create a Token on Cloudflare
                   </a>
                   <input
                     type="password"
                     value={attachToken}
                     onChange={(e) => setAttachToken(e.target.value)}
-                    placeholder="粘贴 Cloudflare API Token"
+                    placeholder="Paste Cloudflare API Token"
                     autoComplete="off"
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-violet-400"
                   />
@@ -1413,7 +1424,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                       type="text"
                       value={attachScriptName}
                       onChange={(e) => setAttachScriptName(e.target.value)}
-                      placeholder="这台 Worker 在 Cloudflare 上的名字"
+                      placeholder="This Worker's name on Cloudflare"
                       autoComplete="off"
                       className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm outline-none focus:border-violet-400"
                     />
@@ -1421,7 +1432,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
                   {attachAccounts?.length ? (
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-bold text-slate-600">多个账号下都有同名 Worker，选一个：</p>
+                      <p className="text-[11px] font-bold text-slate-600">Multiple accounts have a Worker with this name — pick one:</p>
                       {attachAccounts.map((account) => (
                         <button
                           key={account.id}
@@ -1442,7 +1453,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                     onClick={() => void handleAttachUpdateKey()}
                     className="w-full py-2.5 rounded-xl text-xs font-bold bg-violet-500 text-white active:scale-95 transition-transform disabled:opacity-50"
                   >
-                    {attaching ? '装钥匙中…' : '装上钥匙'}
+                    {attaching ? 'Attaching key…' : 'Attach key'}
                   </button>
 
                   {attachError ? (
@@ -1450,8 +1461,9 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                   ) : null}
 
                   <p className="text-[10px] leading-relaxed text-slate-400">
-                    这一步只往你的 Worker 里加这一条密钥，不动代码、不动数据库、不动已有的密钥。
-                    Token 写进去之后就留在你自己的 Worker 里，本页不保存。
+                    This step only adds this one secret to your Worker — it doesn't touch the code, the
+                    database, or any existing secrets. Once the Token is written in, it stays in your own
+                    Worker; this page doesn't save it.
                   </p>
                 </div>
               ) : null}
@@ -1462,24 +1474,26 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <span className="font-bold text-slate-700">
-              {pushStatus?.transport === 'unified-push' ? 'UnifiedPush 通知' : '通知权限'}
+              {pushStatus?.transport === 'unified-push' ? 'UnifiedPush Notifications' : 'Notification Permission'}
             </span>
             <span className={`text-xs font-bold ${pushStatus?.hasSubscription ? 'text-emerald-600' : 'text-amber-600'}`}>
-              {pushStatus?.hasSubscription ? '已开启' : '未开启'}
+              {pushStatus?.hasSubscription ? 'Enabled' : 'Not enabled'}
             </span>
           </div>
           <p className="text-xs leading-relaxed text-slate-500">
-            这是第二步。只有你真的想让角色在后台主动推送消息时，才需要点。
+            This is step two. Only needed if you actually want the character to proactively push messages in the background.
           </p>
           {pushStatus?.transport === 'unified-push' ? (
             <p className="text-xs leading-relaxed text-slate-500">
-              Android App 通过开放的 UnifiedPush 收消息，不依赖 Firebase 或 Google 服务。
-              ntfy 只负责在后台唤醒本 App，AMSG Worker 仍是你自己部署的那一台。
+              The Android App receives messages via the open UnifiedPush standard, without depending on
+              Firebase or Google services. ntfy is only responsible for waking this App in the background —
+              the AMSG Worker is still the one you deployed yourself.
             </p>
           ) : (
             <p className="text-xs leading-relaxed text-slate-500">
-              推送跟着「排程时所在的设备」走：每条任务到点后，推给保存这条排程时用的那台设备。
-              换了设备（或者换了浏览器）之后，在新设备上把排程重新保存一次，之后的推送就发到这台。
+              Push follows "whichever device the task was scheduled on": when each task comes due, it's
+              pushed to the device that was used to save that schedule. After switching devices (or
+              browsers), save the schedule again on the new device and future pushes will go there.
             </p>
           )}
           {pushStatus?.needsDistributor ? (
@@ -1489,7 +1503,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
               rel="noreferrer"
               className="block text-xs font-bold text-violet-600 underline"
             >
-              安装并打开 ntfy（选择无 Firebase 版本）
+              Install and open ntfy (choose the version without Firebase)
             </a>
           ) : null}
           {pushStatus?.detail ? (
@@ -1500,7 +1514,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             disabled={loading}
             className="w-full py-3 bg-violet-500 text-white font-bold rounded-2xl active:scale-95 transition-transform disabled:opacity-50"
           >
-            {loading ? '处理中...' : pushStatus?.transport === 'unified-push' ? '连接 ntfy 并开启通知' : '开启通知与推送'}
+            {loading ? 'Processing...' : pushStatus?.transport === 'unified-push' ? 'Connect ntfy & Enable Notifications' : 'Enable Notifications & Push'}
           </button>
         </div>
 
@@ -1508,27 +1522,29 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             置灰而不说原因的话，用户只会反复点它。 */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <span className="font-bold text-slate-700">即时对话</span>
+            <span className="font-bold text-slate-700">Instant Chat</span>
             {/* 开着但有门没过时不能只写「已开启」——那几道门是真的会让这一轮走本地生成的，
                 标成绿色的「已开启」就是在骗人：用户以为聊天在云端跑，实际一直在本地。 */}
             <span className={`text-xs font-bold ${
               !config.instantChatEnabled ? 'text-slate-400'
                 : instantChatBlockedReason ? 'text-amber-600' : 'text-emerald-600'
             }`}>
-              {!config.instantChatEnabled ? '未开启'
-                : instantChatBlockedReason ? '已开启 · 暂不生效' : '已开启'}
+              {!config.instantChatEnabled ? 'Not enabled'
+                : instantChatBlockedReason ? 'Enabled · Not active yet' : 'Enabled'}
             </span>
           </div>
           <p className="text-xs leading-relaxed text-slate-500">
-            开了以后，你发出的每一条消息都由这台 Worker 去生成回复，回复走推送回来。
-            发完就能切后台、关掉应用，回来时消息已经在那儿了。关掉则回到本地直连生成。
+            Once enabled, every message you send is generated into a reply by this Worker, and the reply
+            comes back via push. Once sent, you can background the app or close it entirely — the message
+            will already be there when you come back. Turning it off returns to local direct generation.
           </p>
           {instantChatBlockedReason ? (
             <p className="text-xs leading-relaxed text-amber-600">{instantChatBlockedReason}</p>
           ) : (
             <p className="text-[11px] leading-relaxed text-slate-400">
-              没有逐字吐出，生成期间显示「正在输入…」；云端明确报错才会提示重发，
-              只要还在生成或重试就一直等（LLM 慢不算失败）。
+              No character-by-character streaming — "Typing…" is shown while generating; a resend prompt
+              only appears on an explicit error from the cloud, and it just keeps waiting as long as
+              generation or a retry is still in progress (a slow LLM doesn't count as a failure).
             </p>
           )}
           <button
@@ -1539,15 +1555,15 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
               config.instantChatEnabled ? 'bg-slate-200 text-slate-600' : 'bg-slate-900 text-white'
             }`}
           >
-            {config.instantChatEnabled ? '关闭即时对话' : '开启即时对话'}
+            {config.instantChatEnabled ? 'Turn off Instant Chat' : 'Turn on Instant Chat'}
           </button>
         </div>
 
         <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 text-xs leading-relaxed text-amber-700 space-y-2">
-          <div className="font-bold text-amber-800">风险说明</div>
-          <p>开了 2.0 以后，主动消息内容、提示词、相关配置，都会进入你自己部署的 Worker 及其 D1 数据库。</p>
-          <p>这是你自己的 Worker、你自己的库，项目不会额外接一个中心服务器。但只要数据进库，能碰到这台 Worker / 数据库的人（也就是你自己）就能看到这些内容。</p>
-          <p>如果你不接受把私密提示词、API Key 放进自己部署的服务，就不要开 2.0。</p>
+          <div className="font-bold text-amber-800">Risk Disclosure</div>
+          <p>Once 2.0 is enabled, proactive message content, prompts, and related configuration will all flow into the Worker and D1 database you deployed yourself.</p>
+          <p>This is your own Worker and your own database — the project does not connect to any additional central server. But once the data is in the database, anyone who can reach that Worker / database (which is to say, you yourself) can see this content.</p>
+          <p>If you're not comfortable putting private prompts or API keys into a service you self-host, don't enable 2.0.</p>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
@@ -1556,8 +1572,8 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
             onClick={() => setAdvancedOpen((prev) => !prev)}
             className="w-full flex items-center justify-between text-left"
           >
-            <span className="font-bold text-slate-700">高级信息</span>
-            <span className="text-xs font-bold text-slate-400">{advancedOpen ? '收起' : '展开'}</span>
+            <span className="font-bold text-slate-700">Advanced Info</span>
+            <span className="text-xs font-bold text-slate-400">{advancedOpen ? 'Collapse' : 'Expand'}</span>
           </button>
 
           {advancedOpen ? (
@@ -1569,25 +1585,29 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                 </div>
               </div>
               <p className="text-[11px] leading-relaxed text-slate-500">
-                Worker 侧的环境变量清单见上面「部署 Worker」一节。发布的 Worker 代码默认 CORS 全开
-                （<code className="font-mono">origin: '*'</code>），想收紧就把它改成自己站点的域名再部署。
+                See the "Deploy the Worker manually" section above for the Worker-side environment
+                variable checklist. The published Worker code has CORS wide open by default
+                (<code className="font-mono">origin: '*'</code>) — to lock it down, change it to your own
+                site's domain and redeploy.
               </p>
               <div className="bg-rose-50 border border-rose-100 rounded-2xl p-3 space-y-2">
-                <div className="font-semibold text-rose-700">清空云端数据</div>
+                <div className="font-semibold text-rose-700">Clear Cloud Data</div>
                 <p className="text-[11px] leading-relaxed text-rose-600">
-                  把 Worker D1 里属于你的数据全部删掉：已排程的主动消息任务（含角色自己排的）、
-                  同步上去的角色上下文（角色卡、最近聊天窗口等）与工具凭据、推送订阅登记。
+                  Deletes all of your data on the Worker's D1: scheduled proactive message tasks
+                  (including ones the character scheduled itself), synced character context (character
+                  card, recent chat window, etc.) and tool credentials, and the push subscription registration.
                 </p>
                 <p className="text-[11px] leading-relaxed text-rose-600">
-                  清完角色上下文下次聊天会自动传回去，工具凭据和推送订阅当场补登记，任务要自己重新排。
-                  换过 <code className="font-mono">AMSG_MASTER_KEY</code> 之后旧数据解不开，也从这里清干净。
+                  After clearing, character context will sync back automatically on your next chat, tool
+                  credentials and the push subscription re-register right away, and tasks need to be
+                  rescheduled yourself. Also use this if you changed <code className="font-mono">AMSG_MASTER_KEY</code> and old data can no longer be decrypted.
                 </p>
                 <button
                   onClick={() => void handleWipeCloudData()}
                   disabled={loading}
                   className="w-full py-2.5 bg-rose-500 text-white font-bold rounded-2xl active:scale-95 transition-transform disabled:opacity-50"
                 >
-                  {loading ? '处理中...' : '清空云端数据'}
+                  {loading ? 'Processing...' : 'Clear Cloud Data'}
                 </button>
               </div>
             </div>

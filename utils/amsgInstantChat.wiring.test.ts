@@ -315,7 +315,7 @@ describe('设置页那一道门', () => {
     // 和「不想要这功能的人」在数据里长得一模一样。
     const report = sliceSrc(settingsSrc, '即时对话可用性上报', 'const reportInstantChatGate', '\n  const refresh');
     expect(report).toContain('resolveInstantChatBlocker(gate)');
-    expect(report).toContain(`trackEvent('即时对话能不能开'`);
+    expect(report).toContain(`trackEvent('Can Instant Chat Be Enabled'`);
     // 反复点「连接」的人否则一个人能刷出十几条同样的结果，把分布带歪。
     expect(report).toContain('instantChatGateReported');
   });

@@ -12,9 +12,9 @@ import { trackEvent } from '../../utils/analytics';
 type Phase = 'idle' | 'checking' | 'available' | 'downloading' | 'permission' | 'installing' | 'latest' | 'error';
 
 const errorMessage = (error: unknown): string => {
-  const message = error instanceof Error ? error.message : String(error || '未知错误');
-  if (/Failed to fetch|NetworkError|timeout/i.test(message)) return '网络连接失败，请稍后重试';
-  return message || '检查更新失败，请稍后重试';
+  const message = error instanceof Error ? error.message : String(error || 'Unknown error');
+  if (/Failed to fetch|NetworkError|timeout/i.test(message)) return 'Network connection failed, please try again later';
+  return message || 'Failed to check for updates, please try again later';
 };
 
 const AndroidUpdateControl: React.FC = () => {
@@ -37,18 +37,18 @@ const AndroidUpdateControl: React.FC = () => {
       if (latest.versionCode <= installed.versionCode) {
         setManifest(null);
         setPhase('latest');
-        setMessage(`当前 ${installed.versionName || installed.versionCode} 已是最新版`);
-        trackEvent('Android 检查更新', { result: 'latest', versionCode: installed.versionCode });
+        setMessage(`Current ${installed.versionName || installed.versionCode} is already the latest version`);
+        trackEvent('Android Check Update', { result: 'latest', versionCode: installed.versionCode });
         return;
       }
       setManifest(latest);
       setPhase('available');
-      setMessage(`发现新版本 ${latest.versionName}`);
-      trackEvent('Android 检查更新', { result: 'available', versionCode: latest.versionCode });
+      setMessage(`New version found: ${latest.versionName}`);
+      trackEvent('Android Check Update', { result: 'available', versionCode: latest.versionCode });
     } catch (error) {
       setPhase('error');
       setMessage(errorMessage(error));
-      trackEvent('Android 检查更新', { result: 'failed' });
+      trackEvent('Android Check Update', { result: 'failed' });
     }
   };
 
@@ -57,26 +57,26 @@ const AndroidUpdateControl: React.FC = () => {
     const result = await installVerifiedAndroidUpdate(path, target);
     if (result.status === 'permission_required') {
       setPhase('permission');
-      setMessage('请允许“安装未知应用”，返回后点“继续安装”');
+      setMessage('Please allow "Install unknown apps", then go back and tap "Continue Install"');
       return;
     }
-    setMessage('已打开 Android 系统安装器');
+    setMessage('Opened the Android system installer');
   };
 
   const download = async () => {
     if (!manifest) return;
     setPhase('downloading');
     setProgress(0);
-    setMessage('正在下载并校验正式安装包');
+    setMessage('Downloading and verifying the official installer package');
     try {
       const path = await downloadAndVerifyAndroidUpdate(manifest, setProgress);
       setDownloadedPath(path);
       await install(path, manifest);
-      trackEvent('Android 下载更新', { result: 'installer-opened', versionCode: manifest.versionCode });
+      trackEvent('Android Download Update', { result: 'installer-opened', versionCode: manifest.versionCode });
     } catch (error) {
       setPhase('error');
       setMessage(errorMessage(error));
-      trackEvent('Android 下载更新', { result: 'failed', versionCode: manifest.versionCode });
+      trackEvent('Android Download Update', { result: 'failed', versionCode: manifest.versionCode });
     }
   };
 
@@ -92,16 +92,16 @@ const AndroidUpdateControl: React.FC = () => {
 
   const busy = phase === 'checking' || phase === 'downloading' || phase === 'installing';
   const label = phase === 'checking'
-    ? '检查中…'
+    ? 'Checking…'
     : phase === 'downloading'
-      ? `下载中 ${Math.round(progress * 100)}%`
+      ? `Downloading ${Math.round(progress * 100)}%`
       : phase === 'installing'
-        ? '正在打开安装器…'
+        ? 'Opening installer…'
         : phase === 'available'
-          ? `下载并安装 ${manifest?.versionName || '新版本'}`
+          ? `Download and install ${manifest?.versionName || 'new version'}`
           : phase === 'permission'
-            ? '继续安装'
-            : '检查更新';
+            ? 'Continue Install'
+            : 'Check for Updates';
   const onClick = phase === 'available' ? download : phase === 'permission' ? continueInstall : check;
 
   return (

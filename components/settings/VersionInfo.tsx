@@ -47,7 +47,7 @@ const VersionInfo: React.FC = () => {
                 swVersionResultReported = true;
                 // 只报「SW 有没有回话」。'?' = 没注册 / 被禁用 / 1.5 秒内没回包，
                 // 版本号字符串本身不上报。
-                trackEvent('查询 Service Worker 版本', { 结果: v === '?' ? '无应答' : '已应答' });
+                trackEvent('Query Service Worker Version', { result: v === '?' ? 'No response' : 'Responded' });
             }
         });
         return () => { cancelled = true; };
@@ -76,11 +76,11 @@ const VersionInfo: React.FC = () => {
         if (remaining <= 0) {
             tapCountRef.current = 0;
             unlockDevDebug();
-            trackEvent('连点版本号解锁调试面板');
-            showHint('🔧 调试面板已解锁（刷新即关闭）', 2600);
+            trackEvent('Unlock Debug Panel by Tapping Version');
+            showHint('🔧 Debug panel unlocked (closes on refresh)', 2600);
             return;
         }
-        if (remaining <= 2) showHint(`还差 ${remaining} 下…`, TAP_RESET_MS);
+        if (remaining <= 2) showHint(`${remaining} more tap${remaining === 1 ? '' : 's'}…`, TAP_RESET_MS);
         // 间隔超过 TAP_RESET_MS 没继续点就重置计数。
         tapTimerRef.current = window.setTimeout(() => { tapCountRef.current = 0; }, TAP_RESET_MS);
     };

@@ -138,7 +138,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
     const nextUrl = normalizeWorkerUrl(value);
     if (d1CheckedWorkerUrl && nextUrl !== d1CheckedWorkerUrl) {
       resetD1State();
-      setCapabilityStatus('Worker 地址变了，需要重新检测 D1 能力');
+      setCapabilityStatus('Worker URL changed, D1 capability needs to be re-checked');
       setCapabilityStatusKind('warning');
     }
   };
@@ -148,17 +148,17 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
   };
 
   const handleCopyWorkerCode = async () => {
-    setCopyStatus('加载中…');
+    setCopyStatus('Loading…');
     try {
       await copyInstantWorkerBundleToClipboard();
-      setCopyStatus('已复制');
-      trackEvent('复制 Instant Push Worker 代码', { result: 'success' });
+      setCopyStatus('Copied');
+      trackEvent('Copy Instant Push Worker Code', { result: 'success' });
       setTimeout(() => setCopyStatus(''), 2000);
     } catch (e) {
       const err = e as { message?: string } | null;
       setCopyStatus('');
-      addToast(`复制失败：${err?.message ?? '未知错误'}`, 'error');
-      trackEvent('复制 Instant Push Worker 代码', { result: 'fail' });
+      addToast(`Copy failed: ${err?.message ?? 'Unknown error'}`, 'error');
+      trackEvent('Copy Instant Push Worker Code', { result: 'fail' });
     }
   };
 
@@ -166,8 +166,8 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
     if (versionCheck === 'checking') return;
     if (!normalizedWorkerUrl) {
       setVersionCheck('stale');
-      setVersionCheckDetail('请先填 Worker URL');
-      trackEvent('对比已部署 Worker 版本', { result: 'no_url', clientVersion: INSTANT_WORKER_VERSION });
+      setVersionCheckDetail('Please fill in the Worker URL first');
+      trackEvent('Compare Deployed Worker Version', { result: 'no_url', clientVersion: INSTANT_WORKER_VERSION });
       return;
     }
     setVersionCheck('checking');
@@ -176,17 +176,17 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
     if (result.ok) {
       setVersionCheck('latest');
       setVersionCheckDetail('');
-      trackEvent('对比已部署 Worker 版本', { result: 'latest', clientVersion: INSTANT_WORKER_VERSION });
+      trackEvent('Compare Deployed Worker Version', { result: 'latest', clientVersion: INSTANT_WORKER_VERSION });
     } else {
       // 任何拉取失败 / 版本不匹配 → 一律视为旧版, 不再细分 404/405/网络错误。
       setVersionCheck('stale');
-      setVersionCheckDetail(result.error ?? '未知错误');
-      trackEvent('对比已部署 Worker 版本', { result: 'stale', clientVersion: INSTANT_WORKER_VERSION });
+      setVersionCheckDetail(result.error ?? 'Unknown error');
+      trackEvent('Compare Deployed Worker Version', { result: 'stale', clientVersion: INSTANT_WORKER_VERSION });
     }
   };
 
   const handleOpenTutorial = () => {
-    trackEvent('打开 Instant Push 视频教程');
+    trackEvent('Open Instant Push Video Tutorial');
     try {
       sessionStorage.setItem(FAQ_TARGET_SECTION_KEY, CHANGELOG_2026_05_27);
     } catch { /* ignore */ }
@@ -195,7 +195,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
   };
 
   const handleOpenCF = () => {
-    trackEvent('打开 Cloudflare Dashboard');
+    trackEvent('Open Cloudflare Dashboard');
     window.open('https://dash.cloudflare.com/?to=/:account/workers-and-pages/create', '_blank');
   };
 
@@ -204,19 +204,19 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
   const handleCopyDenoLoader = async () => {
     try {
       await copyDenoLoaderToClipboard();
-      setDenoCopyStatus('已复制');
-      trackEvent('复制 Deno Loader', { result: 'success' });
+      setDenoCopyStatus('Copied');
+      trackEvent('Copy Deno Loader', { result: 'success' });
       setTimeout(() => setDenoCopyStatus(''), 2000);
     } catch (e) {
       const err = e as { message?: string } | null;
       setDenoCopyStatus('');
-      addToast(`复制失败：${err?.message ?? '未知错误'}`, 'error');
-      trackEvent('复制 Deno Loader', { result: 'fail' });
+      addToast(`Copy failed: ${err?.message ?? 'Unknown error'}`, 'error');
+      trackEvent('Copy Deno Loader', { result: 'fail' });
     }
   };
 
   const handleOpenDeno = () => {
-    trackEvent('打开 Deno 控制台');
+    trackEvent('Open Deno Console');
     window.open('https://app.deno.com', '_blank');
   };
 
@@ -230,7 +230,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
       d1CheckedWorkerUrl: undefined,
     };
     setCapabilityBusy(true);
-    setCapabilityStatus('正在检测 Worker 连接…');
+    setCapabilityStatus('Checking Worker connection…');
     setCapabilityStatusKind('loading');
     try {
       const result = await probeInstantWorkerCapabilities(cfg);
@@ -238,15 +238,15 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
       const checkedWorkerUrl = cfg.workerUrl;
       if (!result.ok) {
         const errorText = result.error === 'X-Client-Token required'
-          ? 'Worker 要求 Client Token'
-          : (result.error === 'X-Client-Token invalid' ? 'Client Token 不对' : result.error);
+          ? 'Worker requires a Client Token'
+          : (result.error === 'X-Client-Token invalid' ? 'Client Token is incorrect' : result.error);
         resetD1State();
-        setCapabilityStatus(`连接失败：${errorText ?? '未知错误'}`);
+        setCapabilityStatus(`Connection failed: ${errorText ?? 'Unknown error'}`);
         setCapabilityStatusKind('error');
         saveInstantConfig({ ...cfg, d1Available: false, useD1BlobStore: false });
         // 「要 token」和「token 不对」统一收敛成 fail_auth: 只区分这两种就等于把
         // 用户有没有配 token 报上去了。原始 error 文本只留在界面上, 不进上报。
-        trackEvent('检测 Instant Push Worker 连接', {
+        trackEvent('Check Instant Push Worker Connection', {
           result: result.error === 'X-Client-Token required' || result.error === 'X-Client-Token invalid'
             ? 'fail_auth'
             : 'fail_other',
@@ -258,7 +258,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
         setD1Available(true);
         setD1CheckedAt(checkedAt);
         setD1CheckedWorkerUrl(checkedWorkerUrl);
-        setCapabilityStatus('连接正常，检测到 D1，可以启用 D1 envelope');
+        setCapabilityStatus('Connection OK, D1 detected — D1 envelope can be enabled');
         setCapabilityStatusKind('success');
         saveInstantConfig({
           ...cfg,
@@ -267,17 +267,17 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
           d1CheckedAt: checkedAt,
           d1CheckedWorkerUrl: checkedWorkerUrl,
         });
-        trackEvent('检测 Instant Push Worker 连接', { result: 'ok_with_d1' });
+        trackEvent('Check Instant Push Worker Connection', { result: 'ok_with_d1' });
       } else {
         const reasonText = result.d1Reason === 'DB binding missing'
-          ? 'Worker 没有绑定 DB'
-          : (result.d1Reason === 'D1 schema init failed' ? 'D1 表初始化失败' : result.d1Reason);
+          ? 'Worker has no DB binding'
+          : (result.d1Reason === 'D1 schema init failed' ? 'D1 table initialization failed' : result.d1Reason);
         resetD1State();
-        setCapabilityStatus(`连接正常，未检测到 D1：${reasonText ?? 'Worker 没有绑定 DB'}`);
+        setCapabilityStatus(`Connection OK, D1 not detected: ${reasonText ?? 'Worker has no DB binding'}`);
         setCapabilityStatusKind('warning');
         saveInstantConfig({ ...cfg, d1Available: false, useD1BlobStore: false });
         // d1Reason 是 worker 回的字符串, 只把两种已知情况映射成固定枚举, 其余一律 other。
-        trackEvent('检测 Instant Push Worker 连接', {
+        trackEvent('Check Instant Push Worker Connection', {
           result: 'ok_no_d1',
           d1Reason: result.d1Reason === 'DB binding missing'
             ? 'binding_missing'
@@ -289,10 +289,10 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
     } catch (e) {
       const err = e as { message?: string } | null;
       resetD1State();
-      setCapabilityStatus(`检测失败：${err?.message ?? String(e)}`);
+      setCapabilityStatus(`Check failed: ${err?.message ?? String(e)}`);
       setCapabilityStatusKind('error');
       saveInstantConfig({ ...cfg, d1Available: false, useD1BlobStore: false });
-      trackEvent('检测 Instant Push Worker 连接', { result: 'fail_other' });
+      trackEvent('Check Instant Push Worker Connection', { result: 'fail_other' });
     } finally {
       setCapabilityBusy(false);
     }
@@ -301,34 +301,34 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
   const handleTest = async () => {
     if (testBusy) return;
     if (!isPushVapidReady()) {
-      setTestStatus('请先到「推送凭据 (VAPID)」生成密钥对');
-      trackEvent('发送 Instant Push 测试推送', { result: 'vapid_missing' });
+      setTestStatus('Please generate a key pair in "Push Credentials (VAPID)" first');
+      trackEvent('Send Instant Push Test Push', { result: 'vapid_missing' });
       return;
     }
     const cfg = currentCfg();
     saveInstantConfig(cfg);
     setTestBusy(true);
-    setTestStatus('正在获取订阅…');
+    setTestStatus('Getting subscription…');
     try {
       const { sub, reason } = await getOrCreateInstantSubscription();
       if (!sub) {
-        setTestStatus(`订阅失败：${reason ?? '未知'}`);
-        trackEvent('发送 Instant Push 测试推送', { result: 'subscribe_failed' });
+        setTestStatus(`Subscription failed: ${reason ?? 'unknown'}`);
+        trackEvent('Send Instant Push Test Push', { result: 'subscribe_failed' });
         return;
       }
-      setTestStatus('调用 LLM 并推送中…');
+      setTestStatus('Calling LLM and pushing…');
       const result = await sendTestInstantPush(apiConfig);
       if (result.ok) {
-        setTestStatus('推送已发出，请查看系统通知');
-        trackEvent('发送 Instant Push 测试推送', { result: 'pushed' });
+        setTestStatus('Push sent — check your system notifications');
+        trackEvent('Send Instant Push Test Push', { result: 'pushed' });
       } else {
-        setTestStatus(`失败：${result.error ?? '未知错误'}`);
-        trackEvent('发送 Instant Push 测试推送', { result: 'push_failed' });
+        setTestStatus(`Failed: ${result.error ?? 'Unknown error'}`);
+        trackEvent('Send Instant Push Test Push', { result: 'push_failed' });
       }
     } catch (e) {
       const err = e as { message?: string } | null;
-      setTestStatus(`错误：${err?.message ?? String(e)}`);
-      trackEvent('发送 Instant Push 测试推送', { result: 'error' });
+      setTestStatus(`Error: ${err?.message ?? String(e)}`);
+      trackEvent('Send Instant Push Test Push', { result: 'error' });
     } finally {
       setTestBusy(false);
     }
@@ -355,26 +355,26 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
     if (turningOn) {
       addToast(
         raceBlocked
-          ? '主动消息 2.0 的「即时对话」已经开着，Instant Push 没法一起启用，其余设置已保存。'
-          : `Instant Push 已停止接入（${INSTANT_PUSH_SUNSET_DATE} 下线），没法再开启，其余设置已保存。`,
+          ? "Proactive Message 2.0's Instant Chat is already on, so Instant Push can't be enabled at the same time. The rest of your settings have been saved."
+          : `Instant Push has been discontinued (sunsetting ${INSTANT_PUSH_SUNSET_DATE}) and can't be turned back on. The rest of your settings have been saved.`,
         'error',
       );
       return;
     }
-    addToast('Instant Push 配置已保存', 'success');
+    addToast('Instant Push settings saved', 'success');
     onClose();
   };
 
-  const testStatusColor = testStatus.includes('推送已发出')
+  const testStatusColor = testStatus.includes('Push sent')
     ? 'text-emerald-600'
-    : testStatus.includes('失败') || testStatus.includes('错误') || testStatus.includes('请先到')
+    : /failed|error|please generate/i.test(testStatus)
     ? 'text-rose-500'
     : 'text-slate-500';
 
   return (
     <Modal
       isOpen={open}
-      title="Instant Push 配置"
+      title="Instant Push Settings"
       onClose={onClose}
       footer={
         <div className="flex gap-2 w-full">
@@ -383,14 +383,14 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
             onClick={onClose}
             className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl text-sm"
           >
-            取消
+            Cancel
           </button>
           <button
             type="button"
             onClick={() => void handleSave()}
             className="flex-1 py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 text-sm"
           >
-            保存
+            Save
           </button>
         </div>
       }
@@ -400,21 +400,22 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
         {/* 下线通告 — 排在最上面，进面板第一眼就看见 */}
         <div className="rounded-2xl p-3 bg-amber-50 border border-amber-200 space-y-2">
           <p className="text-[12px] font-bold text-amber-800">
-            Instant Push 将于 {INSTANT_PUSH_SUNSET_DATE} 下线
+            Instant Push will be discontinued on {INSTANT_PUSH_SUNSET_DATE}
           </p>
           <p className="text-[11px] text-amber-700 leading-relaxed">
-            聊天上云改由「主动消息 2.0 · 即时对话」接管：能力全覆盖，部署只要填一枚
-            Cloudflare Token，还多了定时主动消息、云端跑 MCP 工具、天气热搜节日感知。
-            那天之后这条路不再维护。
+            Cloud chat delivery is now handled by "Proactive Message 2.0 · Instant Chat": it covers everything
+            Instant Push did, deployment only needs a single Cloudflare Token, and it adds scheduled proactive
+            messages, cloud-run MCP tools, and weather / trending-topic / holiday awareness. This path won't be
+            maintained after that date.
           </p>
           <a
             href={INSTANT_PUSH_MIGRATION_GUIDE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackEvent('打开 Instant Push 迁移教程')}
+            onClick={() => trackEvent('Open Instant Push Migration Guide')}
             className="block w-full text-center py-2 rounded-xl text-[11px] font-bold bg-amber-500 text-white hover:bg-amber-600"
           >
-            看迁移教程 →
+            View Migration Guide →
           </a>
         </div>
 
@@ -425,10 +426,10 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
           className="w-full flex items-center gap-3 rounded-2xl p-3 bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200 hover:from-rose-100 hover:to-amber-100 text-left transition-colors"
         >
           <span className="flex-1 min-w-0">
-            <span className="block text-[12px] font-bold text-rose-600">第一次配置？先看视频教程</span>
-            <span className="block text-[11px] text-slate-500">跟着视频一步步点，大概十分钟搞定</span>
+            <span className="block text-[12px] font-bold text-rose-600">First time configuring? Watch the video tutorial first</span>
+            <span className="block text-[11px] text-slate-500">Follow along step by step — takes about ten minutes</span>
           </span>
-          <span className="shrink-0 text-rose-500 font-bold text-sm">看教程 →</span>
+          <span className="shrink-0 text-rose-500 font-bold text-sm">Watch Tutorial →</span>
         </button>
 
         {/* VAPID 状态横条 */}
@@ -436,24 +437,24 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
           <div className="flex items-center justify-between gap-3">
             <div className="text-[11px] leading-relaxed">
               <p className={`font-bold ${vapidReady ? 'text-emerald-700' : 'text-rose-700'}`}>
-                {vapidReady ? 'VAPID 已配置' : 'VAPID 未配置'}
+                {vapidReady ? 'VAPID Configured' : 'VAPID Not Configured'}
               </p>
               <p className={vapidReady ? 'text-emerald-600' : 'text-rose-600'}>
                 {vapidReady
-                  ? '与 Proactive Push 共用同一份。改了之后两边的订阅都会续上。'
-                  : '需要先生成 VAPID 密钥对，Worker env 也要同步填进去。'}
+                  ? 'Shared with Proactive Push. Changing it will renew subscriptions on both sides.'
+                  : 'You need to generate a VAPID key pair first, and fill it into the Worker env too.'}
               </p>
             </div>
             {onOpenVapid && (
               <button
                 type="button"
                 onClick={() => {
-                  trackEvent('跳去配置推送凭据 (VAPID)');
+                  trackEvent('Go to Configure Push Credentials (VAPID)');
                   onOpenVapid?.();
                 }}
                 className={`shrink-0 px-3 py-2 text-[11px] rounded-xl font-bold ${vapidReady ? 'bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50' : 'bg-rose-500 text-white hover:bg-rose-600'}`}
               >
-                {vapidReady ? '查看 / 重生成' : '去生成 →'}
+                {vapidReady ? 'View / Regenerate' : 'Generate →'}
               </button>
             )}
           </div>
@@ -461,7 +462,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
 
         {/* ① Worker 配置 */}
         <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">① Worker 配置</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">① Worker Configuration</p>
 
           <div className="space-y-1">
             <label className="text-[11px] text-slate-500 font-medium">Worker URL</label>
@@ -475,13 +476,13 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] text-slate-500 font-medium">Client Token（可选，防止他人滥用 Worker）</label>
+            <label className="text-[11px] text-slate-500 font-medium">Client Token (optional, prevents others from abusing your Worker)</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={clientToken}
                 onChange={(e) => setClientToken(e.target.value)}
-                placeholder="留空则裸跑"
+                placeholder="Leave blank to run without a token"
                 className="flex-1 text-[11px] font-mono bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-400"
               />
               <button
@@ -489,7 +490,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
                 onClick={handleGenerateToken}
                 className="shrink-0 px-3 py-2 text-[11px] bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-medium"
               >
-                随机
+                Random
               </button>
             </div>
           </div>
@@ -502,13 +503,13 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
               onChange={(e) => setEnabled(e.target.checked)}
               className="accent-indigo-500"
             />
-            <span className="text-[12px] text-slate-600 font-medium">启用 Instant Push</span>
+            <span className="text-[12px] text-slate-600 font-medium">Enable Instant Push</span>
           </label>
           {enableBlocked && (
             <p className="text-[11px] text-amber-600 leading-relaxed">
-              Instant Push 已停止接入，{INSTANT_PUSH_SUNSET_DATE} 起不再维护。聊天上云请用
-              「主动消息 2.0 · 即时对话」——它覆盖了 Instant Push 的全部能力，部署也只要填一枚
-              Cloudflare Token。
+              Instant Push is no longer accepting new setups — it stops being maintained on {INSTANT_PUSH_SUNSET_DATE}.
+              For cloud chat delivery, use "Proactive Message 2.0 · Instant Chat" instead — it covers everything
+              Instant Push does, and deployment also only needs a single Cloudflare Token.
             </p>
           )}
 
@@ -520,9 +521,10 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
               className="accent-indigo-500 mt-0.5"
             />
             <span className="text-[12px] text-slate-600 font-medium leading-relaxed">
-              发送后自动触发回复
+              Auto-trigger reply after sending
               <span className="block text-[11px] text-slate-400 font-normal">
-                关闭时发完文本仍需手动点 ⚡ 触发，跟本地模式一致；开启后发文本即自动让角色回复。
+                When off, you still need to manually tap ⚡ to trigger a reply after sending text, same as local
+                mode; when on, sending text automatically makes the character reply.
               </span>
             </span>
           </label>
@@ -532,7 +534,8 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
               <div className="min-w-0">
                 <p className="text-[12px] text-slate-600 font-bold">D1 envelope</p>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  默认走分片；检测到 Worker 绑定了 D1 后，才允许把大包改成短 push + 拉完整包。
+                  Uses chunking by default; once the Worker is detected to have D1 bound, large payloads can switch
+                  to short push + full-payload fetch.
                 </p>
               </div>
               <button
@@ -541,7 +544,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
                 disabled={capabilityBusy || !normalizedWorkerUrl}
                 className={`shrink-0 px-3 py-2 text-[11px] rounded-xl font-bold ${capabilityBusy || !normalizedWorkerUrl ? 'bg-slate-100 text-slate-400' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
               >
-                {capabilityBusy ? '检测中…' : '检测连接'}
+                {capabilityBusy ? 'Checking…' : 'Check Connection'}
               </button>
             </div>
 
@@ -554,11 +557,11 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
                 className="accent-indigo-500 mt-0.5"
               />
               <span className="text-[12px] text-slate-600 font-medium leading-relaxed">
-                使用 D1 envelope 承接大 payload
+                Use D1 envelope for large payloads
                 <span className="block text-[11px] text-slate-400 font-normal">
                   {canUseD1
-                    ? '已检测到可用 D1；关闭时继续使用默认分片。'
-                    : '先检测连接；没有 D1 时这个选项会保持关闭。'}
+                    ? 'D1 detected and available; when off, default chunking continues to be used.'
+                    : 'Check the connection first; this option stays off if D1 is not available.'}
                 </span>
               </span>
             </label>
@@ -573,15 +576,16 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
 
         {/* ② 部署 Worker */}
         <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">② 部署 Worker</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">② Deploy Worker</p>
 
           {/* 方式 A · Deno (推荐): loader 冷启动自动拉最新 bundle, 部署一次永久追新 */}
           <div className="rounded-xl bg-white border border-indigo-200 p-3 space-y-2">
-            <p className="text-[12px] text-slate-600 font-bold">方式 A · Deno Deploy（推荐，自动追新）</p>
+            <p className="text-[12px] text-slate-600 font-bold">Method A · Deno Deploy (recommended, auto-updates)</p>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              在 Deno 控制台新建 <strong>Playground</strong>，把复制到的 loader（仅 8 行）粘贴进去部署；
-              VAPID 公钥/私钥到「推送凭据 (VAPID)」面板复制 env 清单，填进 Playground 的环境变量。
-              之后 Worker 每次冷启动会自动拉取站点最新代码，<strong>无需手动更新</strong>。
+              Create a new <strong>Playground</strong> in the Deno console, paste in the copied loader (only 8
+              lines), and deploy; go to the "Push Credentials (VAPID)" panel to copy the env list for the VAPID
+              public/private keys, and paste it into the Playground's environment variables. After that, the Worker
+              automatically pulls the latest site code on every cold start — <strong>no manual updates needed</strong>.
             </p>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -589,29 +593,31 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
                 onClick={() => void handleCopyDenoLoader()}
                 className="py-2 rounded-xl text-[11px] font-bold bg-indigo-500 text-white hover:bg-indigo-600"
               >
-                {denoCopyStatus || '复制 Deno Loader'}
+                {denoCopyStatus || 'Copy Deno Loader'}
               </button>
               <button
                 type="button"
                 onClick={handleOpenDeno}
                 className="py-2 rounded-xl text-[11px] font-bold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
               >
-                ↗ Deno 控制台
+                ↗ Deno Console
               </button>
             </div>
           </div>
 
           <p className="text-[11px] text-slate-500 leading-relaxed">
-            <strong>方式 B · Cloudflare（手动更新）：</strong>在 CF 后台 Create → Worker 建一个空 Worker，进
-            <strong> Edit code</strong> 把下面复制到的
-            <code className="font-mono"> worker.bundle.js </code>全部内容粘贴覆盖，再 Deploy；
-            VAPID 公钥/私钥到「推送凭据 (VAPID)」面板复制 env 清单，粘进 Worker 的 Variables。
+            <strong>Method B · Cloudflare (manual updates):</strong> In the CF dashboard, Create → Worker to make a
+            blank Worker, go into
+            <strong> Edit code</strong> and paste over everything with the
+            <code className="font-mono"> worker.bundle.js </code>content copied below, then Deploy;
+            go to the "Push Credentials (VAPID)" panel to copy the env list for the VAPID public/private keys, and
+            paste it into the Worker's Variables.
           </p>
 
           {/* Worker 代码版本 + 对比已部署: 拉 worker /version 跟随包版本对, 拉不到 / 不一致都算旧 */}
           <div className="flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 px-3 py-2">
             <div className="min-w-0">
-              <p className="text-[11px] text-slate-500">最新 Worker 代码版本</p>
+              <p className="text-[11px] text-slate-500">Latest Worker code version</p>
               <p className="text-[12px] font-bold text-slate-700 font-mono">{INSTANT_WORKER_VERSION}</p>
             </div>
             <button
@@ -624,18 +630,18 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
-              {versionCheck === 'checking' ? '查询中…' : '对比已部署'}
+              {versionCheck === 'checking' ? 'Checking…' : 'Compare Deployed'}
             </button>
           </div>
           {versionCheck === 'latest' && (
             <p className="text-[11px] leading-relaxed text-emerald-600">
-              ✓ 你部署的 Worker 已是最新 ({INSTANT_WORKER_VERSION})
+              ✓ Your deployed Worker is up to date ({INSTANT_WORKER_VERSION})
             </p>
           )}
           {versionCheck === 'stale' && (
             <p className="text-[11px] leading-relaxed text-amber-600">
-              你部署的 Worker 不是最新版 —— Deno：进 Playground 重新部署一次（保存即可）；
-              CF：复制下面的最新代码重新粘贴 Deploy
+              Your deployed Worker isn't the latest version — Deno: go into Playground and redeploy once (just
+              save); CF: copy the latest code below and paste-deploy again
               {versionCheckDetail ? ` (${versionCheckDetail})` : ''}
             </p>
           )}
@@ -646,7 +652,7 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
               onClick={() => void handleCopyWorkerCode()}
               className="py-2 rounded-xl text-[11px] font-bold bg-indigo-500 text-white hover:bg-indigo-600"
             >
-              {copyStatus || '复制 Worker 代码'}
+              {copyStatus || 'Copy Worker Code'}
             </button>
             <button
               type="button"
@@ -663,7 +669,8 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
             && __BUILD_BRANCH__ !== 'main'
             && __BUILD_BRANCH__ !== 'unknown' && (
             <p className="text-[10px] text-amber-600 leading-tight pt-1">
-              当前为分支 <code className="font-mono">{__BUILD_BRANCH__}</code> — 兜底 GitHub 链接指向该分支的 bundle，确保已推到远端.
+              Currently on branch <code className="font-mono">{__BUILD_BRANCH__}</code> — the fallback GitHub link
+              points to that branch's bundle, make sure it's been pushed to the remote.
             </p>
           )}
 
@@ -672,10 +679,10 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
               href={INSTANT_PUSH_BUNDLE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent('点击复制失败兜底的 GitHub bundle 链接')}
+              onClick={() => trackEvent('Click Copy-Failed Fallback GitHub Bundle Link')}
               className="text-[11px] text-slate-400 hover:text-slate-600 underline-offset-2 hover:underline"
             >
-              复制失败？去 GitHub 打开 worker.bundle.js →
+              Copy failed? Open worker.bundle.js on GitHub →
             </a>
           </div>
         </div>
@@ -688,16 +695,18 @@ export const InstantPushSettingsModal: React.FC<InstantPushSettingsModalProps> =
             disabled={testBusy}
             className={`w-full py-3 rounded-xl text-sm font-bold ${testBusy ? 'bg-slate-200 text-slate-400' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
           >
-            {testBusy ? '测试中…' : '🔔 发送测试推送'}
+            {testBusy ? 'Testing…' : '🔔 Send Test Push'}
           </button>
           {testStatus && (
             <p className={`text-[11px] text-center ${testStatusColor}`}>{testStatus}</p>
           )}
           {!apiConfig.baseUrl && (
-            <p className="text-[11px] text-amber-600 text-center">请先在 Settings → API 配置 Chat API，测试推送会复用它</p>
+            <p className="text-[11px] text-amber-600 text-center">Please configure the Chat API in Settings → API first — the test push will reuse it</p>
           )}
           <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-            测试推送带 <code>metadata.test=true</code> 标记，SW 收到后即使 app 在前台也会强制弹系统通知 —— 真实消息照旧前台静默由 in-app UI 兜底。
+            The test push carries a <code>metadata.test=true</code> flag — when the SW receives it, it forces a
+            system notification even if the app is in the foreground. Real messages still stay silent in the
+            foreground, handled by the in-app UI as usual.
           </p>
         </div>
 

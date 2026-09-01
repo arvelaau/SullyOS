@@ -84,7 +84,7 @@ describe('更新 Worker 之后的自动验证', () => {
     const src = read('../components/settings/ActiveMsgGlobalSettingsModal.tsx');
     const fn = sliceBetween(src, 'const handleSelfUpdateWorker', 'const handleAttachUpdateKey');
     expect(fn).toContain('await ActiveMsgClient.connect()');
-    expect(fn, '验证没过要单独说，别把「代码换上了」和「表补齐了」混成一句').toContain('重新连接并验证');
+    expect(fn, '验证没过要单独说，别把「代码换上了」和「表补齐了」混成一句').toContain('Reconnect & Verify');
   });
 });
 

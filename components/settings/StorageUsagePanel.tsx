@@ -61,27 +61,27 @@ type PersistAttempt = 'none' | 'granted' | 'denied';
 function describeOptimizeResult(r: OptimizeResult): string {
     const parts: string[] = [];
     if (r.converted > 0) {
-        parts.push(`已把 ${r.converted} 张图片转为二进制存储，释放约 ${formatBytes(Math.max(0, r.bytesBefore - r.bytesAfter))}`);
+        parts.push(`Converted ${r.converted} image(s) to binary storage, freeing about ${formatBytes(Math.max(0, r.bytesBefore - r.bytesAfter))}`);
     }
     if (r.mergedDuplicates > 0) {
-        parts.push(`把 ${r.mergedDuplicates} 份重复的图片并成了一份，约 ${formatBytes(r.reclaimableBytes)} 会在下次清理时释放`);
+        parts.push(`Merged ${r.mergedDuplicates} duplicate image(s) into one — about ${formatBytes(r.reclaimableBytes)} will be freed on the next cleanup`);
     }
     if (r.vectorsCompacted > 0) {
-        parts.push(`把 ${r.vectorsCompacted} 条记忆向量压成了紧凑格式`);
+        parts.push(`Compacted ${r.vectorsCompacted} memory vector(s) into a compact format`);
     }
-    const reloadNote = r.mergedDuplicates > 0 ? '页面即将刷新，让界面和备份都用上合并后的图片。' : '';
-    const vectorNote = r.vectorError ? `记忆向量这一步没做完：${r.vectorError}。再点一次可以接着压。` : '';
+    const reloadNote = r.mergedDuplicates > 0 ? ' The page will reload shortly so the UI and backups both use the merged images.' : '';
+    const vectorNote = r.vectorError ? ` The memory-vector step didn't finish: ${r.vectorError}. Click again to continue compacting.` : '';
     if (parts.length === 0) {
-        if (r.failed > 0) return `有 ${r.failed} 张图片转换失败（已保留原样），其余没有需要优化的。${vectorNote}`;
-        if (vectorNote) return `没有需要优化的图片。${vectorNote}`;
+        if (r.failed > 0) return `${r.failed} image(s) failed to convert (kept as-is); nothing else needs optimizing.${vectorNote}`;
+        if (vectorNote) return `No images need optimizing.${vectorNote}`;
         return r.scanUnavailable
-            ? '没有需要优化的图片。这次没能检查重复图片，换个环境再试试。'
-            : '没有需要优化的，存储已是最省形态。';
+            ? 'No images need optimizing. Could not check for duplicate images this time — try again in a different environment.'
+            : 'Nothing needs optimizing — storage is already as compact as it gets.';
     }
-    let text = `${parts.join('；')}。`;
-    if (r.failed > 0) text += `另有 ${r.failed} 张转换失败，已保留原样。`;
-    if (r.skippedGroups > 0) text += `有 ${r.skippedGroups} 组重复图片没有合并——它们被「换一张就会删掉旧图」的地方用着，并了会误删。`;
-    if (r.scanUnavailable) text += '这次没能检查重复图片，换个环境再试试。';
+    let text = `${parts.join('; ')}.`;
+    if (r.failed > 0) text += ` Also, ${r.failed} failed to convert and were kept as-is.`;
+    if (r.skippedGroups > 0) text += ` ${r.skippedGroups} duplicate group(s) were not merged — they're used somewhere that deletes the old image on replacement, so merging them risked accidental deletion.`;
+    if (r.scanUnavailable) text += ' Could not check for duplicate images this time — try again in a different environment.';
     return text + vectorNote + reloadNote;
 }
 
@@ -134,7 +134,7 @@ const StorageUsagePanel: React.FC = () => {
     const handleToggle = useCallback(() => {
         const next = !expanded;
         setExpanded(next);
-        if (next) trackEvent('查看存储占用明细');
+        if (next) trackEvent('View Storage Usage Details');
         if (next && !cachedBreakdown && !computing) void runBreakdown();
     }, [expanded, computing, runBreakdown]);
 
@@ -169,7 +169,7 @@ const StorageUsagePanel: React.FC = () => {
         try {
             const granted = await requestPersistentStorage();
             // 成败都记一笔：要是这个按钮的通过率常年是 0，那它就是个摆设，得换做法。
-            trackEvent('申请持久化存储许可', { 结果: granted ? '通过' : '没通过' });
+            trackEvent('Request Persistent Storage Permission', { result: granted ? 'granted' : 'denied' });
             if (!aliveRef.current) return;
             setAttempt(granted ? 'granted' : 'denied');
             await refreshOverview();
@@ -201,9 +201,9 @@ const StorageUsagePanel: React.FC = () => {
         <div data-testid="storage-usage-panel" className="mb-5 pb-4 border-b border-slate-100">
             {/* ── 总量 ── */}
             <div className="flex items-baseline justify-between gap-2 mb-1.5">
-                <span className="text-xs font-bold text-slate-600">本机数据</span>
+                <span className="text-xs font-bold text-slate-600">Local Data</span>
                 <span className="text-sm font-bold text-slate-700 tabular-nums">
-                    {overview == null ? '读取中…' : formatBytes(usage)}
+                    {overview == null ? 'Loading…' : formatBytes(usage)}
                 </span>
             </div>
 
@@ -215,12 +215,12 @@ const StorageUsagePanel: React.FC = () => {
 
             <p className="text-[10px] text-slate-400 mb-3">
                 {overview == null
-                    ? '正在读取浏览器给出的用量…'
+                    ? 'Reading the usage figures from your browser…'
                     : !overview.supported
-                        ? '这个浏览器不提供存储用量信息'
+                        ? 'This browser does not provide storage usage info'
                         : quota != null
-                            ? `上限 ${formatBytes(quota)}${percent != null ? ` · 已占 ${percent.toFixed(1)}%` : ''} · 数字由浏览器估算`
-                            : '浏览器没给出上限 · 数字由浏览器估算'}
+                            ? `Limit ${formatBytes(quota)}${percent != null ? ` · ${percent.toFixed(1)}% used` : ''} · Estimated by the browser`
+                            : 'Browser did not report a limit · Estimated by the browser'}
             </p>
 
             {/* ── 持久化许可 ── */}
@@ -230,11 +230,11 @@ const StorageUsagePanel: React.FC = () => {
                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                             persisted === true ? 'bg-emerald-500' : persisted === false ? 'bg-amber-500' : 'bg-slate-300'
                         }`} />
-                        <span className="text-[11px] font-bold text-slate-600">持久化许可</span>
+                        <span className="text-[11px] font-bold text-slate-600">Persistent Storage Permission</span>
                         <span className={`text-[11px] font-bold ${
                             persisted === true ? 'text-emerald-600' : persisted === false ? 'text-amber-600' : 'text-slate-400'
                         }`}>
-                            {persisted === true ? '已获得' : persisted === false ? '未获得' : '无法查询'}
+                            {persisted === true ? 'Granted' : persisted === false ? 'Not Granted' : 'Unable to Check'}
                         </span>
                     </div>
                     {persisted !== true && overview != null && (
@@ -244,42 +244,42 @@ const StorageUsagePanel: React.FC = () => {
                             disabled={persisting}
                             className="shrink-0 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 active:scale-95 transition-all disabled:opacity-50"
                         >
-                            {persisting ? '申请中…' : '再试一次'}
+                            {persisting ? 'Requesting…' : 'Try Again'}
                         </button>
                     )}
                 </div>
                 <p className="mt-1.5 text-[10px] text-slate-400 leading-relaxed">
                     {persisted === true
-                        ? '系统清理存储空间时不会动你的数据。'
+                        ? 'The system will not clear your data when reclaiming storage space.'
                         : attempt === 'denied'
-                            ? '浏览器这次没批准。把 SullyOS 装到主屏、或者允许通知之后再点一次，通过的概率会明显变高。'
-                            : '存储吃紧时系统可能把你的数据一起清掉。把 SullyOS 装到主屏、或者允许通知，能提高申请成功率。'}
+                            ? 'The browser did not approve it this time. Install SullyOS to your home screen, or allow notifications, then try again — that noticeably improves the odds of approval.'
+                            : 'When storage runs low, the system may clear your data along with everything else. Installing SullyOS to your home screen, or allowing notifications, can improve the approval odds.'}
                 </p>
             </div>
 
             {/* ── 优化资源存储（一次性迁移，幂等可重跑） ── */}
             <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 mb-3">
                 <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold text-slate-600">优化资源存储</span>
+                    <span className="text-[11px] font-bold text-slate-600">Optimize Resource Storage</span>
                     <button
                         type="button"
                         onClick={handleOptimize}
                         disabled={optimizing}
                         className="shrink-0 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {optimizing ? '优化中…' : '一键优化'}
+                        {optimizing ? 'Optimizing…' : 'Optimize Now'}
                     </button>
                 </div>
                 <p className={`mt-1.5 text-[10px] leading-relaxed ${optimizeError ? 'text-rose-500' : 'text-slate-400'}`}>
                     {optimizing
                         ? (optimizeProgress
-                            ? `正在处理：${optimizeProgress.label}（${optimizeProgress.done}/${optimizeProgress.total}）…`
-                            : '正在扫描…')
+                            ? `Processing: ${optimizeProgress.label} (${optimizeProgress.done}/${optimizeProgress.total})…`
+                            : 'Scanning…')
                         : optimizeError
                             ? optimizeError
                             : optimizeResult
                                 ? describeOptimizeResult(optimizeResult)
-                                : '把老数据里仍以 base64 存的图片一次性转成二进制，把重复存了好几份的同一张图并成一份，再把记忆向量压成紧凑格式。做过一次就干净；导入过旧备份后可以再点。'}
+                                : 'Converts images still stored as base64 in old data to binary all at once, merges duplicate copies of the same image into one, and compacts memory vectors into a compact format. Once run, things are clean; run it again after importing an old backup.'}
                 </p>
                 {/* 合并动的是库里的引用，内存里的 theme / customIcons 还捏着合并前的令牌。
                     不刷新的话：界面照常显示，但导出的备份里 metadata 写的仍是旧令牌，
@@ -292,7 +292,7 @@ const StorageUsagePanel: React.FC = () => {
                         onClick={() => window.location.reload()}
                         className="mt-2 w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 active:scale-95 transition-all"
                     >
-                        立即刷新
+                        Refresh Now
                     </button>
                 )}
             </div>
@@ -306,7 +306,7 @@ const StorageUsagePanel: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={`w-3 h-3 text-slate-300 transition-transform ${expanded ? 'rotate-180' : ''}`}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                 </svg>
-                <span>看看都是些什么占的</span>
+                <span>See what's taking up space</span>
             </button>
 
             {expanded && (
@@ -316,15 +316,15 @@ const StorageUsagePanel: React.FC = () => {
                             <span className="w-3 h-3 rounded-full border-2 border-slate-200 border-t-violet-400 animate-spin shrink-0" />
                             <span className="text-[10px] text-slate-400">
                                 {progress && progress.total > 0
-                                    ? `计算中… 已翻完 ${progress.done}/${progress.total} 张表`
-                                    : '计算中…'}
+                                    ? `Calculating… scanned ${progress.done}/${progress.total} tables`
+                                    : 'Calculating…'}
                             </span>
                         </div>
                     ) : breakdownError ? (
                         <div className="px-1 py-3">
-                            <p className="text-[10px] text-rose-500 mb-2">读不出各项占用（数据库可能正被其他标签页占用）。</p>
+                            <p className="text-[10px] text-rose-500 mb-2">Could not read the breakdown (the database may be in use by another tab).</p>
                             <button type="button" onClick={() => void runBreakdown()} className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 active:scale-95 transition-all">
-                                重试
+                                Retry
                             </button>
                         </div>
                     ) : breakdown ? (
@@ -334,34 +334,34 @@ const StorageUsagePanel: React.FC = () => {
                                     <div key={c.key} className="flex items-baseline justify-between gap-2">
                                         <span className="text-[11px] text-slate-500 truncate">{c.label}</span>
                                         <span className="text-[11px] text-slate-600 font-medium tabular-nums shrink-0">
-                                            {c.estimated ? '约 ' : ''}{formatBytes(c.bytes)}
+                                            {c.estimated ? 'approx. ' : ''}{formatBytes(c.bytes)}
                                         </span>
                                     </div>
                                 ))}
                                 {showOtherUsage && (
                                     <div className="flex items-baseline justify-between gap-2">
-                                        <span className="text-[11px] text-slate-400 truncate">网页缓存等</span>
-                                        <span className="text-[11px] text-slate-400 font-medium tabular-nums shrink-0">约 {formatBytes(otherUsage)}</span>
+                                        <span className="text-[11px] text-slate-400 truncate">Web cache, etc.</span>
+                                        <span className="text-[11px] text-slate-400 font-medium tabular-nums shrink-0">approx. {formatBytes(otherUsage)}</span>
                                     </div>
                                 )}
                                 {breakdown.categories.length === 0 && !showOtherUsage && (
-                                    <p className="text-[10px] text-slate-400">还没有存下什么数据。</p>
+                                    <p className="text-[10px] text-slate-400">Nothing has been stored yet.</p>
                                 )}
                             </div>
 
                             <div className="flex items-center justify-between gap-2">
                                 <p className="text-[10px] text-slate-300 leading-relaxed">
                                     {[
-                                        breakdown.categories.some(c => c.estimated) ? '标「约」的项目是抽样估算' : '',
+                                        breakdown.categories.some(c => c.estimated) ? 'Items marked "approx." are sampled estimates' : '',
                                         // 数据的原始大小比它实际占的地方大——浏览器落盘时会压一道。
                                         // 不折算的话细分加起来会超过上面的总量，看着像算错了。
-                                        breakdown.calibrated ? '各项已按实际占用折算，比数据本身的大小小一些' : '',
-                                        showOtherUsage ? '「网页缓存等」是离线缓存这类系统占用，删不掉也不用管' : '',
-                                        breakdown.failedStores.length > 0 ? `有 ${breakdown.failedStores.length} 张表没读出来` : '',
-                                    ].filter(Boolean).join('；')}
+                                        breakdown.calibrated ? 'Each figure is adjusted for actual on-disk usage, a bit smaller than the raw data size' : '',
+                                        showOtherUsage ? '"Web cache, etc." is system usage like offline caching — it cannot be removed and does not need attention' : '',
+                                        breakdown.failedStores.length > 0 ? `${breakdown.failedStores.length} table(s) could not be read` : '',
+                                    ].filter(Boolean).join('; ')}
                                 </p>
                                 <button type="button" onClick={() => void runBreakdown()} className="shrink-0 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[10px] font-bold text-slate-500 active:scale-95 transition-all">
-                                    重新计算
+                                    Recalculate
                                 </button>
                             </div>
                         </>

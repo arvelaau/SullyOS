@@ -47,46 +47,46 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
       setPrivateKey(kp.privateKey);
       persist(kp.publicKey, kp.privateKey);
       setShowPrivateKey(true);
-      addToast('已生成新的 VAPID 密钥对', 'success');
+      addToast('New VAPID key pair generated', 'success');
       // 只报「这次生成成没成」。不带「之前配没配过」——那等于上报凭据配置状态。
-      trackEvent('生成 VAPID 密钥对', { result: 'success' });
+      trackEvent('Generate VAPID Key Pair', { result: 'success' });
     } catch (e) {
       const err = e as { message?: string } | null;
-      addToast(err?.message ?? '生成失败', 'error');
+      addToast(err?.message ?? 'Generation failed', 'error');
       // 只报「失败了」这一件事：报错原文可能带路径，留在 toast / console 里就够。
-      trackEvent('生成 VAPID 密钥对', { result: 'error' });
+      trackEvent('Generate VAPID Key Pair', { result: 'error' });
     } finally {
       setGenerating(false);
     }
   };
 
   const handleClear = () => {
-    if (!confirm('确定清空 VAPID 密钥对？Proactive / Instant Push 都会立即失效，下次订阅需要重建。')) {
-      trackEvent('清空 VAPID 密钥对', { confirmed: false });
+    if (!confirm('Clear the VAPID key pair? Proactive / Instant Push will both stop working immediately, and the next subscription will need to be rebuilt.')) {
+      trackEvent('Clear VAPID Key Pair', { confirmed: false });
       return;
     }
-    trackEvent('清空 VAPID 密钥对', { confirmed: true });
+    trackEvent('Clear VAPID Key Pair', { confirmed: true });
     clearPushVapid();
     setPublicKey('');
     setPrivateKey('');
-    addToast('VAPID 已清空', 'success');
+    addToast('VAPID cleared', 'success');
   };
 
   const handleCopyPublicKey = async () => {
     if (!publicKey) return;
     await navigator.clipboard.writeText(publicKey);
-    addToast('公钥已复制', 'success');
-    trackEvent('复制 VAPID 公钥');
+    addToast('Public key copied', 'success');
+    trackEvent('Copy VAPID Public Key');
   };
 
   const handleCopyPrivateKey = async () => {
     if (!privateKey) {
-      addToast('私钥尚未生成', 'error');
+      addToast('Private key not generated yet', 'error');
       return;
     }
     await navigator.clipboard.writeText(privateKey);
-    addToast('私钥已复制', 'success');
-    trackEvent('复制 VAPID 私钥');
+    addToast('Private key copied', 'success');
+    trackEvent('Copy VAPID Private Key');
   };
 
   const handleCopyEnv = async () => {
@@ -102,17 +102,17 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
     const lines = [
       `VAPID_PUBLIC_KEY=${pub}`,
       `VAPID_PRIVATE_KEY=${priv}`,
-      `# 可选：`,
+      `# Optional:`,
       `# VAPID_EMAIL=mailto:you@example.com`,
     ];
     await navigator.clipboard.writeText(lines.join('\n'));
-    addToast('env 已复制（含真实密钥）', 'success');
-    trackEvent('复制 Worker env 清单');
+    addToast('env copied (includes real keys)', 'success');
+    trackEvent('Copy Worker env List');
   };
 
   const handleSave = () => {
     persist(publicKey.trim(), privateKey.trim());
-    addToast('推送凭据已保存', 'success');
+    addToast('Push credentials saved', 'success');
     onClose();
   };
 
@@ -123,7 +123,7 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
   return (
     <Modal
       isOpen={open}
-      title="推送凭据 (VAPID)"
+      title="Push Credentials (VAPID)"
       onClose={onClose}
       footer={
         <div className="flex gap-2 w-full">
@@ -132,14 +132,14 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
             onClick={onClose}
             className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl text-sm"
           >
-            取消
+            Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
             className="flex-1 py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 text-sm"
           >
-            保存
+            Save
           </button>
         </div>
       }
@@ -147,28 +147,29 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
       <div className="space-y-5 text-sm">
 
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-[11px] text-amber-800 leading-relaxed">
-          <p className="font-bold mb-1">⚠ 一份 VAPID, 两个用法</p>
+          <p className="font-bold mb-1">⚠ One VAPID, two uses</p>
           <p>
-            浏览器订阅 push 用<b>公钥</b>; Worker 签名 push 用<b>私钥</b>.
-            Proactive Push 和 Instant Push <b>都从这里读公钥</b> ——
-            两边公钥不一致会反复 unsubscribe 抢同一个订阅, 是 "推送配额没掉但是收不到通知" 的常见原因.
+            The browser uses the <b>public key</b> to subscribe to push; the Worker uses the <b>private key</b> to sign pushes.
+            Proactive Push and Instant Push <b>both read the public key from here</b> —
+            mismatched public keys cause repeated unsubscribe fights over the same subscription, a common cause of
+            "push quota isn't dropping but notifications aren't arriving."
           </p>
           <p className="mt-1">
-            生成 / 改了之后, 你的 CF Worker env (<code>VAPID_PUBLIC_KEY</code> + <code>VAPID_PRIVATE_KEY</code>) 也要同步更新, 否则签名校验会失败.
+            After generating / changing it, your CF Worker env (<code>VAPID_PUBLIC_KEY</code> + <code>VAPID_PRIVATE_KEY</code>) needs to be updated too, or signature verification will fail.
           </p>
         </div>
 
         {/* 公钥 */}
         <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] text-slate-500 font-medium">VAPID 公钥</label>
+            <label className="text-[11px] text-slate-500 font-medium">VAPID Public Key</label>
             {publicKey && (
               <button
                 type="button"
                 onClick={() => void handleCopyPublicKey()}
                 className="text-[11px] text-slate-500 hover:text-slate-700 font-medium"
               >
-                复制
+                Copy
               </button>
             )}
           </div>
@@ -176,7 +177,7 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
             type="text"
             value={publicKey}
             onChange={(e) => setPublicKey(e.target.value)}
-            placeholder="BA…（点下方「生成新密钥对」自动生成）"
+            placeholder="BA… (click &quot;Generate New Key Pair&quot; below to auto-generate)"
             className="w-full text-[11px] font-mono bg-white border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-400"
           />
         </div>
@@ -184,7 +185,7 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
         {/* 私钥 */}
         <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] text-slate-500 font-medium">VAPID 私钥</label>
+            <label className="text-[11px] text-slate-500 font-medium">VAPID Private Key</label>
             <div className="flex items-center gap-3">
               {privateKey && (
                 <>
@@ -193,14 +194,14 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
                     onClick={() => setShowPrivateKey((s) => !s)}
                     className="text-[11px] text-slate-500 hover:text-slate-700 font-medium"
                   >
-                    {showPrivateKey ? '隐藏' : '显示'}
+                    {showPrivateKey ? 'Hide' : 'Show'}
                   </button>
                   <button
                     type="button"
                     onClick={() => void handleCopyPrivateKey()}
                     className="text-[11px] text-indigo-500 hover:text-indigo-600 font-medium"
                   >
-                    复制
+                    Copy
                   </button>
                 </>
               )}
@@ -211,16 +212,16 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
               value={privateKey}
               onChange={(e) => setPrivateKey(e.target.value)}
               rows={3}
-              placeholder="点下方「生成新密钥对」自动生成"
+              placeholder="Click &quot;Generate New Key Pair&quot; below to auto-generate"
               className="w-full font-mono text-[11px] bg-white border border-slate-200 rounded-xl p-2 resize-none leading-relaxed focus:outline-none focus:border-indigo-400"
             />
           ) : (
             <div className="w-full text-[11px] font-mono bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-500 select-none break-all">
-              {maskedPrivateKey || '尚未生成'}
+              {maskedPrivateKey || 'Not generated yet'}
             </div>
           )}
           <p className="text-[10px] text-slate-400 leading-relaxed">
-            私钥常驻 localStorage 方便复制到 Worker env. 本机数据已经够多 secret, 多这一个不改变威胁模型.
+            The private key lives in localStorage for easy copying to the Worker env. Local data already holds plenty of secrets — one more doesn't change the threat model.
           </p>
         </div>
 
@@ -232,7 +233,7 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
             disabled={generating}
             className={`py-2.5 rounded-xl text-[11px] font-bold ${generating ? 'bg-slate-200 text-slate-400' : 'bg-indigo-500 text-white hover:bg-indigo-600'}`}
           >
-            {generating ? '生成中…' : (publicKey ? '🔄 重新生成密钥对' : '生成新密钥对')}
+            {generating ? 'Generating…' : (publicKey ? '🔄 Regenerate Key Pair' : 'Generate New Key Pair')}
           </button>
           <button
             type="button"
@@ -240,7 +241,7 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
             disabled={generating}
             className={`py-2.5 rounded-xl text-[11px] font-bold border border-slate-200 ${generating ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
           >
-            复制 env 清单
+            Copy env List
           </button>
         </div>
 
@@ -251,7 +252,7 @@ export const PushVapidSettingsModal: React.FC<PushVapidSettingsModalProps> = ({ 
               onClick={handleClear}
               className="text-[11px] text-rose-500 hover:text-rose-600 font-medium underline-offset-2 hover:underline"
             >
-              清空 VAPID（Proactive / Instant 都会失效）
+              Clear VAPID (Proactive / Instant will both stop working)
             </button>
           </div>
         )}
