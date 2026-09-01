@@ -64,14 +64,16 @@
 
 ```
 ⟦OBSERVE⟧
-时间｜傍晚六点过，天刚擦黑
-地点｜便利店门口的塑料凳上
-状态｜有点疲惫，但见到你眼神亮了一下
-细节｜指尖无意识地敲着关东煮的纸杯
+time｜傍晚六点过，天刚擦黑
+location｜便利店门口的塑料凳上
+status｜有点疲惫，但见到你眼神亮了一下
+detail｜指尖无意识地敲着关东煮的纸杯
 ⟦/OBSERVE⟧
 [normal] 抬眼看你。
 [happy] "你来啦。"
 ```
+
+> **2026-09 变更**：默认维度的线格式字段名从中文（时间/地点/状态/细节）改成英文（time/location/status/detail），生产侧（`OBSERVE_DIMENSIONS`）与消费侧（`ObserveSettings.tsx`/`ObserveHUD.tsx` 均通过 `dim.label`/`resolveObserveFields` 引用，无需改动）同步生效。`extractObservation` 的解析正则仍同时接受中英文 key（含旧版中文标签），纯向后兼容，不影响已保存的历史消息重新解析。当时数据是全新环境、无需迁移旧存档，故未做双写过渡。
 
 定界符故意用冷僻的 `⟦⟧`，避免和 `[emotion]` 立绘标签、台词引号撞车。
 

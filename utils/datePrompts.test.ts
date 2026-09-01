@@ -131,7 +131,7 @@ ${OBSERVE_CLOSE}`;
         expect(sysOf(off.messages)).not.toContain('观测协议');
     });
 
-    it('自定义维度：hint 注入提示词，label 只改 HUD（线格式仍用固定中文 key）', async () => {
+    it('自定义维度：hint 注入提示词，label 只改 HUD（线格式仍用固定英文 key）', async () => {
         const { messages } = await DatePrompts.buildSessionPayload({
             char: makeChar({ dateObserve: {
                 enabled: true,
@@ -142,7 +142,7 @@ ${OBSERVE_CLOSE}`;
         });
         const sys = sysOf(messages);
         expect(sys).toContain('用一个温度词概括此刻心情'); // 自定义 hint 进了提示词
-        expect(sys).toContain('状态｜');                    // 线格式字段名仍是固定的「状态」
+        expect(sys).toContain('status｜');                  // 线格式字段名仍是固定的「status」（2026-09 起为英文）
         expect(sys).not.toContain('心情指数｜');            // 自定义 label 不进线格式（避免解析失配）
     });
 
@@ -154,8 +154,8 @@ ${OBSERVE_CLOSE}`;
         });
         const sys = sysOf(messages);
         expect(sys).toContain('观测协议');
-        expect(sys).toContain('时间｜');
-        expect(sys).not.toContain('细节｜');
+        expect(sys).toContain('time｜');
+        expect(sys).not.toContain('detail｜');
     });
 
     it('四个维度全部禁用时不注入观测块', async () => {
@@ -175,8 +175,8 @@ ${OBSERVE_CLOSE}`;
         } } });
         const fields = resolveObserveFields(char.dateObserve, char.name);
         expect(fields.map(f => f.key)).toEqual(['time', 'place', 'state']); // detail 被过滤
-        expect(fields.find(f => f.key === 'place')!.display).toBe('坐标');   // 自定义展示标签
-        expect(fields.find(f => f.key === 'place')!.label).toBe('地点');     // 线格式字段名不变
+        expect(fields.find(f => f.key === 'place')!.display).toBe('坐标');     // 自定义展示标签
+        expect(fields.find(f => f.key === 'place')!.label).toBe('location');  // 线格式字段名不变（2026-09 起为英文）
         expect(fields.find(f => f.key === 'place')!.hint).toContain('阿狸'); // {name} 已替换
     });
 

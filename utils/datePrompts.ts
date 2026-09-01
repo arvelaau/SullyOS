@@ -269,7 +269,7 @@ const pickFocusHint = (): string =>
 // 开启后，让模型在「正文最前面」吐一段定界的结构化观测块，前端 extractObservation
 // 把它从正文里剥出来渲染成全息 HUD（独立查看），剩余文本照常走 VN 解析。
 // 定界符用不常见的 ⟦⟧，避免和 [emotion] 立绘标签 / 台词引号撞车。
-// 字段标签固定中文 + 全角竖线，解析时对中英 key、半角竖线、冒号都容错。
+// 字段标签固定英文（2026-09 起，原为中文）+ 全角竖线，解析时对中英 key、半角竖线、冒号都容错（含旧版中文标签，向后兼容）。
 // ─────────────────────────────────────────────────────────────
 
 export const OBSERVE_OPEN = '⟦OBSERVE⟧';
@@ -330,10 +330,10 @@ export interface ObserveDimension {
 }
 
 export const OBSERVE_DIMENSIONS: ObserveDimension[] = [
-    { key: 'time',   label: '时间', en: 'TIME',  glyph: '◷', hint: '结合场景的当下时刻，可比系统时间更具体，如"傍晚六点过，天刚擦黑"' },
-    { key: 'place',  label: '地点', en: 'SITE',  glyph: '⌖', hint: '{name}此刻所在的具体地点与环境' },
-    { key: 'state',  label: '状态', en: 'STATE', glyph: '❖', hint: '{name}的身心状态：情绪、体感、正在经历的内在波动' },
-    { key: 'detail', label: '细节', en: 'TRACE', glyph: '✶', hint: '此刻最值得被注意的一个动作 / 微小细节' },
+    { key: 'time',   label: 'time',     en: 'TIME',  glyph: '◷', hint: '结合场景的当下时刻，可比系统时间更具体，如"傍晚六点过，天刚擦黑"' },
+    { key: 'place',  label: 'location', en: 'SITE',  glyph: '⌖', hint: '{name}此刻所在的具体地点与环境' },
+    { key: 'state',  label: 'status',   en: 'STATE', glyph: '❖', hint: '{name}的身心状态：情绪、体感、正在经历的内在波动' },
+    { key: 'detail', label: 'detail',   en: 'TRACE', glyph: '✶', hint: '此刻最值得被注意的一个动作 / 微小细节' },
 ];
 
 /** 自定义维度在 HUD 上轮换用的字形 */
