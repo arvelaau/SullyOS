@@ -296,10 +296,10 @@ export const PLATE_ENTRY_TARGET_CHARS = 50;
 export const PLATE_ENTRY_HARD_MAX_CHARS = 90;
 
 export const PLATE_TITLES: Record<PlateRoom, string> = {
-    user_room: 'TA的事',
-    self_room: '我是谁',
-    bedroom:   '我们之间',
-    study:     '我的领域',
+    user_room: 'Their Story',
+    self_room: 'Who I Am',
+    bedroom:   'Between Us',
+    study:     'My Domain',
 };
 
 // ─── 消化日志（DigestReport — 认知消化的可回看记录） ───

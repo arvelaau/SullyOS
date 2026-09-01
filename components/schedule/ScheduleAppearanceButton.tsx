@@ -22,7 +22,7 @@ import {
 
 const CSS_TEMPLATES = [
     {
-        name: '柔光玻璃',
+        name: 'Soft Glass',
         code: `.sully-schedule-root{
   backdrop-filter:blur(18px) saturate(1.25)!important;
   box-shadow:0 18px 50px rgba(43,25,68,.22),inset 0 1px 0 rgba(255,255,255,.22)!important;
@@ -32,7 +32,7 @@ const CSS_TEMPLATES = [
 }`,
     },
     {
-        name: '纸胶带',
+        name: 'Washi Tape',
         code: `.sully-schedule-root{border-radius:18px!important;box-shadow:0 12px 28px rgba(86,62,42,.16)!important;}
 .sully-schedule-header::after{
   content:"";position:absolute;top:-7px;left:50%;width:72px;height:18px;
@@ -42,7 +42,7 @@ const CSS_TEMPLATES = [
 .sully-schedule-activity{font-family:"Songti SC",serif!important;letter-spacing:.04em!important;}`,
     },
     {
-        name: '夜光边框',
+        name: 'Glow Border',
         code: `.sully-schedule-root{
   border:1px solid color-mix(in srgb,var(--schedule-accent) 58%,transparent)!important;
   box-shadow:0 0 28px color-mix(in srgb,var(--schedule-accent) 24%,transparent),inset 0 0 20px rgba(255,255,255,.035)!important;
@@ -53,28 +53,28 @@ const CSS_TEMPLATES = [
     },
 ];
 
-const AI_PROMPT = `你是 CSS 设计师，请为 SullyOS 的日程卡片写一段自定义 CSS。
-只能使用以 .sully-schedule-* 开头的选择器；覆盖内联样式时使用 !important。
+const AI_PROMPT = `You are a CSS designer. Please write custom CSS for SullyOS's schedule card.
+Only use selectors starting with .sully-schedule-*; use !important when overriding inline styles.
 
-可用钩子：
-- .sully-schedule-root：所有日程卡根节点
-- .sully-schedule-card：完整日程卡
-- .sully-schedule-widget：桌面日程卡
-- .sully-schedule-header：卡片头部
-- .sully-schedule-cover：角色看板图
-- .sully-schedule-list：日程列表
-- .sully-schedule-item：单条日程
-- .sully-schedule-item-current：当前日程
-- .sully-schedule-time：时间
-- .sully-schedule-activity：活动标题
-- .sully-schedule-description：活动描述
-- .sully-schedule-timeline：底部时间线
-- .sully-schedule-settings：右上角设置按钮
+Available hooks:
+- .sully-schedule-root: root node of all schedule cards
+- .sully-schedule-card: the full schedule card
+- .sully-schedule-widget: the desktop schedule widget
+- .sully-schedule-header: card header
+- .sully-schedule-cover: character cover image
+- .sully-schedule-list: schedule list
+- .sully-schedule-item: a single schedule item
+- .sully-schedule-item-current: the current schedule item
+- .sully-schedule-time: time
+- .sully-schedule-activity: activity title
+- .sully-schedule-description: activity description
+- .sully-schedule-timeline: bottom timeline
+- .sully-schedule-settings: top-right settings button
 
-可以使用这些变量：
---schedule-bg、--schedule-text、--schedule-accent、--schedule-accent-soft、--schedule-base、--schedule-line。
+You can use these variables:
+--schedule-bg, --schedule-text, --schedule-accent, --schedule-accent-soft, --schedule-base, --schedule-line.
 
-请直接输出完整 CSS，不要写解释。我想要的风格是：______`;
+Please output the complete CSS directly, no explanation. The style I want is: ______`;
 
 function defaultDraft(current?: ScheduleCardAppearance): ScheduleCardAppearance {
     return {
@@ -139,13 +139,13 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
             return;
         }
         await updateTheme({ scheduleCardAppearance: { ...draft } });
-        addToast('日程卡片样式已同步', 'success');
+        addToast('Schedule card style synced', 'success');
         setOpen(false);
     };
 
     const reset = async () => {
         await updateTheme({ scheduleCardAppearance: undefined });
-        addToast('已还原原版日程卡片', 'success');
+        addToast('Restored original schedule card', 'success');
         setOpen(false);
     };
 
@@ -155,7 +155,7 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
             setCopied(true);
             window.setTimeout(() => setCopied(false), 1400);
         } catch {
-            addToast('复制失败，请手动选择文本', 'error');
+            addToast('Copy failed — please select the text manually', 'error');
         }
     };
 
@@ -175,12 +175,12 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                 <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-4 bg-[#fbfafc]/95 backdrop-blur border-b border-slate-200/70">
                     <div>
                         <div className="text-[10px] font-bold tracking-[.2em] uppercase text-violet-400">Schedule skin</div>
-                        <h2 className="text-base font-black mt-0.5">日程卡片美化</h2>
+                        <h2 className="text-base font-black mt-0.5">Schedule Card Styling</h2>
                     </div>
                     <button
                         className="w-9 h-9 rounded-full grid place-items-center bg-slate-100 text-slate-500"
                         onClick={() => setOpen(false)}
-                        aria-label="关闭日程卡片设置"
+                        aria-label="Close schedule card settings"
                     >
                         <X size={17} />
                     </button>
@@ -189,8 +189,8 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                 <div className="p-5 space-y-7">
                     <section>
                         <div className="mb-3">
-                            <h3 className="text-sm font-bold">配色</h3>
-                            <p className="text-[11px] text-slate-400 mt-1">桌面、房间和聊天里的日程卡会一起变化。</p>
+                            <h3 className="text-sm font-bold">Colors</h3>
+                            <p className="text-[11px] text-slate-400 mt-1">The schedule card changes together on the desktop, in the room, and in chat.</p>
                         </div>
                         <div className="grid grid-cols-2 gap-2.5">
                             {SCHEDULE_CARD_PRESETS.map(preset => {
@@ -227,8 +227,8 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                                 }`}
                                 onClick={() => setDraft(current => ({ ...current, preset: 'custom' }))}
                             >
-                                <span className="block text-sm font-black text-slate-700">自定义配色</span>
-                                <span className="block text-[10px] text-slate-400 mt-1">背景 · 文字 · 强调色</span>
+                                <span className="block text-sm font-black text-slate-700">Custom Colors</span>
+                                <span className="block text-[10px] text-slate-400 mt-1">Background · Text · Accent</span>
                             </button>
                         </div>
                     </section>
@@ -240,13 +240,13 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                                 style={{ background: preview.background, color: preview.text }}
                             >
                                 <span className="text-[9px] uppercase tracking-[.2em] opacity-55">Daily schedule</span>
-                                <b style={{ color: preview.accent }}>08:30 · 今天的日程</b>
+                                <b style={{ color: preview.accent }}>08:30 · Today's Schedule</b>
                             </div>
                             <div className="grid grid-cols-3 gap-3">
                                 {([
-                                    ['background', '背景', draft.background || '#21192b'],
-                                    ['textColor', '文字', draft.textColor || '#f8f3ff'],
-                                    ['accentColor', '强调', draft.accentColor || '#c9a7ff'],
+                                    ['background', 'Background', draft.background || '#21192b'],
+                                    ['textColor', 'Text', draft.textColor || '#f8f3ff'],
+                                    ['accentColor', 'Accent', draft.accentColor || '#c9a7ff'],
                                 ] as const).map(([key, label, value]) => (
                                     <label key={key} className="text-[11px] text-slate-500">
                                         <span className="block mb-1.5">{label}</span>
@@ -271,15 +271,15 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                     <section>
                         <div className="flex items-start justify-between gap-3 mb-3">
                             <div>
-                                <h3 className="text-sm font-bold">自定义 CSS</h3>
-                                <p className="text-[11px] text-slate-400 mt-1">类似白框美化，只作用于日程卡。</p>
+                                <h3 className="text-sm font-bold">Custom CSS</h3>
+                                <p className="text-[11px] text-slate-400 mt-1">Similar to Whitebox styling, but only affects the schedule card.</p>
                             </div>
                             <button
                                 onClick={copyPrompt}
                                 className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 text-violet-600 text-[11px] font-bold"
                             >
                                 {copied ? <Check size={13} /> : <Copy size={13} />}
-                                {copied ? '已复制' : '复制 AI 提示词'}
+                                {copied ? 'Copied' : 'Copy AI Prompt'}
                             </button>
                         </div>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
@@ -296,7 +296,7 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                                 className="shrink-0 px-3 py-2 rounded-xl border border-slate-200 bg-white text-[11px] font-bold text-slate-400"
                                 onClick={() => setDraft(current => ({ ...current, customCss: '' }))}
                             >
-                                清空 CSS
+                                Clear CSS
                             </button>
                         </div>
                         <textarea
@@ -313,11 +313,11 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                             </div>
                         )}
                         <details className="mt-3 text-[11px] text-slate-500">
-                            <summary className="cursor-pointer font-bold">查看可用 CSS 钩子</summary>
+                            <summary className="cursor-pointer font-bold">View available CSS hooks</summary>
                             <p className="mt-2 leading-5">
-                                root、card、widget、header、cover、list、item、item-current、time、
-                                activity、description、timeline、settings，均以 <code>.sully-schedule-</code> 开头。
-                                内联颜色需要用 <code>!important</code> 覆盖。
+                                root, card, widget, header, cover, list, item, item-current, time,
+                                activity, description, timeline, settings — all prefixed with <code>.sully-schedule-</code>.
+                                Inline colors need <code>!important</code> to override.
                             </p>
                         </details>
                     </section>
@@ -329,14 +329,14 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                         onClick={reset}
                     >
                         <ArrowCounterClockwise size={15} />
-                        还原
+                        Reset
                     </button>
                     <button
                         className="h-12 flex-1 rounded-2xl bg-slate-900 text-white font-bold text-sm disabled:opacity-40"
                         disabled={!validation.isValid}
                         onClick={save}
                     >
-                        保存并同步
+                        Save &amp; Sync
                     </button>
                 </div>
             </div>
@@ -364,8 +364,8 @@ const ScheduleAppearanceButton: React.FC<{ compact?: boolean }> = ({ compact = f
                     stop(event);
                     setOpen(true);
                 }}
-                aria-label="日程卡片设置"
-                title="日程卡片设置"
+                aria-label="Schedule card settings"
+                title="Schedule card settings"
             >
                 <GearSix size={compact ? 13 : 15} weight="bold" />
             </button>

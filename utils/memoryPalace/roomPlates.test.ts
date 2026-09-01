@@ -253,8 +253,8 @@ describe('formatRoomPlatesSection — 注入格式', () => {
             plate('bedroom', ['TA会在深夜来找我说话']),
             plate('study', []),
         ], '小明');
-        expect(out).toContain('我们之间');
+        expect(out).toContain('Between Us');
         expect(out).toContain('只有质地');
-        expect(out).not.toContain('我的领域');
+        expect(out).not.toContain('My Domain');
     });
 });

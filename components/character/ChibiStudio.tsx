@@ -39,9 +39,9 @@ interface SlotMeta {
 }
 
 const SLOTS: SlotMeta[] = [
-    { id: 'room', label: '小小窝', en: 'ROOM', desc: '站在房间里的立绘', accent: '#f4a3ca' },
-    { id: 'vr', label: '彼方', en: 'VR WORLD', desc: '彼方房间里的小人', accent: '#8f9bf4' },
-    { id: 'like520', label: '特别时光', en: '520 EVENT', desc: '520 活动的大头贴', accent: '#f4b78f' },
+    { id: 'room', label: 'Dwelling', en: 'ROOM', desc: 'Standing portrait in the room', accent: '#f4a3ca' },
+    { id: 'vr', label: 'Beyond', en: 'VR WORLD', desc: 'Little figure in the Beyond room', accent: '#8f9bf4' },
+    { id: 'like520', label: 'Special Moments', en: '520 EVENT', desc: '520 event photo sticker', accent: '#f4b78f' },
 ];
 
 const StudioStyle: React.FC = () => (
@@ -100,7 +100,7 @@ const DisplayCase: React.FC<{
                         <div className="w-20 h-24 rounded-xl border-2 border-dashed border-indigo-300/25 flex items-center justify-center">
                             <Sparkle size={22} />
                         </div>
-                        <span className="text-[10px] tracking-widest">展台空着</span>
+                        <span className="text-[10px] tracking-widest">Case empty</span>
                     </div>
                 )}
                 {/* 底座：圆盘 + 投影 */}
@@ -121,12 +121,12 @@ const DisplayCase: React.FC<{
                     <button onClick={onEdit}
                         className="flex-1 rounded-lg py-2 text-[11.5px] font-bold text-white flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                         style={{ background: `linear-gradient(135deg, ${meta.accent}cc, ${meta.accent}88)` }}>
-                        <PencilSimple size={13} weight="bold" /> {url ? '重新捏' : '捏这只'}
+                        <PencilSimple size={13} weight="bold" /> {url ? 'Re-craft' : 'Craft This One'}
                     </button>
                     {url && (
                         <button onClick={onSync}
                             className="flex-1 rounded-lg py-2 text-[11.5px] font-medium text-indigo-100 border border-white/20 flex items-center justify-center gap-1.5 active:bg-white/10 transition-colors">
-                            <ArrowsClockwise size={13} weight="bold" /> 同步到全部
+                            <ArrowsClockwise size={13} weight="bold" /> Sync to All
                         </button>
                     )}
                 </div>
@@ -165,9 +165,9 @@ export const ChibiShelfPanel: React.FC<{ charId: string; onOpen: () => void }> =
                         style={{ top: sp.top, left: sp.left, fontSize: sp.s, animation: `chibistudio-twinkle 2.6s ease-in-out ${sp.d} infinite` }}>✦</span>
                 ))}
                 <div className="relative px-4 pt-4 pb-1 flex items-baseline gap-2">
-                    <span className="font-serif text-[15px] font-bold text-white tracking-wide">QQ捏人 · 手办柜</span>
+                    <span className="font-serif text-[15px] font-bold text-white tracking-wide">QQ Chibi Maker · Figure Studio</span>
                     <span className="text-[9px] tracking-[3px] text-indigo-300/60 font-medium">FIGURE STUDIO</span>
-                    <span className="ml-auto text-[10px] text-indigo-200/50">{dressed}/3 已上架</span>
+                    <span className="ml-auto text-[10px] text-indigo-200/50">{dressed}/3 on display</span>
                 </div>
                 {/* 三格迷你展台 */}
                 <div className="relative grid grid-cols-3 gap-2 px-3 pb-4 pt-1">
@@ -201,10 +201,10 @@ export const ChibiShelfPanel: React.FC<{ charId: string; onOpen: () => void }> =
             <button onClick={onOpen}
                 className="w-full rounded-2xl py-3 text-[13px] font-bold text-white flex items-center justify-center gap-2 shadow-[0_6px_18px_rgba(140,120,200,0.30)] active:scale-[0.98] transition-transform"
                 style={{ background: 'linear-gradient(135deg, #a78bda, #8f9bf4)' }}>
-                🧸 进入手办柜
+                🧸 Enter Figure Studio
             </button>
             <p className="text-[10.5px] text-slate-400 leading-relaxed px-1">
-                小小窝立绘、彼方小人、特别时光 520 大头贴——三处 Q 版形象在这里统一打理：可以各捏各的，也可以挑一只「同步到全部」。
+                Dwelling portrait, Beyond figure, Special Moments 520 photo sticker — manage all three chibi looks in one place: craft each separately, or pick one and "Sync to All".
             </p>
         </div>
     );
@@ -300,9 +300,9 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                     return updates;
                 });
             }
-            addToast(`${SLOTS.find(s => s.id === slot)?.label}的手办已上架 ✓`, 'success');
+            addToast(`${SLOTS.find(s => s.id === slot)?.label}'s figure is now on display ✓`, 'success');
         } catch (e: any) {
-            addToast(`保存失败：${e?.message || e}`, 'error');
+            addToast(`Save failed: ${e?.message || e}`, 'error');
         }
         setEditing(null);
     };
@@ -315,7 +315,7 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
         try {
             // room 槽原始值可能是 blobref，先解析回 dataURL 才能喂给彼方/520（它们直接存 dataURL）
             const dataUrl = src.raw.startsWith('data:') ? src.raw : await resolveRefToDataUrl(src.raw);
-            if (!dataUrl.startsWith('data:')) throw new Error('这只手办的图片格式不支持同步');
+            if (!dataUrl.startsWith('data:')) throw new Error('This image format is not supported for sync');
             const roomRef = source === 'room' ? src.raw : await putImageBlob(dataUrlToBlob(dataUrl));
             const state = src.state;
             const now = Date.now();
@@ -350,9 +350,9 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                     },
                 };
             });
-            addToast('三处形象已对齐 ✓', 'success');
+            addToast('All three looks are now aligned ✓', 'success');
         } catch (e: any) {
-            addToast(`同步失败：${e?.message || e}`, 'error');
+            addToast(`Sync failed: ${e?.message || e}`, 'error');
         }
         setSyncing(false);
         setSyncConfirm(null);
@@ -372,7 +372,7 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                 <div className="flex items-center gap-2 px-4 pb-2 shrink-0 text-white"
                     style={{ background: 'linear-gradient(180deg,#241b3f 0%,#120d24 100%)', paddingTop: STUDIO_TOP }}>
                     <button onClick={() => setEditing(null)} className="p-1.5 -ml-1.5 rounded-full active:bg-white/10"><CaretLeft size={20} weight="bold" /></button>
-                    <span className="text-[14px] font-bold">捏 {char.name} 的{slotMeta.label}形象</span>
+                    <span className="text-[14px] font-bold">Crafting {char.name}'s {slotMeta.label} look</span>
                 </div>
                 <div className="flex-1 min-h-0">
                     <CreatorIframe
@@ -400,7 +400,7 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                 <div className="flex items-center gap-2 pt-2">
                     <button onClick={onClose} className="p-2 -ml-2 rounded-full text-indigo-100 active:bg-white/10"><CaretLeft size={20} weight="bold" /></button>
                     <div>
-                        <h2 className="font-serif text-lg font-bold text-white tracking-wide leading-tight">QQ捏人 · 手办柜</h2>
+                        <h2 className="font-serif text-lg font-bold text-white tracking-wide leading-tight">QQ Chibi Maker · Figure Studio</h2>
                         <p className="text-[10px] tracking-[3px] text-indigo-300/60">FIGURE STUDIO</p>
                     </div>
                     <div className="ml-auto flex items-center gap-2 rounded-full pl-1 pr-3 py-1 border border-white/15 bg-white/5">
@@ -409,14 +409,14 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                     </div>
                 </div>
                 <p className="text-[10.5px] text-indigo-300/55 mt-2 pl-1">
-                    同一只角色在三个地方的 Q 版形象——可以各捏各的，也可以挑一只「同步到全部」。
+                    The same character's chibi look in three places — craft each separately, or pick one and "Sync to All".
                 </p>
                 {/* 自定义素材工坊入口：PSD 批量导入自己的部件（正式站用户也能用） */}
                 <button onClick={() => setShowUploader(true)}
                     className="mt-3 w-full flex items-center gap-2 rounded-xl px-3.5 py-2.5 border border-amber-300/25 active:scale-[0.99] transition-transform"
                     style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.14), rgba(245,158,11,0.06))' }}>
                     <FileArrowUp size={16} weight="bold" className="text-amber-300 shrink-0" />
-                    <span className="text-[12px] font-bold text-amber-100 tracking-wide">上传自定义素材（PSD 批量导入）</span>
+                    <span className="text-[12px] font-bold text-amber-100 tracking-wide">Upload Custom Parts (Bulk PSD Import)</span>
                     <CaretRight size={15} weight="bold" className="ml-auto text-amber-200/50" />
                 </button>
             </div>
@@ -431,7 +431,7 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                 ))}
                 {!rec && (
                     <p className="text-[10px] text-indigo-300/45 text-center px-6 leading-relaxed">
-                        「特别时光」这只捏好后不会立刻出现在活动里——下次进 520 活动时会自动穿上这套造型。
+                        Once you finish crafting the "Special Moments" look, it won't show up in the event right away — it'll be worn automatically the next time you enter the 520 event.
                     </p>
                 )}
             </div>
@@ -445,16 +445,16 @@ const ChibiStudio: React.FC<{ charId: string; onClose: () => void }> = ({ charId
                             style={{ background: 'linear-gradient(180deg,#2b2150 0%,#171130 100%)', paddingBottom: STUDIO_SHEET_BOTTOM }}
                             onClick={e => e.stopPropagation()}>
                             <div className="flex items-center mb-2">
-                                <span className="text-[14px] font-bold text-white">以「{meta.label}」这只为准？</span>
+                                <span className="text-[14px] font-bold text-white">Use "{meta.label}" as the source?</span>
                                 <button onClick={() => !syncing && setSyncConfirm(null)} className="ml-auto p-1 text-indigo-300/60"><X size={18} /></button>
                             </div>
                             <p className="text-[11px] text-indigo-200/60 leading-relaxed mb-4">
-                                小小窝、彼方、特别时光三处会全部换成这套造型，另外两处现在的手办会被替换掉。
+                                Dwelling, Beyond, and Special Moments will all switch to this look — the other two places' current figures will be replaced.
                             </p>
                             <button disabled={syncing} onClick={() => { void syncFrom(syncConfirm); }}
                                 className="w-full rounded-xl py-2.5 text-[13px] font-bold text-white active:scale-[0.98] transition-transform disabled:opacity-60"
                                 style={{ background: `linear-gradient(135deg, ${meta.accent}dd, ${meta.accent}99)` }}>
-                                {syncing ? '同步中…' : '确认同步 ✓'}
+                                {syncing ? 'Syncing…' : 'Confirm Sync ✓'}
                             </button>
                         </div>
                     </div>

@@ -44,22 +44,22 @@ const iconStroke = (accent: string): React.SVGProps<SVGSVGElement> => ({
 
 const THEMES: Record<LifeRecordModule, ModuleTheme> = {
     period: {
-        cn: '生理期', en: 'CYCLE', accent: '#a34a5e', deep: '#7d3646', soft: '#e7c3ca',
+        cn: 'Period', en: 'CYCLE', accent: '#a34a5e', deep: '#7d3646', soft: '#e7c3ca',
         paper: 'linear-gradient(160deg,#fdf8f6 0%,#faeef0 100%)',
         icon: <svg {...iconStroke('#a34a5e')}><circle cx="12" cy="12" r="8.2" /><path d="M12 7.5v4.5l3 2" /></svg>,
     },
     med: {
-        cn: '药盒', en: 'PHARMACY', accent: '#3e7c6f', deep: '#2e5f55', soft: '#bfdcd3',
+        cn: 'Pharmacy', en: 'PHARMACY', accent: '#3e7c6f', deep: '#2e5f55', soft: '#bfdcd3',
         paper: 'linear-gradient(160deg,#f7fbf8 0%,#eaf4ef 100%)',
         icon: <svg {...iconStroke('#3e7c6f')}><path d="M9.5 3h5M10 3v4.2L5.8 14a4.6 4.6 0 0 0 4 7h4.4a4.6 4.6 0 0 0 4-7L14 7.2V3M7.5 15.5h9" /></svg>,
     },
     expense: {
-        cn: '记账', en: 'LEDGER', accent: '#9a7433', deep: '#775724', soft: '#e2d0a8',
+        cn: 'Ledger', en: 'LEDGER', accent: '#9a7433', deep: '#775724', soft: '#e2d0a8',
         paper: 'linear-gradient(160deg,#fdfaf2 0%,#f8f1de 100%)',
         icon: <svg {...iconStroke('#9a7433')}><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3h11A1.5 1.5 0 0 1 19 4.5v15A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-15ZM9 3v18M12.5 8h3.5M12.5 12h3.5" /></svg>,
     },
     exercise: {
-        cn: '锻炼', en: 'TRAINING', accent: '#5d7345', deep: '#465936', soft: '#ccd8b6',
+        cn: 'Exercise', en: 'TRAINING', accent: '#5d7345', deep: '#465936', soft: '#ccd8b6',
         paper: 'linear-gradient(160deg,#f9fbf3 0%,#eef4e2 100%)',
         icon: <svg {...iconStroke('#5d7345')}><path d="M7 8v8M4.5 10v4M17 8v8M19.5 10v4M7 12h10" /></svg>,
     },
@@ -67,9 +67,11 @@ const THEMES: Record<LifeRecordModule, ModuleTheme> = {
 
 const MODULE_ORDER: LifeRecordModule[] = ['period', 'med', 'expense', 'exercise'];
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 const fmtCN = (s: string): string => {
     const p = (s || '').split('-');
-    return p.length === 3 ? `${parseInt(p[1], 10)}月${parseInt(p[2], 10)}日` : s;
+    return p.length === 3 ? `${MONTH_ABBR[parseInt(p[1], 10) - 1]} ${parseInt(p[2], 10)}` : s;
 };
 const fmtMD = (s: string): string => {
     const p = (s || '').split('-');
@@ -150,18 +152,18 @@ const RecordDateBar: React.FC<{
 }> = ({ theme, date, today, onChange }) => {
     const isToday = date === today;
     const isYesterday = date === lifeAddDays(today, -1);
-    const label = isToday ? '今天' : isYesterday ? '昨天' : fmtCN(date);
+    const label = isToday ? 'Today' : isYesterday ? 'Yesterday' : fmtCN(date);
     return (
         <div className="rounded-[10px] px-3.5 py-3"
             style={{ background: theme.paper, border: `1px solid ${theme.soft}`, boxShadow: `0 8px 20px -18px ${theme.accent}66` }}>
             <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">
-                    <div className="text-[8px] font-semibold mb-0.5" style={{ color: theme.accent, letterSpacing: '0.28em' }}>记录日期</div>
+                    <div className="text-[8px] font-semibold mb-0.5" style={{ color: theme.accent, letterSpacing: '0.28em' }}>Record Date</div>
                     <div className="text-[12px] font-bold" style={{ color: INK, fontFamily: SERIF }}>
-                        {label}{!isToday && <span className="text-[9px] font-normal ml-1.5" style={{ color: theme.accent }}>补记模式</span>}
+                        {label}{!isToday && <span className="text-[9px] font-normal ml-1.5" style={{ color: theme.accent }}>Backfill mode</span>}
                     </div>
                 </div>
-                <button type="button" aria-label="前一天" onClick={() => onChange(lifeAddDays(date, -1))}
+                <button type="button" aria-label="Previous day" onClick={() => onChange(lifeAddDays(date, -1))}
                     className="w-7 h-7 rounded-full text-[15px] active:scale-90 transition-transform"
                     style={{ color: theme.accent, border: `1px solid ${theme.soft}`, background: '#ffffff88' }}>‹</button>
                 <input
@@ -175,18 +177,18 @@ const RecordDateBar: React.FC<{
                     className="min-w-0 w-[118px] bg-white/70 rounded-[6px] px-2 py-1.5 text-[10px] outline-none"
                     style={{ color: INK, border: `1px solid ${theme.soft}`, fontFamily: SERIF }}
                 />
-                <button type="button" aria-label="后一天" disabled={isToday}
+                <button type="button" aria-label="Next day" disabled={isToday}
                     onClick={() => onChange(lifeAddDays(date, 1) > today ? today : lifeAddDays(date, 1))}
                     className="w-7 h-7 rounded-full text-[15px] active:scale-90 transition-transform disabled:opacity-25"
                     style={{ color: theme.accent, border: `1px solid ${theme.soft}`, background: '#ffffff88' }}>›</button>
             </div>
             {!isToday && (
                 <div className="flex items-center justify-between gap-2 mt-2 pt-2" style={{ borderTop: `1px dashed ${theme.soft}` }}>
-                    <span className="text-[9px]" style={{ color: FADE, fontFamily: SERIF }}>新增内容会记到 {fmtCN(date)}</span>
+                    <span className="text-[9px]" style={{ color: FADE, fontFamily: SERIF }}>New entries will be recorded to {fmtCN(date)}</span>
                     <button type="button" onClick={() => onChange(today)}
                         className="text-[9px] font-bold px-2.5 py-1 rounded-full active:scale-95 transition-transform"
                         style={{ color: theme.deep, background: `${theme.accent}12`, border: `1px solid ${theme.accent}44`, fontFamily: SERIF }}>
-                        回到今天
+                        Back to Today
                     </button>
                 </div>
             )}
@@ -272,13 +274,13 @@ const LifeRecordPanel: React.FC = () => {
     const today = useLocalDateKey();
     const [recordDate, setRecordDate] = useState(today);
     const recordDateLabel = recordDate === today
-        ? '今日'
+        ? 'Today'
         : recordDate === lifeAddDays(today, -1)
-            ? '昨日'
+            ? 'Yesterday'
             : fmtCN(recordDate);
     const recordMonthLabel = recordDate.slice(0, 7) === today.slice(0, 7)
-        ? '本月累计'
-        : `${parseInt(recordDate.slice(0, 4), 10)}年${parseInt(recordDate.slice(5, 7), 10)}月累计`;
+        ? 'This Month'
+        : `${MONTH_ABBR[parseInt(recordDate.slice(5, 7), 10) - 1]} ${parseInt(recordDate.slice(0, 4), 10)}`;
 
     useEffect(() => {
         setRecordDate(current => current > today ? today : current);
@@ -322,12 +324,12 @@ const LifeRecordPanel: React.FC = () => {
         const next = Array.from(new Set([...(settings?.hiddenModules || []), m]));
         await saveSettings({ hiddenModules: next });
         setHideCandidate(null);
-        addToast('已隐藏，该功能不会再注入给任何角色', 'success');
+        addToast('Hidden. This feature will no longer be injected into any character.', 'success');
     };
 
     const restoreModule = async (m: LifeRecordModule) => {
         await saveSettings({ hiddenModules: (settings?.hiddenModules || []).filter(x => x !== m) });
-        addToast(`已恢复「${THEMES[m].cn}」`, 'success');
+        addToast(`Restored "${THEMES[m].cn}"`, 'success');
     };
 
     const effectiveRecords = useMemo(() => records.filter(r => r.reviewStatus !== 'rejected'), [records]);
@@ -350,10 +352,10 @@ const LifeRecordPanel: React.FC = () => {
         if (rec.bankTxId) await DB.deleteTransaction(rec.bankTxId).catch(() => {});
         await DB.deleteLifeRecord(rec.id);
         await reload();
-        addToast('记录已删除', 'success');
+        addToast('Record deleted', 'success');
     };
 
-    const recordedByLabel = (r: LifeRecord) => r.recordedBy === 'user' ? '' : ` · ${r.recordedByName || '角色'}代记`;
+    const recordedByLabel = (r: LifeRecord) => r.recordedBy === 'user' ? '' : ` · logged by ${r.recordedByName || 'the character'}`;
 
     // ─── 生理期 ───
     const periodStatus = useMemo(() => computePeriodStatus(records, settings, today), [records, settings, today]);
@@ -390,10 +392,10 @@ const LifeRecordPanel: React.FC = () => {
     const handlePeriodToggle = async () => {
         if (periodStatus.inPeriod) {
             await addUserRecord('period', 'end', {});
-            addToast('已记录：生理期结束', 'success');
+            addToast('Recorded: Period ended', 'success');
         } else {
             await addUserRecord('period', 'start', {});
-            addToast('已记录：生理期开始', 'success');
+            addToast('Recorded: Period started', 'success');
         }
     };
 
@@ -401,14 +403,14 @@ const LifeRecordPanel: React.FC = () => {
     const backfillPeriod = async (date: string, kind: 'start' | 'end') => {
         await addUserRecord('period', kind, {}, { date });
         setDaySheet(null);
-        addToast(`已补记：${fmtCN(date)} 生理期${kind === 'start' ? '开始' : '结束'}`, 'success');
+        addToast(`Backfilled: Period ${kind === 'start' ? 'started' : 'ended'} on ${fmtCN(date)}`, 'success');
     };
     const clearPeriodDay = async (date: string) => {
         const hits = records.filter(r => r.module === 'period' && r.date === date);
         for (const h of hits) await DB.deleteLifeRecord(h.id);
         await reload();
         setDaySheet(null);
-        addToast(`已清除 ${fmtCN(date)} 的生理期记录`, 'success');
+        addToast(`Cleared the period record for ${fmtCN(date)}`, 'success');
     };
 
     /** 当前展示月份的日历格（周一起始） */
@@ -454,8 +456,8 @@ const LifeRecordPanel: React.FC = () => {
     const coursePlans = useMemo(() => plans.filter(p => p.planKind === 'course'), [plans]);
 
     const handleAddPlan = async () => {
-        if (!planName.trim()) { addToast('先填药名哦', 'error'); return; }
-        if (planKind === 'course' && planEnd < planStart) { addToast('疗程结束日期要晚于开始哦', 'error'); return; }
+        if (!planName.trim()) { addToast('Enter a medication name first', 'error'); return; }
+        if (planKind === 'course' && planEnd < planStart) { addToast('The course end date should be after the start date', 'error'); return; }
         await DB.saveMedPlan({
             id: newId('med'), name: planName.trim(), time: planTime,
             dosage: planDosage.trim() || undefined, enabled: true, createdAt: Date.now(),
@@ -465,7 +467,7 @@ const LifeRecordPanel: React.FC = () => {
         });
         setPlanName(''); setPlanDosage('');
         await reload();
-        addToast('已加入药盒，之后每天自动出现在待服清单', 'success');
+        addToast('Added to the pharmacy. It will appear on your due list automatically from now on.', 'success');
     };
 
     const planTakenRecord = (p: MedPlan) =>
@@ -478,7 +480,7 @@ const LifeRecordPanel: React.FC = () => {
             await reload();
         } else {
             await addUserRecord('med', 'taken', { name: p.name, planId: p.id, time: p.time }, { date: recordDate });
-            addToast(recordDate === today ? `已打卡：${p.name}` : `已补记：${fmtCN(recordDate)} ${p.name}`, 'success');
+            addToast(recordDate === today ? `Checked off: ${p.name}` : `Backfilled: ${p.name} on ${fmtCN(recordDate)}`, 'success');
         }
     };
 
@@ -499,7 +501,7 @@ const LifeRecordPanel: React.FC = () => {
                     ? { color: THEMES.med.accent, border: `1px solid ${THEMES.med.accent}55` }
                     : { color: FAINT, border: '1px solid #e5ddcd' }}
             >
-                {p.enabled ? '启用' : '停用'}
+                {p.enabled ? 'On' : 'Off'}
             </button>
             <button onClick={async () => { await DB.deleteMedPlan(p.id); await reload(); }} className="px-1 text-slate-300 hover:text-rose-400 shrink-0">✕</button>
         </div>
@@ -517,14 +519,14 @@ const LifeRecordPanel: React.FC = () => {
 
     const handleAddTx = async () => {
         const amount = parseFloat(txAmount);
-        if (isNaN(amount) || amount <= 0 || !txNote.trim()) { addToast('请填写金额和用途哦', 'error'); return; }
+        if (isNaN(amount) || amount <= 0 || !txNote.trim()) { addToast('Please fill in the amount and purpose', 'error'); return; }
         await DB.saveTransaction({
             id: newId('tx-life'), amount, category: 'general',
             note: txNote.trim(), timestamp: Date.now(), dateStr: recordDate,
         });
         setTxAmount(''); setTxNote('');
         await reload();
-        addToast(recordDate === today ? '记账成功' : `已补记到 ${fmtCN(recordDate)}`, 'success');
+        addToast(recordDate === today ? 'Entry added' : `Backfilled to ${fmtCN(recordDate)}`, 'success');
     };
 
     // ─── 锻炼 ───
@@ -539,7 +541,7 @@ const LifeRecordPanel: React.FC = () => {
     );
     const weekGoal = settings?.exerciseWeeklyGoal || 0;
     const weekDots = useMemo(() => {
-        const names = ['一', '二', '三', '四', '五', '六', '日'];
+        const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const done = new Set(exerciseRecords.map(r => r.date));
         return Array.from({ length: 7 }, (_, i) => {
             const ds = lifeAddDays(weekStart, i);
@@ -548,16 +550,16 @@ const LifeRecordPanel: React.FC = () => {
     }, [exerciseRecords, weekStart, today]);
 
     const handleAddExercise = async () => {
-        if (!exActivity.trim()) { addToast('先填运动项目哦', 'error'); return; }
+        if (!exActivity.trim()) { addToast('Enter an activity first', 'error'); return; }
         await addUserRecord('exercise', 'session', {
             activity: exActivity.trim(),
             ...(exDuration.trim() ? { duration: exDuration.trim() } : {}),
         }, { date: recordDate });
         setExActivity(''); setExDuration('');
-        addToast(recordDate === today ? '已记录锻炼' : `已补记：${fmtCN(recordDate)} 锻炼`, 'success');
+        addToast(recordDate === today ? 'Exercise recorded' : `Backfilled: exercise on ${fmtCN(recordDate)}`, 'success');
     };
 
-    if (!loaded) return <div className="py-16 text-center text-xs text-slate-300" style={{ fontFamily: SERIF }}>翻开记事簿…</div>;
+    if (!loaded) return <div className="py-16 text-center text-xs text-slate-300" style={{ fontFamily: SERIF }}>Opening the journal…</div>;
 
     const accentBtn = (t: ModuleTheme): React.CSSProperties => ({
         background: t.accent, color: '#fdfbf7', fontFamily: SERIF,
@@ -593,7 +595,7 @@ const LifeRecordPanel: React.FC = () => {
             {visibleModules.length === 0 && (
                 <LedgerCard theme={THEMES.expense} className="text-center py-10">
                     <div className="text-2xl mb-2" style={{ color: FAINT }}>❧</div>
-                    <p className="text-xs" style={{ fontFamily: SERIF, color: FADE }}>所有功能均已隐藏</p>
+                    <p className="text-xs" style={{ fontFamily: SERIF, color: FADE }}>All features are hidden</p>
                 </LedgerCard>
             )}
 
@@ -601,31 +603,30 @@ const LifeRecordPanel: React.FC = () => {
             {tab === 'period' && visibleModules.includes('period') && (
                 <>
                     <SoftCard theme={THEMES.period}>
-                        <SectionHead theme={THEMES.period} cn="生理期" en="CYCLE" />
+                        <SectionHead theme={THEMES.period} cn="Period" en="CYCLE" />
                         <div className="relative text-center py-1">
                             {periodStatus.inPeriod ? (
                                 <>
                                     <div className="text-[10px] mb-1.5" style={{ color: THEMES.period.accent, opacity: 0.75, fontFamily: SERIF }}>
-                                        {fmtCN(periodStatus.lastStart!)} 开始
+                                        Started {fmtCN(periodStatus.lastStart!)}
                                     </div>
                                     <div style={{ fontFamily: SERIF, color: THEMES.period.accent }}>
-                                        <span className="text-sm align-[0.5em] mr-1">第</span>
+                                        <span className="text-sm align-[0.5em] mr-1">Day</span>
                                         <span className="text-[44px] font-bold leading-none tracking-tight">{periodStatus.dayN}</span>
-                                        <span className="text-sm align-[0.5em] ml-1">天</span>
                                     </div>
-                                    <div className="text-[10px] mt-2" style={{ color: FADE }}>生理期进行中 · 对自己好一点</div>
+                                    <div className="text-[10px] mt-2" style={{ color: FADE }}>Period in progress · Be kind to yourself</div>
                                 </>
                             ) : periodStatus.lastStart ? (
                                 <>
-                                    <div className="text-[15px] font-bold" style={{ fontFamily: SERIF, color: INK }}>当前不在生理期</div>
+                                    <div className="text-[15px] font-bold" style={{ fontFamily: SERIF, color: INK }}>Not on your period right now</div>
                                     <div className="text-[10px] mt-1" style={{ color: FADE }}>
-                                        上次 {fmtCN(periodStatus.lastStart)}{periodStatus.lastEnd ? ` ～ ${fmtCN(periodStatus.lastEnd)}` : ''}
+                                        Last: {fmtCN(periodStatus.lastStart)}{periodStatus.lastEnd ? ` – ${fmtCN(periodStatus.lastEnd)}` : ''}
                                     </div>
                                 </>
                             ) : (
                                 <>
-                                    <div className="text-[15px] font-bold" style={{ fontFamily: SERIF, color: INK }}>尚无记录</div>
-                                    <div className="text-[10px] mt-1.5" style={{ color: FADE }}>来了就点下面记一笔；以前的可以在日历里补</div>
+                                    <div className="text-[15px] font-bold" style={{ fontFamily: SERIF, color: INK }}>No records yet</div>
+                                    <div className="text-[10px] mt-1.5" style={{ color: FADE }}>When it starts, tap below to log it. You can backfill past dates in the calendar.</div>
                                 </>
                             )}
 
@@ -634,16 +635,16 @@ const LifeRecordPanel: React.FC = () => {
                                 <div className="flex flex-wrap justify-center gap-1.5 mt-3">
                                     {periodStatus.daysUntilNext >= 0 ? (
                                         <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ fontFamily: SERIF, color: THEMES.period.deep, background: `${THEMES.period.accent}14`, border: `1px solid ${THEMES.period.soft}` }}>
-                                            下次 {fmtCN(periodStatus.nextPredicted!)} · {periodStatus.daysUntilNext}天后
+                                            Next: {fmtCN(periodStatus.nextPredicted!)} · in {periodStatus.daysUntilNext} days
                                         </span>
                                     ) : (
                                         <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ fontFamily: SERIF, color: THEMES.period.deep, background: `${THEMES.period.accent}14`, border: `1px solid ${THEMES.period.soft}` }}>
-                                            比预测晚了 {-periodStatus.daysUntilNext} 天
+                                            {-periodStatus.daysUntilNext} days later than predicted
                                         </span>
                                     )}
                                     {periodStatus.ovulationDate && periodStatus.ovulationEnd! >= today && (
                                         <span className="text-[9px] px-2.5 py-1 rounded-full" style={{ fontFamily: SERIF, color: '#8a6a2f', background: '#f4e9d2aa', border: '1px solid #e2d0a8' }}>
-                                            排卵期约 {fmtMD(periodStatus.ovulationStart!)}~{fmtMD(periodStatus.ovulationEnd!)}
+                                            Ovulation window ~ {fmtMD(periodStatus.ovulationStart!)}–{fmtMD(periodStatus.ovulationEnd!)}
                                         </span>
                                     )}
                                 </div>
@@ -654,13 +655,13 @@ const LifeRecordPanel: React.FC = () => {
                                 className="mt-4 px-9 py-2.5 rounded-full text-[13px] font-bold active:scale-95 transition-transform"
                                 style={accentBtn(THEMES.period)}
                             >
-                                {periodStatus.inPeriod ? '记录结束' : '记录开始'}
+                                {periodStatus.inPeriod ? 'Log End' : 'Log Start'}
                             </button>
                         </div>
 
                         <div className="relative mt-4 pt-3 flex items-center justify-between"
                             style={{ borderTop: `1px dashed ${THEMES.period.soft}` }}>
-                            <span className="text-[10px]" style={{ color: FADE, fontFamily: SERIF }}>平均周期（用于预测）</span>
+                            <span className="text-[10px]" style={{ color: FADE, fontFamily: SERIF }}>Average cycle (used for prediction)</span>
                             <span className="flex items-baseline gap-1">
                                 <input
                                     type="number"
@@ -669,7 +670,7 @@ const LifeRecordPanel: React.FC = () => {
                                     className="w-12 text-center bg-transparent outline-none text-sm font-bold"
                                     style={{ fontFamily: SERIF, color: THEMES.period.accent, borderBottom: `1px solid ${THEMES.period.soft}` }}
                                 />
-                                <span className="text-[10px]" style={{ color: FADE }}>天</span>
+                                <span className="text-[10px]" style={{ color: FADE }}>days</span>
                             </span>
                         </div>
                     </SoftCard>
@@ -677,9 +678,9 @@ const LifeRecordPanel: React.FC = () => {
                     {/* 可展开小日历：补记 / 清除 / 看预测 */}
                     <SoftCard theme={THEMES.period}>
                         <button onClick={() => setCalOpen(o => !o)} className="w-full flex items-center justify-between">
-                            <span className="text-[12px] font-bold" style={{ fontFamily: SERIF, color: INK }}>周期日历</span>
+                            <span className="text-[12px] font-bold" style={{ fontFamily: SERIF, color: INK }}>Cycle Calendar</span>
                             <span className="text-[10px]" style={{ color: FADE, fontFamily: SERIF }}>
-                                {calOpen ? '收起 ▴' : '展开 · 可补记以前的日子 ▾'}
+                                {calOpen ? 'Collapse ▴' : 'Expand · backfill past dates ▾'}
                             </span>
                         </button>
                         {calOpen && (
@@ -687,12 +688,12 @@ const LifeRecordPanel: React.FC = () => {
                                 <div className="flex items-center justify-between mb-2">
                                     <button onClick={() => shiftMonth(-1)} className="px-2.5 py-1 text-[12px]" style={{ color: THEMES.period.accent }}>‹</button>
                                     <span className="text-[12px] font-bold tabular-nums" style={{ fontFamily: SERIF, color: INK }}>
-                                        {parseInt(calMonth.split('-')[0], 10)}年{parseInt(calMonth.split('-')[1], 10)}月
+                                        {MONTH_ABBR[parseInt(calMonth.split('-')[1], 10) - 1]} {parseInt(calMonth.split('-')[0], 10)}
                                     </span>
                                     <button onClick={() => shiftMonth(1)} className="px-2.5 py-1 text-[12px]" style={{ color: THEMES.period.accent }}>›</button>
                                 </div>
                                 <div className="grid grid-cols-7 gap-y-1 text-center mb-1">
-                                    {['一', '二', '三', '四', '五', '六', '日'].map(w => (
+                                    {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(w => (
                                         <span key={w} className="text-[8px]" style={{ color: FAINT, fontFamily: SERIF }}>{w}</span>
                                     ))}
                                 </div>
@@ -728,13 +729,13 @@ const LifeRecordPanel: React.FC = () => {
                                     })}
                                 </div>
                                 <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-3 text-[8px]" style={{ color: FADE, fontFamily: SERIF }}>
-                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ background: THEMES.period.accent }} />生理期</span>
-                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ border: `1.5px dashed ${THEMES.period.accent}88` }} />预测</span>
-                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ border: '1.5px solid #cfa75f' }} />排卵日</span>
-                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ background: '#f4e9d2' }} />排卵期</span>
-                                    <span>点过去的日期可补记</span>
+                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ background: THEMES.period.accent }} />Period</span>
+                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ border: `1.5px dashed ${THEMES.period.accent}88` }} />Predicted</span>
+                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ border: '1.5px solid #cfa75f' }} />Ovulation day</span>
+                                    <span><span className="inline-block w-2 h-2 rounded-full align-[-1px] mr-1" style={{ background: '#f4e9d2' }} />Ovulation window</span>
+                                    <span>Tap a past date to backfill</span>
                                 </div>
-                                <p className="text-[8px] text-center mt-1.5" style={{ color: FAINT, fontFamily: SERIF }}>预测为日历法估算，仅供参考</p>
+                                <p className="text-[8px] text-center mt-1.5" style={{ color: FAINT, fontFamily: SERIF }}>Predictions are calendar-based estimates, for reference only</p>
                             </div>
                         )}
                     </SoftCard>
@@ -745,10 +746,10 @@ const LifeRecordPanel: React.FC = () => {
             {tab === 'med' && visibleModules.includes('med') && (
                 <>
                     <LabelCard theme={THEMES.med}>
-                        <SectionHead theme={THEMES.med} cn={`${recordDateLabel}待服`} en={`PHARMACY · ${recordDate === today ? 'TODAY' : recordDate}`} />
+                        <SectionHead theme={THEMES.med} cn={`Due ${recordDateLabel}`} en={`PHARMACY · ${recordDate === today ? 'TODAY' : recordDate}`} />
                         {duePlans.length === 0 ? (
                             <p className="text-[11px] text-center py-3" style={{ color: FADE, fontFamily: SERIF }}>
-                                {plans.filter(p => p.enabled).length === 0 ? '药盒还是空的——先在下面放一样进去' : `按频率，${recordDate === today ? '今天' : '这一天'}不用吃药 ❧`}
+                                {plans.filter(p => p.enabled).length === 0 ? 'Your pharmacy is still empty — add something below to get started' : `Nothing due ${recordDate === today ? 'today' : 'on this day'} based on the schedule ❧`}
                             </p>
                         ) : (
                             <div className="space-y-2">
@@ -770,7 +771,7 @@ const LifeRecordPanel: React.FC = () => {
                                                     {p.name}{p.dosage ? ` · ${p.dosage}` : ''}
                                                 </span>
                                                 <span className="text-[9px]" style={{ color: FADE }}>
-                                                    {medFreqLabel(p)}{p.planKind === 'course' && p.endDate ? ` · 疗程至${fmtCN(p.endDate)}` : ' · 长期'}
+                                                    {medFreqLabel(p)}{p.planKind === 'course' && p.endDate ? ` · course until ${fmtCN(p.endDate)}` : ' · long-term'}
                                                 </span>
                                             </span>
                                             <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[13px] transition-all"
@@ -789,7 +790,7 @@ const LifeRecordPanel: React.FC = () => {
                         )}
                         {dayMeds.filter(r => !r.payload.planId).length > 0 && (
                             <div className="mt-3 pt-3" style={{ borderTop: `1px dashed ${THEMES.med.soft}` }}>
-                                <div className="text-[9px] mb-1.5" style={{ color: FADE, letterSpacing: '0.2em' }}>计划之外</div>
+                                <div className="text-[9px] mb-1.5" style={{ color: FADE, letterSpacing: '0.2em' }}>Off-plan</div>
                                 {dayMeds.filter(r => !r.payload.planId).map(r => (
                                     <div key={r.id} className="flex items-center justify-between text-[11px] py-1" style={{ fontFamily: SERIF }}>
                                         <span style={{ color: INK }}>{r.payload.name}<span className="text-[9px]" style={{ color: FAINT }}>{recordedByLabel(r)}</span></span>
@@ -801,19 +802,19 @@ const LifeRecordPanel: React.FC = () => {
                     </LabelCard>
 
                     <LabelCard theme={THEMES.med}>
-                        <SectionHead theme={THEMES.med} cn="我的药盒" en="CABINET" />
+                        <SectionHead theme={THEMES.med} cn="My Medicine Cabinet" en="CABINET" />
                         <p className="text-[9px] italic mb-3 -mt-1 text-center" style={{ color: FAINT, fontFamily: SERIF }}>
-                            像设闹钟一样只写一次：长期的每天/隔几天自动出现在待服清单；短期疗程到期自动消失
+                            Set it up once, like an alarm: long-term plans show up automatically every day or every few days; short courses disappear automatically when they end
                         </p>
                         {longtermPlans.length > 0 && (
                             <div className="mb-3">
-                                <div className="text-[9px] mb-1" style={{ color: THEMES.med.accent, letterSpacing: '0.25em' }}>长期 · 保健品等</div>
+                                <div className="text-[9px] mb-1" style={{ color: THEMES.med.accent, letterSpacing: '0.25em' }}>Long-term · supplements, etc.</div>
                                 {longtermPlans.map(renderPlanRow)}
                             </div>
                         )}
                         {coursePlans.length > 0 && (
                             <div className="mb-3">
-                                <div className="text-[9px] mb-1" style={{ color: THEMES.med.accent, letterSpacing: '0.25em' }}>短期疗程</div>
+                                <div className="text-[9px] mb-1" style={{ color: THEMES.med.accent, letterSpacing: '0.25em' }}>Short courses</div>
                                 {coursePlans.map(renderPlanRow)}
                             </div>
                         )}
@@ -821,7 +822,7 @@ const LifeRecordPanel: React.FC = () => {
                         {/* 添加：类型 + 频率 + 时间 + 名称/剂量 +（疗程）日期段 */}
                         <div className="space-y-2.5 pt-1">
                             <div className="flex gap-2">
-                                {([['longterm', '长期'], ['course', '短期疗程']] as const).map(([k, label]) => (
+                                {([['longterm', 'Long-term'], ['course', 'Short course']] as const).map(([k, label]) => (
                                     <button key={k} onClick={() => setPlanKind(k)}
                                         className="flex-1 py-1.5 rounded-full text-[10px] font-bold transition-colors"
                                         style={planKind === k
@@ -833,26 +834,26 @@ const LifeRecordPanel: React.FC = () => {
                                 <select value={planInterval} onChange={e => setPlanInterval(parseInt(e.target.value, 10))}
                                     className="w-[74px] text-[10px] bg-transparent outline-none text-center"
                                     style={{ ...inkInputStyle(THEMES.med), border: '1px solid #e5ddcd', borderRadius: 999, color: THEMES.med.deep }}>
-                                    <option value={1}>每天</option>
-                                    <option value={2}>隔天</option>
-                                    <option value={3}>每3天</option>
-                                    <option value={7}>每周</option>
+                                    <option value={1}>Daily</option>
+                                    <option value={2}>Every 2 days</option>
+                                    <option value={3}>Every 3 days</option>
+                                    <option value={7}>Weekly</option>
                                 </select>
                             </div>
                             <div className="flex items-end gap-2.5">
                                 <input type="time" value={planTime} onChange={e => setPlanTime(e.target.value)}
                                     className={`w-[74px] ${inkInputCls}`} style={inkInputStyle(THEMES.med)} />
-                                <input value={planName} onChange={e => setPlanName(e.target.value)} placeholder="药名 / 保健品"
+                                <input value={planName} onChange={e => setPlanName(e.target.value)} placeholder="Medication / supplement"
                                     className={`flex-1 min-w-0 ${inkInputCls}`} style={inkInputStyle(THEMES.med)} />
-                                <input value={planDosage} onChange={e => setPlanDosage(e.target.value)} placeholder="剂量"
+                                <input value={planDosage} onChange={e => setPlanDosage(e.target.value)} placeholder="Dosage"
                                     className={`w-14 ${inkInputCls}`} style={inkInputStyle(THEMES.med)} />
                             </div>
                             {planKind === 'course' && (
                                 <div className="flex items-end gap-2.5">
-                                    <span className="text-[9px] pb-1.5 shrink-0" style={{ color: FADE, fontFamily: SERIF }}>从</span>
+                                    <span className="text-[9px] pb-1.5 shrink-0" style={{ color: FADE, fontFamily: SERIF }}>From</span>
                                     <input type="date" value={planStart} onChange={e => setPlanStart(e.target.value)}
                                         className={`flex-1 min-w-0 ${inkInputCls}`} style={inkInputStyle(THEMES.med)} />
-                                    <span className="text-[9px] pb-1.5 shrink-0" style={{ color: FADE, fontFamily: SERIF }}>到</span>
+                                    <span className="text-[9px] pb-1.5 shrink-0" style={{ color: FADE, fontFamily: SERIF }}>To</span>
                                     <input type="date" value={planEnd} onChange={e => setPlanEnd(e.target.value)}
                                         className={`flex-1 min-w-0 ${inkInputCls}`} style={inkInputStyle(THEMES.med)} />
                                 </div>
@@ -861,7 +862,7 @@ const LifeRecordPanel: React.FC = () => {
                                 <button onClick={handleAddPlan}
                                     className="px-5 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
                                     style={accentBtn(THEMES.med)}>
-                                    放进药盒
+                                    Add to Pharmacy
                                 </button>
                             </div>
                         </div>
@@ -873,10 +874,10 @@ const LifeRecordPanel: React.FC = () => {
             {tab === 'expense' && visibleModules.includes('expense') && (
                 <>
                     <LedgerCard theme={THEMES.expense}>
-                        <SectionHead theme={THEMES.expense} cn="记账" en="LEDGER" />
+                        <SectionHead theme={THEMES.expense} cn="Ledger" en="LEDGER" />
                         <div className="flex items-stretch px-1">
                             <div className="flex-1">
-                                <div className="text-[9px] mb-0.5" style={{ color: FADE, letterSpacing: '0.25em' }}>{recordDateLabel}支出</div>
+                                <div className="text-[9px] mb-0.5" style={{ color: FADE, letterSpacing: '0.25em' }}>Spent {recordDateLabel}</div>
                                 <div style={{ fontFamily: SERIF, color: THEMES.expense.accent }}>
                                     <span className="text-[34px] font-bold leading-none tabular-nums">{formatMoney(dayTotal)}</span>
                                 </div>
@@ -888,36 +889,36 @@ const LifeRecordPanel: React.FC = () => {
                             </div>
                         </div>
                         <p className="text-[9px] italic mt-2 px-1" style={{ color: FAINT, fontFamily: SERIF }}>
-                            与银行 App 共用一本账
+                            Shares one ledger with the Piggy Bank app
                         </p>
                         <div className="flex items-end gap-2.5 mt-3 pt-3" style={{ borderTop: `1px dashed ${THEMES.expense.soft}` }}>
-                            <input value={txAmount} onChange={e => setTxAmount(e.target.value)} inputMode="decimal" placeholder="金额"
+                            <input value={txAmount} onChange={e => setTxAmount(e.target.value)} inputMode="decimal" placeholder="Amount"
                                 className={`w-16 ${inkInputCls}`} style={inkInputStyle(THEMES.expense)} />
-                            <input value={txNote} onChange={e => setTxNote(e.target.value)} placeholder="用途（奶茶 / 午饭…）"
+                            <input value={txNote} onChange={e => setTxNote(e.target.value)} placeholder="Purpose (bubble tea / lunch…)"
                                 className={`flex-1 min-w-0 ${inkInputCls}`} style={inkInputStyle(THEMES.expense)} />
                             <button onClick={handleAddTx}
                                 className="shrink-0 px-4 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
                                 style={accentBtn(THEMES.expense)}>
-                                入账
+                                Add
                             </button>
                         </div>
                     </LedgerCard>
 
                     <LedgerCard theme={THEMES.expense}>
-                        <SectionHead theme={THEMES.expense} cn={`${recordDateLabel}流水`} en="ENTRIES" />
+                        <SectionHead theme={THEMES.expense} cn={`Entries ${recordDateLabel}`} en="ENTRIES" />
                         {dayTxs.length === 0 ? (
                             <p className="text-[11px] text-center py-4" style={{ color: FADE, fontFamily: SERIF }}>
-                                {recordDate === today ? '今日' : '当日'}账面清白 ❧
+                                {recordDate === today ? 'No spending today' : 'No spending that day'} ❧
                             </p>
                         ) : (
                             <div>
                                 {dayTxs.map(t => (
                                     <div key={t.id} className="flex items-center gap-2 py-2 text-[11px]"
                                         style={{ fontFamily: SERIF, borderBottom: `1px dashed ${THEMES.expense.soft}` }}>
-                                        <span className="flex-1 truncate" style={{ color: INK }}>{t.note || '未备注'}</span>
+                                        <span className="flex-1 truncate" style={{ color: INK }}>{t.note || 'No note'}</span>
                                         <span className="font-bold tabular-nums" style={{ color: THEMES.expense.accent }}>{formatMoney(t.amount)}</span>
                                         <button
-                                            onClick={async () => { await DB.deleteTransaction(t.id); await reload(); addToast('记录已删除', 'success'); }}
+                                            onClick={async () => { await DB.deleteTransaction(t.id); await reload(); addToast('Record deleted', 'success'); }}
                                             className="px-1 text-slate-300 hover:text-rose-400"
                                         >✕</button>
                                     </div>
@@ -932,9 +933,9 @@ const LifeRecordPanel: React.FC = () => {
             {tab === 'exercise' && visibleModules.includes('exercise') && (
                 <>
                     <TicketCard theme={THEMES.exercise}>
-                        <SectionHead theme={THEMES.exercise} cn="每周规划" en="WEEKLY PLAN" />
+                        <SectionHead theme={THEMES.exercise} cn="Weekly Plan" en="WEEKLY PLAN" />
                         <div className="flex items-center justify-between mb-2.5">
-                            <span className="text-[10px]" style={{ color: FADE, fontFamily: SERIF }}>每周目标次数（0 = 不设）</span>
+                            <span className="text-[10px]" style={{ color: FADE, fontFamily: SERIF }}>Weekly goal (0 = none)</span>
                             <input
                                 type="number" min={0} max={21}
                                 defaultValue={weekGoal}
@@ -952,16 +953,16 @@ const LifeRecordPanel: React.FC = () => {
                                 const v = e.target.value.trim();
                                 if (v !== (settings?.exercisePlanNote || '')) await saveSettings({ exercisePlanNote: v });
                             }}
-                            placeholder="写下你的每周规划（如：周一慢跑 30 分钟 / 周四力量 / 周末爬山）——开启注入的角色会盯着你执行"
+                            placeholder="Write your weekly plan (e.g. Mon: 30-min jog / Thu: strength training / weekend hike) — characters with injection enabled will keep an eye on your progress"
                             className="w-full h-16 text-[11px] leading-relaxed bg-white/60 rounded-[6px] p-2.5 outline-none resize-none placeholder:text-slate-300"
                             style={{ fontFamily: SERIF, color: INK, border: `1px solid ${THEMES.exercise.soft}` }}
                         />
                         {/* 本周进度 */}
                         <div className="mt-3">
                             <div className="flex items-center justify-between text-[10px] mb-1.5" style={{ fontFamily: SERIF }}>
-                                <span style={{ color: FADE }}>{recordDate === today ? '本周进度' : `${fmtCN(recordDate)}所在周`}（周一起）</span>
+                                <span style={{ color: FADE }}>{recordDate === today ? "This Week's Progress" : `Week of ${fmtCN(recordDate)}`} (Mon–Sun)</span>
                                 <span style={{ color: THEMES.exercise.deep, fontWeight: 700 }}>
-                                    {weekSessions}{weekGoal > 0 ? ` / ${weekGoal} 次` : ' 次'}{weekGoal > 0 && weekSessions >= weekGoal ? ' · 已达标 ✓' : ''}
+                                    {weekSessions}{weekGoal > 0 ? ` / ${weekGoal}` : ''} sessions{weekGoal > 0 && weekSessions >= weekGoal ? ' · Goal met ✓' : ''}
                                 </span>
                             </div>
                             {weekGoal > 0 && (
@@ -978,7 +979,7 @@ const LifeRecordPanel: React.FC = () => {
                                                 ? { background: THEMES.exercise.accent, boxShadow: `0 2px 6px -2px ${THEMES.exercise.accent}` }
                                                 : { border: `1px solid ${THEMES.exercise.soft}`, background: d.future ? 'transparent' : '#ffffff90', opacity: d.future ? 0.4 : 1 }} />
                                         <span className="text-[8px]" style={{ color: d.date === recordDate || d.date === today ? THEMES.exercise.accent : FAINT, fontFamily: SERIF }}>
-                                            {d.date === recordDate ? (d.date === today ? '今' : '选') : d.date === today ? '今' : d.label}
+                                            {d.date === recordDate ? (d.date === today ? 'Today' : 'Sel') : d.date === today ? 'Today' : d.label}
                                         </span>
                                     </div>
                                 ))}
@@ -987,16 +988,16 @@ const LifeRecordPanel: React.FC = () => {
                     </TicketCard>
 
                     <TicketCard theme={THEMES.exercise}>
-                        <SectionHead theme={THEMES.exercise} cn={`${recordDateLabel}打卡`} en={`CHECK-IN · ${recordDate === today ? 'TODAY' : recordDate}`} />
+                        <SectionHead theme={THEMES.exercise} cn={`Check-in ${recordDateLabel}`} en={`CHECK-IN · ${recordDate === today ? 'TODAY' : recordDate}`} />
                         <div className="flex items-end gap-2.5">
-                            <input value={exActivity} onChange={e => setExActivity(e.target.value)} placeholder="项目（跑步 / 瑜伽…）"
+                            <input value={exActivity} onChange={e => setExActivity(e.target.value)} placeholder="Activity (running / yoga…)"
                                 className={`flex-1 min-w-0 ${inkInputCls}`} style={inkInputStyle(THEMES.exercise)} />
-                            <input value={exDuration} onChange={e => setExDuration(e.target.value)} placeholder="时长"
+                            <input value={exDuration} onChange={e => setExDuration(e.target.value)} placeholder="Duration"
                                 className={`w-16 ${inkInputCls}`} style={inkInputStyle(THEMES.exercise)} />
                             <button onClick={handleAddExercise}
                                 className="shrink-0 px-4 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
                                 style={accentBtn(THEMES.exercise)}>
-                                盖章
+                                Stamp
                             </button>
                         </div>
                         {exerciseRecords.length > 0 && (
@@ -1021,8 +1022,8 @@ const LifeRecordPanel: React.FC = () => {
             {/* 页脚注释 + 恢复入口 */}
             <div className="text-center space-y-1 pb-1">
                 <p className="text-[9px] italic leading-relaxed px-4" style={{ color: FAINT, fontFamily: SERIF }}>
-                    想让某个角色「隐约知道」这些，去神经链接里打开对应角色的「生活记录注入」；
-                    <br />长按上方页签，可隐藏你不需要的功能。
+                    To let a character "vaguely sense" this, open that character's "Life Record Injection" toggle in Neural Link.
+                    <br />Long-press a tab above to hide a feature you don't need.
                 </p>
                 {hiddenModules.length > 0 && (
                     <button
@@ -1030,7 +1031,7 @@ const LifeRecordPanel: React.FC = () => {
                         className="text-[9px] underline underline-offset-2"
                         style={{ color: FADE, fontFamily: SERIF }}
                     >
-                        已隐藏 {hiddenModules.length} 项功能 · 查看与恢复
+                        {hiddenModules.length} feature(s) hidden · View & restore
                     </button>
                 )}
             </div>
@@ -1043,29 +1044,29 @@ const LifeRecordPanel: React.FC = () => {
                         <SoftCard theme={THEMES.period} className="w-[270px] !p-6 text-center">
                             <h3 className="text-[14px] font-bold mb-1" style={{ fontFamily: SERIF, color: INK }}>{fmtCN(daySheet)}</h3>
                             <p className="text-[10px] mb-4" style={{ color: FADE, fontFamily: SERIF }}>
-                                {periodDaySet.has(daySheet) ? '这一天在生理期内' : '为这一天补一笔记录'}
+                                {periodDaySet.has(daySheet) ? 'This day is within your period' : 'Add a backfilled record for this day'}
                             </p>
                             <div className="space-y-2">
                                 <button onClick={() => backfillPeriod(daySheet, 'start')}
                                     className="w-full py-2 rounded-full text-[12px] font-bold active:scale-95 transition-transform"
                                     style={accentBtn(THEMES.period)}>
-                                    记为生理期开始
+                                    Mark as period start
                                 </button>
                                 <button onClick={() => backfillPeriod(daySheet, 'end')}
                                     className="w-full py-2 rounded-full text-[12px] font-bold"
                                     style={{ fontFamily: SERIF, color: THEMES.period.deep, border: `1px solid ${THEMES.period.soft}`, background: '#ffffff90' }}>
-                                    记为生理期结束
+                                    Mark as period end
                                 </button>
                                 {records.some(r => r.module === 'period' && r.date === daySheet) && (
                                     <button onClick={() => clearPeriodDay(daySheet)}
                                         className="w-full py-2 rounded-full text-[12px] font-bold"
                                         style={{ fontFamily: SERIF, color: FADE, border: '1px solid #e5ddcd', background: '#ffffff90' }}>
-                                        清除这一天的记录
+                                        Clear this day's record
                                     </button>
                                 )}
                                 <button onClick={() => setDaySheet(null)}
                                     className="w-full py-1.5 text-[11px]" style={{ fontFamily: SERIF, color: FAINT }}>
-                                    取消
+                                    Cancel
                                 </button>
                             </div>
                         </SoftCard>
@@ -1081,12 +1082,12 @@ const LifeRecordPanel: React.FC = () => {
                         <SoftCard theme={THEMES[hideCandidate]} className="w-[280px] !p-6 text-center">
                             <div className="flex justify-center mb-2 opacity-80">{THEMES[hideCandidate].icon}</div>
                             <h3 className="text-[15px] font-bold mb-2" style={{ fontFamily: SERIF, color: INK }}>
-                                是否不需要这个功能？
+                                Don't need this feature?
                             </h3>
                             <p className="text-[11px] leading-relaxed mb-5" style={{ color: FADE, fontFamily: SERIF }}>
-                                隐藏「{THEMES[hideCandidate].cn}」后，这里不再显示它，
-                                也不会把相关内容注入给任何角色。
-                                <br />之后随时可以从页脚恢复。
+                                Once you hide "{THEMES[hideCandidate].cn}", it won't show up here,
+                                and nothing related will be injected into any character.
+                                <br />You can restore it anytime from the footer.
                             </p>
                             <div className="flex gap-2.5">
                                 <button
@@ -1094,14 +1095,14 @@ const LifeRecordPanel: React.FC = () => {
                                     className="flex-1 py-2 rounded-full text-[12px] font-bold"
                                     style={{ fontFamily: SERIF, color: FADE, border: '1px solid #e5ddcd', background: '#ffffff90' }}
                                 >
-                                    先留着
+                                    Keep it
                                 </button>
                                 <button
                                     onClick={() => confirmHide(hideCandidate)}
                                     className="flex-1 py-2 rounded-full text-[12px] font-bold active:scale-95 transition-transform"
                                     style={accentBtn(THEMES[hideCandidate])}
                                 >
-                                    确定隐藏
+                                    Hide
                                 </button>
                             </div>
                         </SoftCard>
@@ -1116,7 +1117,7 @@ const LifeRecordPanel: React.FC = () => {
                     <div onClick={e => e.stopPropagation()}>
                         <LedgerCard theme={THEMES.expense} className="w-[280px] !p-6">
                             <h3 className="text-[14px] font-bold mb-4 text-center" style={{ fontFamily: SERIF, color: INK }}>
-                                已隐藏的功能
+                                Hidden Features
                             </h3>
                             <div className="space-y-2 mb-4">
                                 {hiddenModules.map(m => (
@@ -1130,12 +1131,12 @@ const LifeRecordPanel: React.FC = () => {
                                             className="text-[10px] px-3 py-1 rounded-full font-bold"
                                             style={{ color: THEMES[m].accent, border: `1px solid ${THEMES[m].accent}66` }}
                                         >
-                                            恢复
+                                            Restore
                                         </button>
                                     </div>
                                 ))}
                                 {hiddenModules.length === 0 && (
-                                    <p className="text-[11px] text-center py-2" style={{ color: FADE, fontFamily: SERIF }}>没有隐藏中的功能</p>
+                                    <p className="text-[11px] text-center py-2" style={{ color: FADE, fontFamily: SERIF }}>No hidden features</p>
                                 )}
                             </div>
                             <button
@@ -1143,7 +1144,7 @@ const LifeRecordPanel: React.FC = () => {
                                 className="w-full py-2 rounded-full text-[12px] font-bold"
                                 style={{ fontFamily: SERIF, color: FADE, border: '1px solid #e5ddcd', background: '#ffffff90' }}
                             >
-                                收起
+                                Close
                             </button>
                         </LedgerCard>
                     </div>

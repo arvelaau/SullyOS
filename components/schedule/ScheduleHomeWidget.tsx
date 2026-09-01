@@ -126,7 +126,7 @@ export const ScheduleSquareWidget: React.FC<ScheduleSquareWidgetProps> = ({
                         <span className="text-xl shrink-0 drop-shadow-md">{currentSlot.emoji}</span>
                     )}
                     <span className="sully-schedule-activity text-[13px] font-bold truncate drop-shadow-md leading-tight">
-                        {currentSlot?.activity || (schedule ? '休息中' : '未生成')}
+                        {currentSlot?.activity || (schedule ? 'Resting' : 'Not generated')}
                     </span>
                 </div>
                 {nextSlot ? (
@@ -229,7 +229,7 @@ export const ScheduleHomeWidget: React.FC<ScheduleHomeWidgetProps> = ({
                 </div>
                 <div className="flex flex-col p-4 gap-3">
                     <div className="sully-schedule-header flex items-center gap-2 pr-8">
-                        <span className="text-[12px] font-extrabold" style={{ color: '#725d42' }}>🍃 今日日程</span>
+                        <span className="text-[12px] font-extrabold" style={{ color: '#725d42' }}>🍃 Today's Schedule</span>
                         <div className="h-[2px] flex-1 rounded-full" style={{ background: '#e8e2d6' }} />
                         <span className="text-[11px] font-bold" style={{ color: '#9f927d' }}>{timeLabel}</span>
                     </div>
@@ -244,7 +244,7 @@ export const ScheduleHomeWidget: React.FC<ScheduleHomeWidgetProps> = ({
                             <div className="flex items-center gap-1.5 mb-1">
                                 <span className="text-[9px] font-extrabold tracking-wide px-2 py-0.5 rounded-full"
                                     style={{ background: currentSlot ? '#dff0c8' : '#efe7d4', color: currentSlot ? '#5a9e1e' : '#9f927d' }}>
-                                    {currentSlot ? '现在' : '休息'}
+                                    {currentSlot ? 'Now' : 'Resting'}
                                 </span>
                                 <span className="sully-schedule-time text-[10px] font-bold" style={{ color: '#9f927d' }}>{currentSlot ? currentSlot.startTime : timeLabel}</span>
                                 <span className="text-[9px] ml-auto shrink-0 truncate max-w-[40%] font-bold" style={{ color: '#b3a88e' }}>{character?.name || '—'}</span>
@@ -252,7 +252,7 @@ export const ScheduleHomeWidget: React.FC<ScheduleHomeWidgetProps> = ({
                             <div className="flex items-center gap-1.5 min-w-0">
                                 {currentSlot?.emoji && <span className="text-base shrink-0">{currentSlot.emoji}</span>}
                                 <span className="sully-schedule-activity text-[15px] font-bold truncate leading-tight" style={{ color: '#725d42' }}>
-                                    {currentSlot?.activity || (schedule ? '休息中 · 暂无安排' : '尚未生成日程')}
+                                    {currentSlot?.activity || (schedule ? 'Resting · No plans' : 'Schedule not generated yet')}
                                 </span>
                             </div>
                             {nextSlot && (
@@ -399,7 +399,7 @@ export const ScheduleHomeWidget: React.FC<ScheduleHomeWidgetProps> = ({
                                 <span className={`text-lg shrink-0 ${effectivePaper ? '' : 'drop-shadow-md'}`}>{currentSlot.emoji}</span>
                             )}
                             <span className={`sully-schedule-activity text-[15px] font-bold truncate leading-tight ${effectivePaper ? '' : 'drop-shadow-md'}`}>
-                                {currentSlot?.activity || (schedule ? '休息中 · 暂无安排' : '尚未生成日程')}
+                                {currentSlot?.activity || (schedule ? 'Resting · No plans' : 'Schedule not generated yet')}
                             </span>
                         </div>
                         {(currentSlot?.description || nextSlot) && (
@@ -602,7 +602,7 @@ export const ScheduleFullscreenViewer: React.FC<ScheduleFullscreenViewerProps> =
                     compact={true}
                 />
                 <div className="text-[10px] text-center opacity-40 mt-4 tracking-widest">
-                    TAP OUTSIDE TO CLOSE · 点空白处关闭
+                    TAP OUTSIDE TO CLOSE · TAP TO DISMISS
                 </div>
             </div>
         </div>

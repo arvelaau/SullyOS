@@ -10,11 +10,13 @@ import { PLATE_ROOMS, PLATE_TITLES, PLATE_ENTRY_CAPS, PLATE_ENTRY_HARD_MAX_CHARS
 import { ROOM_PLATES_UPDATED_EVENT, RoomPlateDB, mutatePlate } from '../../utils/memoryPalace/db';
 
 /**
- * 房间门牌面板（神经链接 · 底色认知）— 淡紫梦境皮肤
+ * Room plate panel (Neural Link · baseline cognition) — pale violet dream skin
  *
- * 展示四块门牌的常驻条目。门牌由封盒/消化自动蒸馏维护，这里只提供
- * 审计入口：查看、改写、删除——蒸错的事实一旦常驻会被自信地重复很久，
- * 必须有人工纠错的口子。
+ * Shows the resident entries of the four plates. Plates are auto-distilled
+ * and maintained by box-sealing/digestion; this only provides an audit entry
+ * point: view, rewrite, delete — a wrongly-distilled fact, once resident,
+ * gets confidently repeated for a long time, so there must be a manual
+ * correction path.
  */
 
 const ROOM_ICON: Record<PlateRoom, React.ReactNode> = {
@@ -25,10 +27,10 @@ const ROOM_ICON: Record<PlateRoom, React.ReactNode> = {
 };
 
 const ROOM_HINT: Record<PlateRoom, string> = {
-    user_room: '关于TA的稳定事实：家庭、居住、重要他人、雷区',
-    self_room: '角色对自己的稳定认知',
-    bedroom:   '关系的质地——只有现象，没有定义',
-    study:     '会什么、在学什么',
+    user_room: 'Stable facts about them: family, living situation, important people, no-go zones',
+    self_room: "The character's stable self-perception",
+    bedroom:   'The texture of the relationship — only phenomena, no definitions',
+    study:     'What they can do, what they are learning',
 };
 
 /** tag → 条目小图标（按包含匹配，兜底 Sparkle） */
@@ -104,7 +106,7 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                     setPlates(new Map(loaded.map(p => [p.room, p])));
                 }
             } catch (e) {
-                console.warn('[RoomPlatePanel] 加载门牌失败', e);
+                console.warn('[RoomPlatePanel] failed to load plates', e);
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -149,8 +151,8 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                 const saved = await mutatePlate(charId, room, change);
                 if (saved) setPlates(prev => new Map(prev).set(saved.room, saved));
             } catch (e) {
-                console.warn('[RoomPlatePanel] 门牌改动没存上', e);
-                setNotice('这次改动没能存进去，再试一次吧。');
+                console.warn('[RoomPlatePanel] plate edit failed to save', e);
+                setNotice('This edit could not be saved — please try again.');
             }
         };
         // 面板自己这条队还留着，但管的是**界面**而不是落库：收起编辑框那一刻要等这次
@@ -194,7 +196,7 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                 updatedAt: Date.now(),
             };
         }).then(() => {
-            if (vanished) setNotice('刚改的那条在编辑期间已经被整理掉了，这次改写没有落到门牌上。');
+            if (vanished) setNotice('The entry you just edited was cleaned up during editing — this rewrite did not land on the plate.');
         });
     };
 
@@ -217,24 +219,24 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                 <Feather size={72} weight="duotone" className="absolute -right-3 -bottom-4 text-violet-200/50 rotate-12 pointer-events-none" />
                 <div className="text-[10px] text-violet-300 uppercase tracking-[0.25em] font-bold">Resident Knowledge</div>
                 <p className="text-xs text-slate-500 mt-2 leading-relaxed relative z-10">
-                    门牌是角色从相处中自己蒸馏出的常驻认知——事件盒封存、认知消化时自动整理，每轮对话都在场。
+                    Plates are the resident cognition the character distills from spending time together — auto-organized when event boxes are sealed or cognition is digested, present every round of conversation.
                 </p>
-                <p className="text-xs text-violet-400/90 mt-1.5 relative z-10">蒸馏的条目可以在这里改写或删除。</p>
+                <p className="text-xs text-violet-400/90 mt-1.5 relative z-10">Distilled entries can be rewritten or deleted here.</p>
             </div>
 
             {notice && (
                 <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
                     <p className="flex-1 text-xs text-amber-700 leading-relaxed">{notice}</p>
-                    <button onClick={() => setNotice(null)} className="shrink-0 text-[11px] font-bold text-amber-500 px-2 py-0.5">知道了</button>
+                    <button onClick={() => setNotice(null)} className="shrink-0 text-[11px] font-bold text-amber-500 px-2 py-0.5">Got it</button>
                 </div>
             )}
 
             {totalEntries === 0 && (
                 <div className="text-center py-12 bg-gradient-to-b from-white to-violet-50/50 rounded-3xl border border-dashed border-violet-200">
                     <Sparkle size={28} weight="duotone" className="mx-auto text-violet-300 mb-3" />
-                    <p className="text-sm text-slate-400">门牌还是空的</p>
+                    <p className="text-sm text-slate-400">Plates are still empty</p>
                     <p className="text-xs text-slate-300 mt-2 max-w-xs mx-auto leading-relaxed">
-                        继续相处：事件盒被压缩/封存、或触发一次认知消化后，角色会自己把沉淀下来的认知写上门牌。
+                        Keep spending time together: once event boxes get compressed/sealed, or a cognition digestion is triggered, the character will write its settled cognition onto the plates itself.
                     </p>
                 </div>
             )}
@@ -243,7 +245,7 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                 const plate = plates.get(room);
                 const entries = plate?.entries || [];
                 if (entries.length === 0 && totalEntries === 0) return null;
-                const title = room === 'user_room' && userName ? `关于${userName}` : PLATE_TITLES[room];
+                const title = room === 'user_room' && userName ? `About ${userName}` : PLATE_TITLES[room];
                 return (
                     <React.Fragment key={room}>
                         {roomIdx > 0 && totalEntries > 0 && <SectionDivider />}
@@ -264,7 +266,7 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                             </div>
 
                             {entries.length === 0 ? (
-                                <p className="text-xs text-slate-300 italic mt-3 ml-1">暂无条目</p>
+                                <p className="text-xs text-slate-300 italic mt-3 ml-1">No entries yet</p>
                             ) : (
                                 <ul className="space-y-2.5 mt-4">
                                     {entries.map((e: PlateEntry) => (
@@ -282,8 +284,8 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                                                     <div className="flex items-center justify-between mt-2">
                                                         <Feather size={16} weight="duotone" className="text-violet-300 ml-1" />
                                                         <div className="flex gap-2">
-                                                            <button onClick={() => setEditing(null)} className="text-xs font-bold text-slate-400 px-4 py-1.5 rounded-xl bg-violet-50 border border-violet-100">取消</button>
-                                                            <button onClick={commitEdit} className="text-xs font-bold text-white px-5 py-1.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 shadow-md shadow-violet-200">保存</button>
+                                                            <button onClick={() => setEditing(null)} className="text-xs font-bold text-slate-400 px-4 py-1.5 rounded-xl bg-violet-50 border border-violet-100">Cancel</button>
+                                                            <button onClick={commitEdit} className="text-xs font-bold text-white px-5 py-1.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 shadow-md shadow-violet-200">Save</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -297,12 +299,12 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                                                         <p
                                                             className="text-sm text-slate-700 leading-relaxed cursor-pointer"
                                                             onClick={() => { setMenuEntryId(null); setEditing({ room, entryId: e.id, draft: e.text }); }}
-                                                            title="点击改写"
+                                                            title="Click to rewrite"
                                                         >
                                                             {e.text}
                                                         </p>
                                                         <p className="text-[10px] text-violet-300/90 mt-1">
-                                                            {fmtDate(e.firstLearnedAt)} · 得知{e.sourceCount > 1 ? ` · 印证 ${e.sourceCount} 次` : ''}
+                                                            {fmtDate(e.firstLearnedAt)} · learned{e.sourceCount > 1 ? ` · corroborated ${e.sourceCount}×` : ''}
                                                         </p>
                                                     </div>
                                                     <div className="shrink-0 flex flex-col items-end gap-1.5">
@@ -314,7 +316,7 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                                                         <button
                                                             onClick={() => setMenuEntryId(menuEntryId === e.id ? null : e.id)}
                                                             className="text-violet-300 hover:text-violet-500 p-0.5"
-                                                            title="更多操作"
+                                                            title="More actions"
                                                         >
                                                             <DotsThree size={18} weight="bold" />
                                                         </button>
@@ -328,13 +330,13 @@ const RoomPlatePanel: React.FC<RoomPlatePanelProps> = ({ charId, userName }) => 
                                                         onClick={() => { setMenuEntryId(null); setEditing({ room, entryId: e.id, draft: e.text }); }}
                                                         className="flex items-center gap-1 text-[11px] font-bold text-violet-500 bg-violet-50 border border-violet-100 rounded-xl px-3 py-1.5"
                                                     >
-                                                        <PencilSimple size={12} weight="bold" /> 改写
+                                                        <PencilSimple size={12} weight="bold" /> Rewrite
                                                     </button>
                                                     <button
                                                         onClick={() => removeEntry(room, e.id)}
                                                         className="flex items-center gap-1 text-[11px] font-bold text-rose-400 bg-rose-50 border border-rose-100 rounded-xl px-3 py-1.5"
                                                     >
-                                                        <Trash size={12} weight="bold" /> 删除
+                                                        <Trash size={12} weight="bold" /> Delete
                                                     </button>
                                                 </div>
                                             )}

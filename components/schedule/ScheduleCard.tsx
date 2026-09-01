@@ -104,7 +104,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
         return tz ? tzShortLabel(tz) : '';
     })();
     const charAvatar = character?.avatar;
-    const charName = character?.name || '角色';
+    const charName = character?.name || 'Character';
     const coverImage = schedule?.coverImage;
 
     const startEdit = (idx: number, slot: ScheduleSlot) => {
@@ -192,7 +192,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                             {formatClock(wallClock)}
                         </span>
                         <span className="text-[10px] font-bold opacity-40">
-                            {charTzName ? `${charName}那边` : '现在'}
+                            {charTzName ? `${charName}'s side` : 'Now'}
                         </span>
                     </div>
                 </div>
@@ -218,7 +218,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                             className="text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all active:scale-95 disabled:opacity-30"
                             style={{ background: accentBg, borderColor: palette.line }}
                         >
-                            {isGenerating ? '生成中...' : '↻ 重新生成'}
+                            {isGenerating ? 'Generating...' : '↻ Regenerate'}
                         </button>
                     )}
                 </div>
@@ -254,7 +254,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                         <button
                             onClick={() => coverInputRef.current?.click()}
                             className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-black/40 flex items-center justify-center text-white/60 hover:text-white/90 transition-colors text-[10px]"
-                            title="更换看板图"
+                            title="Change cover image"
                         >
                             ✎
                         </button>
@@ -267,7 +267,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                     {isGenerating && !schedule ? (
                         <div className="py-12 text-center">
                             <div className="inline-block w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mb-3"></div>
-                            <p className="text-xs opacity-40">正在生成日程...</p>
+                            <p className="text-xs opacity-40">Generating schedule...</p>
                         </div>
                     ) : schedule && schedule.slots.length > 0 ? (
                         schedule.slots.map((slot, idx) => {
@@ -296,18 +296,18 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                                         <input
                                             value={editActivity}
                                             onChange={e => setEditActivity(e.target.value)}
-                                            placeholder="活动"
+                                            placeholder="Activity"
                                             className="w-full bg-white/10 rounded-lg px-2 py-1 text-sm font-bold mb-1 border border-white/10 focus:outline-none"
                                         />
                                         <input
                                             value={editDesc}
                                             onChange={e => setEditDesc(e.target.value)}
-                                            placeholder="描述 (可选)"
+                                            placeholder="Description (optional)"
                                             className="w-full bg-white/10 rounded-lg px-2 py-1 text-xs border border-white/10 focus:outline-none opacity-70"
                                         />
                                         <div className="flex gap-2 mt-2">
-                                            <button onClick={saveEdit} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 transition-colors">保存</button>
-                                            <button onClick={() => setEditingIdx(null)} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors opacity-60">取消</button>
+                                            <button onClick={saveEdit} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 transition-colors">Save</button>
+                                            <button onClick={() => setEditingIdx(null)} className="text-[10px] font-bold px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors opacity-60">Cancel</button>
                                         </div>
                                     </div>
                                 );
@@ -390,7 +390,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                                                     background: isFuture ? 'color-mix(in srgb, var(--schedule-text) 6%, transparent)' : (slot.theater ? accentHsl : 'color-mix(in srgb, var(--schedule-text) 12%, transparent)'),
                                                     color: isFuture ? 'color-mix(in srgb, var(--schedule-text) 28%, transparent)' : (slot.theater ? cardBg : contentColor),
                                                 }}
-                                                title={isFuture ? '还没到这个时间哦' : (slot.theater ? '重看小剧场' : '窥视这一刻')}
+                                                title={isFuture ? 'Not time yet' : (slot.theater ? 'Rewatch the theater' : 'Peek at this moment')}
                                                 onPointerDown={(e) => { e.stopPropagation(); cancelLongPress(); }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -406,7 +406,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                                                     className="absolute right-0 bottom-full mb-1.5 z-20 whitespace-nowrap px-2 py-1 rounded-lg text-[10px] font-bold animate-fade-in pointer-events-none"
                                                     style={{ background: 'rgba(20,16,30,0.96)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 4px 14px rgba(0,0,0,0.4)' }}
                                                 >
-                                                    还没到这个时间哦
+                                                    Not time yet
                                                 </div>
                                             )}
                                         </div>
@@ -416,10 +416,10 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                         })
                     ) : (
                         <div className="py-12 text-center">
-                            <p className="text-xs opacity-30">暂无日程</p>
+                            <p className="text-xs opacity-30">No schedule yet</p>
                             {onReroll && (
                                 <button onClick={onReroll} className="mt-2 text-xs font-bold opacity-50 hover:opacity-80 transition-opacity" style={{ color: accentHsl }}>
-                                    生成今日日程
+                                    Generate Today's Schedule
                                 </button>
                             )}
                         </div>
@@ -429,7 +429,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                     {schedule && schedule.slots.length > 0 && (
                         <div className="pt-2 pl-3">
                             <span className="text-[10px] font-bold tracking-widest opacity-20">OFFLINE</span>
-                            <p className="text-[10px] opacity-15">就寝</p>
+                            <p className="text-[10px] opacity-15">Bedtime</p>
                         </div>
                     )}
                 </div>
@@ -447,7 +447,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="px-4 py-3 border-b border-slate-100">
-                            <p className="text-xs text-slate-400">日程项</p>
+                            <p className="text-xs text-slate-400">Schedule Item</p>
                             <p className="text-sm font-bold text-slate-700 truncate">
                                 {schedule.slots[actionIdx].startTime} · {schedule.slots[actionIdx].activity}
                             </p>
@@ -460,7 +460,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                                 if (i !== null && schedule) startEdit(i, schedule.slots[i]);
                             }}
                         >
-                            修改
+                            Edit
                         </button>
                         <button
                             className="w-full py-3 text-sm font-bold text-red-500 border-t border-slate-100 hover:bg-red-50 transition-colors"
@@ -470,13 +470,13 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
                                 if (i !== null && onDelete) onDelete(i);
                             }}
                         >
-                            删除
+                            Delete
                         </button>
                         <button
                             className="w-full py-3 text-sm text-slate-400 border-t border-slate-100 hover:bg-slate-50 transition-colors"
                             onClick={() => setActionIdx(null)}
                         >
-                            取消
+                            Cancel
                         </button>
                     </div>
                 </div>

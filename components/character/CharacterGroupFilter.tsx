@@ -54,14 +54,14 @@ export const CharacterGroupFilterBar: React.FC<FilterBarProps> = ({ characters, 
     const known = new Set(groups.map(g => g.id));
     const ungroupedCount = characters.filter(c => !c.groupId || !known.has(c.groupId)).length;
     const chips: { id: string; label: string; count: number }[] = [
-        { id: GROUP_FILTER_ALL, label: '全部', count: characters.length },
+        { id: GROUP_FILTER_ALL, label: 'All', count: characters.length },
         ...sortCharacterGroups(groups).map(g => ({
             id: g.id,
             label: g.name,
             count: characters.filter(c => c.groupId === g.id).length,
         })),
     ];
-    if (ungroupedCount > 0) chips.push({ id: GROUP_FILTER_UNGROUPED, label: '未分组', count: ungroupedCount });
+    if (ungroupedCount > 0) chips.push({ id: GROUP_FILTER_UNGROUPED, label: 'Ungrouped', count: ungroupedCount });
 
     const base = 'shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95 flex items-center gap-1';
     const idle = dark

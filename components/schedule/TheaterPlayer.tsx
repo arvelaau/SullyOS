@@ -38,7 +38,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
     character, slot, lines, isGenerating, onReplay, onSendCard, onClose,
 }) => {
     const accent = `hsl(${HUE}, 75%, 72%)`;
-    const charName = character?.name || '角色';
+    const charName = character?.name || 'Character';
     // 背景那层是 CSS 背景图，没有 <img> 帮忙解析，在组件顶层先把令牌解开
     const avatarUrl = useBlobRefUrl(character?.avatar);
 
@@ -162,14 +162,14 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                             </span>
                         </div>
                         <p className="text-base font-black text-white/95 truncate leading-tight mt-0.5">
-                            {slot?.activity || '某个时段'}
-                            <span className="text-white/45 text-xs font-medium"> · 窥视 {charName} 当前行为</span>
+                            {slot?.activity || 'Some time slot'}
+                            <span className="text-white/45 text-xs font-medium"> · Peeking at {charName}'s current behavior</span>
                         </p>
                     </div>
                     <button
                         onClick={onClose}
                         className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-white/55 hover:text-white border border-white/10 hover:bg-white/10 transition-colors"
-                        aria-label="关闭"
+                        aria-label="Close"
                     >
                         ✕
                     </button>
@@ -178,10 +178,10 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                 {/* 同步状态副标题 */}
                 <p className="text-[11px] mt-2 ml-12" style={{ color: `hsl(${HUE},45%,68%)`, opacity: 0.75 }}>
                     {isGenerating || !lines
-                        ? '⟶ 正在同步 TA 的行为轨迹…'
+                        ? '⟶ Syncing their behavior trace…'
                         : finished
-                            ? `✦ 同步完成 · 共截获 ${total} 帧行为`
-                            : '⟶ 正在同步 TA 的行为轨迹…'}
+                            ? `✦ Sync complete · captured ${total} behavior frames`
+                            : '⟶ Syncing their behavior trace…'}
                 </p>
             </div>
 
@@ -207,7 +207,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                         <p className="mt-2 text-sm font-black text-white/95 text-center truncate w-full" style={{ textShadow: `0 0 12px hsla(${HUE},70%,55%,0.5)` }}>
                             {charName}
                         </p>
-                        <span className="mt-0.5 text-[9px] font-bold tracking-[0.15em] uppercase text-white/35">窥视目标</span>
+                        <span className="mt-0.5 text-[9px] font-bold tracking-[0.15em] uppercase text-white/35">Peek Target</span>
                     </div>
 
                     {/* 当前环境（仅展示我们真有的字段：地点 / 时刻） */}
@@ -216,7 +216,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                             className="mt-2.5 rounded-2xl border p-2.5"
                             style={{ borderColor: `hsla(${HUE},50%,55%,0.2)`, background: `hsla(${HUE},45%,12%,0.5)`, backdropFilter: 'blur(8px)' }}
                         >
-                            <p className="text-[9px] font-bold tracking-[0.15em] uppercase text-white/35 mb-1">当前环境</p>
+                            <p className="text-[9px] font-bold tracking-[0.15em] uppercase text-white/35 mb-1">Current Environment</p>
                             {slot?.location && (
                                 <p className="text-[11px] text-white/80 leading-snug flex items-start gap-1">
                                     <span style={{ color: accent }}>📍</span>
@@ -246,7 +246,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                                 <div className="absolute inset-0 rounded-full border-2 animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
                             </div>
                             <div>
-                                <p className="text-sm text-white/70 font-bold">正在窥视 {charName}…</p>
+                                <p className="text-sm text-white/70 font-bold">Peeking at {charName}…</p>
                                 <p className="text-[11px] text-white/35 mt-1">{slot?.startTime} · {slot?.activity}</p>
                             </div>
                         </div>
@@ -265,7 +265,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                             )}
                             <div className="pt-2 pb-1 text-center">
                                 <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-white/25">
-                                    {finished ? '— 同步结束 —' : '✦ 同步仍在进行中'}
+                                    {finished ? '— Sync complete —' : '✦ Sync still in progress'}
                                 </span>
                             </div>
                         </div>
@@ -282,7 +282,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                                 onClick={handleAdvance}
                                 className="px-6 py-2.5 rounded-full text-xs font-bold text-white/80 border border-white/15 bg-white/5 hover:bg-white/12 transition-colors active:scale-95"
                             >
-                                {currentLine && typed.length < (currentLine.text?.length ?? 0) ? '▸ 跳过本拍' : '▸▸ 跳到结尾'}
+                                {currentLine && typed.length < (currentLine.text?.length ?? 0) ? '▸ Skip this beat' : '▸▸ Skip to end'}
                             </button>
                         </div>
                     ) : (
@@ -292,7 +292,7 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                                 onClick={onReplay}
                                 className="text-[11px] font-bold text-white/50 hover:text-white/85 transition-colors active:scale-95"
                             >
-                                ↻ 换一段重演
+                                ↻ Replay a different scene
                             </button>
                             {/* 两态都把这一刻「留痕」进聊天，角色都记得自己干了啥；
                                 区别只在 TA 知不知道你看了。主按钮=暴露，次按钮=不暴露。 */}
@@ -304,9 +304,9 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                                         style={{ borderColor: `hsla(${HUE},50%,60%,0.4)`, background: `hsla(${HUE},40%,18%,0.6)` }}
                                     >
                                         <span className="text-[13px] font-black text-white/90 flex items-center gap-1">
-                                            <span>🙈</span>TA 不知道你看了
+                                            <span>🙈</span>They don't know you looked
                                         </span>
-                                        <span className="text-[9px] font-medium text-white/45 mt-0.5">悄悄留痕 · TA 没发现被看</span>
+                                        <span className="text-[9px] font-medium text-white/45 mt-0.5">Quietly logged · They didn't notice</span>
                                     </button>
                                     <button
                                         onClick={() => onSendCard(true)}
@@ -317,9 +317,9 @@ const TheaterPlayer: React.FC<TheaterPlayerProps> = ({
                                         }}
                                     >
                                         <span className="text-[13px] font-black text-white flex items-center gap-1">
-                                            <span>✦</span>让 TA 发现你在看
+                                            <span>✦</span>Let Them See You Watching
                                         </span>
-                                        <span className="text-[9px] font-medium text-white/75 mt-0.5">甩到 TA 面前 · TA 会察觉</span>
+                                        <span className="text-[9px] font-medium text-white/75 mt-0.5">Right in front of them · They'll notice</span>
                                     </button>
                                 </div>
                             )}

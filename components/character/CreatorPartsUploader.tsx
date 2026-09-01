@@ -36,9 +36,9 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             const result = await parseCreatorPsd(await f.arrayBuffer());
             setPsdParts(result.parts);
             setPsdWarnings(result.warnings);
-            if (!result.parts.length) addToast('没解析出部件，看看「命名规则」里的结构要求', 'error');
+            if (!result.parts.length) addToast('No parts found — check the structure requirements in "Naming Rules"', 'error');
         } catch (err) {
-            addToast('PSD 解析失败：' + String((err as Error)?.message || err), 'error');
+            addToast('PSD parsing failed: ' + String((err as Error)?.message || err), 'error');
         } finally {
             setPsdParsing(false);
             if (psdRef.current) psdRef.current.value = '';
@@ -50,15 +50,15 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
 
     const savePsdParts = async () => {
         const ready = psdParts.filter(p => p.categoryKey);
-        if (!ready.length) { addToast('先给每个部件选好类目', 'error'); return; }
-        if (ready.length < psdParts.length) { addToast('还有部件没选类目', 'error'); return; }
+        if (!ready.length) { addToast('Choose a category for every part first', 'error'); return; }
+        if (ready.length < psdParts.length) { addToast('Some parts still have no category selected', 'error'); return; }
         setBusy(true);
         try {
             for (const p of ready) {
                 const part: CustomCreatorPart = {
                     id: `${p.categoryKey}_cc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
                     categoryKey: p.categoryKey!,
-                    name: p.name || `自定义${labelOfCategory(p.categoryKey!)}`,
+                    name: p.name || `Custom ${labelOfCategory(p.categoryKey!)}`,
                     src: p.src,
                     tintable: p.tintable,
                     shadowSrc: p.shadowSrc,
@@ -68,17 +68,17 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             }
             setPsdParts([]); setPsdWarnings([]);
             await load();
-            addToast(`已加入 ${ready.length} 个部件，进捏人器就能用啦`, 'success');
+            addToast(`Added ${ready.length} part(s) — ready to use in the Character Creator`, 'success');
         } catch (e) {
-            addToast('保存失败：' + String((e as Error)?.message || e), 'error');
+            addToast('Save failed: ' + String((e as Error)?.message || e), 'error');
         } finally {
             setBusy(false);
         }
     };
 
     const removePart = async (id: string) => {
-        try { await DB.deleteCustomCreatorPart(id); await load(); addToast('已删除', 'success'); }
-        catch (e) { addToast('删除失败：' + String((e as Error)?.message || e), 'error'); }
+        try { await DB.deleteCustomCreatorPart(id); await load(); addToast('Deleted', 'success'); }
+        catch (e) { addToast('Delete failed: ' + String((e as Error)?.message || e), 'error'); }
     };
 
     // 按类目分组展示已有部件
@@ -92,7 +92,7 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             <div className="shrink-0 px-4 pb-3 flex items-center gap-2 text-white" style={{ paddingTop: 'var(--chrome-top)' }}>
                 <button onClick={onClose} className="p-2 -ml-2 rounded-full text-indigo-100 active:bg-white/10"><CaretLeft size={20} weight="bold" /></button>
                 <div>
-                    <h2 className="font-serif text-lg font-bold tracking-wide leading-tight">自定义素材工坊</h2>
+                    <h2 className="font-serif text-lg font-bold tracking-wide leading-tight">Custom Parts Workshop</h2>
                     <p className="text-[10px] tracking-[3px] text-indigo-300/60">CUSTOM PARTS</p>
                 </div>
             </div>
@@ -102,33 +102,33 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                 <div className="rounded-2xl p-3.5 border border-white/10 space-y-2.5" style={{ background: 'rgba(255,255,255,0.04)' }}>
                     <div className="text-[13px] font-bold text-white flex items-center gap-1.5">
                         <FileArrowUp size={15} weight="bold" className="text-amber-300" />
-                        上传 PSD，批量加自定义部件
+                        Upload a PSD to bulk-add custom parts
                     </div>
 
                     <button onClick={() => setShowRules(v => !v)} className="text-[11px] font-bold text-amber-200/90 flex items-center gap-1 active:opacity-70">
-                        {showRules ? '▾' : '▸'} PSD 怎么做（命名规则）
+                        {showRules ? '▾' : '▸'} How to prepare a PSD (naming rules)
                     </button>
                     {showRules && (
                         <div className="text-[10.5px] text-indigo-100/60 leading-relaxed space-y-2 rounded-xl bg-black/25 p-2.5 border border-white/10">
-                            <div><b className="text-white/85">① 结构</b>：顶层<b>图层组 = 一个类目</b>，<b>组内每个图层 = 一个部件</b>。例：<code>眼睛</code> 组里放「杏眼」「圆眼」各一层 → 两个部件。</div>
+                            <div><b className="text-white/85">① Structure</b>: each top-level <b>layer group = one category</b>, and <b>each layer inside a group = one part</b>. Example: put "Almond Eyes" and "Round Eyes" as two layers in the <code>Eyes</code> group → two parts.</div>
                             <div>
-                                <b className="text-white/85">② 组名 = 类目</b>（中英文都认）：
+                                <b className="text-white/85">② Group name = category</b> (Chinese or English both work):
                                 <div className="flex flex-wrap gap-1 mt-1">
                                     {CC_CATEGORIES.map(c => (
                                         <span key={c.key} className="px-1.5 py-0.5 rounded bg-white/8 text-white/75">{c.label}<span className="text-white/35"> / {c.key}</span></span>
                                     ))}
                                 </div>
                             </div>
-                            <div><b className="text-white/85">③ 图层名 = 部件名</b>；换色标记 <code>#色</code> / <code>#原色</code>（头发+眼睛默认可换色）。</div>
-                            <div><b className="text-white/85">④ 显示 / 隐藏</b>：要导入的图层保持<b>显示</b>，隐藏图层会跳过；不透明度拉满。</div>
-                            <div><b className="text-white/85">⑤ 画布</b> 472×472 正方形。识别不出类目也没关系，下面能手动选。</div>
+                            <div><b className="text-white/85">③ Layer name = part name</b>; recolor markers <code>#tint</code> / <code>#notint</code> (hair + eyes are recolorable by default).</div>
+                            <div><b className="text-white/85">④ Show / Hide</b>: keep the layers you want imported <b>visible</b> — hidden layers are skipped; opacity should be full.</div>
+                            <div><b className="text-white/85">⑤ Canvas</b> 472×472 square. If the category can't be auto-detected, no problem — pick it manually below.</div>
                         </div>
                     )}
 
                     <input ref={psdRef} type="file" accept=".psd" className="hidden" onChange={e => void onPsdFile(e.target.files?.[0])} />
                     <button onClick={() => psdRef.current?.click()} disabled={psdParsing || busy}
                         className="w-full rounded-xl border border-dashed border-white/30 py-3 text-[12px] text-indigo-100/70 active:bg-white/5 disabled:opacity-50">
-                        {psdParsing ? '解析中…' : '选择 .psd 文件'}
+                        {psdParsing ? 'Parsing…' : 'Choose .psd file'}
                     </button>
 
                     {psdWarnings.map((w, i) => (
@@ -146,7 +146,7 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                         <div className="flex gap-1.5">
                                             <select value={p.categoryKey || ''} onChange={e => updatePsdPart(idx, { categoryKey: e.target.value || null })}
                                                 className={`text-[10.5px] rounded px-1.5 py-1 bg-white/10 outline-none ${p.categoryKey ? 'text-white' : 'text-red-300 border border-red-400/50'}`}>
-                                                <option value="">类目?</option>
+                                                <option value="">Category?</option>
                                                 {CC_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                                             </select>
                                             <input value={p.name} onChange={e => updatePsdPart(idx, { name: e.target.value })}
@@ -155,16 +155,16 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                         <div className="flex items-center gap-2.5 text-[10px] text-indigo-100/70">
                                             <label className="flex items-center gap-1">
                                                 <input type="checkbox" checked={p.tintable} onChange={e => updatePsdPart(idx, { tintable: e.target.checked })} className="accent-amber-400 w-3 h-3" />
-                                                可换色
+                                                Recolorable
                                             </label>
-                                            <button onClick={() => setPsdParts(prev => prev.filter((_, i) => i !== idx))} className="ml-auto text-red-300/80 active:text-red-300">移除</button>
+                                            <button onClick={() => setPsdParts(prev => prev.filter((_, i) => i !== idx))} className="ml-auto text-red-300/80 active:text-red-300">Remove</button>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                             <button onClick={() => void savePsdParts()} disabled={busy}
                                 className="w-full rounded-xl py-2.5 text-[13px] font-bold text-black disabled:opacity-50" style={{ background: 'linear-gradient(135deg,#fbbf24,#f59e0b)' }}>
-                                {busy ? '保存中…' : `全部加入（${psdParts.length}）`}
+                                {busy ? 'Saving…' : `Add All (${psdParts.length})`}
                             </button>
                         </div>
                     )}
@@ -172,9 +172,9 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
 
                 {/* 已有自定义部件 */}
                 <div className="space-y-2">
-                    <div className="text-[12px] font-bold text-indigo-100/85 px-0.5">我的自定义部件{parts.length > 0 ? ` · ${parts.length}` : ''}</div>
+                    <div className="text-[12px] font-bold text-indigo-100/85 px-0.5">My Custom Parts{parts.length > 0 ? ` · ${parts.length}` : ''}</div>
                     {parts.length === 0 ? (
-                        <p className="text-[11px] text-indigo-300/45 py-3 text-center">还没有自定义部件。传个 PSD 试试～</p>
+                        <p className="text-[11px] text-indigo-300/45 py-3 text-center">No custom parts yet. Try uploading a PSD~</p>
                     ) : (
                         Object.keys(grouped).map(key => (
                             <div key={key}>
@@ -184,7 +184,7 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                         <div key={p.id} className="relative rounded-lg overflow-hidden border border-white/10 aspect-square flex items-center justify-center"
                                             style={{ background: 'repeating-conic-gradient(#ffffff10 0% 25%, transparent 0% 50%) 50% / 14px 14px' }}>
                                             <img src={p.src} alt={p.name} className="max-h-full max-w-full object-contain" />
-                                            <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] text-white/90 px-1 py-0.5 truncate">{p.name}{p.tintable ? ' ·色' : ''}</span>
+                                            <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] text-white/90 px-1 py-0.5 truncate">{p.name}{p.tintable ? ' ·tint' : ''}</span>
                                             <button onClick={() => void removePart(p.id)} className="absolute top-1 right-1 bg-red-500/90 rounded-full p-1 active:scale-90 text-white"><Trash size={10} weight="bold" /></button>
                                         </div>
                                     ))}
@@ -193,7 +193,7 @@ const CreatorPartsUploader: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                         ))
                     )}
                     <p className="text-[10px] text-indigo-300/45 leading-relaxed px-0.5 pt-1">
-                        自定义部件会出现在<b className="text-indigo-200/70">捏人器</b>里对应类目下（只你自己可见）。加/删后重新进捏人器即可看到。
+                        Custom parts will show up in the <b className="text-indigo-200/70">Character Creator</b> under the matching category (visible only to you). Re-open the Character Creator after adding/removing to see the changes.
                     </p>
                 </div>
             </div>
