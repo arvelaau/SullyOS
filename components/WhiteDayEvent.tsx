@@ -192,9 +192,9 @@ const WhiteDayPopup: React.FC<WhiteDayPopupProps> = ({ onView, onDismiss, onChec
                 {/* Header */}
                 <div className="pt-8 pb-4 px-6 text-center relative">
                     <div className="text-4xl mb-3 animate-bounce">🍫</div>
-                    <h2 className="text-lg font-extrabold text-slate-800">{sullyName || 'Sully'}好像有事找你？</h2>
+                    <h2 className="text-lg font-extrabold text-slate-800">{sullyName || 'Sully'} seems to have something for you?</h2>
                     <p className="text-[11px] text-amber-400 mt-1.5 font-medium">2026 White Day Special</p>
-                    <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">想听其他角色的心声？可以在桌面「特别时光」中找到</p>
+                    <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">Want to hear from other characters too? Find them on the desktop under "Special Moments"</p>
                 </div>
 
                 {/* Buttons */}
@@ -203,7 +203,7 @@ const WhiteDayPopup: React.FC<WhiteDayPopupProps> = ({ onView, onDismiss, onChec
                         onClick={onView}
                         className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-amber-200 active:scale-95 transition-transform text-sm flex items-center justify-center gap-2"
                     >
-                        <span>查看</span>
+                        <span>View</span>
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" /></svg>
                     </button>
 
@@ -211,14 +211,14 @@ const WhiteDayPopup: React.FC<WhiteDayPopupProps> = ({ onView, onDismiss, onChec
                         onClick={onCheckApi}
                         className="w-full py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl active:scale-95 transition-transform text-sm"
                     >
-                        我先切换API！
+                        Let me switch APIs first!
                     </button>
 
                     <button
                         onClick={onDismiss}
                         className="w-full py-2.5 text-slate-400 text-xs font-medium active:scale-95 transition-transform"
                     >
-                        没兴趣
+                        Not interested
                     </button>
                 </div>
             </div>
@@ -241,15 +241,15 @@ const WhiteDayApiSetup: React.FC<{ onDone: () => void; onBack: () => void }> = (
 
     const handleSave = () => {
         updateApiConfig({ baseUrl: localUrl, apiKey: localKey, model: localModel });
-        setStatusMsg('配置已保存');
-        addToast('API 配置已保存', 'success');
+        setStatusMsg('Configuration saved');
+        addToast('API configuration saved', 'success');
         setTimeout(() => setStatusMsg(''), 2000);
     };
 
     const fetchModels = async () => {
-        if (!localUrl) { setStatusMsg('请先填写 URL'); return; }
+        if (!localUrl) { setStatusMsg('Please fill in the URL first'); return; }
         setIsLoadingModels(true);
-        setStatusMsg('正在连接...');
+        setStatusMsg('Connecting...');
         try {
             const baseUrl = localUrl.replace(/\/+$/, '');
             const response = await fetch(`${baseUrl}/models`, {
@@ -263,11 +263,11 @@ const WhiteDayApiSetup: React.FC<{ onDone: () => void; onBack: () => void }> = (
                 const models = list.map((m: any) => m.id || m);
                 setAvailableModels(models);
                 if (models.length > 0 && !models.includes(localModel)) setLocalModel(models[0]);
-                setStatusMsg(`获取到 ${models.length} 个模型`);
+                setStatusMsg(`Found ${models.length} models`);
                 setShowModelList(true);
-            } else { setStatusMsg('格式不兼容'); }
+            } else { setStatusMsg('Incompatible format'); }
         } catch (error: any) {
-            setStatusMsg('连接失败');
+            setStatusMsg('Connection failed');
         } finally {
             setIsLoadingModels(false);
         }
@@ -279,8 +279,8 @@ const WhiteDayApiSetup: React.FC<{ onDone: () => void; onBack: () => void }> = (
             <div className="relative w-full max-w-sm bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/30 overflow-hidden animate-slide-up max-h-[85vh] flex flex-col">
                 <div className="px-6 pt-6 pb-2 text-center shrink-0">
                     <div className="text-2xl mb-1">🔧</div>
-                    <h3 className="text-lg font-bold text-slate-800">API 配置</h3>
-                    <p className="text-[11px] text-slate-400 mt-1">配置完成后即可查看白色情人节特别活动</p>
+                    <h3 className="text-lg font-bold text-slate-800">API Configuration</h3>
+                    <p className="text-[11px] text-slate-400 mt-1">Once configured, you can view the White Day special event</p>
                 </div>
 
                 <div className="px-6 py-4 space-y-4 overflow-y-auto no-scrollbar flex-1">
@@ -295,7 +295,7 @@ const WhiteDayApiSetup: React.FC<{ onDone: () => void; onBack: () => void }> = (
                     <div>
                         <div className="flex justify-between items-center mb-1.5 pl-1">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model</label>
-                            <button onClick={fetchModels} disabled={isLoadingModels} className="text-[10px] text-primary font-bold">{isLoadingModels ? 'Fetching...' : '刷新模型列表'}</button>
+                            <button onClick={fetchModels} disabled={isLoadingModels} className="text-[10px] text-primary font-bold">{isLoadingModels ? 'Fetching...' : 'Refresh Model List'}</button>
                         </div>
                         <input type="text" value={localModel} onChange={(e) => setLocalModel(e.target.value)} placeholder="gpt-4o-mini" className="w-full bg-white/50 border border-slate-200/60 rounded-xl px-4 py-2.5 text-sm font-mono focus:bg-white transition-all" />
 
@@ -311,16 +311,16 @@ const WhiteDayApiSetup: React.FC<{ onDone: () => void; onBack: () => void }> = (
                     </div>
 
                     <button onClick={handleSave} className="w-full py-3 rounded-2xl font-bold text-white shadow-lg shadow-primary/20 bg-primary active:scale-95 transition-all">
-                        {statusMsg || '保存配置'}
+                        {statusMsg || 'Save Configuration'}
                     </button>
                 </div>
 
                 <div className="px-6 pb-6 pt-2 flex gap-3 shrink-0">
                     <button onClick={onBack} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl active:scale-95 transition-transform text-sm">
-                        返回
+                        Back
                     </button>
                     <button onClick={onDone} className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-amber-200 active:scale-95 transition-transform text-sm">
-                        前往查看 🍫
+                        View Now 🍫
                     </button>
                 </div>
             </div>
@@ -395,32 +395,32 @@ const SpriteDialogBox: React.FC<SpriteDialogBoxProps> = ({
                 <div className="absolute top-16 right-4 z-50 control-zone animate-fade-in" onClick={(e) => e.stopPropagation()}>
                     <div className="bg-black/70 backdrop-blur-xl rounded-2xl border border-white/15 p-4 w-52 shadow-2xl">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-[11px] font-bold text-white/80">立绘调整</span>
-                            <button onClick={(e) => { e.stopPropagation(); onSaveSpriteConfig?.(); setShowSettings(false); }} className="text-[10px] text-amber-400 font-bold">完成</button>
+                            <span className="text-[11px] font-bold text-white/80">Sprite Adjustment</span>
+                            <button onClick={(e) => { e.stopPropagation(); onSaveSpriteConfig?.(); setShowSettings(false); }} className="text-[10px] text-amber-400 font-bold">Done</button>
                         </div>
                         <div className="space-y-3">
                             <div>
                                 <div className="flex justify-between mb-1">
-                                    <span className="text-[10px] text-white/50">大小</span>
+                                    <span className="text-[10px] text-white/50">Size</span>
                                     <span className="text-[10px] text-white/50 font-mono">{spriteScale.toFixed(1)}x</span>
                                 </div>
                                 <input type="range" min="0.3" max="3" step="0.1" value={spriteScale} onChange={(e) => onSpriteConfigChange(parseFloat(e.target.value), spriteX, spriteY)} className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400" />
                             </div>
                             <div>
                                 <div className="flex justify-between mb-1">
-                                    <span className="text-[10px] text-white/50">水平</span>
+                                    <span className="text-[10px] text-white/50">Horizontal</span>
                                     <span className="text-[10px] text-white/50 font-mono">{spriteX}%</span>
                                 </div>
                                 <input type="range" min="-50" max="50" step="1" value={spriteX} onChange={(e) => onSpriteConfigChange(spriteScale, parseInt(e.target.value), spriteY)} className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400" />
                             </div>
                             <div>
                                 <div className="flex justify-between mb-1">
-                                    <span className="text-[10px] text-white/50">垂直</span>
+                                    <span className="text-[10px] text-white/50">Vertical</span>
                                     <span className="text-[10px] text-white/50 font-mono">{spriteY}%</span>
                                 </div>
                                 <input type="range" min="-50" max="50" step="1" value={spriteY} onChange={(e) => onSpriteConfigChange(spriteScale, spriteX, parseInt(e.target.value))} className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-400" />
                             </div>
-                            <button onClick={(e) => { e.stopPropagation(); onSpriteConfigChange(1, 0, 0); }} className="w-full text-[10px] text-white/40 py-1.5">重置默认</button>
+                            <button onClick={(e) => { e.stopPropagation(); onSpriteConfigChange(1, 0, 0); }} className="w-full text-[10px] text-white/40 py-1.5">Reset to Default</button>
                         </div>
                     </div>
                 </div>
@@ -450,7 +450,7 @@ const SpriteDialogBox: React.FC<SpriteDialogBoxProps> = ({
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
                     {questionText && (
                         <div className="mb-3 pb-2.5 border-b border-white/10">
-                            <p className="text-[10px] text-white/40 mb-1 font-medium">这道题问的是——</p>
+                            <p className="text-[10px] text-white/40 mb-1 font-medium">This question was about—</p>
                             <p className="text-xs text-white/75 leading-relaxed">{questionText}</p>
                         </div>
                     )}
@@ -642,7 +642,7 @@ export const WhiteDaySession: React.FC<WhiteDaySessionProps> = ({ charId, onClos
     const generateQuiz = async (cId: string) => {
         const c = characters.find(ch => ch.id === cId);
         if (!c || !apiConfig) {
-            setErrorMsg('找不到角色或 API 未配置');
+            setErrorMsg('Character not found or API not configured');
             setPhase('select');
             return;
         }
@@ -729,20 +729,20 @@ export const WhiteDaySession: React.FC<WhiteDaySessionProps> = ({ charId, onClos
                 }),
             });
 
-            if (!response.ok) throw new Error(`API 错误: ${response.status}`);
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await safeResponseJson(response);
             const content = data.choices?.[0]?.message?.content;
-            if (!content) throw new Error('AI 返回为空');
+            if (!content) throw new Error('AI returned an empty response');
 
             const parsed = extractJSON(content) as WhiteDayQuizData;
-            if (!parsed?.questions || parsed.questions.length === 0) throw new Error('题目解析失败，请重试');
+            if (!parsed?.questions || parsed.questions.length === 0) throw new Error('Failed to parse the questions, please try again');
 
             setQuizData(parsed);
             setUserAnswers(new Array(parsed.questions.length).fill(-1));
             setPhase('quiz');
         } catch (e: any) {
             console.error('Quiz generation failed:', e);
-            setErrorMsg(e.message || '生成题目失败');
+            setErrorMsg(e.message || 'Failed to generate quiz questions');
         }
     };
 
@@ -857,13 +857,13 @@ ${answerSummary}
                 }),
             });
 
-            if (!response.ok) throw new Error(`API 错误: ${response.status}`);
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await safeResponseJson(response);
             const content = data.choices?.[0]?.message?.content;
-            if (!content) throw new Error('AI 返回为空');
+            if (!content) throw new Error('AI returned an empty response');
 
             const parsed = extractJSON(content) as WhiteDayReviewData;
-            if (!parsed?.reviews) throw new Error('评阅结果解析失败');
+            if (!parsed?.reviews) throw new Error('Failed to parse the review results');
 
             setReviewData(parsed);
             setReviewLineIndex(0);
@@ -893,7 +893,7 @@ ${answerSummary}
             try { localStorage.setItem(WHITEDAY_COMPLETED_KEY, Date.now().toString()); } catch { /* */ }
         } catch (e: any) {
             console.error('Review generation failed:', e);
-            setErrorMsg(e.message || '评阅失败，请重试');
+            setErrorMsg(e.message || 'Review failed, please try again');
             setPhase('quiz');
         }
     };
@@ -966,10 +966,10 @@ ${answerSummary}
                 });
             }
 
-            if (!response.ok) throw new Error(`API 错误: ${response.status}`);
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await safeResponseJson(response);
             const content = data.choices?.[0]?.message?.content;
-            if (!content) throw new Error('AI 返回为空');
+            if (!content) throw new Error('AI returned an empty response');
 
             // 解析情绪行
             const parsed: { text: string; emotion: string }[] = [];
@@ -990,7 +990,7 @@ ${answerSummary}
             setPhase('commenting');
         } catch (e: any) {
             console.error('Comment generation failed:', e);
-            addToast('评价生成失败（需要支持视觉功能的模型）', 'error');
+            addToast('Failed to generate comment (requires a vision-capable model)', 'error');
             setPhase('decorate');
         }
     };
@@ -1230,7 +1230,7 @@ ${answerSummary}
         const row2Y = row1Y + 36;
         ctx.fillStyle = '#b45309';
         ctx.font = '20px sans-serif';
-        ctx.fillText('2026 · 3 · 14  白色情人节', nameX, row2Y + 6);
+        ctx.fillText('2026 · 3 · 14  White Day', nameX, row2Y + 6);
 
         // ── 第三行："White Day Special" 居中（底部条中偏下）──
         const row3Y = wmY + BOTTOM_PAD - 80; // 距底部 80px
@@ -1264,7 +1264,7 @@ ${answerSummary}
             setExportedBase64(base64);
 
             const fileName = `whiteday_${char?.name || 'chocolate'}_2026.png`;
-            await downloadOrShare(base64, fileName, '白色情人节巧克力');
+            await downloadOrShare(base64, fileName, 'White Day Chocolate');
 
             // 更新角色记录（保留 quiz 数据，追加明信片图片）
             if (char) {
@@ -1291,10 +1291,10 @@ ${answerSummary}
                 });
             }
             try { localStorage.setItem(WHITEDAY_COMPLETED_KEY, Date.now().toString()); } catch { /* */ }
-            addToast('导出成功！', 'success');
+            addToast('Export successful!', 'success');
         } catch (e: any) {
             console.error('Export failed:', e);
-            addToast('导出失败，请截图保存', 'error');
+            addToast('Export failed, please take a screenshot instead', 'error');
         } finally {
             setIsExporting(false);
         }
@@ -1305,8 +1305,8 @@ ${answerSummary}
         setIsSendingToRoom(true);
         try {
             // AI 自动生成家具名称和描述
-            let itemName = `${char.name}的白色巧克力`;
-            let itemDesc = `这是 ${char.name} 和 ${userProfile.name} 在 2026 年白色情人节一起做的巧克力，主要由 ${char.name} 亲手制作。`;
+            let itemName = `${char.name}'s White Chocolate`;
+            let itemDesc = `This is a chocolate that ${char.name} and ${userProfile.name} made together on White Day 2026, mainly crafted by ${char.name}.`;
 
             if (apiConfig) {
                 try {
@@ -1344,7 +1344,7 @@ ${answerSummary}
             // 用已有的 AI 评价补充描述
             if (commentLines.length > 0) {
                 const commentText = commentLines.map(l => l.text).join(' ');
-                itemDesc += ` ${char.name}的评价：${commentText}`;
+                itemDesc += ` ${char.name}'s review: ${commentText}`;
             }
 
             // 1. 存入全局家具库（角色专属）
@@ -1384,9 +1384,9 @@ ${answerSummary}
                     items: [...currentItems, newItem],
                 },
             });
-            addToast(`已发送到 ${char.name} 的小屋！`, 'success');
+            addToast(`Sent to ${char.name}'s Dwelling!`, 'success');
         } catch {
-            addToast('发送失败', 'error');
+            addToast('Send failed', 'error');
         } finally {
             setIsSendingToRoom(false);
         }
@@ -1413,11 +1413,11 @@ ${answerSummary}
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                     </button>
-                    <span className="text-sm font-bold text-amber-800">白色情人节 2026.3.14</span>
+                    <span className="text-sm font-bold text-amber-800">White Day 2026.3.14</span>
                     <div className="w-10" />
                 </div>
                 <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: 'calc(1.5rem + var(--safe-bottom))' }}>
-                    <p className="text-sm text-amber-600 text-center mb-6">选择一位角色，和 TA 一起 DIY 巧克力</p>
+                    <p className="text-sm text-amber-600 text-center mb-6">Pick a character to DIY chocolate together with them</p>
                     <div className="grid grid-cols-3 gap-3">
                         {characters.map(c => (
                             <button
@@ -1438,8 +1438,8 @@ ${answerSummary}
     // 加载中
     if (phase === 'loading_quiz' || phase === 'loading_review' || phase === 'loading_comment') {
         const loadingText =
-            phase === 'loading_quiz' ? '生成题目中…' :
-            phase === 'loading_review' ? '评阅中…' : '截图发给 TA 看…';
+            phase === 'loading_quiz' ? 'Generating questions…' :
+            phase === 'loading_review' ? 'Reviewing…' : 'Sending screenshot to them…';
         return (
             <div className="fixed inset-0 z-[9997] bg-gradient-to-b from-amber-50 to-white flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 rounded-full border-4 border-amber-300 border-t-amber-600 animate-spin" />
@@ -1448,7 +1448,7 @@ ${answerSummary}
                     <div className="mt-4 px-6 text-center">
                         <p className="text-red-500 text-sm mb-3">{errorMsg}</p>
                         <button onClick={() => { setErrorMsg(''); setPhase('select'); }} className="px-6 py-2 rounded-full bg-amber-500 text-white text-sm">
-                            返回
+                            Back
                         </button>
                     </div>
                 )}
@@ -1468,7 +1468,7 @@ ${answerSummary}
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                     </button>
-                    <span className="text-sm font-bold text-amber-800">白色情人节小测验</span>
+                    <span className="text-sm font-bold text-amber-800">White Day Quiz</span>
                     <div className="w-10" />
                 </div>
 
@@ -1484,7 +1484,7 @@ ${answerSummary}
                     )}
 
                     <p className="text-xs text-amber-400 text-center mb-5">
-                        答对 {QUIZ_PASS_SCORE}/{QUIZ_TOTAL} 题解锁巧克力 DIY · 不够可以重试
+                        Answer {QUIZ_PASS_SCORE}/{QUIZ_TOTAL} correctly to unlock chocolate DIY · Retry if you fall short
                     </p>
 
                     {quizData?.questions.map((q, qi) => (
@@ -1525,8 +1525,8 @@ ${answerSummary}
                         }`}
                     >
                         {allAnswered
-                            ? '提交答案，等 TA 评分 →'
-                            : `还有 ${userAnswers.filter(a => a < 0).length} 题未答`}
+                            ? 'Submit answers, wait for their score →'
+                            : `${userAnswers.filter(a => a < 0).length} question(s) left unanswered`}
                     </button>
                 </div>
             </div>
@@ -1548,9 +1548,9 @@ ${answerSummary}
                 sprite={currentSprite}
                 text={displayedText}
                 isAnimating={isAnimating}
-                subInfo={!isResultLine ? `第 ${reviewLineIndex + 1} / ${reviewData.reviews.length} 题` : undefined}
+                subInfo={!isResultLine ? `Question ${reviewLineIndex + 1} / ${reviewData.reviews.length}` : undefined}
                 onClick={handleReviewClick}
-                hintText="点击继续"
+                hintText="Tap to continue"
                 progressBar={{ value: progress, total: reviewData.reviews.length }}
                 questionText={questionText}
                 spriteScale={localSpriteScale}
@@ -1575,9 +1575,9 @@ ${answerSummary}
         return (
             <div className="fixed inset-0 z-[9997] bg-gradient-to-b from-amber-50 to-white flex flex-col items-center justify-center p-6 animate-fade-in">
                 <div className="text-5xl mb-4">😮‍💨</div>
-                <h2 className="text-xl font-bold text-amber-800 mb-2">答对了 {score} 题</h2>
+                <h2 className="text-xl font-bold text-amber-800 mb-2">You got {score} right</h2>
                 <p className="text-sm text-amber-600 text-center mb-8">
-                    还差一点！再好好想想，答对 {QUIZ_PASS_SCORE} 题就能装饰巧克力了～
+                    So close! Think it over a bit more — answer {QUIZ_PASS_SCORE} correctly to decorate the chocolate~
                 </p>
                 <div className="flex flex-col gap-3 w-full max-w-xs">
                     <button
@@ -1589,10 +1589,10 @@ ${answerSummary}
                         }}
                         className="w-full py-3.5 rounded-2xl bg-amber-500 text-white font-bold text-sm shadow-md active:scale-95 transition-transform"
                     >
-                        再试一次
+                        Try Again
                     </button>
                     <button onClick={onClose} className="w-full py-2.5 rounded-2xl text-amber-400 text-sm">
-                        下次再说
+                        Maybe Later
                     </button>
                 </div>
             </div>
@@ -1612,16 +1612,16 @@ ${answerSummary}
                         </svg>
                     </button>
                     <div className="text-center">
-                        <p className="text-xs font-bold text-rose-700">DIY 巧克力</p>
+                        <p className="text-xs font-bold text-rose-700">DIY Chocolate</p>
                         <p className="text-[10px] text-rose-400/70">
-                            {customImage ? '拖动调整位置，滑动调整大小/旋转' : '上传一张你喜欢的照片'}
+                            {customImage ? 'Drag to reposition, slide to resize/rotate' : 'Upload a photo you like'}
                         </p>
                     </div>
                     <button
                         onClick={() => setPhase('export')}
                         className="text-xs font-bold text-rose-600 bg-rose-100 px-3 py-1.5 rounded-full border border-rose-200"
                     >
-                        完成 →
+                        Done →
                     </button>
                 </div>
 
@@ -1687,7 +1687,7 @@ ${answerSummary}
                                                 crossOrigin="anonymous"
                                                 className="max-w-full max-h-full w-auto h-auto select-none"
                                                 draggable={false}
-                                                alt="自定义图片"
+                                                alt="Custom image"
                                             />
                                         </div>
                                     </div>
@@ -1706,7 +1706,7 @@ ${answerSummary}
                         {/* 无图片时的提示（在顶层之下，心形透明区可见） */}
                         {!customImage && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 6, paddingBottom: '20%' }}>
-                                <p className="text-rose-300/60 text-xs text-center">上传照片后<br/>会出现在这里</p>
+                                <p className="text-rose-300/60 text-xs text-center">Once uploaded, your photo<br/>will appear here</p>
                             </div>
                         )}
                     </div>
@@ -1718,7 +1718,7 @@ ${answerSummary}
                     {customImage && (
                         <div className="bg-white rounded-2xl p-3 border border-rose-100 shadow-sm">
                             <div className="flex items-center gap-3 mb-2">
-                                <span className="text-[11px] text-slate-500 w-8 shrink-0">大小</span>
+                                <span className="text-[11px] text-slate-500 w-8 shrink-0">Size</span>
                                 <input
                                     type="range" min="0.3" max="2.5" step="0.05"
                                     value={customImage.scale}
@@ -1727,7 +1727,7 @@ ${answerSummary}
                                 />
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-[11px] text-slate-500 w-8 shrink-0">旋转</span>
+                                <span className="text-[11px] text-slate-500 w-8 shrink-0">Rotate</span>
                                 <input
                                     type="range" min="-180" max="180" step="3"
                                     value={customImage.rotation}
@@ -1739,7 +1739,7 @@ ${answerSummary}
                                 onClick={() => setCustomImage(null)}
                                 className="mt-2 text-xs text-red-400/80 underline"
                             >
-                                移除图片
+                                Remove Photo
                             </button>
                         </div>
                     )}
@@ -1747,7 +1747,7 @@ ${answerSummary}
                     {/* 上传 / URL 输入 */}
                     <div className="flex gap-2">
                         <label className="flex-1 py-3 text-center text-xs rounded-2xl border border-rose-200 text-rose-600 bg-white cursor-pointer active:bg-rose-50">
-                            {customImage ? '更换照片' : '上传照片'}
+                            {customImage ? 'Change Photo' : 'Upload Photo'}
                             <input
                                 type="file"
                                 accept="image/*"
@@ -1759,7 +1759,7 @@ ${answerSummary}
                             onClick={() => setShowUrlInput(v => !v)}
                             className="flex-1 py-3 text-center text-xs rounded-2xl border border-rose-200 text-rose-600 bg-white active:bg-rose-50"
                         >
-                            图床 URL
+                            Image Host URL
                         </button>
                     </div>
 
@@ -1776,7 +1776,7 @@ ${answerSummary}
                                 onClick={() => { if (urlInput.trim()) { addCustomImage(urlInput.trim()); setUrlInput(''); setShowUrlInput(false); } }}
                                 className="px-4 text-xs bg-rose-500 text-white rounded-xl"
                             >
-                                添加
+                                Add
                             </button>
                         </div>
                     )}
@@ -1786,7 +1786,7 @@ ${answerSummary}
                         onClick={generateComment}
                         className="w-full py-2.5 rounded-2xl border border-rose-200 text-rose-500 text-xs bg-white active:bg-rose-50"
                     >
-                        听听 {char?.name} 怎么评价这块巧克力 👀
+                        Hear what {char?.name} thinks of this chocolate 👀
                     </button>
                 </div>
             </div>
@@ -1827,7 +1827,7 @@ ${answerSummary}
                         setPhase('export');
                     }
                 }}
-                hintText="点击继续"
+                hintText="Tap to continue"
             />
         );
     }
@@ -1843,7 +1843,7 @@ ${answerSummary}
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                     </button>
-                    <span className="text-sm font-bold text-amber-800">导出明信片</span>
+                    <span className="text-sm font-bold text-amber-800">Export Postcard</span>
                     <div className="w-10" />
                 </div>
 
@@ -1887,7 +1887,7 @@ ${answerSummary}
                                 {char && <TokenImg value={char.avatar} className="w-8 h-8 rounded-full object-cover border-2 border-amber-200" alt="" />}
                                 <div>
                                     <p className="text-xs font-bold text-amber-800">{char?.name}</p>
-                                    <p className="text-[10px] text-amber-400">2026.3.14 白色情人节</p>
+                                    <p className="text-[10px] text-amber-400">2026.3.14 White Day</p>
                                 </div>
                             </div>
                             <p className="text-[9px] text-amber-300/60 italic">White Day</p>
@@ -1897,8 +1897,8 @@ ${answerSummary}
                     {/* 导出后的 PNG 预览 */}
                     {exportedBase64 && (
                         <div className="w-full max-w-[340px]">
-                            <p className="text-[10px] text-amber-500 text-center mb-2">导出预览</p>
-                            <img src={exportedBase64} className="w-full rounded-2xl shadow-md border border-amber-200" alt="导出预览" />
+                            <p className="text-[10px] text-amber-500 text-center mb-2">Export Preview</p>
+                            <img src={exportedBase64} className="w-full rounded-2xl shadow-md border border-amber-200" alt="Export preview" />
                         </div>
                     )}
 
@@ -1909,7 +1909,7 @@ ${answerSummary}
                             disabled={isExporting}
                             className="w-full py-3.5 rounded-2xl bg-amber-500 text-white font-bold text-sm shadow-md disabled:opacity-60 active:scale-95 transition-transform"
                         >
-                            {isExporting ? '生成中…' : exportedBase64 ? '重新下载' : '下载明信片'}
+                            {isExporting ? 'Generating…' : exportedBase64 ? 'Download Again' : 'Download Postcard'}
                         </button>
                         <button
                             onClick={handleSendToRoom}
@@ -1917,10 +1917,10 @@ ${answerSummary}
                             className="w-full py-3.5 rounded-2xl border-2 border-amber-300 text-amber-600 font-bold text-sm disabled:opacity-40 active:scale-95 transition-transform"
                         >
                             {isSendingToRoom
-                                ? '正在装修中…'
+                                ? 'Decorating…'
                                 : exportedBase64
-                                    ? `发送到 ${char?.name || ''} 的小屋`
-                                    : '请先下载以生成文件'}
+                                    ? `Send to ${char?.name || ''}'s Dwelling`
+                                    : 'Please download first to generate the file'}
                         </button>
                         <button
                             onClick={() => {
@@ -1944,13 +1944,13 @@ ${answerSummary}
                             }}
                             className="w-full py-2.5 rounded-2xl text-amber-500 text-xs border border-amber-200 bg-white active:bg-amber-50"
                         >
-                            重新答题（换一套题目）
+                            Retake the Quiz (new set of questions)
                         </button>
                         <button
                             onClick={onClose}
                             className="text-xs text-amber-400 text-center py-2"
                         >
-                            我会永远在意你
+                            I will always care about you
                         </button>
                     </div>
                 </div>
@@ -1976,12 +1976,12 @@ ${answerSummary}
             try {
                 // a.download / fetch / Filesystem 都只认真的 data URL，令牌得先还原回来
                 const dataUrl = await resolveRefToDataUrl(savedImage);
-                if (!dataUrl) { addToast('明信片图片已丢失', 'error'); return; }
+                if (!dataUrl) { addToast('Postcard image is missing', 'error'); return; }
                 const fileName = `whiteday_${char?.name || 'chocolate'}_2026.png`;
-                await downloadOrShare(dataUrl, fileName, '白色情人节巧克力');
-                addToast('导出成功！', 'success');
+                await downloadOrShare(dataUrl, fileName, 'White Day Chocolate');
+                addToast('Export successful!', 'success');
             } catch (e: any) {
-                if (e?.name !== 'AbortError') addToast('导出失败', 'error');
+                if (e?.name !== 'AbortError') addToast('Export failed', 'error');
             } finally { setIsExporting(false); }
         };
 
@@ -1994,7 +1994,7 @@ ${answerSummary}
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                     </button>
-                    <span className="text-sm font-bold text-amber-800">白色情人节 2026</span>
+                    <span className="text-sm font-bold text-amber-800">White Day 2026</span>
                     <div className="w-10" />
                 </div>
 
@@ -2002,25 +2002,25 @@ ${answerSummary}
                     {/* 明信片 */}
                     {savedImage ? (
                         <div className="flex flex-col items-center gap-2">
-                            <TokenImg value={savedImage} className="w-full max-w-[320px] rounded-2xl shadow-md border border-amber-200" alt="白色情人节明信片" />
+                            <TokenImg value={savedImage} className="w-full max-w-[320px] rounded-2xl shadow-md border border-amber-200" alt="White Day postcard" />
                             <button
                                 onClick={handleReExport}
                                 disabled={isExporting}
                                 className="w-full max-w-[320px] py-3 rounded-2xl bg-amber-500 text-white font-bold text-sm shadow-md disabled:opacity-60 active:scale-95 transition-transform"
                             >
-                                {isExporting ? '生成中…' : '下载明信片'}
+                                {isExporting ? 'Generating…' : 'Download Postcard'}
                             </button>
                         </div>
                     ) : (
                         <div className="w-full max-w-[320px] mx-auto rounded-2xl border border-amber-200 bg-amber-50 py-8 flex items-center justify-center text-amber-400 text-sm">
-                            明信片尚未导出
+                            Postcard not yet exported
                         </div>
                     )}
 
                     {/* 测验题目和答案回顾 */}
                     {savedQuizData && savedReviewData && (
                         <div className="w-full max-w-[320px] mx-auto flex flex-col gap-3">
-                            <p className="text-xs font-bold text-amber-700 mb-1">答题回顾 · {savedScore}/{savedQuizData.questions.length} 题</p>
+                            <p className="text-xs font-bold text-amber-700 mb-1">Answer Review · {savedScore}/{savedQuizData.questions.length}</p>
                             {savedQuizData.questions.map((q, i) => {
                                 const review = savedReviewData.reviews[i];
                                 const userIdx = savedAnswers[i] ?? -1;
@@ -2038,7 +2038,7 @@ ${answerSummary}
                                                 return (
                                                     <div key={oi} className={`text-[11px] px-2 py-0.5 rounded-lg ${isUser && isCorrectOpt ? 'bg-emerald-100 text-emerald-700 font-bold' : isUser && !isCorrectOpt ? 'bg-red-50 text-red-600' : isCorrectOpt ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400'}`}>
                                                         {labels[oi]}. {opt}
-                                                        {isUser && <span className="ml-1 opacity-70">(你选的)</span>}
+                                                        {isUser && <span className="ml-1 opacity-70">(your pick)</span>}
                                                         {isCorrectOpt && !isUser && <span className="ml-1 text-emerald-500">✓</span>}
                                                     </div>
                                                 );
@@ -2054,7 +2054,7 @@ ${answerSummary}
                             })}
                             {savedReviewData.finalDialogue && (
                                 <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4">
-                                    <p className="text-[11px] text-amber-500 font-bold mb-1">{char?.name} 的最终评价</p>
+                                    <p className="text-[11px] text-amber-500 font-bold mb-1">{char?.name}'s Final Verdict</p>
                                     <p className="text-sm text-amber-800 leading-relaxed">{savedReviewData.finalDialogue}</p>
                                 </div>
                             )}
@@ -2090,7 +2090,7 @@ ${answerSummary}
                             }}
                             className="w-full py-3 rounded-2xl bg-rose-500 text-white font-bold text-sm shadow-md active:scale-95 transition-transform"
                         >
-                            重新装饰图片
+                            Redecorate Photo
                         </button>
                         <button
                             onClick={() => {
@@ -2113,7 +2113,7 @@ ${answerSummary}
                             }}
                             className="w-full py-2.5 rounded-2xl text-amber-500 text-xs border border-amber-200 bg-white active:bg-amber-50"
                         >
-                            重新答题（换一套题目）
+                            Retake the Quiz (new set of questions)
                         </button>
                     </div>
                 </div>
