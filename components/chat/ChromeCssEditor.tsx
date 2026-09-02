@@ -2,70 +2,71 @@ import React, { useEffect, useRef, useState } from 'react';
 import { DB } from '../../utils/db';
 import { shareOrDownloadFile } from '../../utils/shareExport';
 
-// 聊天「白框」自定义 CSS 编辑器（Appearance 全局默认 与 单角色定制 共用）。
-// 选择器钩子覆盖顶栏、输入栏、整屏背景与普通消息布局；完整清单见下方 AI_PROMPT。
+// Chat "Whitebox" custom CSS editor (shared by Appearance's global default and per-character customization).
+// Selector hooks cover the header, input bar, full-screen background, and normal message layout; see the AI_PROMPT below for the full list.
 
 const PRESET_STORE_KEY = 'sully_chrome_css_presets_v1';
 
-// 丢给别的 AI 的提示词（让它按想要的风格生成整段 CSS）。
-const AI_PROMPT = `你是一个 CSS 设计师。我在用一个叫 SullyOS 的「浏览器里的虚拟手机」聊天 App，
-它允许我用一段自定义 CSS 来重新设计聊天外壳与消息布局。
-这段 CSS 会被注入到聊天界面里，通过下面这些固定类名生效。请帮我写一整段 CSS，
-实现我想要的风格——你有很高的自由度，不要只改颜色，可以大胆重构整个顶栏的视觉。
+// A prompt to hand off to some other AI (so it generates a whole CSS block in the style you want).
+const AI_PROMPT = `You are a CSS designer. I'm using a chat app called SullyOS, a "virtual phone in the browser,"
+which lets me redesign the chat shell and message layout with a block of custom CSS.
+This CSS gets injected into the chat interface and takes effect via the fixed class names below. Please write me
+a complete block of CSS that achieves the style I want -- you have a lot of creative freedom, don't just change
+colors, feel free to boldly rework the entire visual look of the header.
 
-【可用的类名（只能用这些，别用全局选择器）】
-- .sully-chat-root      整个聊天屏（最外层背景）
-- .sully-chat-header    顶栏整块（已是 position: relative，可在内部绝对定位子元素）
-- .sully-chat-back      左侧返回箭头按钮
-- .sully-chat-avatar    角色头像（默认圆形 img，可改尺寸/形状/位置/遮罩）
-- .sully-chat-name      角色名字
-- .sully-chat-status    名字旁/下的在线状态区
-- .sully-chat-buffs     情绪状态栏容器；其中每个情绪胶囊是 .sully-chat-buffs button
-- .sully-chat-token     右上角 token 用量小标签
-- .sully-chat-trigger   右侧「触发 AI」的小闪电按钮
-- .sully-chat-inputbar  底部输入栏整块
-- .sully-chat-panel     点「＋」拉起的功能面板（表情/动作菜单），其中按钮是 .sully-chat-panel button
-- .sully-chat-message   普通消息整行；同时带 -ai / -user 和 -group-first / -group-last 状态类
-- .sully-chat-message-content 该条消息的气泡列
-- .sully-chat-message-avatar  默认贴在组末气泡旁的头像
-- .sully-chat-turn-avatar-slot 每组首条的头像槽（默认 display:none，内部已有正确的双方头像）
-- .sully-chat-turn-avatar      上述头像槽里的头像容器；图片是 .sully-chat-message-avatar-img
-- .sully-bubble-ai / .sully-bubble-user 角色 / 用户气泡
-- .sully-schedule-change      角色修改未来日程后浮出的整张回执
-- .sully-schedule-change-head / -mark / -kicker  回执标题行 / 勾选标记 / 标题文字
-- .sully-schedule-change-list / -row             修改列表 / 单条修改
-- .sully-schedule-change-time / -before / -arrow / -after  时段 / 原计划 / 箭头 / 新计划
-- .sully-schedule-change-shine                    掠过回执的一次性高光
+[Available class names (use ONLY these, no global selectors)]
+- .sully-chat-root      the whole chat screen (outermost background)
+- .sully-chat-header    the entire header (already position: relative, you can absolutely position children inside it)
+- .sully-chat-back      the back-arrow button on the left
+- .sully-chat-avatar    the character's avatar (a circular img by default; size/shape/position/mask can be changed)
+- .sully-chat-name      the character's name
+- .sully-chat-status    the online-status area next to/below the name
+- .sully-chat-buffs     the emotion-state row container; each emotion pill inside it is .sully-chat-buffs button
+- .sully-chat-token     the small token-usage label in the top-right corner
+- .sully-chat-trigger   the small lightning-bolt "Trigger AI" button on the right
+- .sully-chat-inputbar  the entire bottom input bar
+- .sully-chat-panel     the feature panel (emoji/action menu) opened by tapping "+"; buttons inside it are .sully-chat-panel button
+- .sully-chat-message   an entire normal message row; also carries -ai / -user and -group-first / -group-last state classes
+- .sully-chat-message-content the bubble column for that message
+- .sully-chat-message-avatar  the avatar normally stuck next to the last bubble in a group
+- .sully-chat-turn-avatar-slot the avatar slot at the start of each group (display:none by default; already contains the correct avatar for both sides)
+- .sully-chat-turn-avatar      the avatar container inside the slot above; the image itself is .sully-chat-message-avatar-img
+- .sully-bubble-ai / .sully-bubble-user the character's / the user's bubble
+- .sully-schedule-change      the whole receipt card that surfaces after the character changes an upcoming schedule
+- .sully-schedule-change-head / -mark / -kicker  the receipt's title row / checkmark / title text
+- .sully-schedule-change-list / -row             the list of changes / a single change
+- .sully-schedule-change-time / -before / -arrow / -after  time slot / original plan / arrow / new plan
+- .sully-schedule-change-shine                    the one-time shine sweep across the receipt
 
-【必须遵守的规范】
-1. 覆盖默认样式必须加 !important（尤其 .sully-chat-buffs button 带内联样式，不加 !important 盖不掉）。
-2. 只允许使用上面的 .sully-chat-* / .sully-bubble-* / .sully-schedule-change* 选择器及其后代/伪元素，禁止写 body、*、div、html 这类全局选择器（会污染其它界面）。
-3. 这是移动端窄屏（宽约 390px），尺寸请克制、用相对单位或小数值。
-4. 顶栏顶部已自动留出状态栏安全区。装饰若要贴最顶部，用 top: calc(var(--safe-top) + 数值)。
-5. 不要 display:none 掉 .sully-chat-back（否则用户无法返回），除非我明确要求。
-6. 想让装饰溢出到顶栏外（如垂下的挂饰、超出的波浪），需给 .sully-chat-header 加 overflow: visible。
-7. 性能：可以用静态 backdrop-filter/blur，但不要对 blur/backdrop 做持续动画。
-8. 若要“每轮头像在气泡上方”：显示 .sully-chat-turn-avatar-slot、隐藏 .sully-chat-message-avatar，
-   给 .sully-chat-message-group-first 留出顶部空间，并清零 .sully-chat-message-content 的左右 margin。
+[Rules you must follow]
+1. Overriding the default styles requires !important (especially .sully-chat-buffs button, which has inline styles that only !important can beat).
+2. You may only use the .sully-chat-* / .sully-bubble-* / .sully-schedule-change* selectors above and their descendants/pseudo-elements -- no global selectors like body, *, div, or html (that would pollute other screens).
+3. This is a narrow mobile screen (about 390px wide) -- keep sizes restrained, use relative units or small values.
+4. The header already automatically reserves a safe area for the status bar at the top. If a decoration needs to sit flush against the very top, use top: calc(var(--safe-top) + value).
+5. Don't display:none the .sully-chat-back button (or the user can't go back), unless I explicitly ask for it.
+6. If you want a decoration to spill outside the header (like a hanging charm, or a wave that overflows), add overflow: visible to .sully-chat-header.
+7. Performance: static backdrop-filter/blur is fine, but don't continuously animate blur/backdrop.
+8. For "avatar above the bubble on every turn": show .sully-chat-turn-avatar-slot, hide .sully-chat-message-avatar,
+   leave top space on .sully-chat-message-group-first, and zero out the left/right margin on .sully-chat-message-content.
 
-【可以自由发挥的部分】
-- 背景：纯色、渐变、重复图案、图片（background: url(图片直链)）、多层叠加，随意。
-- 形状：border-radius、clip-path（不规则切角/波浪）任意；不规则形状不必额外垫白底。
-- 质感：box-shadow、inset 阴影、发光、描边。
-- 头像：加边框、光环、改大小/形状（甚至异形/横幅）。
-- 文字：字色、字重、字间距、文字阴影/发光。
-- 情绪胶囊 / token / 面板按钮：背景色、字色、边框、圆角。
-- 重新布局：用 position: absolute 把头像/名字/闪电/token 摆到顶栏里的任意位置。
-- 装饰元素：用 ::before / ::after 加角标、条纹、图标、挂件、光带等（记得写 content 和 position）。
-- 动画：可用 @keyframes + animation（适度、别太晃眼）。
+[Areas you're free to get creative with]
+- Background: solid color, gradient, repeating pattern, image (background: url(direct image link)), layered stacks -- anything goes.
+- Shape: border-radius, clip-path (irregular cut corners/waves), anything; irregular shapes don't need an extra white backing.
+- Texture: box-shadow, inset shadows, glow, outlines.
+- Avatar: add a border, halo, change size/shape (even non-circular/banner shapes).
+- Text: color, weight, letter-spacing, text shadow/glow.
+- Emotion pills / token / panel buttons: background color, text color, border, corner radius.
+- Re-layout: use position: absolute to place the avatar/name/lightning-bolt/token anywhere within the header.
+- Decorative elements: use ::before / ::after for corner tags, stripes, icons, charms, light bands, etc. (remember to set content and position).
+- Animation: @keyframes + animation are fine (keep it subtle, not too flashy).
 
-【输出要求】
-直接输出一整段可用的 CSS（可以带少量注释说明），不需要长篇解释。
-我现在想要的风格是：______（在这里填你的需求，例如「赛博朋克霓虹」「和风温泉」「Y2K 千禧辣妹」「极简性冷淡」等）`;
+[Output requirements]
+Output one complete, ready-to-use block of CSS directly (a few comments are fine), no need for a long explanation.
+The style I want right now is: ______ (fill in your request here, e.g. "cyberpunk neon," "Japanese-style hot spring," "Y2K millennium babe," "minimalist cold")`;
 
 type Preset = { name: string; code: string; swatch?: string };
 
-// 从一段 CSS 里尽力抠出 .sully-chat-header 的背景值，给「我的预设」生成缩略色块（抠不到则用中性灰）。
+// Tries its best to pull the .sully-chat-header background value out of a CSS block, to generate a thumbnail swatch for "My Presets" (falls back to neutral gray if it can't be extracted).
 const extractSwatch = (code: string): string => {
     const block = code.match(/\.sully-chat-header\s*\{([^}]*)\}/);
     const body = block ? block[1] : code;
@@ -74,12 +75,12 @@ const extractSwatch = (code: string): string => {
     return val && !/url\(/i.test(val) ? val : '#e2e8f0';
 };
 
-// 内置完整风格（点击=替换文本框、立刻生效）。
+// Built-in full styles (click = replaces the text box, takes effect immediately).
 const PRESETS: Preset[] = [
     {
-        name: '奶油少女',
+        name: 'Cream Sweetheart',
         swatch: 'linear-gradient(135deg,#ffe3ef,#fff2e2 55%,#f1e7ff)',
-        code: `/* 奶油少女 */
+        code: `/* Cream Sweetheart */
 .sully-chat-header{
   background:linear-gradient(135deg,#ffe3ef,#fff2e2 55%,#f1e7ff)!important;
   border-bottom:none!important;
@@ -93,9 +94,9 @@ const PRESETS: Preset[] = [
 .sully-chat-token{background:#fff0f6!important;color:#c76aa0!important;border-color:#ffd4e6!important;}`,
     },
     {
-        name: '霓虹夜',
+        name: 'Neon Night',
         swatch: 'radial-gradient(circle at 30% 30%,#3b1d63,#0e0b1e 75%)',
-        code: `/* 霓虹夜 */
+        code: `/* Neon Night */
 .sully-chat-header{
   background:#0e0b1e!important;
   border-bottom:1px solid rgba(168,85,247,.45)!important;
@@ -109,9 +110,9 @@ const PRESETS: Preset[] = [
 .sully-chat-token{background:rgba(168,85,247,.15)!important;color:#d8b4fe!important;border-color:rgba(168,85,247,.4)!important;}`,
     },
     {
-        name: '薄荷奶绿',
+        name: 'Minty Cream',
         swatch: 'linear-gradient(135deg,#e3f9ee,#f0fff4 60%,#e0f5ff)',
-        code: `/* 薄荷奶绿 */
+        code: `/* Minty Cream */
 .sully-chat-header{
   background:linear-gradient(135deg,#e3f9ee,#f0fff4 60%,#e0f5ff)!important;
   border-bottom:none!important;
@@ -125,9 +126,9 @@ const PRESETS: Preset[] = [
 .sully-chat-token{background:#e7faf0!important;color:#3a9b76!important;border-color:#bdebd6!important;}`,
     },
     {
-        name: '暮光紫',
+        name: 'Twilight Purple',
         swatch: 'linear-gradient(135deg,#3b2a63,#5a3f86 55%,#7e5aa6)',
-        code: `/* 暮光紫 */
+        code: `/* Twilight Purple */
 .sully-chat-header{
   background:linear-gradient(135deg,#3b2a63,#5a3f86 55%,#7e5aa6)!important;
   border-bottom:none!important;
@@ -142,9 +143,9 @@ const PRESETS: Preset[] = [
 .sully-chat-token{background:rgba(255,255,255,.14)!important;color:#f0e0ff!important;border-color:rgba(255,255,255,.25)!important;}`,
     },
     {
-        name: '极简白',
+        name: 'Minimal White',
         swatch: 'linear-gradient(135deg,#ffffff,#f3f4f6)',
-        code: `/* 极简白 */
+        code: `/* Minimal White */
 .sully-chat-header{background:#ffffff!important;border-bottom:1px solid #eef1f5!important;box-shadow:none!important;}
 .sully-chat-name{color:#1f2937!important;}
 .sully-chat-avatar{border:1.5px solid #e5e7eb!important;}
@@ -153,9 +154,9 @@ const PRESETS: Preset[] = [
 .sully-chat-token{background:#f5f6f8!important;color:#9ca3af!important;border-color:#e5e7eb!important;}`,
     },
     {
-        name: '淡紫毛绒',
+        name: 'Lavender Plush',
         swatch: 'radial-gradient(150% 120% at 50% -30%,#ddc9ff,#c9b2f4 45%,#bda0ee)',
-        code: `/* ===== 淡紫毛绒 · 温柔风 ===== */
+        code: `/* ===== Lavender Plush - Tender Style ===== */
 .sully-chat-root{
   background:
     radial-gradient(120% 80% at 18% 0%, #f4ecff 0%, transparent 58%),
@@ -207,9 +208,9 @@ const PRESETS: Preset[] = [
 }`,
     },
     {
-        name: '和风温泉',
+        name: 'Japanese Hot Spring',
         swatch: 'linear-gradient(165deg,#ffe3c4,#ffd0b0 38%,#ffb9ad 62%,#f7a9b0 84%,#ef9bb0)',
-        code: `/* ===== 和风温泉・晨光汤屋 ===== */
+        code: `/* ===== Japanese Hot Spring - Morning Bathhouse ===== */
 .sully-chat-root{background:linear-gradient(180deg,#fdf3e7 0%, #fbe9da 45%, #f6e4ea 100%) !important;}
 .sully-chat-header{
   overflow:visible !important;border-bottom:none !important;box-shadow:0 .3rem .9rem rgba(180,120,110,.28) !important;
@@ -250,12 +251,12 @@ const PRESETS: Preset[] = [
     },
 ];
 
-// 自定义预设存 IndexedDB（STORE_ASSETS，随 app 备份/导出一起走）；旧 localStorage 自动一次性迁移过来。
+// Custom presets are stored in IndexedDB (STORE_ASSETS, travels along with app backup/export); old localStorage data is auto-migrated once.
 const PRESET_ASSET_KEY = 'chrome_css_presets';
 
 const loadCustom = async (): Promise<Preset[]> => {
     try { const fromDb = await DB.getAssetRaw(PRESET_ASSET_KEY); if (Array.isArray(fromDb)) return fromDb; } catch { /* ignore */ }
-    // 迁移旧 localStorage → IndexedDB
+    // Migrate old localStorage -> IndexedDB
     try {
         const raw = localStorage.getItem(PRESET_STORE_KEY);
         const arr = raw ? JSON.parse(raw) : [];
@@ -265,7 +266,7 @@ const loadCustom = async (): Promise<Preset[]> => {
 };
 const persistCustom = async (list: Preset[]) => { try { await DB.saveAssetRaw(PRESET_ASSET_KEY, list); } catch { /* ignore */ } };
 
-// 导出码：SULLYCSS1: + base64(utf8(JSON))，方便整段复制分享/换机带走。
+// Export code: SULLYCSS1: + base64(utf8(JSON)), so the whole thing can be copied to share/carry over to a new device.
 const encodePresets = (list: Preset[]): string => 'SULLYCSS1:' + btoa(unescape(encodeURIComponent(JSON.stringify(list))));
 const decodePresets = (code: string): Preset[] => {
     const body = code.trim().replace(/^SULLYCSS1:/, '');
@@ -302,7 +303,7 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
     };
     const handleSavePreset = () => {
         if (!value.trim() || typeof window === 'undefined') return;
-        const name = window.prompt('给这套白框预设起个名字（所有角色通用）：', '我的预设')?.trim();
+        const name = window.prompt('Name this Whitebox preset (shared across all characters):', 'My Preset')?.trim();
         if (!name) return;
         commitCustom([...custom.filter((p) => p.name !== name), { name, code: value }]);
     };
@@ -314,12 +315,12 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
         try {
             const css = (await file.text()).replace(/^\uFEFF/, '');
             if (!css.trim()) {
-                window.alert('TXT 文件内容为空。');
+                window.alert('The TXT file is empty.');
                 return;
             }
             onChange(css);
         } catch {
-            window.alert('TXT 导入失败，请确认文件可以正常读取。');
+            window.alert('TXT import failed. Please make sure the file can be read normally.');
         } finally {
             event.target.value = '';
         }
@@ -327,7 +328,7 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
 
     const handleTxtExport = async () => {
         if (!value.trim()) {
-            window.alert('当前没有可导出的 CSS。');
+            window.alert('There is no CSS to export right now.');
             return;
         }
         const date = new Date();
@@ -338,30 +339,30 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
                 content: value,
                 fileName,
                 mimeType: 'text/plain;charset=utf-8',
-                shareTitle: 'SullyOS 白框样式',
+                shareTitle: 'SullyOS Whitebox Style',
             });
         } catch (error: any) {
-            if (error?.name !== 'AbortError') window.alert('TXT 导出失败，请重试。');
+            if (error?.name !== 'AbortError') window.alert('TXT export failed. Please try again.');
         }
     };
 
     const handleExport = async () => {
-        if (!custom.length) { window.alert('还没有「我的预设」可导出。'); return; }
+        if (!custom.length) { window.alert('There are no "My Presets" to export yet.'); return; }
         const ok = await copyText(encodePresets(custom));
-        window.alert(ok ? `已复制 ${custom.length} 套预设的导出码到剪贴板，发给别人或换机粘贴导入即可。` : '复制失败，请重试。');
+        window.alert(ok ? `Copied the export code for ${custom.length} presets to the clipboard -- send it to someone else, or paste it to import on a new device.` : 'Copy failed. Please try again.');
     };
     const handleImport = () => {
         if (typeof window === 'undefined') return;
-        const code = window.prompt('粘贴预设导出码（SULLYCSS1:...）：', '')?.trim();
+        const code = window.prompt('Paste a preset export code (SULLYCSS1:...):', '')?.trim();
         if (!code) return;
         let incoming: Preset[] = [];
-        try { incoming = decodePresets(code); } catch { window.alert('导出码无法识别，请确认完整粘贴。'); return; }
-        if (!incoming.length) { window.alert('没解析到有效预设。'); return; }
-        // 同名覆盖，其余追加
+        try { incoming = decodePresets(code); } catch { window.alert('Could not recognize the export code. Please make sure you pasted the whole thing.'); return; }
+        if (!incoming.length) { window.alert('No valid presets were found.'); return; }
+        // Same-name entries overwrite, the rest are appended
         const map = new Map(custom.map((p) => [p.name, p] as const));
         incoming.forEach((p) => map.set(p.name, p));
         commitCustom(Array.from(map.values()));
-        window.alert(`已导入 ${incoming.length} 套预设。`);
+        window.alert(`Imported ${incoming.length} presets.`);
     };
 
     const cardCls = 'group relative h-14 w-[78px] shrink-0 overflow-hidden rounded-xl border border-black/5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-95';
@@ -369,19 +370,19 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
 
     return (
         <div className="space-y-4">
-            {/* 需要灵感：复制提示词给 AI */}
+            {/* Need inspiration: copy the prompt for an AI */}
             <button onClick={handleCopyPrompt}
                 className="flex w-full items-center gap-2.5 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-violet-50 px-3.5 py-3 text-left transition-all hover:from-indigo-100 hover:to-violet-100 active:scale-[0.99]">
                 <span className="text-lg leading-none">{copied ? '✓' : '🪄'}</span>
                 <span className="min-w-0">
-                    <span className="block text-[12px] font-bold text-indigo-700">{copied ? '已复制！丢给任意 AI 即可' : '让 AI 帮你写一套'}</span>
-                    <span className="block text-[10px] leading-snug text-indigo-400">复制提示词 → 发给任何 AI，说出你想要的风格，把它给的 CSS 粘回来</span>
+                    <span className="block text-[12px] font-bold text-indigo-700">{copied ? 'Copied! Hand it to any AI' : 'Let an AI write one for you'}</span>
+                    <span className="block text-[10px] leading-snug text-indigo-400">Copy the prompt then send it to any AI, tell it the style you want, and paste the CSS it gives you back here</span>
                 </span>
             </button>
 
-            {/* 内置风格：缩略色块卡片 */}
+            {/* Built-in styles: thumbnail swatch cards */}
             <div>
-                <div className="mb-2 text-[11px] font-bold text-slate-500">内置风格 <span className="font-normal text-slate-400">· 点一下套用</span></div>
+                <div className="mb-2 text-[11px] font-bold text-slate-500">Built-in Styles <span className="font-normal text-slate-400">- tap to apply</span></div>
                 <div className="flex flex-wrap gap-2">
                     {PRESETS.map((p) => (
                         <button key={p.name} onClick={() => onChange(p.code)} title={p.name} className={cardCls}>
@@ -392,13 +393,13 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
                 </div>
             </div>
 
-            {/* 我的预设：全角色通用，存 IndexedDB（随备份走），可导入导出 */}
+            {/* My Presets: shared across all characters, stored in IndexedDB (travels with backups), can be imported/exported */}
             <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
-                    <span className="text-[11px] font-bold text-slate-500">我的预设 <span className="font-normal text-slate-400">· 全角色通用</span></span>
+                    <span className="text-[11px] font-bold text-slate-500">My Presets <span className="font-normal text-slate-400">- shared across all characters</span></span>
                     <div className="flex items-center gap-1">
-                        <button onClick={handleImport} className="rounded-md px-2 py-1 text-[10px] font-semibold text-slate-400 hover:bg-slate-100 hover:text-slate-600">导入</button>
-                        <button onClick={handleExport} disabled={!custom.length} className={`rounded-md px-2 py-1 text-[10px] font-semibold ${custom.length ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-600' : 'text-slate-300'}`}>导出</button>
+                        <button onClick={handleImport} className="rounded-md px-2 py-1 text-[10px] font-semibold text-slate-400 hover:bg-slate-100 hover:text-slate-600">Import</button>
+                        <button onClick={handleExport} disabled={!custom.length} className={`rounded-md px-2 py-1 text-[10px] font-semibold ${custom.length ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-600' : 'text-slate-300'}`}>Export</button>
                     </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -408,42 +409,42 @@ const ChromeCssEditor: React.FC<{ value: string; onChange: (css: string) => void
                                 <span className="absolute inset-0" style={{ background: extractSwatch(p.code) }} />
                                 <span className={cardLabelCls} style={{ background: 'linear-gradient(to top, rgba(0,0,0,.5), transparent)' }}>{p.name}</span>
                             </button>
-                            <button onClick={() => handleDeletePreset(p.name)} title="删除"
+                            <button onClick={() => handleDeletePreset(p.name)} title="Delete"
                                 className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/45 text-[10px] leading-none text-white opacity-80 hover:bg-rose-500">×</button>
                         </div>
                     ))}
-                    {/* 保存当前为预设 */}
-                    <button onClick={handleSavePreset} disabled={!value.trim()} title={value.trim() ? '把当前 CSS 存为预设' : '先写点 CSS'}
+                    {/* Save the current CSS as a preset */}
+                    <button onClick={handleSavePreset} disabled={!value.trim()} title={value.trim() ? 'Save the current CSS as a preset' : 'Write some CSS first'}
                         className={`flex h-14 w-[78px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed text-[10px] font-bold transition-all active:scale-95 ${value.trim() ? 'border-emerald-300 text-emerald-600 hover:bg-emerald-50' : 'border-slate-200 text-slate-300'}`}>
-                        <span className="text-lg leading-none">＋</span>存当前
+                        <span className="text-lg leading-none">＋</span>Save Current
                     </button>
                 </div>
             </div>
 
-            {/* CSS 代码区 */}
+            {/* CSS code area */}
             <div>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold text-slate-500">CSS 代码 <span className="font-normal text-slate-400">· 可手改 / 粘贴</span></span>
+                    <span className="text-[11px] font-bold text-slate-500">CSS Code <span className="font-normal text-slate-400">- can be hand-edited / pasted</span></span>
                     <div className="flex items-center gap-1">
                         <input ref={txtImportRef} type="file" accept=".txt,text/plain" className="hidden" onChange={handleTxtImport} />
-                        <button onClick={() => txtImportRef.current?.click()} className="rounded-lg px-2 py-1 text-[10px] font-semibold text-indigo-500 hover:bg-indigo-50">导入 TXT</button>
-                        <button onClick={handleTxtExport} disabled={!value.trim()} className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${value.trim() ? 'text-indigo-500 hover:bg-indigo-50' : 'text-slate-300'}`}>导出 TXT</button>
-                        {value && <button onClick={() => onChange('')} className="rounded-lg px-2 py-1 text-[10px] font-semibold text-rose-400 hover:bg-rose-50 hover:text-rose-500">清空</button>}
+                        <button onClick={() => txtImportRef.current?.click()} className="rounded-lg px-2 py-1 text-[10px] font-semibold text-indigo-500 hover:bg-indigo-50">Import TXT</button>
+                        <button onClick={handleTxtExport} disabled={!value.trim()} className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${value.trim() ? 'text-indigo-500 hover:bg-indigo-50' : 'text-slate-300'}`}>Export TXT</button>
+                        {value && <button onClick={() => onChange('')} className="rounded-lg px-2 py-1 text-[10px] font-semibold text-rose-400 hover:bg-rose-50 hover:text-rose-500">Clear</button>}
                     </div>
                 </div>
                 <textarea
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    placeholder={'/* 点上面任一套，或在这里直接写 / 粘贴 CSS */\n.sully-chat-header{\n  background: linear-gradient(135deg,#ffe3ef,#f1e7ff) !important;\n  border-bottom: none !important;\n}'}
+                    placeholder={'/* Tap any preset above, or write / paste CSS directly here */\n.sully-chat-header{\n  background: linear-gradient(135deg,#ffe3ef,#f1e7ff) !important;\n  border-bottom: none !important;\n}'}
                     spellCheck={false}
                     rows={8}
                     className="w-full resize-y rounded-2xl border border-slate-700 bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-200 outline-none focus:border-primary/50 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 />
                 <div className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
-                    可用选择器：<code className="rounded bg-slate-100 px-1 text-slate-500">.sully-chat-header / -avatar / -name / -buffs / -token / -trigger / -back / -status / -inputbar / -panel / -root</code>
+                    Available selectors: <code className="rounded bg-slate-100 px-1 text-slate-500">.sully-chat-header / -avatar / -name / -buffs / -token / -trigger / -back / -status / -inputbar / -panel / -root</code>
                 </div>
                 <div className="mt-1 text-[10px] leading-relaxed text-slate-400">
-                    日程修改动效：<code className="rounded bg-slate-100 px-1 text-slate-500">.sully-schedule-change / -head / -mark / -kicker / -list / -row / -time / -before / -arrow / -after / -shine</code>
+                    Schedule-change animation: <code className="rounded bg-slate-100 px-1 text-slate-500">.sully-schedule-change / -head / -mark / -kicker / -list / -row / -time / -before / -arrow / -after / -shine</code>
                 </div>
             </div>
         </div>

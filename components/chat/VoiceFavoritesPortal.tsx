@@ -41,13 +41,13 @@ interface FavoritesPortalProps {
 }
 
 const voiceFilters: Array<{ value: VoiceSourceFilter; label: string }> = [
-    { value: 'all', label: '全部' },
-    { value: 'chat', label: '聊天' },
-    { value: 'call', label: '通话' },
-    { value: 'date', label: '见面' },
+    { value: 'all', label: 'All' },
+    { value: 'chat', label: 'Chat' },
+    { value: 'call', label: 'Call' },
+    { value: 'date', label: 'Date' },
 ];
 
-const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
+const timeFormatter = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',
@@ -58,16 +58,16 @@ const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
 const formatTime = (timestamp: number) => timeFormatter.format(new Date(timestamp));
 
 const messageTypeLabel = (type?: string): string => ({
-    text: '文字',
-    voice: '语音消息',
-    emoji: '表情',
-    transfer: '转账',
-    social_card: '动态卡片',
-    xhs_card: '小红书卡片',
-    music_card: '音乐卡片',
-    webpage_card: '网页卡片',
-    life_card: '生活记录',
-}[type || ''] || '聊天消息');
+    text: 'Text',
+    voice: 'Voice Message',
+    emoji: 'Emoji',
+    transfer: 'Transfer',
+    social_card: 'Feed Card',
+    xhs_card: 'Xiaohongshu Card',
+    music_card: 'Music Card',
+    webpage_card: 'Webpage Card',
+    life_card: 'Life Record',
+}[type || ''] || 'Chat Message');
 
 const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMessage }) => {
     const [tab, setTab] = useState<FavoriteTab>('chat');
@@ -216,7 +216,7 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
         stopPlayback();
         const blob = await getVoiceFavoriteBlob(item.id);
         if (!blob) {
-            setAudioError('这条收藏的音频文件缺失，请回到来源重新收藏。');
+            setAudioError('The audio file for this favorite is missing. Please go back to the source and favorite it again.');
             return;
         }
         const url = URL.createObjectURL(blob);
@@ -227,14 +227,14 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
         audio.onended = stopPlayback;
         audio.onerror = () => {
             stopPlayback();
-            setAudioError('音频暂时无法播放。');
+            setAudioError('The audio cannot play right now.');
         };
         try {
             await audio.play();
             setPlayingId(item.id);
         } catch {
             stopPlayback();
-            setAudioError('浏览器阻止了播放，请再点一次。');
+            setAudioError('The browser blocked playback. Please tap again.');
         }
     };
 
@@ -255,9 +255,9 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
     };
 
     const tabs: Array<{ value: FavoriteTab; label: string; count: number; icon: React.ReactNode }> = [
-        { value: 'chat', label: '聊天', count: chatItems.length, icon: <ChatCircleDots size={16} weight="fill" /> },
-        { value: 'voice', label: '语音', count: voiceItems.length, icon: <Waveform size={16} weight="bold" /> },
-        { value: 'image', label: '图片', count: imageItems.length, icon: <Image size={16} weight="fill" /> },
+        { value: 'chat', label: 'Chat', count: chatItems.length, icon: <ChatCircleDots size={16} weight="fill" /> },
+        { value: 'voice', label: 'Voice', count: voiceItems.length, icon: <Waveform size={16} weight="bold" /> },
+        { value: 'image', label: 'Image', count: imageItems.length, icon: <Image size={16} weight="fill" /> },
     ];
 
     const renderChat = () => (visibleItems as ContentFavorite[]).map(item => {
@@ -282,17 +282,17 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
                     </div>
                     {message ? (
                         <p className="mt-2 text-[14px] leading-6 text-slate-800 whitespace-pre-wrap break-words line-clamp-4">
-                            {message.content || '（无文字内容）'}
+                            {message.content || '(No text content)'}
                         </p>
                     ) : missing ? (
-                        <p className="mt-2 text-[12px] text-rose-500">旧版收藏没有可恢复的内容</p>
+                        <p className="mt-2 text-[12px] text-rose-500">This legacy favorite has no recoverable content</p>
                     ) : (
-                        <p className="mt-2 text-[12px] text-slate-400">正在读取原消息…</p>
+                        <p className="mt-2 text-[12px] text-slate-400">Loading original message…</p>
                     )}
-                    {resolved && message && !sourceAvailable && <p className="mt-2 text-[10px] font-bold text-amber-700">原消息已删除 · 内容由收藏保留</p>}
-                    {sourceAvailable && onJumpToMessage && <p className="mt-2 text-[10px] font-bold text-violet-600">点按跳回原聊天</p>}
+                    {resolved && message && !sourceAvailable && <p className="mt-2 text-[10px] font-bold text-amber-700">Original message deleted · content preserved by this favorite</p>}
+                    {sourceAvailable && onJumpToMessage && <p className="mt-2 text-[10px] font-bold text-violet-600">Tap to jump back to the original chat</p>}
                 </button>
-                <button type="button" onClick={() => void removeContent(item)} className="self-start shrink-0 w-9 h-9 grid place-items-center rounded-full text-slate-400 active:bg-rose-50 active:text-rose-500" aria-label="取消收藏">
+                <button type="button" onClick={() => void removeContent(item)} className="self-start shrink-0 w-9 h-9 grid place-items-center rounded-full text-slate-400 active:bg-rose-50 active:text-rose-500" aria-label="Remove from favorites">
                     <Trash size={16} />
                 </button>
             </article>
@@ -305,7 +305,7 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
         const active = playingId === item.id;
         return (
             <article key={item.id} className="favorite-row flex gap-3 py-4 border-b border-slate-900/10">
-                <button type="button" onClick={() => void playVoice(item)} className={`mt-0.5 shrink-0 w-11 h-11 grid place-items-center rounded-full transition-colors ${active ? 'bg-amber-500 text-white' : 'bg-slate-800 text-white active:bg-slate-700'}`} aria-label={active ? '暂停' : '播放'}>
+                <button type="button" onClick={() => void playVoice(item)} className={`mt-0.5 shrink-0 w-11 h-11 grid place-items-center rounded-full transition-colors ${active ? 'bg-amber-500 text-white' : 'bg-slate-800 text-white active:bg-slate-700'}`} aria-label={active ? 'Pause' : 'Play'}>
                     {active ? <Pause size={17} weight="fill" /> : <Play size={17} weight="fill" className="ml-0.5" />}
                 </button>
                 <div className="min-w-0 flex-1">
@@ -314,10 +314,10 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
                         <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">{voiceFavoriteSourceLabel(item.source)}</span>
                         <time>{formatTime(item.sourceTimestamp)}</time>
                     </div>
-                    <p className="mt-2 text-[14px] leading-6 text-slate-800 whitespace-pre-wrap break-words">{item.originalText || item.spokenText || '（无文字）'}</p>
-                    {showSecondary && <p className="mt-1 text-[12px] leading-5 text-slate-500 whitespace-pre-wrap break-words"><span className="mr-1.5 text-[10px] font-bold text-amber-700">{item.translation ? '翻译' : '语音'}</span>{secondary}</p>}
+                    <p className="mt-2 text-[14px] leading-6 text-slate-800 whitespace-pre-wrap break-words">{item.originalText || item.spokenText || '(No text)'}</p>
+                    {showSecondary && <p className="mt-1 text-[12px] leading-5 text-slate-500 whitespace-pre-wrap break-words"><span className="mr-1.5 text-[10px] font-bold text-amber-700">{item.translation ? 'Translation' : 'Voice'}</span>{secondary}</p>}
                 </div>
-                <button type="button" onClick={() => void removeVoice(item)} className="self-start shrink-0 w-9 h-9 grid place-items-center rounded-full text-slate-400 active:bg-rose-50 active:text-rose-500" aria-label="取消收藏">
+                <button type="button" onClick={() => void removeVoice(item)} className="self-start shrink-0 w-9 h-9 grid place-items-center rounded-full text-slate-400 active:bg-rose-50 active:text-rose-500" aria-label="Remove from favorites">
                     <Trash size={16} />
                 </button>
             </article>
@@ -336,21 +336,21 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
                     <article key={item.id} className="relative rounded-2xl overflow-hidden bg-white border border-slate-900/10 shadow-sm">
                         <button type="button" disabled={!imageUrl} onClick={() => imageUrl && setPreviewImage(imageUrl)} className="block w-full aspect-square bg-slate-100 disabled:cursor-default">
                             {imageUrl ? (
-                                <img src={imageUrl} alt="收藏图片" className="w-full h-full object-cover" loading="lazy" />
+                                <img src={imageUrl} alt="Favorited image" className="w-full h-full object-cover" loading="lazy" />
                             ) : (
                                 <span className="h-full grid place-items-center px-4 text-center text-[11px] leading-5 text-slate-400">
-                                    {ready ? '原图片已删除或未随备份恢复' : '正在读取原图片…'}
+                                    {ready ? 'Original image deleted or not restored with backup' : 'Loading original image…'}
                                 </span>
                             )}
                         </button>
                         <div className="p-2.5 pr-10">
                             <div className="truncate text-[11px] font-bold text-slate-700">{item.charName}</div>
-                            <div className="mt-0.5 text-[9px] text-slate-400">{formatTime(item.sourceTimestamp)} · {reference?.source === 'gallery' ? '相册引用' : reference?.source === 'chat' ? '聊天引用' : '收藏保留'}</div>
+                            <div className="mt-0.5 text-[9px] text-slate-400">{formatTime(item.sourceTimestamp)} · {reference?.source === 'gallery' ? 'Gallery reference' : reference?.source === 'chat' ? 'Chat reference' : 'Preserved by favorite'}</div>
                             {reference?.source === 'chat' && onJumpToMessage && (
-                                <button type="button" onClick={() => onJumpToMessage(reference.charId, reference.messageId)} className="mt-1.5 text-[10px] font-bold text-violet-600">查看原聊天</button>
+                                <button type="button" onClick={() => onJumpToMessage(reference.charId, reference.messageId)} className="mt-1.5 text-[10px] font-bold text-violet-600">View original chat</button>
                             )}
                         </div>
-                        <button type="button" onClick={() => void removeContent(item)} className="absolute right-1.5 bottom-1.5 w-8 h-8 grid place-items-center rounded-full bg-white/90 text-slate-400 shadow-sm active:text-rose-500" aria-label="取消收藏">
+                        <button type="button" onClick={() => void removeContent(item)} className="absolute right-1.5 bottom-1.5 w-8 h-8 grid place-items-center rounded-full bg-white/90 text-slate-400 shadow-sm active:text-rose-500" aria-label="Remove from favorites">
                             <Trash size={14} />
                         </button>
                     </article>
@@ -360,10 +360,10 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
     );
 
     const emptyText = tab === 'chat'
-        ? '长按有意义的聊天消息，就能收藏到这里。'
+        ? 'Long-press a meaningful chat message to favorite it here.'
         : tab === 'voice'
-            ? '在聊天、通话或见面里长按语音，就能收藏到这里。'
-            : '在聊天或相册里收藏图片；这里只保存引用，不复制图片。';
+            ? 'Long-press a voice message in chat, calls, or dates to favorite it here.'
+            : 'Favorite images from chat or the gallery; only a reference is kept here, not a copy of the image.';
 
     const portal = (
         <div className="favorites-root">
@@ -380,12 +380,12 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
             <div className="favorites-shell px-4 sm:px-7">
                 <header className="shrink-0 pt-[max(16px,env(safe-area-inset-top))] pb-3 border-b border-slate-900/10">
                     <div className="flex items-center justify-between gap-4 h-12">
-                        <button type="button" onClick={onClose} className="w-10 h-10 -ml-1 grid place-items-center rounded-full text-slate-600 active:bg-black/5" aria-label="关闭收藏">
+                        <button type="button" onClick={onClose} className="w-10 h-10 -ml-1 grid place-items-center rounded-full text-slate-600 active:bg-black/5" aria-label="Close favorites">
                             <X size={21} weight="bold" />
                         </button>
                         <div className="min-w-0 text-center">
-                            <h1 className="text-[17px] font-bold tracking-[.12em]">收藏</h1>
-                            <p className="mt-0.5 text-[10px] text-slate-500">聊天 {chatItems.length} · 语音 {voiceItems.length} · 图片 {imageItems.length}</p>
+                            <h1 className="text-[17px] font-bold tracking-[.12em]">Favorites</h1>
+                            <p className="mt-0.5 text-[10px] text-slate-500">Chat {chatItems.length} · Voice {voiceItems.length} · Image {imageItems.length}</p>
                         </div>
                         <button
                             type="button"
@@ -399,13 +399,13 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
                                 }
                             }}
                             className={`w-10 h-10 -mr-1 grid place-items-center rounded-full transition-colors ${tab === 'chat' && searchOpen ? 'bg-violet-100 text-violet-700' : 'text-slate-600 active:bg-black/5'}`}
-                            aria-label={tab === 'chat' && searchOpen ? '关闭收藏搜索' : '搜索聊天收藏'}
+                            aria-label={tab === 'chat' && searchOpen ? 'Close favorites search' : 'Search chat favorites'}
                             aria-pressed={tab === 'chat' && searchOpen}
                         >
                             <MagnifyingGlass size={21} weight="bold" />
                         </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-1.5 mt-2 rounded-2xl bg-slate-900/5 p-1" role="tablist" aria-label="收藏分类">
+                    <div className="grid grid-cols-3 gap-1.5 mt-2 rounded-2xl bg-slate-900/5 p-1" role="tablist" aria-label="Favorites category">
                         {tabs.map(option => (
                             <button key={option.value} type="button" onClick={() => setTab(option.value)} className={`h-9 rounded-xl flex items-center justify-center gap-1.5 text-[11px] font-bold transition-colors ${tab === option.value ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>
                                 {option.icon}<span>{option.label}</span><span className="text-[9px] opacity-60">{option.count}</span>
@@ -421,25 +421,25 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
                                     type="search"
                                     value={searchQuery}
                                     onChange={event => setSearchQuery(event.target.value)}
-                                    placeholder="搜索聊天收藏中的关键词"
+                                    placeholder="Search keywords in chat favorites"
                                     className="w-full h-10 rounded-xl border border-slate-900/10 bg-white/80 pl-9 pr-10 text-[12px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-violet-300 focus:bg-white"
-                                    aria-label="搜索聊天收藏中的关键词"
+                                    aria-label="Search keywords in chat favorites"
                                 />
                                 {searchQuery && (
-                                    <button type="button" onClick={() => setSearchQuery('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 grid place-items-center rounded-full text-slate-400 active:bg-black/5" aria-label="清空收藏搜索">
+                                    <button type="button" onClick={() => setSearchQuery('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 grid place-items-center rounded-full text-slate-400 active:bg-black/5" aria-label="Clear favorites search">
                                         <X size={14} weight="bold" />
                                     </button>
                                 )}
                             </div>
                             {normalizedSearchQuery && (
                                 <p className="mt-1.5 px-1 text-[10px] text-slate-500">
-                                    {searchHydrating ? '正在补读旧版收藏…' : <>找到 <b className="text-violet-700">{searchedChatItems.length}</b> 条聊天收藏</>}
+                                    {searchHydrating ? 'Loading legacy favorites…' : <>Found <b className="text-violet-700">{searchedChatItems.length}</b> chat favorites</>}
                                 </p>
                             )}
                         </div>
                     )}
                     {tab === 'voice' && (
-                        <div className="flex items-center justify-center gap-1 mt-2" role="tablist" aria-label="按语音来源筛选">
+                        <div className="flex items-center justify-center gap-1 mt-2" role="tablist" aria-label="Filter by voice source">
                             {voiceFilters.map(option => (
                                 <button type="button" key={option.value} onClick={() => setVoiceFilter(option.value)} className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors ${voiceFilter === option.value ? 'bg-slate-800 text-white' : 'text-slate-500 active:bg-black/5'}`}>{option.label}</button>
                             ))}
@@ -449,33 +449,33 @@ const FavoritesPortal: React.FC<FavoritesPortalProps> = ({ onClose, onJumpToMess
 
                 <main className="favorites-list flex-1 min-h-0 overflow-y-auto">
                     {loading ? (
-                        <div className="h-full grid place-items-center text-sm text-slate-400">正在整理收藏…</div>
+                        <div className="h-full grid place-items-center text-sm text-slate-400">Organizing favorites…</div>
                     ) : searchActive && searchHydrating && visibleItems.length === 0 ? (
-                        <div className="h-full min-h-64 grid place-items-center text-center px-8 text-sm text-slate-400">正在补读旧版收藏…</div>
+                        <div className="h-full min-h-64 grid place-items-center text-center px-8 text-sm text-slate-400">Loading legacy favorites…</div>
                     ) : visibleItems.length === 0 ? (
                         <div className="h-full min-h-64 grid place-items-center text-center px-8">
                             <div>
                                 {searchActive ? <MagnifyingGlass size={34} className="mx-auto text-slate-300" /> : tab === 'chat' ? <ChatCircleDots size={34} className="mx-auto text-slate-300" /> : tab === 'voice' ? <Waveform size={34} className="mx-auto text-slate-300" /> : <Image size={34} className="mx-auto text-slate-300" />}
-                                <p className="mt-4 text-sm font-bold text-slate-500">{searchActive ? `没有找到“${searchQuery.trim()}”` : `这里还没有${tab === 'chat' ? '聊天收藏' : tab === 'voice' ? '语音' : '图片'}`}</p>
-                                <p className="mt-1.5 text-xs leading-5 text-slate-400">{searchActive ? '试试缩短关键词，或换一个更具体的词。' : emptyText}</p>
+                                <p className="mt-4 text-sm font-bold text-slate-500">{searchActive ? `No results for "${searchQuery.trim()}"` : `No ${tab === 'chat' ? 'chat favorites' : tab === 'voice' ? 'voice favorites' : 'image favorites'} yet`}</p>
+                                <p className="mt-1.5 text-xs leading-5 text-slate-400">{searchActive ? 'Try a shorter keyword, or a more specific one.' : emptyText}</p>
                             </div>
                         </div>
                     ) : tab === 'chat' ? renderChat() : tab === 'voice' ? renderVoice() : renderImages()}
-                    {resolving && tab !== 'voice' && <div className="py-2 text-center text-[10px] text-slate-400">正在核对原始内容…</div>}
+                    {resolving && tab !== 'voice' && <div className="py-2 text-center text-[10px] text-slate-400">Verifying original content…</div>}
                 </main>
 
                 {audioError && <div className="shrink-0 py-2 text-center text-[11px] text-rose-600">{audioError}</div>}
                 <footer className="shrink-0 min-h-[62px] pb-[max(12px,env(safe-area-inset-bottom))] pt-2 border-t border-slate-900/10 flex items-center justify-between">
-                    <button type="button" disabled={page === 0} onClick={() => setPage(value => Math.max(0, value - 1))} className="w-10 h-10 grid place-items-center rounded-full text-slate-600 disabled:opacity-20 active:bg-black/5" aria-label="上一页"><CaretLeft size={18} weight="bold" /></button>
-                    <span className="text-[11px] tabular-nums text-slate-500">第 {page + 1} / {pageCount} 页 · {searchActive ? `共 ${activeItems.length} 条` : `每页 ${PAGE_SIZE} 条`}</span>
-                    <button type="button" disabled={page >= pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))} className="w-10 h-10 grid place-items-center rounded-full text-slate-600 disabled:opacity-20 active:bg-black/5" aria-label="下一页"><CaretRight size={18} weight="bold" /></button>
+                    <button type="button" disabled={page === 0} onClick={() => setPage(value => Math.max(0, value - 1))} className="w-10 h-10 grid place-items-center rounded-full text-slate-600 disabled:opacity-20 active:bg-black/5" aria-label="Previous page"><CaretLeft size={18} weight="bold" /></button>
+                    <span className="text-[11px] tabular-nums text-slate-500">Page {page + 1} / {pageCount} · {searchActive ? `${activeItems.length} total` : `${PAGE_SIZE} per page`}</span>
+                    <button type="button" disabled={page >= pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))} className="w-10 h-10 grid place-items-center rounded-full text-slate-600 disabled:opacity-20 active:bg-black/5" aria-label="Next page"><CaretRight size={18} weight="bold" /></button>
                 </footer>
             </div>
 
             {previewImage && (
                 <div className="absolute inset-0 z-20 bg-black/95 grid place-items-center p-3" onClick={() => setPreviewImage(null)}>
-                    <button type="button" onClick={() => setPreviewImage(null)} className="absolute top-[max(16px,env(safe-area-inset-top))] right-4 w-10 h-10 grid place-items-center rounded-full bg-white/10 text-white" aria-label="关闭图片预览"><X size={22} /></button>
-                    <img src={previewImage} alt="收藏图片预览" className="max-w-full max-h-full object-contain" onClick={event => event.stopPropagation()} />
+                    <button type="button" onClick={() => setPreviewImage(null)} className="absolute top-[max(16px,env(safe-area-inset-top))] right-4 w-10 h-10 grid place-items-center rounded-full bg-white/10 text-white" aria-label="Close image preview"><X size={22} /></button>
+                    <img src={previewImage} alt="Favorited image preview" className="max-w-full max-h-full object-contain" onClick={event => event.stopPropagation()} />
                 </div>
             )}
         </div>

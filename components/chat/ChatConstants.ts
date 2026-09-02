@@ -28,7 +28,7 @@ export const PRESET_THEMES: Record<string, ChatTheme> = {
 export const DEFAULT_REFINE_PROMPTS = [
     {
         id: 'refine_atmosphere',
-        name: '氛围月记 (Atmosphere)',
+        name: 'Atmosphere Monthly Journal',
         content: `### [角色月度记忆精炼]
 当前月份: \${dateStr}
 身份: 你就是 \${char.name}
@@ -57,7 +57,7 @@ export const DEFAULT_REFINE_PROMPTS = [
     },
     {
         id: 'refine_keypoints',
-        name: '要点速记 (Key Points)',
+        name: 'Key Points Digest',
         content: `### [月度记忆压缩]
 月份: \${dateStr}
 角色: \${char.name}
@@ -88,7 +88,7 @@ export const DEFAULT_REFINE_PROMPTS = [
 export const DEFAULT_ARCHIVE_PROMPTS = [
     {
         id: 'preset_rational',
-        name: '理性精炼 (Rational)',
+        name: 'Rational Refinement',
         content: `### [System Instruction: Memory Archival]
 当前日期: \${dateStr}
 任务: 请回顾今天的聊天记录，生成一份【高精度的事件日志】。
@@ -118,7 +118,7 @@ export const DEFAULT_ARCHIVE_PROMPTS = [
     },
     {
         id: 'preset_diary',
-        name: '日记风格 (Diary)',
+        name: 'Diary Style',
         content: `当前日期: \${dateStr}
 任务: 请回顾今天的聊天记录，将其转化为一条**属于你自己的**“核心记忆”。
 

@@ -21,17 +21,17 @@ interface ChatInputAreaProps {
     onForwardSelected?: () => void;
     selectedCount: number;
     emojis: Emoji[];
-    /** 以下会话切换/主题 props 仅私聊使用；群聊等复用方不传（'chars' 面板不会被打开） */
+    /** The following session-switch/theme props are private-chat only; reuse sites like group chat do not pass them (the 'chars' panel is never opened) */
     characters?: CharacterProfile[];
     activeCharacterId?: string;
     onCharSelect?: (id: string) => void;
-    /** 每个角色的未读消息数，用于在「切换会话」头像上显示红点 */
+    /** Unread message count per character, used to show a red dot on the "Switch Session" avatar */
     unreadMessages?: Record<string, number>;
     customThemes?: ChatTheme[];
     onUpdateTheme?: (id: string) => void;
     onRemoveTheme?: (id: string) => void;
     activeThemeId?: string;
-    /** 提供时整体替换内置 actions 双页网格——群聊传自己的功能格。不传 = 原行为 */
+    /** When provided, replaces the built-in two-page actions grid entirely — group chat passes its own function tiles. Not passing it = original behavior */
     actionsContent?: React.ReactNode;
     onPanelAction: (type: string, payload?: any) => void;
     onImageSelect: (file: File) => void;
@@ -44,21 +44,21 @@ interface ChatInputAreaProps {
     canReroll: boolean;
     // Proactive messaging
     isProactiveActive?: boolean;
-    // 麦当劳 MCP
-    mcdConfigured?: boolean;   // 设置里 token 已填且启用
-    mcdActivated?: boolean;    // 当前会话已发"麦请求"
-    // 瑞幸 MCP
+    // McDonald's MCP
+    mcdConfigured?: boolean;   // Token filled in and enabled in settings
+    mcdActivated?: boolean;    // Current session has sent a "McDonald's request"
+    // Luckin MCP
     luckinConfigured?: boolean;
     luckinActivated?: boolean;
-    // HTML 模块模式
+    // HTML Module Mode
     htmlModeEnabled?: boolean;
-    // 思考过程展示（会话级）
+    // Thinking process display (session-level)
     showThinkingChain?: boolean;
     // Input style
     inputStyle?: 'default' | 'rounded' | 'flat' | 'wechat' | 'ios' | 'telegram' | 'discord' | 'pixel';
     sendButtonStyle?: 'circle' | 'pill' | 'minimal';
     chromeStyle?: 'soft' | 'flat' | 'floating' | 'pixel';
-    /** 动森彩蛋模式：输入栏换成木质草绿圆角。 */
+    /** Animal Crossing easter-egg mode: the input bar switches to wood-and-grass-green rounded corners. */
     acnh?: boolean;
 }
 
@@ -87,14 +87,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     const chatImageInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [actionsPage, setActionsPage] = useState<0 | 1 | 2>(0);
-    // 气泡样式面板：搜索 + 两步确认删除（防止 hover 小 × 误删）
+    // Bubble style panel: search + two-step delete confirmation (prevents accidental deletion via the hover x)
     const [bubbleSearch, setBubbleSearch] = useState('');
-    // 会话面板的主要用途仍是切换聊天；气泡选择作为次级工具默认收起。
+    // The session panel's main purpose is still switching chats; bubble selection is a secondary tool, collapsed by default.
     const [isBubbleSectionOpen, setIsBubbleSectionOpen] = useState(false);
     const [pendingDeleteThemeId, setPendingDeleteThemeId] = useState<string | null>(null);
     const [emojiSelectionMode, setEmojiSelectionMode] = useState(false);
     const [selectedEmojis, setSelectedEmojis] = useState<any[]>([]);
-    // 手动分页避免旧版/第三方 WebView 不触发 IntersectionObserver，永远卡在「加载中」。
+    // Manual pagination avoids older/third-party WebViews that never fire IntersectionObserver, getting permanently stuck on "Loading".
     const [emojiPage, setEmojiPage] = useState(0);
     const emojiPageCount = Math.max(1, Math.ceil(emojis.length / EMOJI_PAGE_SIZE));
     const emojiPageStart = emojiPage * EMOJI_PAGE_SIZE;
@@ -128,7 +128,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     };
 
     // --- Unified Touch/Long-Press Logic ---
-    
+
     const clearTimer = () => {
         if (longPressTimer.current) {
             clearTimeout(longPressTimer.current);
@@ -139,12 +139,12 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     const handleTouchStart = (item: any, type: 'emoji' | 'category', e: React.TouchEvent | React.MouseEvent) => {
         // 1. Always reset state first to ensure clean slate for any interaction
         // This fixes the bug where deleting a category leaves the flag true, blocking clicks on system categories
-        clearTimer(); 
+        clearTimer();
         isLongPressTriggered.current = false;
 
         // 2. Skip long-press for the default category (no options needed)
         if (type === 'category' && item.id === 'default') return;
-        
+
         // 3. Store coordinates and start timer for valid long-press candidates
         if ('touches' in e) {
             startPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -156,8 +156,8 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             isLongPressTriggered.current = true;
             // Trigger action
             if (type === 'emoji') {
-                // 不在批量选择态时, 长按单个表情弹出操作菜单 (修改名称 / 删除)。
-                // 批量删除仍可通过右上角铅笔按钮进入多选态。
+                // When not in bulk-select mode, long-pressing a single emoji opens the actions menu (rename / delete).
+                // Bulk delete is still reachable via the pencil button in the top-right to enter multi-select mode.
                 if (!emojiSelectionMode) {
                     onPanelAction('emoji-options', item);
                 }
@@ -408,25 +408,25 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
             <div className={`fixed inset-0 z-[-1] ${isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' : isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' : 'bg-white/60 backdrop-blur-[2px]'}`} />
         )}
         <div className={`sully-chat-inputbar ${shellClass} pb-safe shrink-0 z-40 relative`}>
-            
+
             {selectionMode ? (
                 <div className={`p-3 flex gap-2 ${isPixelStyle ? 'bg-[#f3e7d6]' : isDiscordStyle ? 'bg-slate-900/60 backdrop-blur-md' : 'bg-white/50 backdrop-blur-md'}`}>
                     {onForwardSelected && (
                         <button
-                            onClick={() => { onForwardSelected?.(); trackEvent('转发选中的消息'); }}
+                            onClick={() => { onForwardSelected?.(); trackEvent('Forward Selected Messages'); }}
                             disabled={selectedCount === 0}
                             className={`flex-1 py-3 font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${selectedCount === 0 ? 'bg-slate-200 text-slate-400 shadow-none' : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-blue-200'}`}
                         >
                             <ShareNetwork className="w-5 h-5" weight="bold" />
-                            转发 ({selectedCount})
+                            Forward ({selectedCount})
                         </button>
                     )}
                     <button
-                        onClick={() => { onDeleteSelected(); trackEvent('批量删除选中的消息'); }}
+                        onClick={() => { onDeleteSelected(); trackEvent('Bulk Delete Selected Messages'); }}
                         className={`${onForwardSelected ? 'flex-1' : 'w-full'} py-3 bg-red-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2`}
                     >
                         <Trash className="w-5 h-5" weight="bold" />
-                        删除 ({selectedCount})
+                        Delete ({selectedCount})
                     </button>
                 </div>
             ) : (
@@ -435,31 +435,31 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         <Plus className="w-6 h-6" weight="bold" />
                     </button>
                     <div className={`flex-1 min-w-0 flex items-center px-1 transition-all ${useIOSStandaloneInputFix ? 'overflow-visible' : 'overflow-hidden'} ${inputWrapClass} ${isPixelStyle ? 'focus-within:bg-[#fff7ed]' : isDiscordStyle ? 'focus-within:bg-slate-800 focus-within:border-white/20' : 'border border-transparent focus-within:bg-white focus-within:border-primary/30'}`}>
-                        <textarea 
+                        <textarea
                             ref={textareaRef}
-                            rows={1} 
-                            value={input} 
-                            onChange={(e) => setInput(e.target.value)} 
-                            onKeyDown={handleKeyDown} 
+                            rows={1}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             onFocus={handleInputFocus}
                             inputMode="text"
                             enterKeyHint="send"
                             autoCorrect="on"
                             autoCapitalize="sentences"
-                            className={`flex-1 min-w-0 bg-transparent px-4 py-3 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[15px]'} resize-none max-h-24 no-scrollbar ${isDiscordStyle ? 'text-white placeholder:text-slate-500' : isPixelStyle ? 'text-[#6a4c35] placeholder:text-[#9b8677]' : ''}`} 
-                            placeholder="Message..." 
-                            style={{ height: 'auto' }} 
+                            className={`flex-1 min-w-0 bg-transparent px-4 py-3 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[15px]'} resize-none max-h-24 no-scrollbar ${isDiscordStyle ? 'text-white placeholder:text-slate-500' : isPixelStyle ? 'text-[#6a4c35] placeholder:text-[#9b8677]' : ''}`}
+                            placeholder="Message..."
+                            style={{ height: 'auto' }}
                         />
                         <button onClick={() => setShowPanel(showPanel === 'emojis' ? 'none' : 'emojis')} className={`p-2 shrink-0 ${isDiscordStyle ? 'text-slate-400 hover:text-sky-300' : isPixelStyle ? 'text-[#8f674a] hover:text-[#a16207]' : 'text-slate-400 hover:text-primary'}`}>
                             <Smiley className="w-6 h-6" weight="regular" />
                         </button>
                     </div>
-                    <button 
-                        onClick={onSend} 
-                        disabled={!input.trim()} 
+                    <button
+                        onClick={onSend}
+                        disabled={!input.trim()}
                         className={`${sendButtonClass} ${input.trim() ? '' : 'opacity-45 shadow-none'}`}
                     >
-                        {sendButtonStyle === 'pill' ? <span>发送</span> : <PaperPlaneTilt className="w-5 h-5" weight="fill" />}
+                        {sendButtonStyle === 'pill' ? <span>Send</span> : <PaperPlaneTilt className="w-5 h-5" weight="fill" />}
                     </button>
 
                     {emojiSelectionMode && (
@@ -474,14 +474,14 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     className={`sully-chat-panel ${panelClass} overflow-hidden relative z-0 flex flex-col will-change-[max-height] transition-[max-height] duration-200 ease-out`}
                     style={{ maxHeight: showPanel !== 'none' ? '18rem' : '0px' }}
                 >
-                    
+
                     {/* Emojis Panel with Categories */}
                     {showPanel === 'emojis' && (
                         <>
                             {/* Categories Bar */}
                             <div className={`relative flex shrink-0 ${panelTopBarSurfaceClass}`}>
-                                {/* touch-action: pan-x —— 显式告诉浏览器"从分组 chip 上起手的触摸就是横向滚动"，
-                                    防止 chip 的长按/点击手势让部分浏览器犹豫而吞掉滑动（分组多时滑不到末尾的 +） */}
+                                {/* touch-action: pan-x — explicitly tells the browser "a touch starting on a category chip is horizontal scrolling",
+                                    preventing the chip's long-press/click gesture from making some browsers hesitate and swallow the swipe (when there are many categories, you cannot swipe to the trailing + otherwise) */}
                                 <div className={panelTopBarClass} style={{ touchAction: 'pan-x' }}>
                                     {categories.map(cat => (
                                         <button
@@ -507,15 +507,15 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                     <button onClick={() => onPanelAction('add-category')} className={categoryAddButtonClass}>+</button>
                                 </div>
                                 {emojiSelectionMode ? (
-                                    <div 
+                                    <div
                                         className={`absolute inset-0 z-10 flex items-center justify-end px-3 ${
-                                            isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' : 
-                                            isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' : 
+                                            isPixelStyle ? 'bg-[#eadfce]/70 backdrop-blur-[2px]' :
+                                            isDiscordStyle ? 'bg-slate-950/70 backdrop-blur-[2px]' :
                                             'bg-white/60 backdrop-blur-[2px]'
                                         }`}
                                     >
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); setEmojiSelectionMode(false); }} 
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setEmojiSelectionMode(false); }}
                                             className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors shadow-sm ${
                                                 isPixelStyle ? 'bg-[#c99872] text-[#fff7ed] hover:bg-[#b07d57]' :
                                                 isDiscordStyle ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' :
@@ -528,7 +528,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                         </button>
                                     </div>
                                 ) : (
-                                    /* 编辑按钮占据独立列，滚动区在它左侧结束，末尾的 + 不会再被覆盖。 */
+                                    /* The edit button occupies its own column; the scroll area ends to its left, so the trailing + no longer gets covered. */
                                     <div className="flex h-10 shrink-0 items-center pl-1 pr-3">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setEmojiSelectionMode(true); }}
@@ -545,16 +545,16 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                             </div>
 
                             <div className="flex-1 overflow-y-auto no-scrollbar p-4">
-                                {/* 4 列 → 5 列：面板缩略图整体缩小一档（吸收社区美化的共识密度）。
-                                    已用自定义 CSS（.sully-chat-panel button img 定宽 !important）的用户不受影响。 */}
+                                {/* 4 columns → 5 columns: shrinks the panel thumbnails by one notch overall (adopting the community-styling consensus density).
+                                    Users who already use custom CSS (.sully-chat-panel button img fixed width !important) are unaffected. */}
                                 <div className="grid grid-cols-5 gap-2">
                                     {emojiSelectionMode ? (
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 if (selectedEmojis.length > 0) {
                                                     onPanelAction('delete-emoji-req', selectedEmojis);
                                                 }
-                                            }} 
+                                            }}
                                             disabled={selectedEmojis.length === 0}
                                             className={`${emojiImportTileClass} !bg-red-50 !border-red-400 !text-red-500 ${selectedEmojis.length === 0 ? 'opacity-40 cursor-not-allowed' : 'active:scale-95'}`}
                                         >
@@ -567,9 +567,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                         const isSelected = selectedEmojiUrls.has(e.url);
                                         return (
                                         <button
-                                            // key 必须用 url 而不是索引：索引 key 会让 React 复用 <img> 节点、
-                                            // 切分组时只换 src——旧分组的位图在新图解码完成前一直挂在格子上
-                                            // （表现为"新分组显示旧分组的图"）。按 url 重建节点则空白等加载，不串图。
+                                            // The key must use url, not the index: an index key would let React reuse the <img> node and
+                                            // just swap src when switching categories — the old category's bitmap stays hanging in the tile
+                                            // until the new image finishes decoding (shows up as "the new category displaying the old category's image").
+                                            // Rebuilding the node by url instead shows a blank while loading, with no cross-contamination.
                                             key={e.url}
                                             onClick={(ev) => handleItemClick(ev, e, 'emoji')}
                                             // Long press handlers for Emojis
@@ -596,7 +597,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                     <div className={`py-3 flex items-center justify-center gap-3 text-[10px] ${emojiLabelClass}`}>
                                         <button
                                             type="button"
-                                            aria-label="上一页表情"
+                                            aria-label="Previous emoji page"
                                             disabled={emojiPage === 0}
                                             onClick={() => setEmojiPage(page => Math.max(0, page - 1))}
                                             className="w-8 h-7 rounded-full border border-current/20 disabled:opacity-30 active:scale-95"
@@ -604,11 +605,11 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                             ‹
                                         </button>
                                         <span>
-                                            {emojiPage + 1}/{emojiPageCount} 页 · {emojiPageStart + 1}-{Math.min(emojiPageStart + EMOJI_PAGE_SIZE, emojis.length)}/{emojis.length}
+                                            {emojiPage + 1}/{emojiPageCount} pages · {emojiPageStart + 1}-{Math.min(emojiPageStart + EMOJI_PAGE_SIZE, emojis.length)}/{emojis.length}
                                         </span>
                                         <button
                                             type="button"
-                                            aria-label="下一页表情"
+                                            aria-label="Next emoji page"
                                             disabled={emojiPage >= emojiPageCount - 1}
                                             onClick={() => setEmojiPage(page => Math.min(emojiPageCount - 1, page + 1))}
                                             className="w-8 h-7 rounded-full border border-current/20 disabled:opacity-30 active:scale-95"
@@ -621,13 +622,13 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                         </>
                     )}
 
-                    {/* Actions Panel：外部提供 actionsContent 时整体替换内置双页网格 */}
+                    {/* Actions Panel: when actionsContent is provided externally, it replaces the built-in two-page grid entirely */}
                     {showPanel === 'actions' && actionsContent && (
                         <div className="overflow-y-auto no-scrollbar">
                             {actionsContent}
                         </div>
                     )}
-                    {/* Actions Panel (paginated: page 0 = 内置功能, page 1 = 外部服务, page 2 = 更多) */}
+                    {/* Actions Panel (paginated: page 0 = built-in features, page 1 = external services, page 2 = more) */}
                     {showPanel === 'actions' && !actionsContent && (
                         <div
                             className="overflow-y-auto no-scrollbar"
@@ -641,15 +642,15 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${acnh ? 'bg-white/70 border-[#e6dab4] text-[#7c6ee6]' : isDiscordStyle ? 'bg-slate-800 text-indigo-300 border-indigo-400/20' : 'bg-indigo-50 text-indigo-500 border-indigo-100'}`}>
                                     <Briefcase className="w-6 h-6" weight="fill" />
                                 </div>
-                                <span className="text-xs font-bold">协同工作</span>
+                                <span className="text-xs font-bold">Collaboration</span>
                             </button>
 
-                            {/* 见面：直接跳到该角色的见面模式（等同于进见面 App 并点击该角色） */}
+                            {/* Date: jumps directly into this character's Date mode (equivalent to opening the Date App and tapping this character) */}
                             <button onClick={() => onPanelAction('meetup')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-violet-300 border-violet-400/20' : 'bg-violet-50 text-violet-500 border-violet-100'}`}>
                                     <Sparkle className="w-6 h-6" weight="fill" />
                                 </div>
-                                <span className="text-xs font-bold">见面</span>
+                                <span className="text-xs font-bold">Date</span>
                             </button>
 
                             <button onClick={() => onPanelAction('transfer')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
@@ -657,40 +658,40 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-orange-300 border-orange-400/20' : 'bg-orange-50 text-orange-400 border-orange-100'}`}>
                                     <Money className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">转账</span>
+                                <span className="text-xs font-bold">Transfer</span>
                             </button>
-                            
+
                             <button onClick={() => onPanelAction('poke')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 {acnh ? <AcnhActionTile kind="poke" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 border-sky-400/20' : 'bg-sky-50 border-sky-100'}`}><img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f449.png" alt="poke" className="w-6 h-6" /></div>)}
-                                <span className="text-xs font-bold">戳一戳</span>
+                                <span className="text-xs font-bold">Poke</span>
                             </button>
-                            
+
                             <button onClick={() => onPanelAction('archive')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 {acnh ? <AcnhActionTile kind="archive" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-indigo-300 border-indigo-400/20' : 'bg-indigo-50 text-indigo-400 border-indigo-100'}`}>
                                     <BookOpenText className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">{isSummarizing ? '归档中...' : '记忆归档'}</span>
+                                <span className="text-xs font-bold">{isSummarizing ? 'Archiving...' : 'Memory Archive'}</span>
                             </button>
-                            
+
                             <button onClick={() => onPanelAction('settings')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 {acnh ? <AcnhActionTile kind="settings" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-slate-300 border-white/10' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
                                     <GearSix className="w-6 h-6" weight="bold" /></div>)}
-                                <span className="text-xs font-bold">设置</span>
+                                <span className="text-xs font-bold">Settings</span>
                             </button>
-                            
+
                             {/* Regenerate Button */}
                             <button onClick={onReroll} disabled={!canReroll} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${canReroll ? (isDiscordStyle ? 'text-slate-200' : 'text-slate-600') : 'text-slate-300 opacity-50'}`}>
                                 {acnh ? <AcnhActionTile kind="regenerate" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${canReroll ? (isDiscordStyle ? 'bg-slate-800 text-emerald-300 border-emerald-400/20' : 'bg-emerald-50 text-emerald-400 border-emerald-100') : (isDiscordStyle ? 'bg-slate-800 text-slate-600 border-white/10' : 'bg-slate-50 text-slate-300 border-slate-100')}`}>
                                     <ArrowsClockwise className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">重新生成</span>
+                                <span className="text-xs font-bold">Regenerate</span>
                             </button>
 
-                            {/* 情绪按钮已并入日程 — 情绪/意识流与日程强制同步，配置面板在日程 Modal 下方 */}
+                            {/* The Emotion button has been merged into Schedule — Emotion/stream-of-consciousness is forced in sync with the schedule, the config panel is below the Schedule Modal */}
 
                             {/* Schedule Button */}
                             <button onClick={() => onPanelAction('schedule')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
@@ -698,30 +699,30 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-cyan-300 border-cyan-400/20' : 'bg-cyan-50 text-cyan-500 border-cyan-100'}`}>
                                     <CalendarBlank className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">日程/情绪</span>
+                                <span className="text-xs font-bold">Schedule / Emotion</span>
                             </button>
 
                           </div>
 
-                          {/* Page 1: 外部服务 */}
+                          {/* Page 1: External Services */}
                           <div className={`p-6 grid grid-cols-4 gap-8 ${actionsPage === 1 ? '' : 'hidden'}`}>
-                            {/* Proactive Message Button（从第一页移到第二页） */}
+                            {/* Proactive Message Button (moved from page 1 to page 2) */}
                             <button onClick={() => onPanelAction('proactive')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform relative ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 {acnh ? <AcnhActionTile kind="proactive" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isProactiveActive ? (isDiscordStyle ? 'bg-violet-500/15 text-violet-300 border-violet-400/30' : 'bg-violet-50 text-violet-500 border-violet-200') : (isDiscordStyle ? 'bg-slate-800 text-slate-400 border-white/10' : 'bg-slate-50 text-slate-400 border-slate-100')}`}>
                                     <ChatCircleDots className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">主动消息</span>
+                                <span className="text-xs font-bold">Proactive Message</span>
                                 {isProactiveActive && <span className={`absolute top-0 right-1 w-2.5 h-2.5 rounded-full border-2 ${isDiscordStyle ? 'bg-violet-400 border-slate-900' : 'bg-violet-500 border-white'}`} />}
                             </button>
 
-                            {/* 主动消息 2.0：云端 worker 定时任务，App 关闭后仍可收取。 */}
+                            {/* Proactive Message 2.0: cloud worker scheduled task, still deliverable after the App is closed. */}
                             <button onClick={() => onPanelAction('active-msg-2')} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 {acnh ? <AcnhActionTile kind="proactive" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-indigo-300 border-indigo-400/20' : 'bg-indigo-50 text-indigo-500 border-indigo-100'}`}>
                                     <Alarm className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">主动消息 2.0</span>
+                                <span className="text-xs font-bold">Proactive Message 2.0</span>
                             </button>
 
                             <button
@@ -740,10 +741,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                   <ForkKnife className="w-6 h-6" weight="bold" />
                                   {mcdActivated && <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 ${isDiscordStyle ? 'bg-yellow-300 border-slate-900' : 'bg-yellow-500 border-white'}`} />}
                               </div>)}
-                              <span className="text-xs font-bold">{mcdActivated ? '结束麦请求' : '麦当劳'}</span>
+                              <span className="text-xs font-bold">{mcdActivated ? "End McDonald's Request" : "McDonald's"}</span>
                             </button>
 
-                            {/* 瑞幸 MCP (与麦当劳同构) */}
+                            {/* Luckin MCP (same structure as McDonald's) */}
                             <button
                               onClick={() => {
                                 if (!luckinConfigured) { onPanelAction('luckin-not-configured'); return; }
@@ -759,10 +760,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                   <Coffee className="w-6 h-6" weight="bold" />
                                   {luckinActivated && <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 ${isDiscordStyle ? 'bg-[#C6A15B] border-slate-900' : 'bg-[#C6A15B] border-white'}`} />}
                               </div>
-                              <span className="text-xs font-bold">{luckinActivated ? '结束瑞一杯' : '瑞一杯'}</span>
+                              <span className="text-xs font-bold">{luckinActivated ? 'End Luckin Order' : 'Grab a Luckin'}</span>
                             </button>
 
-                            {/* HTML 模块模式：tap = 切换开关 (注入提示词); 长按打开自定义提示词设置 */}
+                            {/* HTML Module Mode: tap = toggle (inject prompt); long-press opens custom prompt settings */}
                             <button
                               onClick={() => onPanelAction('html-mode-toggle')}
                               onContextMenu={(e) => { e.preventDefault(); onPanelAction('html-mode-settings'); }}
@@ -777,10 +778,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                   <Code className="w-6 h-6" weight="bold" />
                                   {htmlModeEnabled && <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 ${isDiscordStyle ? 'bg-fuchsia-400 border-slate-900' : 'bg-fuchsia-500 border-white'}`} />}
                               </div>)}
-                              <span className="text-xs font-bold">{htmlModeEnabled ? 'HTML已开' : 'HTML模式'}</span>
+                              <span className="text-xs font-bold">{htmlModeEnabled ? 'HTML On' : 'HTML Mode'}</span>
                             </button>
 
-                            {/* 「展示思考」按钮：tap → 直接打开思考链设置弹窗（含开关），不再做 inline toggle */}
+                            {/* "Show Thinking" button: tap → opens the thinking-chain settings modal directly (toggle included), no longer does an inline toggle */}
                             <button
                               onClick={() => onPanelAction('thinking-settings')}
                               className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}
@@ -794,10 +795,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                   <Brain className="w-6 h-6" weight="bold" />
                                   {showThinkingChain && <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 ${isDiscordStyle ? 'bg-indigo-400 border-slate-900' : 'bg-indigo-500 border-white'}`} />}
                               </div>)}
-                              <span className="text-xs font-bold">{showThinkingChain ? '思考已开' : '展示思考'}</span>
+                              <span className="text-xs font-bold">{showThinkingChain ? 'Thinking On' : 'Show Thinking'}</span>
                             </button>
 
-                            {/* 聊天装扮：打开该角色专属的「聊天细节微调」弹窗（跟随全局 / 单独定制，不用写 CSS） */}
+                            {/* Chat Styling: opens this character's dedicated "Chat Detail Fine-Tuning" modal (follows global / customized per-character, no CSS needed) */}
                             <button
                               onClick={() => onPanelAction('fine-tune')}
                               className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}
@@ -805,10 +806,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${acnh ? 'bg-white/70 border-[#e6dab4] text-[#5fae6e]' : isDiscordStyle ? 'bg-slate-800 text-teal-300 border-teal-400/20' : 'bg-teal-50 text-teal-500 border-teal-100'}`}>
                                   <FadersHorizontal className="w-6 h-6" weight="bold" />
                               </div>
-                              <span className="text-xs font-bold">聊天装扮</span>
+                              <span className="text-xs font-bold">Chat Styling</span>
                             </button>
 
-                            {/* 白框：打开该角色专属的「白框自定义 CSS」弹窗 */}
+                            {/* Whitebox: opens this character's dedicated "Whitebox Custom CSS" modal */}
                             <button
                               onClick={() => onPanelAction('chrome-css')}
                               className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}
@@ -816,23 +817,23 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${acnh ? 'bg-white/70 border-[#e6dab4] text-[#b77dee]' : isDiscordStyle ? 'bg-slate-800 text-pink-300 border-pink-400/20' : 'bg-pink-50 text-pink-500 border-pink-100'}`}>
                                   <PencilSimple className="w-6 h-6" weight="bold" />
                               </div>
-                              <span className="text-xs font-bold">白框</span>
+                              <span className="text-xs font-bold">Whitebox</span>
                             </button>
 
                           </div>
 
-                          {/* Page 2: 更多 */}
+                          {/* Page 2: More */}
                           <div className={`p-6 grid grid-cols-4 gap-8 ${actionsPage === 2 ? '' : 'hidden'}`}>
                             <button onClick={() => chatImageInputRef.current?.click()} className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}>
                                 {acnh ? <AcnhActionTile kind="image" /> : (
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDiscordStyle ? 'bg-slate-800 text-pink-300 border-pink-400/20' : 'bg-pink-50 text-pink-400 border-pink-100'}`}>
                                     <Image className="w-6 h-6" weight="bold" />
                                 </div>)}
-                                <span className="text-xs font-bold">相册</span>
+                                <span className="text-xs font-bold">Gallery</span>
                             </button>
                             <input type="file" ref={chatImageInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageChange(e, 'chat')} />
 
-                            {/* 提示音：打开该角色专属的「白框提示音」弹窗（挨着白框，独立于白框可绑定/解绑） */}
+                            {/* Notification Sound: opens this character's dedicated "Whitebox Notification Sound" modal (next to Whitebox, can be bound/unbound independently of it) */}
                             <button
                               onClick={() => onPanelAction('chrome-sound')}
                               className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}
@@ -840,10 +841,10 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${acnh ? 'bg-white/70 border-[#e6dab4] text-[#e0994a]' : isDiscordStyle ? 'bg-slate-800 text-amber-300 border-amber-400/20' : 'bg-amber-50 text-amber-500 border-amber-100'}`}>
                                   <BellSimpleRinging className="w-6 h-6" weight="bold" />
                               </div>
-                              <span className="text-xs font-bold">提示音</span>
+                              <span className="text-xs font-bold">Notification Sound</span>
                             </button>
 
-                            {/* 记忆链接与提示音同级：都是聊天工具入口，不单独占一整块。 */}
+                            {/* Memory Link is at the same level as Notification Sound: both are chat-tool entry points, neither gets its own dedicated block. */}
                             <button
                               onClick={() => onPanelAction('memory-link')}
                               className={`flex flex-col items-center gap-2 active:scale-95 transition-transform ${acnh ? 'text-[#725d42]' : isDiscordStyle ? 'text-slate-200' : 'text-slate-600'}`}
@@ -851,7 +852,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                               <span className={`w-14 h-14 rounded-2xl grid place-items-center shadow-sm border ${acnh ? 'bg-white/70 border-[#e6dab4] text-[#8f674a]' : isDiscordStyle ? 'bg-slate-800 text-purple-300 border-purple-400/20' : 'bg-purple-50 text-purple-500 border-purple-100'}`}>
                                 <LinkSimple className="w-6 h-6" weight="bold" />
                               </span>
-                              <span className="text-xs font-bold">记忆链接</span>
+                              <span className="text-xs font-bold">Memory Link</span>
                             </button>
 
                             <button
@@ -861,27 +862,27 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                               <span className={`w-14 h-14 rounded-2xl grid place-items-center shadow-sm border ${acnh ? 'bg-white/70 border-[#e6dab4] text-[#c17b42]' : isDiscordStyle ? 'bg-slate-800 text-amber-300 border-amber-400/20' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                                   <Star className="w-6 h-6" weight="fill" />
                               </span>
-                              <span className="text-xs font-bold">收藏</span>
+                              <span className="text-xs font-bold">Favorites</span>
                             </button>
                           </div>
 
-                          {/* 翻页指示器 */}
+                          {/* Page indicator */}
                           <div className="flex items-center justify-center gap-3 pb-3 -mt-2">
                             <button
                               type="button"
-                              aria-label="第 1 页"
+                              aria-label="Page 1"
                               onClick={() => setActionsPage(0)}
                               className={`w-2 h-2 rounded-full transition-all ${actionsPage === 0 ? (isDiscordStyle ? 'bg-slate-200 w-5' : 'bg-slate-500 w-5') : (isDiscordStyle ? 'bg-slate-600' : 'bg-slate-300')}`}
                             />
                             <button
                               type="button"
-                              aria-label="第 2 页"
+                              aria-label="Page 2"
                               onClick={() => setActionsPage(1)}
                               className={`w-2 h-2 rounded-full transition-all ${actionsPage === 1 ? (isDiscordStyle ? 'bg-slate-200 w-5' : 'bg-slate-500 w-5') : (isDiscordStyle ? 'bg-slate-600' : 'bg-slate-300')}`}
                             />
                             <button
                               type="button"
-                              aria-label="第 3 页"
+                              aria-label="Page 3"
                               onClick={() => setActionsPage(2)}
                               className={`w-2 h-2 rounded-full transition-all ${actionsPage === 2 ? (isDiscordStyle ? 'bg-slate-200 w-5' : 'bg-slate-500 w-5') : (isDiscordStyle ? 'bg-slate-600' : 'bg-slate-300')}`}
                             />
@@ -898,20 +899,20 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                     className="w-full flex items-center justify-between gap-3 px-1 py-1 text-left"
                                 >
                                     <span>
-                                        <span className="block text-xs font-bold text-slate-400 tracking-wider uppercase">气泡样式 · 当前角色</span>
-                                        <span className="block mt-1 text-[10px] text-slate-400">{isBubbleSectionOpen ? '选择或管理当前角色的气泡' : '已折叠 · 点此展开'}</span>
+                                        <span className="block text-xs font-bold text-slate-400 tracking-wider uppercase">Bubble Style · Current Character</span>
+                                        <span className="block mt-1 text-[10px] text-slate-400">{isBubbleSectionOpen ? 'Choose or manage bubbles for this character' : 'Collapsed · tap to expand'}</span>
                                     </span>
                                     <span className={`text-slate-400 transition-transform ${isBubbleSectionOpen ? 'rotate-180' : ''}`} aria-hidden>⌄</span>
                                 </button>
                                 {isBubbleSectionOpen && <div className="mt-3">
                                 <div className="flex justify-end px-1 mb-2">
-                                    <span className="text-[10px] text-slate-400">新气泡去「气泡工坊」App 制作</span>
+                                    <span className="text-[10px] text-slate-400">Make new bubbles in the "Bubble Workshop" App</span>
                                 </div>
                                 {customThemes.length > 6 && (
                                     <input
                                         value={bubbleSearch}
                                         onChange={e => setBubbleSearch(e.target.value)}
-                                        placeholder="搜索我的气泡…"
+                                        placeholder="Search my bubbles…"
                                         className="w-full mb-2.5 px-3 py-2 rounded-xl bg-white/70 border border-slate-200 text-xs focus:outline-none focus:border-indigo-300"
                                     />
                                 )}
@@ -941,16 +942,16 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                                         {t.name}
                                                         {activeThemeId === t.id && <span aria-hidden>✓</span>}
                                                         {inUseCount > 0 && activeThemeId !== t.id && (
-                                                            <span className="text-[9px] font-normal opacity-70">{inUseCount}人在用</span>
+                                                            <span className="text-[9px] font-normal opacity-70">{inUseCount} in use</span>
                                                         )}
                                                     </button>
-                                                    {/* 删除两步确认：第一下变红色「确删」，3 秒不点自动还原 */}
+                                                    {/* Two-step delete confirmation: first tap turns red "Confirm", auto-reverts after 3s if not tapped again */}
                                                     {pendingDelete ? (
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setPendingDeleteThemeId(null); onRemoveTheme(t.id); }}
                                                             className="px-2 py-2 text-[10px] font-bold bg-red-500 text-white self-stretch"
                                                         >
-                                                            确删
+                                                            Confirm
                                                         </button>
                                                     ) : (
                                                         <button
@@ -959,7 +960,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                                                 setPendingDeleteThemeId(t.id);
                                                                 setTimeout(() => setPendingDeleteThemeId(cur => (cur === t.id ? null : cur)), 3000);
                                                             }}
-                                                            aria-label={`删除气泡 ${t.name}`}
+                                                            aria-label={`Delete bubble ${t.name}`}
                                                             className={`pr-2.5 pl-1 py-2 text-sm leading-none opacity-45 hover:opacity-100 transition-opacity ${activeThemeId === t.id ? 'text-white' : 'text-indigo-400'}`}
                                                         >
                                                             ×
@@ -969,13 +970,13 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                             );
                                         })}
                                     {bubbleSearch.trim() && customThemes.every(t => !(t.name || '').toLowerCase().includes(bubbleSearch.trim().toLowerCase())) && (
-                                        <div className="text-[11px] text-slate-400 px-1 py-2">没有叫「{bubbleSearch.trim()}」的气泡～</div>
+                                        <div className="text-[11px] text-slate-400 px-1 py-2">No bubble named "{bubbleSearch.trim()}"~</div>
                                     )}
                                 </div>
                                 </div>}
                             </div>
                             <div>
-                                <h3 className="text-xs font-bold text-slate-400 px-1 tracking-wider uppercase mb-3">切换会话</h3>
+                                <h3 className="text-xs font-bold text-slate-400 px-1 tracking-wider uppercase mb-3">Switch Session</h3>
                                 <div className="space-y-3">
                                     {characters.map(c => {
                                         const unread = c.id !== activeCharacterId ? (unreadMessages[c.id] || 0) : 0;
@@ -984,7 +985,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                                             <div className="relative shrink-0">
                                                 <TokenImg value={c.avatar} className="w-12 h-12 rounded-2xl object-cover" />
                                                 {unread > 0 && (
-                                                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-[0_0_8px_rgba(244,63,94,0.6)] ring-2 ring-white" aria-label={`${unread} 条未读消息`}>{unread > 99 ? '99+' : unread}</span>
+                                                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-[0_0_8px_rgba(244,63,94,0.6)] ring-2 ring-white" aria-label={`${unread} unread messages`}>{unread > 99 ? '99+' : unread}</span>
                                                 )}
                                             </div>
                                             <div className="flex-1"><div className="font-bold text-sm text-slate-700">{c.name}</div><div className="text-xs text-slate-400 truncate">{c.description}</div></div>
@@ -1002,4 +1003,4 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     );
 };
 
-export default React.memo(ChatInputArea);
+export default ChatInputArea;

@@ -4,7 +4,7 @@ import { CaretLeft, Lightning, Stop } from '@phosphor-icons/react';
 import { CharacterBuff, CharacterProfile } from '../../types';
 import TokenImg from '../os/TokenImg';
 
-/** header 实际只用到这些字段——放宽类型让群聊传合成对象（群名/群头像）复用本组件 */
+/** The header only actually uses these fields -- the type is loosened so Group Chat can pass a composite object (group name/group avatar) and reuse this component */
 type HeaderCharacter = Pick<CharacterProfile, 'id' | 'name' | 'avatar'> & { activeBuffs?: CharacterBuff[] };
 
 interface TokenBreakdown {
@@ -22,11 +22,11 @@ interface ChatHeaderShellProps {
     activeCharacter: HeaderCharacter;
     isTyping: boolean;
     isSummarizing: boolean;
-    /** 覆盖状态区的 "Online" 文案（群聊传 "N 成员"）。不传 = 原行为 */
+    /** Overrides the status area's "Online" text (Group Chat passes "N members"). Not passed = original behavior */
     statusText?: string;
-    /** 可选的附加操作，群聊用来放置“记忆规则”帮助入口。 */
+    /** Optional extra action; Group Chat uses this to place a "memory rules" help entry point. */
     extraAction?: { label: string; icon: React.ReactNode; onClick: () => void };
-    /** 触发按钮图标：生成中想显示"停止"时传 'stop'。不传 = 原行为（闪电） */
+    /** Trigger-button icon: pass 'stop' to show "stop" while generating. Not passed = original behavior (lightning bolt) */
     triggerIcon?: 'lightning' | 'stop';
     isEmotionEvaluating?: boolean;
     isInstantSending?: boolean;
@@ -38,7 +38,7 @@ interface ChatHeaderShellProps {
     onTriggerAI: () => void;
     onShowCharsPanel: () => void;
     onDeleteBuff?: (buffId: string) => void;
-    /** 隐藏顶栏情绪 buff 栏（Appearance 里的「显示情绪栏」开关）。 */
+    /** Hides the header's emotion buff row (the "Show Emotion Row" toggle in Appearance). */
     hideBuffs?: boolean;
     headerStyle?: 'default' | 'minimal' | 'gradient' | 'wechat' | 'telegram' | 'discord' | 'pixel';
     avatarShape?: 'circle' | 'rounded' | 'square';
@@ -46,7 +46,7 @@ interface ChatHeaderShellProps {
     headerDensity?: 'compact' | 'default' | 'airy';
     statusStyle?: 'subtle' | 'pill' | 'dot';
     chromeStyle?: 'soft' | 'flat' | 'floating' | 'pixel';
-    /** 动森彩蛋模式：头部换成木质草绿栏。 */
+    /** Animal Crossing easter-egg mode: swaps the header for a wood-and-grass-green bar. */
     acnh?: boolean;
 }
 
@@ -201,7 +201,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
     const isPixelHeader = headerStyle === 'pixel';
     const useCenteredLayout = headerAlign === 'center';
     const avatarRadiusClass = avatarShape === 'square' ? 'rounded-sm' : avatarShape === 'rounded' ? 'rounded-xl' : 'rounded-full';
-    // 动森：情绪 buff 胶囊统一奶油底 + 棕字，和谐进绿顶栏（否则各 buff 自带的彩色底铺在绿上很糊）
+    // Animal Crossing: emotion buff pills all use a uniform cream background + brown text so they blend into the green header (otherwise each buff's own colored background looks muddy on green)
     const buffChipStyle = (buff: CharacterBuff): React.CSSProperties => acnh
         ? { color: '#6b5a3e', borderColor: '#e6dab4', background: '#fbf4de' }
         : { color: buff.color || '#db2777', borderColor: `${buff.color || '#db2777'}40`, background: `${buff.color || '#db2777'}10` };
@@ -228,12 +228,14 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                           ? 'bg-white/85 backdrop-blur-xl border-b border-white/70 shadow-sm'
                           : 'bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm';
     const headerBaseHeight = headerDensity === 'compact' ? '5rem' : headerDensity === 'airy' ? '7rem' : '6rem';
-    // 两种对齐都用对称 py，让内容垂直居中（原标准布局只给 pb → 底贴、上方留白、整体不居中）。
+    // Both alignments use symmetric py so content is vertically centered (the original standard layout only had pb -> content stuck to the bottom, blank space up top, not centered overall).
     const headerDensityClass = headerDensity === 'compact' ? 'px-4 py-2' : headerDensity === 'airy' ? 'px-6 py-4' : 'px-5 py-3';
-    // 顶栏背景自己铺到刘海下：paddingTop 让出 safe-top，背景随 .sully-chat-header 一起从 y=0 延伸，
-    // 刘海段就是顶栏自己的颜色，和其余 App 统一无缝（取代旧的「透明 spacer」方案）。
-    // minHeight 是地板不是固定高度——border-box 下 padding 在它之上叠加把元素撑高、不挤压内容（区别于固定 h-NN 会劈开）。
-    // Chat 在 SELF_SAFE_AREA_APPS 名单里，外壳不再加 safe-top，这里加一次不会重复。
+    // The header background extends under the notch itself: paddingTop yields the safe-top area while the background
+    // still stretches from y=0 along with .sully-chat-header, so the notch strip is just the header's own color,
+    // seamless with the rest of the app (replaces the old "transparent spacer" approach).
+    // minHeight is a floor, not a fixed height -- under border-box, padding stacks on top of it and grows the
+    // element instead of squeezing the content (unlike a fixed h-NN, which would clip it).
+    // Chat is on the SELF_SAFE_AREA_APPS list, so the shell no longer adds safe-top; adding it once here doesn't double up.
     const headerSafeStyle: React.CSSProperties = { minHeight: headerBaseHeight, paddingTop: 'var(--safe-top)' };
     const primaryTextClass = acnh ? 'text-[#6b5a3e]' : isDarkHeader ? 'text-white' : isPixelHeader ? 'text-[#fff7ed]' : 'text-slate-800';
     const secondaryTextClass = acnh ? 'text-[#5a9e7a]' : isDarkHeader ? 'text-slate-400' : isPixelHeader ? 'text-[#f3ddc7]' : 'text-slate-400';
@@ -301,7 +303,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsBuffListExpanded((prev) => !prev); }}
                             className={`shrink-0 min-w-[22px] text-[8px] leading-none px-1 py-[3px] rounded-[10px] font-bold border transition-colors ${acnh ? 'border-[#e6dab4] text-[#6b5a3e] bg-[#fbf4de]' : 'border-slate-300 text-slate-500 bg-slate-100/90 hover:bg-slate-200/80'}`}
-                            title="查看全部状态"
+                            title="View all states"
                         >
                             +{hiddenBuffCount}
                         </button>
@@ -336,17 +338,17 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
             )}
             {isInstantSending && (
                 <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-sky-500/15 text-sky-200 border-sky-400/20' : isPixelHeader ? 'bg-[#eff6ff] text-[#1d4ed8] border-[#1d4ed8]/20' : 'bg-sky-50/95 text-sky-600 border-sky-200'}`}>
-                    发送中…
+                    Sending…
                 </div>
             )}
             {isEmotionEvaluating && (
                 <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-violet-500/15 text-violet-200 border-violet-400/20' : isPixelHeader ? 'bg-[#fff7ed] text-[#8f674a] border-[#8f674a]/20' : 'bg-violet-50/95 text-violet-500 border-violet-200'}`}>
-                    情绪分析中
+                    Analyzing mood
                 </div>
             )}
             {isMemoryPalaceProcessing && (
                 <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-indigo-500/15 text-indigo-200 border-indigo-400/20' : isPixelHeader ? 'bg-[#f5f3ff] text-[#4338ca] border-[#4338ca]/20' : 'bg-indigo-50/95 text-indigo-600 border-indigo-200'}`}>
-                    {memoryPalaceStatusText || '记忆整理中'}
+                    {memoryPalaceStatusText || 'Organizing memories'}
                 </div>
             )}
         </div>
@@ -378,12 +380,12 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                     )}
                     {isInstantSending && (
                         <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-sky-500/15 text-sky-200 border-sky-400/20' : isPixelHeader ? 'bg-[#eff6ff] text-[#1d4ed8] border-[#1d4ed8]/20' : 'bg-sky-50 text-sky-600 border-sky-200'}`}>
-                            发送中…
+                            Sending…
                         </div>
                     )}
                     {isEmotionEvaluating && (
                         <div className={`text-[9px] px-1.5 py-0.5 rounded-md font-semibold border animate-pulse ${isDarkHeader ? 'bg-violet-500/15 text-violet-200 border-violet-400/20' : isPixelHeader ? 'bg-[#fff7ed] text-[#8f674a] border-[#8f674a]/20' : 'bg-violet-50 text-violet-500 border-violet-200'}`}>
-                            情绪分析中
+                            Analyzing mood
                         </div>
                     )}
                 </div>
@@ -398,9 +400,9 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
 
     return (
         <div className="shrink-0 z-30 sticky top-0">
-        {/* header 主体：sully-chat-header 钩子背景从 y=0 铺起、paddingTop 让出 safe-top，刘海段即顶栏自己的背景（无缝，和其余 App 统一）；内容垂直居中 */}
+        {/* Header body: the sully-chat-header hook's background stretches from y=0, paddingTop yields safe-top, and the notch strip is the header's own background (seamless, matches the rest of the app); content is vertically centered */}
         <div className={`sully-chat-header ${headerDensityClass} flex items-center relative ${headerToneClass}`} style={headerSafeStyle}>
-            {/* 动森彩蛋：顶栏右下角纯色松树剪影（z-[-1] 在内容之下，不挡按钮）。塞在 header 主体内而非外层 spacer，否则会飘到刘海上 */}
+            {/* Animal Crossing easter egg: a solid-color pine-tree silhouette in the header's bottom-right corner (z-[-1], below the content, doesn't block buttons). Placed inside the header body itself rather than the outer spacer, otherwise it would drift up onto the notch */}
             {acnh && !selectionMode && (
                 <svg viewBox="0 0 140 46" className="absolute right-2 bottom-[5px] h-9 w-auto pointer-events-none" style={{ zIndex: -1, opacity: 0.9 }} fill="#76b48f" aria-hidden>
                     <rect x="98" y="40" width="4" height="6" /><path d="M84 41 L116 41 L100 24Z" /><path d="M88 32 L112 32 L100 18Z" /><path d="M91 24 L109 24 L100 10Z" />
@@ -410,8 +412,8 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
             )}
             {selectionMode ? (
                 <div className="flex items-center justify-between w-full">
-                    <button onClick={onCancelSelection} className={`text-sm font-bold px-2 py-1 ${secondaryTextClass}`}>取消</button>
-                    <span className={`text-sm font-bold ${primaryTextClass}`}>已选 {selectedCount} 项</span>
+                    <button onClick={onCancelSelection} className={`text-sm font-bold px-2 py-1 ${secondaryTextClass}`}>Cancel</button>
+                    <span className={`text-sm font-bold ${primaryTextClass}`}>{selectedCount} selected</span>
                     <div className="w-10" />
                 </div>
             ) : useCenteredLayout ? (
@@ -429,7 +431,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                         {renderCenteredInfo()}
                     </div>
 
-                    <button onClick={onTriggerAI} className={`sully-chat-trigger absolute right-0 bottom-2 p-2 ${actionButtonClass}`} title={triggerIcon === 'stop' ? '停止生成' : '触发 AI'}>
+                    <button onClick={onTriggerAI} className={`sully-chat-trigger absolute right-0 bottom-2 p-2 ${actionButtonClass}`} title={triggerIcon === 'stop' ? 'Stop generating' : 'Trigger AI'}>
                         {triggerIconNode}
                     </button>
                     {extraAction && (
@@ -454,7 +456,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                             {extraAction.icon}
                         </button>
                     )}
-                    <button onClick={onTriggerAI} className={`sully-chat-trigger p-2 ${extraAction ? '' : 'ml-auto'} ${actionButtonClass}`} title={triggerIcon === 'stop' ? '停止生成' : '触发 AI'}>
+                    <button onClick={onTriggerAI} className={`sully-chat-trigger p-2 ${extraAction ? '' : 'ml-auto'} ${actionButtonClass}`} title={triggerIcon === 'stop' ? 'Stop generating' : 'Trigger AI'}>
                         {triggerIconNode}
                     </button>
                 </div>
@@ -462,7 +464,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
 
             {isBuffListExpanded && hiddenBuffCount > 0 && (
                 <div ref={buffPanelRef} className="absolute top-full left-4 right-4 mt-1 bg-white rounded-xl shadow-lg border border-slate-200 p-3 z-40">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">全部状态</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">All States</div>
                     <div className="max-h-36 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         <div className="flex flex-wrap gap-1.5">
                             {buffs.map((buff) => (
@@ -497,7 +499,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                             </span>
                             <div className="text-xs font-bold tracking-wide" style={{ color: openBuff.color || '#db2777' }}>
                                 {intensityDots(openBuff.intensity)}{' '}
-                                {normalizeIntensity(openBuff.intensity) === 1 ? '轻微' : normalizeIntensity(openBuff.intensity) === 2 ? '中等' : '强烈'}
+                                {normalizeIntensity(openBuff.intensity) === 1 ? 'Mild' : normalizeIntensity(openBuff.intensity) === 2 ? 'Moderate' : 'Strong'}
                             </div>
                         </div>
                         <button onClick={() => setOpenBuff(null)} className="text-slate-300 hover:text-slate-500 text-lg leading-none px-1">
@@ -507,7 +509,7 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                     {openBuff.description ? (
                         <p className="text-sm text-slate-600 leading-relaxed">{openBuff.description}</p>
                     ) : (
-                        <p className="text-xs text-slate-400 italic">暂无详情</p>
+                        <p className="text-xs text-slate-400 italic">No details yet</p>
                     )}
                 </div>
             )}
@@ -519,11 +521,11 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                             <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-red-100 text-xl shadow-inner">
                                 {confirmDeleteBuff.emoji || '🗑'}
                             </div>
-                            <div className="font-bold text-slate-800 text-sm">删除情绪状态</div>
+                            <div className="font-bold text-slate-800 text-sm">Delete Emotion State</div>
                             <div className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                确定要删除“{confirmDeleteBuff.label}”吗？
+                                Are you sure you want to delete "{confirmDeleteBuff.label}"?
                                 <br />
-                                对应的提示也会一起移除。
+                                Its matching prompt will be removed too.
                             </div>
                         </div>
                         <div className="flex gap-2.5">
@@ -531,13 +533,13 @@ const ChatHeaderShell: React.FC<ChatHeaderShellProps> = ({
                                 onClick={() => setConfirmDeleteBuff(null)}
                                 className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors"
                             >
-                                取消
+                                Cancel
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
                                 className="flex-1 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-red-500 rounded-2xl hover:from-rose-600 hover:to-red-600 shadow-lg shadow-red-200/80 transition-all"
                             >
-                                删除
+                                Delete
                             </button>
                         </div>
                     </div>

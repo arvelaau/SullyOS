@@ -85,7 +85,7 @@ describe('collaboration sidecar wiring', () => {
     expect(parser).toContain('collaborationFileMessageMetadata(file)');
     expect(parser).not.toContain('saveAsset({ id: file.assetId');
     expect(item).toContain('sully-collaboration-file');
-    expect(item).toContain('可安装作品');
+    expect(item).toContain('Installable app');
     expect(read('apps/Chat.tsx')).toContain('requestedPreviewAssetId={collaborationPreviewAssetId}');
     expect(types).toContain("'collaboration_file'");
   });

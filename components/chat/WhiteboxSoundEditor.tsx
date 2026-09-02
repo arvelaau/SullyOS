@@ -9,17 +9,21 @@ import {
     decodeSoundShare,
 } from '../../utils/whiteboxSound';
 
-// 白框「提示音」编辑器（独立于白框 CSS）。
+// Whitebox "notification sound" editor (independent of Whitebox CSS).
 //
-// 触发时机（播放逻辑见 apps/Chat.tsx）：仅当"ta 新发的消息"成为会话最后一条时响一次；
-// 你自己发消息 / 翻旧记录都不会响。
+// Trigger timing (playback logic is in apps/Chat.tsx): plays once only when "a new message they just sent"
+// becomes the last message in the conversation; you sending a message yourself, or scrolling back through
+// old history, never triggers it.
 //
-// 存储与分享：
-// - 默认「解绑」——提示音独立存在角色字段里，白框分享码保持轻量、纯 CSS。提示音可用下方「分享码」单独传。
-// - 打开「绑定到白框」——提示音会写进白框 CSS 的指令注释，跟白框一起分享出去（随时可解绑）。
-// 本组件不关心存哪，只吐出 (sound, bound) 的变化，落地位置由 Chat.tsx 决定。
+// Storage and sharing:
+// - Default is "unbound" -- the sound lives independently in the character's own field, keeping the Whitebox
+//   share code lightweight and pure CSS. The sound can be shared separately using the "share code" below.
+// - Turning on "Bind to Whitebox" -- the sound gets written into a directive comment inside the Whitebox CSS,
+//   and shared together with it (can be unbound again at any time).
+// This component doesn't care where it's stored -- it only emits (sound, bound) changes; where they land is up to Chat.tsx.
 
-// 上传音频转 data URI 的体积上限：绑定分享时会进分享码，太大会爆；提示音本就该短，200KB 足够。
+// Size cap for converting an uploaded audio file to a data URI: when bound-shared it goes into the share code,
+// so anything too large would blow it up; a notification sound should be short anyway, 200KB is plenty.
 const MAX_UPLOAD_BYTES = 200 * 1024;
 
 const readFileAsDataUrl = (file: File): Promise<string> =>
@@ -43,11 +47,11 @@ const copyText = async (text: string): Promise<boolean> => {
 interface Props {
     sound: WhiteboxSound | null;
     onChangeSound: (sound: WhiteboxSound | null) => void;
-    /** 「绑定到白框」开关；全局默认提示音不涉及绑定，传 false 隐藏。默认显示。 */
+    /** The "Bind to Whitebox" toggle; the global default sound doesn't involve binding, pass false to hide it. Shown by default. */
     showBind?: boolean;
     bound?: boolean;
     onChangeBound?: (bound: boolean) => void;
-    /** 顶部提示条文案（区分「角色版」与「全局默认版」）。 */
+    /** The top hint bar's copy (distinguishes the "per-character version" from the "global default version"). */
     hint?: React.ReactNode;
 }
 
@@ -66,7 +70,7 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
         unlockWhiteboxAudio();
         const next = { src: key, volume };
         onChangeSound(next);
-        playWhiteboxSound(next); // 点一下即试听
+        playWhiteboxSound(next); // Preview it with a single tap
     };
 
     const setVolume = (v: number) => {
@@ -78,9 +82,9 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
         const file = e.target.files?.[0];
         e.target.value = '';
         if (!file) return;
-        if (!file.type.startsWith('audio/')) { window.alert('请选择音频文件（mp3 / wav / ogg 等）。'); return; }
+        if (!file.type.startsWith('audio/')) { window.alert('Please choose an audio file (mp3 / wav / ogg, etc).'); return; }
         if (file.size > MAX_UPLOAD_BYTES) {
-            window.alert(`音频太大（${Math.round(file.size / 1024)}KB）。绑定到白框分享时会进分享码，请用 ≤ ${MAX_UPLOAD_BYTES / 1024}KB 的短提示音，或改用「音频 URL」。`);
+            window.alert(`Audio file too large (${Math.round(file.size / 1024)}KB). It goes into the share code when bound-shared with Whitebox, so please use a short sound of ${MAX_UPLOAD_BYTES / 1024}KB or less, or use an "Audio URL" instead.`);
             return;
         }
         setBusy(true);
@@ -91,7 +95,7 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
             onChangeSound(next);
             playWhiteboxSound(next);
         } catch {
-            window.alert('读取音频失败，请换个文件重试。');
+            window.alert('Failed to read the audio file. Please try a different file.');
         } finally {
             setBusy(false);
         }
@@ -100,7 +104,7 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
     const applyUrl = () => {
         const u = urlDraft.trim();
         if (!u) return;
-        if (!/^https?:\/\//i.test(u)) { window.alert('请填写 http(s):// 开头的音频直链。'); return; }
+        if (!/^https?:\/\//i.test(u)) { window.alert('Please enter a direct audio link starting with http(s)://.'); return; }
         unlockWhiteboxAudio();
         const next = { src: u, volume };
         onChangeSound(next);
@@ -112,13 +116,13 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
     const handleShareExport = async () => {
         if (!sound) return;
         const ok = await copyText(encodeSoundShare(sound));
-        window.alert(ok ? '已复制提示音分享码，发给别人粘贴导入即可（不含白框皮肤）。' : '复制失败，请重试。');
+        window.alert(ok ? 'Copied the sound share code -- send it to someone else, and they can paste it to import (Whitebox skin not included).' : 'Copy failed. Please try again.');
     };
     const handleShareImport = () => {
-        const code = window.prompt('粘贴提示音分享码（SULLYSND1:...）：', '')?.trim();
+        const code = window.prompt('Paste a sound share code (SULLYSND1:...):', '')?.trim();
         if (!code) return;
         const incoming = decodeSoundShare(code);
-        if (!incoming) { window.alert('分享码无法识别，请确认完整粘贴。'); return; }
+        if (!incoming) { window.alert('Could not recognize the share code. Please make sure you pasted the whole thing.'); return; }
         unlockWhiteboxAudio();
         onChangeSound(incoming);
         playWhiteboxSound(incoming);
@@ -132,12 +136,12 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
     return (
         <div className="space-y-4">
             <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-3.5 py-2.5 text-[11px] leading-relaxed text-amber-700">
-                {hint ?? <>🔔 提示音只在 <b>ta 新发的消息成为最新一条</b> 时响一次；你自己发消息、翻旧记录都不会响。</>}
+                {hint ?? <>🔔 The notification sound only plays once when <b>a new message they sent becomes the latest one</b>; sending a message yourself, or scrolling back through old history, never triggers it.</>}
             </div>
 
-            {/* 内置音效 */}
+            {/* Built-in sounds */}
             <div>
-                <div className="mb-2 text-[11px] font-bold text-slate-500">内置音效 <span className="font-normal text-slate-400">· 点一下试听并选用</span></div>
+                <div className="mb-2 text-[11px] font-bold text-slate-500">Built-in Sounds <span className="font-normal text-slate-400">- tap to preview and select</span></div>
                 <div className="flex flex-wrap gap-1.5">
                     {Object.entries(BUILTIN_SOUNDS).map(([key, s]) => (
                         <button key={key} onClick={() => pickBuiltin(key)} className={chipCls(isBuiltin && src === key)}>
@@ -147,18 +151,18 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
                 </div>
             </div>
 
-            {/* 上传 / URL */}
+            {/* Upload / URL */}
             <div>
-                <div className="mb-2 text-[11px] font-bold text-slate-500">自定义 <span className="font-normal text-slate-400">· 上传音频（≤200KB）或填直链</span></div>
+                <div className="mb-2 text-[11px] font-bold text-slate-500">Custom <span className="font-normal text-slate-400">- upload audio (≤200KB) or enter a direct link</span></div>
                 <div className="flex flex-wrap items-center gap-2">
                     <input ref={fileRef} type="file" accept="audio/*" className="hidden" onChange={handleUpload} />
                     <button
                         onClick={() => fileRef.current?.click()}
                         disabled={busy}
                         className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-[11px] font-semibold text-indigo-600 hover:bg-indigo-100 disabled:opacity-50"
-                    >{busy ? '读取中…' : '⬆ 上传音频文件'}</button>
+                    >{busy ? 'Loading…' : '⬆ Upload Audio File'}</button>
                     {isUpload && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600">已内嵌上传音频 ✓</span>
+                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600">Uploaded audio embedded ✓</span>
                     )}
                 </div>
                 <div className="mt-2 flex items-center gap-1.5">
@@ -169,14 +173,14 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
                         placeholder="https://…/ding.mp3"
                         className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-600 outline-none focus:border-indigo-300"
                     />
-                    <button onClick={applyUrl} className="shrink-0 rounded-xl bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-200">用此链接</button>
+                    <button onClick={applyUrl} className="shrink-0 rounded-xl bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-200">Use This Link</button>
                 </div>
             </div>
 
-            {/* 音量 + 试听 + 关闭 */}
+            {/* Volume + preview + turn off */}
             <div>
                 <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-500">音量</span>
+                    <span className="text-[11px] font-bold text-slate-500">Volume</span>
                     <span className="text-[10px] text-slate-400">{Math.round(volume * 100)}%</span>
                 </div>
                 <input
@@ -190,17 +194,17 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
                         onClick={() => { unlockWhiteboxAudio(); playWhiteboxSound(sound); }}
                         disabled={!src}
                         className="rounded-xl bg-indigo-500 px-4 py-1.5 text-[11px] font-bold text-white hover:bg-indigo-600 disabled:opacity-40"
-                    >▶ 试听</button>
+                    >▶ Preview</button>
                     {src && (
-                        <button onClick={clearSound} className="rounded-xl px-3 py-1.5 text-[11px] font-semibold text-rose-400 hover:bg-rose-50 hover:text-rose-500">关闭提示音</button>
+                        <button onClick={clearSound} className="rounded-xl px-3 py-1.5 text-[11px] font-semibold text-rose-400 hover:bg-rose-50 hover:text-rose-500">Turn Off Sound</button>
                     )}
                     <span className="ml-auto text-[10px] text-slate-400">
-                        {src ? (isBuiltin ? '当前：内置音效' : '当前：自定义音频') : '当前：无'}
+                        {src ? (isBuiltin ? 'Current: built-in sound' : 'Current: custom audio') : 'Current: none'}
                     </span>
                 </div>
             </div>
 
-            {/* 绑定到白框 开关（全局默认版不显示） */}
+            {/* Bind to Whitebox toggle (hidden for the global default version) */}
             {showBind && (
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-3.5 py-3">
                     <label className="flex cursor-pointer items-start gap-3">
@@ -211,22 +215,22 @@ const WhiteboxSoundEditor: React.FC<Props> = ({ sound, onChangeSound, showBind =
                             className="mt-0.5 h-4 w-4 shrink-0 accent-indigo-500"
                         />
                         <span className="min-w-0">
-                            <span className="block text-[12px] font-bold text-slate-700">绑定到白框一起分享</span>
+                            <span className="block text-[12px] font-bold text-slate-700">Bind to Whitebox and share together</span>
                             <span className="block text-[10px] leading-snug text-slate-400">
                                 {bound
-                                    ? '已绑定：分享这套白框时会带上提示音（上传的音频会进分享码，可能变大）。'
-                                    : '未绑定：白框分享码保持轻量、只含皮肤；提示音用下方分享码单独传。'}
+                                    ? 'Bound: sharing this Whitebox will include the notification sound (uploaded audio goes into the share code and may make it larger).'
+                                    : 'Unbound: the Whitebox share code stays lightweight and skin-only; share the sound separately with the code below.'}
                             </span>
                         </span>
                     </label>
                 </div>
             )}
 
-            {/* 提示音独立分享码 */}
+            {/* Standalone share code for the notification sound */}
             <div className="flex items-center gap-2">
-                <button onClick={handleShareImport} className="rounded-lg px-2.5 py-1 text-[10px] font-semibold text-slate-400 hover:bg-slate-100 hover:text-slate-600">导入分享码</button>
-                <button onClick={handleShareExport} disabled={!sound} className={`rounded-lg px-2.5 py-1 text-[10px] font-semibold ${sound ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-600' : 'text-slate-300'}`}>导出分享码</button>
-                <span className="ml-auto text-[10px] text-slate-300">SULLYSND1 · 单独分享提示音</span>
+                <button onClick={handleShareImport} className="rounded-lg px-2.5 py-1 text-[10px] font-semibold text-slate-400 hover:bg-slate-100 hover:text-slate-600">Import Share Code</button>
+                <button onClick={handleShareExport} disabled={!sound} className={`rounded-lg px-2.5 py-1 text-[10px] font-semibold ${sound ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-600' : 'text-slate-300'}`}>Export Share Code</button>
+                <span className="ml-auto text-[10px] text-slate-300">SULLYSND1 · share the sound separately</span>
             </div>
         </div>
     );

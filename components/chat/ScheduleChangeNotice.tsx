@@ -6,7 +6,7 @@ interface ScheduleChangeNoticeProps {
     onDone: () => void;
 }
 
-/** ChatApp 顶部短暂浮出的日程修订回执；全部零件都有稳定白框 CSS 钩子。 */
+/** Brief receipt that surfaces at the top of ChatApp when a schedule is revised; every part has a stable Whitebox CSS hook. */
 const ScheduleChangeNotice: React.FC<ScheduleChangeNoticeProps> = ({ detail, onDone }) => {
     useEffect(() => {
         const timer = window.setTimeout(onDone, 4300);
@@ -64,13 +64,13 @@ const ScheduleChangeNotice: React.FC<ScheduleChangeNoticeProps> = ({ detail, onD
                     :where(.sully-schedule-change-shine) { display:none; animation:none; }
                 }
             `}</style>
-            <div className="sully-schedule-change" role="status" aria-live="polite" aria-label="未来日程已调整">
+            <div className="sully-schedule-change" role="status" aria-live="polite" aria-label="Upcoming schedule updated">
                 <div className="sully-schedule-change-shine" aria-hidden="true" />
                 <div className="sully-schedule-change-head">
                     <span className="sully-schedule-change-mark" aria-hidden="true">✓</span>
-                    <span className="sully-schedule-change-kicker">未来日程已调整</span>
+                    <span className="sully-schedule-change-kicker">Upcoming schedule updated</span>
                     {detail.changes.length > 1 && (
-                        <span className="sully-schedule-change-count">{detail.changes.length} 项</span>
+                        <span className="sully-schedule-change-count">{detail.changes.length} items</span>
                     )}
                 </div>
                 <div className="sully-schedule-change-list">

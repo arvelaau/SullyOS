@@ -34,7 +34,7 @@ interface ChatModalsProps {
     setPreserveContext: (v: boolean) => void;
     editContent: string;
     setEditContent: (v: string) => void;
-    
+
     // New Category Props
     newCategoryName: string;
     setNewCategoryName: (v: string) => void;
@@ -138,9 +138,9 @@ interface ChatModalsProps {
     // Memory Palace force vectorize
     isMemoryPalaceEnabled?: boolean;
     isVectorizing?: boolean;
-    /** 待处理条数（排除热区的真实缓冲区口径）：null=未算出/未开弹窗，0=已全同步 */
+    /** Pending count (real buffer measure, excluding the hot zone): null = not yet computed / modal not open, 0 = fully synced */
     vectorizePendingCount?: number | null;
-    /** 处理中的逐轮进度文案，如「第 2 轮 · 剩余 340 条」 */
+    /** Turn-by-turn progress text while processing, e.g. "Round 2 · 340 remaining" */
     vectorizeProgress?: string;
     retainRecentForVectorize?: boolean;
     setRetainRecentForVectorize?: (value: boolean) => void;
@@ -229,7 +229,7 @@ const TranslationLanguagePicker: React.FC<TranslationLanguagePickerProps> = ({
                     disabled={!normalizedCustomLang}
                     className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${normalizedCustomLang ? selectedClass : 'bg-slate-100 text-slate-300'}`}
                 >
-                    套用
+                    Apply
                 </button>
             </div>
         </div>
@@ -305,11 +305,11 @@ const ChatModals: React.FC<ChatModalsProps> = ({
             longPressTriggeredRef.current = false;
             return;
         }
-        // 范围内直接设置；范围外由上层直接提示先调整拉杆。
+        // Set directly when within range; when out of range, the parent layer directly prompts to adjust the slider first.
         onSetHistoryStart(msgId);
     };
 
-    // 高亮命中的连续子串（优先），否则不高亮（subsequence 命中时高亮意义不大）。
+    // Highlight the matched contiguous substring (preferred), otherwise no highlight (a highlight is not very meaningful for a subsequence match).
     const renderHighlighted = (text: string, query: string, baseClass: string) => {
         if (!query) return <span className={baseClass}>{text}</span>;
         const lower = text.toLowerCase();
@@ -351,56 +351,56 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
     return (
         <>
-            <Modal 
-                isOpen={modalType === 'transfer'} title="Credits 转账" onClose={() => setModalType('none')}
-                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">取消</button><button onClick={onTransfer} className="flex-1 py-3 bg-orange-500 text-white rounded-2xl">确认</button></>}
+            <Modal
+                isOpen={modalType === 'transfer'} title="Credits Transfer" onClose={() => setModalType('none')}
+                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">Cancel</button><button onClick={onTransfer} className="flex-1 py-3 bg-orange-500 text-white rounded-2xl">Confirm</button></>}
             >
-                <input type="number" value={transferAmt} onChange={e => setTransferAmt(e.target.value)} placeholder="金额" className="w-full bg-slate-100 rounded-2xl px-5 py-4 text-lg font-bold" autoFocus />
-                <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} maxLength={30} placeholder="添加转账留言（选填）" className="w-full bg-slate-100 rounded-2xl px-5 py-3 text-sm mt-3" />
+                <input type="number" value={transferAmt} onChange={e => setTransferAmt(e.target.value)} placeholder="Amount" className="w-full bg-slate-100 rounded-2xl px-5 py-4 text-lg font-bold" autoFocus />
+                <input type="text" value={transferNote} onChange={e => setTransferNote(e.target.value)} maxLength={30} placeholder="Add a transfer note (optional)" className="w-full bg-slate-100 rounded-2xl px-5 py-3 text-sm mt-3" />
             </Modal>
 
             {/* New Category Modal */}
-            <Modal 
-                isOpen={modalType === 'add-category'} title="新建表情分类" onClose={() => setModalType('none')}
-                footer={<button onClick={onAddCategory} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">创建</button>}
+            <Modal
+                isOpen={modalType === 'add-category'} title="New Emoji Category" onClose={() => setModalType('none')}
+                footer={<button onClick={onAddCategory} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">Create</button>}
             >
-                <input 
-                    value={newCategoryName} 
-                    onChange={e => setNewCategoryName(e.target.value)} 
-                    placeholder="输入分类名称..." 
-                    className="w-full bg-slate-100 rounded-2xl px-5 py-4 text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-slate-700" 
-                    autoFocus 
+                <input
+                    value={newCategoryName}
+                    onChange={e => setNewCategoryName(e.target.value)}
+                    placeholder="Enter category name..."
+                    className="w-full bg-slate-100 rounded-2xl px-5 py-4 text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-slate-700"
+                    autoFocus
                 />
             </Modal>
 
-            <Modal 
-                isOpen={modalType === 'emoji-import'} title="表情注入" onClose={() => setModalType('none')}
-                footer={<button onClick={onImportEmoji} className="w-full py-4 bg-primary text-white font-bold rounded-2xl">添加至当前分类</button>}
+            <Modal
+                isOpen={modalType === 'emoji-import'} title="Emoji Import" onClose={() => setModalType('none')}
+                footer={<button onClick={onImportEmoji} className="w-full py-4 bg-primary text-white font-bold rounded-2xl">Add to Current Category</button>}
             >
                 <div className="space-y-3">
-                    <p className="text-xs text-slate-400">表情将导入到你当前选中的分类。</p>
-                    <textarea value={emojiImportText} onChange={e => setEmojiImportText(e.target.value)} placeholder="Name--URL (每行一个)" className="w-full h-40 bg-slate-100 rounded-2xl p-4 resize-none" />
+                    <p className="text-xs text-slate-400">Emoji will be imported into your currently selected category.</p>
+                    <textarea value={emojiImportText} onChange={e => setEmojiImportText(e.target.value)} placeholder="Name--URL (one per line)" className="w-full h-40 bg-slate-100 rounded-2xl p-4 resize-none" />
                 </div>
             </Modal>
 
-            <Modal 
-                isOpen={modalType === 'chat-settings'} title="聊天设置" onClose={() => setModalType('none')}
-                footer={<button onClick={onSaveSettings} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">保存设置</button>}
+            <Modal
+                isOpen={modalType === 'chat-settings'} title="Chat Settings" onClose={() => setModalType('none')}
+                footer={<button onClick={onSaveSettings} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">Save Settings</button>}
             >
                 <div className="space-y-6">
                      <div className="rounded-2xl border border-violet-200 bg-violet-50 p-3.5">
                          <div className="flex items-center gap-3">
                              <div className="min-w-0 flex-1">
-                                 <div className="text-xs font-bold text-violet-700">智能语境</div>
+                                 <div className="text-xs font-bold text-violet-700">Smart Context</div>
                                  <p className="mt-1 text-[10px] leading-relaxed text-violet-600/90">
-                                     更准确地承接上下文、跟随交流节奏，并持续关注正在展开的事情。对所有私聊生效，本地完成，不增加 API 调用。
+                                     Picks up context more accurately, keeps pace with the conversation, and stays aware of what is currently unfolding. Applies to all private chats, runs locally, adds no extra API calls.
                                  </p>
                                  <p className="mt-1.5 text-[10px] font-bold text-violet-600">
                                      {contextSuiteAllEnabled
-                                         ? '已开启'
+                                         ? 'On'
                                          : contextSuiteAnyEnabled
-                                             ? '旧版的部分能力仍在运行；关闭后可统一重新开启'
-                                             : '已关闭，回复保持原有行为'}
+                                             ? 'Some legacy capabilities are still running; turning off lets you re-enable them all at once'
+                                             : 'Off, replies keep their original behavior'}
                                  </p>
                              </div>
                              <button
@@ -411,19 +411,19 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                      ? 'bg-white text-violet-700 ring-1 ring-violet-200'
                                      : 'bg-violet-600 text-white'}`}
                              >
-                                 {contextSuiteAnyEnabled ? '关闭' : '开启'}
+                                 {contextSuiteAnyEnabled ? 'Turn Off' : 'Turn On'}
                              </button>
                          </div>
                      </div>
 
                      <div>
-                         <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">聊天背景</label>
+                         <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Chat Background</label>
                          <div onClick={() => bgInputRef.current?.click()} className="h-24 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:border-primary/50 overflow-hidden relative">
-                             {activeCharacter.chatBackground ? <TokenImg value={activeCharacter.chatBackground} className="w-full h-full object-cover opacity-60" /> : <span className="text-xs text-slate-400">点击上传图片 (原画质)</span>}
-                             {activeCharacter.chatBackground && <span className="absolute z-10 text-xs bg-white/80 px-2 py-1 rounded">更换</span>}
+                             {activeCharacter.chatBackground ? <TokenImg value={activeCharacter.chatBackground} className="w-full h-full object-cover opacity-60" /> : <span className="text-xs text-slate-400">Tap to upload an image (original quality)</span>}
+                             {activeCharacter.chatBackground && <span className="absolute z-10 text-xs bg-white/80 px-2 py-1 rounded">Change</span>}
                          </div>
                          <input type="file" ref={bgInputRef} className="hidden" accept="image/*" onChange={(e) => e.target.files?.[0] && onBgUpload(e.target.files[0])} />
-                         {activeCharacter.chatBackground && <button onClick={onRemoveBg} className="text-[10px] text-red-400 mt-1">移除背景</button>}
+                         {activeCharacter.chatBackground && <button onClick={onRemoveBg} className="text-[10px] text-red-400 mt-1">Remove Background</button>}
                      </div>
                      <div>
                          {(activeCharacter.autoArchiveEnabled || activeCharacter.contextFollowsMemoryPalaceHwm) && settingsContextRangeMode === 'adaptive' ? (
@@ -431,14 +431,14 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                  <div className="flex items-start justify-between gap-3">
                                      <div>
                                          <div className="text-xs font-bold text-violet-700">
-                                             {activeCharacter.autoArchiveEnabled ? '自适应全自动记忆中' : '原文范围跟随记忆水位线'}
+                                             {activeCharacter.autoArchiveEnabled ? 'Adaptive Full-Auto Memory Active' : 'Raw Text Range Follows Memory Watermark'}
                                          </div>
                                          <p className="text-[10px] text-violet-600/80 mt-1 leading-relaxed">
-                                             已处理原文不再重复注入，更早内容通过向量记忆召回。非特殊需求请勿调整。
+                                             Processed raw text is no longer re-injected; earlier content is recalled via vector memory. Please do not adjust unless you have a special need.
                                          </p>
                                          {activeCharacter.contextUserStartMessageId && (
                                              <p className="text-[10px] text-sky-700 mt-1.5 leading-relaxed">
-                                                 当前另有用户断点，实际原文范围会在自适应上限内进一步缩小。
+                                                 There is also a user breakpoint right now — the actual raw text range will be further narrowed within the adaptive cap.
                                              </p>
                                          )}
                                      </div>
@@ -448,7 +448,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                              onClick={() => setSettingsContextRangeMode('manual')}
                                              className="px-3 py-1.5 rounded-xl bg-white border border-violet-200 text-[11px] font-bold text-violet-700"
                                          >
-                                             自定义范围
+                                             Custom Range
                                          </button>
                                          {activeCharacter.contextUserStartMessageId && (
                                              <button
@@ -456,7 +456,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                                  onClick={onRestoreAdaptiveContext}
                                                  className="px-3 py-1.5 rounded-xl bg-violet-600 text-[11px] font-bold text-white"
                                              >
-                                                 一键还原
+                                                 One-Click Restore
                                              </button>
                                          )}
                                      </div>
@@ -465,14 +465,14 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                          ) : (
                              <>
                                  <div className="flex items-center justify-between gap-2 mb-2">
-                                     <label className="text-xs font-bold text-slate-400 uppercase">上下文最大条数 ({settingsContextLimit})</label>
+                                     <label className="text-xs font-bold text-slate-400 uppercase">Max Context Messages ({settingsContextLimit})</label>
                                      {(activeCharacter.autoArchiveEnabled || activeCharacter.contextFollowsMemoryPalaceHwm) && (
                                          <button
                                              type="button"
                                              onClick={onRestoreAdaptiveContext}
                                              className="text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-100 rounded-full px-2.5 py-1"
                                          >
-                                             {activeCharacter.autoArchiveEnabled ? '一键恢复自适应' : '恢复水位跟随'}
+                                             {activeCharacter.autoArchiveEnabled ? 'One-Click Restore Adaptive' : 'Restore Watermark Following'}
                                          </button>
                                      )}
                                  </div>
@@ -488,10 +488,10 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                      }}
                                      className="w-full h-2 bg-slate-200 rounded-full appearance-none accent-primary"
                                  />
-                                 <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>10 (省流)</span><span>5000 (最大范围)</span></div>
+                                 <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>10 (data saver)</span><span>5000 (max range)</span></div>
                                  {(activeCharacter.autoArchiveEnabled || activeCharacter.contextFollowsMemoryPalaceHwm) && (
                                      <p className="text-[10px] text-amber-600 mt-2 leading-relaxed">
-                                         自定义只改变 AI 可直接读取的原文范围，不会回退记忆宫殿水位线，也不会让旧消息重新向量化。
+                                         Customizing only changes the raw text range the AI can directly read — it does not roll back the Memory Palace watermark, nor does it re-vectorize old messages.
                                      </p>
                                  )}
                              </>
@@ -500,41 +500,41 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
                      <div className="pt-2 border-t border-slate-100">
                          <div className="flex justify-between items-center cursor-pointer" onClick={() => setSettingsHideSysLogs(!settingsHideSysLogs)}>
-                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">隐藏系统日志</label>
+                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">Hide System Logs</label>
                              <div className={`w-10 h-6 rounded-full p-1 transition-colors flex items-center ${settingsHideSysLogs ? 'bg-primary' : 'bg-slate-200'}`}>
                                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${settingsHideSysLogs ? 'translate-x-4' : ''}`}></div>
                              </div>
                          </div>
                          <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                             开启后隐藏见面/小程序等自动产生的灰色提示（转账、戳一戳、发图提示除外）。
+                             When on, hides gray auto-generated notices from Date / mini-programs etc. (except transfer, poke, and image-sent notices).
                          </p>
                      </div>
 
                      {/* Translation Settings */}
                      <div className="pt-2 border-t border-slate-100">
                          <div className="flex justify-between items-center cursor-pointer" onClick={onToggleTranslation}>
-                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">消息翻译</label>
+                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">Message Translation</label>
                              <div className={`w-10 h-6 rounded-full p-1 transition-colors flex items-center ${translationEnabled ? 'bg-primary' : 'bg-slate-200'}`}>
                                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${translationEnabled ? 'translate-x-4' : ''}`}></div>
                              </div>
                          </div>
                          <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                             开启后，AI 消息自动翻译为「选」的语言显示，点「译」切换到目标语言。
+                             When on, AI messages are automatically shown translated into the "Show" language; tap "Translate" to switch to the target language.
                          </p>
                          {translationEnabled && (
                              <div className="mt-3 space-y-3">
                                  <TranslationLanguagePicker
-                                     label="选（气泡显示语言）"
+                                     label="Show (bubble display language)"
                                      value={translateSourceLang}
                                      tone="source"
-                                     inputPlaceholder="自定义，如 粤语"
+                                     inputPlaceholder="Custom, e.g. Cantonese"
                                      onSelect={onSetTranslateSourceLang}
                                  />
                                  <TranslationLanguagePicker
-                                     label="译（翻译目标语言）"
+                                     label="Translate (translation target language)"
                                      value={translateTargetLang}
                                      tone="target"
-                                     inputPlaceholder="自定义，如 中文（繁體）"
+                                     inputPlaceholder="Custom, e.g. Chinese (Traditional)"
                                      onSelect={onSetTranslateLang}
                                  />
                                  <button
@@ -543,8 +543,8 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                      className="w-full flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left active:bg-slate-50"
                                  >
                                      <span>
-                                         <span className="block text-[11px] font-bold text-slate-600">原文与译文同时展开</span>
-                                         <span className="block mt-0.5 text-[9px] leading-relaxed text-slate-400">开启后不再逐条点击切换，双语气泡会直接上下显示两种语言。</span>
+                                         <span className="block text-[11px] font-bold text-slate-600">Show original and translation together</span>
+                                         <span className="block mt-0.5 text-[9px] leading-relaxed text-slate-400">When on, no more tapping to switch each message — bilingual bubbles show both languages stacked directly.</span>
                                      </span>
                                      <span className={`shrink-0 w-10 h-6 rounded-full p-1 transition-colors flex items-center ${translationExpanded ? 'bg-primary' : 'bg-slate-200'}`}>
                                          <span className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${translationExpanded ? 'translate-x-4' : ''}`} />
@@ -552,7 +552,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                  </button>
                                  {/* Preview */}
                                  <div className="text-[11px] text-center text-slate-500 bg-slate-50 rounded-lg py-2">
-                                     选<span className="font-bold text-slate-700">{translateSourceLang || '?'}</span> 译<span className="font-bold text-primary">{translateTargetLang || '?'}</span>
+                                     Show<span className="font-bold text-slate-700">{translateSourceLang || '?'}</span> Translate<span className="font-bold text-primary">{translateTargetLang || '?'}</span>
                                  </div>
                              </div>
                          )}
@@ -561,37 +561,37 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                      {/* XHS Toggle */}
                      <div className="pt-2 border-t border-slate-100">
                          <div className="flex justify-between items-center cursor-pointer" onClick={onToggleXhs}>
-                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">小红书</label>
+                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">Xiaohongshu</label>
                              <div className={`w-10 h-6 rounded-full p-1 transition-colors flex items-center ${xhsEnabled ? 'bg-red-400' : 'bg-slate-200'}`}>
                                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${xhsEnabled ? 'translate-x-4' : ''}`}></div>
                              </div>
                          </div>
                          <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                             开启后，角色在聊天中可以搜索、浏览、发帖、评论小红书。需要在全局设置中配置 MCP 或 Cookie。
+                             When on, the character can search, browse, post, and comment on Xiaohongshu in chat. Requires configuring MCP or a cookie in global settings.
                          </p>
                      </div>
 
-                     {/* HTML 模块模式 */}
+                     {/* HTML Module Mode */}
                      <div className="pt-2 border-t border-slate-100">
                          <div className="flex justify-between items-center cursor-pointer" onClick={onToggleHtmlMode}>
-                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">HTML 模块模式</label>
+                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">HTML Module Mode</label>
                              <div className={`w-10 h-6 rounded-full p-1 transition-colors flex items-center ${htmlModeEnabled ? 'bg-fuchsia-500' : 'bg-slate-200'}`}>
                                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${htmlModeEnabled ? 'translate-x-4' : ''}`}></div>
                              </div>
                          </div>
                          <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                             开启后注入"用 [html]...[/html] 包裹的精美卡片"提示词，AI 会在合适场景输出邀请函 / 票据 / 通知等可视化模块。
+                             When on, injects a prompt telling the AI to "wrap polished cards in [html]...[/html]" — the AI will output visual modules like invitations / tickets / notices in suitable scenes.
                          </p>
                          {htmlModeEnabled && (
                              <div className="mt-3">
-                                 <label className="text-[10px] font-bold text-slate-400 mb-1.5 block">自定义提示词补充（追加在内置提示词之后，不会覆盖）</label>
+                                 <label className="text-[10px] font-bold text-slate-400 mb-1.5 block">Custom prompt addition (appended after the built-in prompt, does not overwrite it)</label>
                                  <textarea
                                      value={htmlModeCustomPrompt || ''}
                                      onChange={e => setHtmlModeCustomPrompt?.(e.target.value)}
-                                     placeholder="比如：偏好暖色调 / 默认风格走 minimal 杂志感 / 票据类必须含二维码占位…"
+                                     placeholder="e.g.: prefer warm tones / default to a minimal magazine feel / ticket-type cards must include a QR code placeholder..."
                                      className="w-full h-28 bg-slate-50 rounded-2xl p-3 text-[12px] resize-none border border-slate-200 focus:outline-none focus:border-fuchsia-300"
                                  />
-                                 <p className="text-[10px] text-slate-400 mt-1">留空则只使用内置提示词。</p>
+                                 <p className="text-[10px] text-slate-400 mt-1">Leave blank to use only the built-in prompt.</p>
                              </div>
                          )}
                      </div>
@@ -599,30 +599,30 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                      {/* Voice TTS */}
                      <div className="pt-2 border-t border-slate-100">
                          <div className="flex justify-between items-center cursor-pointer" onClick={onToggleChatVoice}>
-                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">语音消息</label>
+                             <label className="text-xs font-bold text-slate-400 uppercase pointer-events-none">Voice Messages</label>
                              <div className={`w-10 h-6 rounded-full p-1 transition-colors flex items-center ${chatVoiceEnabled ? 'bg-emerald-400' : 'bg-slate-200'}`}>
                                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${chatVoiceEnabled ? 'translate-x-4' : ''}`}></div>
                              </div>
                          </div>
                          <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                             开启后，AI 回复里会出现语音条（需配置 MiniMax 和角色语音）。
+                             When on, AI replies will include voice bars (requires configuring MiniMax and the character's voice).
                          </p>
                          {chatVoiceEnabled && (
                              <div className="mt-3 pt-3 border-t border-slate-100">
                                  <div className="flex justify-between items-center cursor-pointer" onClick={onToggleChatVoiceAutoPlay}>
-                                     <label className="text-[10px] font-bold text-slate-400 uppercase pointer-events-none">收到就自动播放</label>
+                                     <label className="text-[10px] font-bold text-slate-400 uppercase pointer-events-none">Auto-play on receipt</label>
                                      <div className={`w-9 h-5 rounded-full p-1 transition-colors flex items-center ${chatVoiceAutoPlay ? 'bg-emerald-400' : 'bg-slate-200'}`}>
                                          <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${chatVoiceAutoPlay ? 'translate-x-4' : ''}`}></div>
                                      </div>
                                  </div>
                                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                                     开启后收到消息就合成语音并播放。关闭时语音条照常出现，点一下才合成并播放，不听就不消耗语音额度（也可以点「转文字」直接看内容）。
+                                     When on, voice is synthesized and played as soon as a message arrives. When off, the voice bar still appears as usual — it is only synthesized and played when tapped, so if you do not listen it does not use your voice quota (you can also tap "To Text" to view the content directly).
                                  </p>
                              </div>
                          )}
                          {chatVoiceEnabled && (
                              <div className="mt-3">
-                                 <label className="text-[10px] font-bold text-slate-400 mb-1.5 block">语音语种</label>
+                                 <label className="text-[10px] font-bold text-slate-400 mb-1.5 block">Voice Language</label>
                                  <div className="flex flex-wrap gap-1.5">
                                      {VOICE_LANGUAGE_OPTIONS.map(opt => (
                                          <button key={opt.value} onClick={() => onSetChatVoiceLang?.(opt.value)}
@@ -632,21 +632,21 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                      ))}
                                  </div>
                                  {chatVoiceLang === 'yue' && <p className="text-[10px] text-amber-600/80 mt-1.5">{CANTONESE_VOICE_SUPPORT_NOTE}</p>}
-                                 {chatVoiceLang && <p className="text-[10px] text-emerald-600/70 mt-1.5">选择非默认语种时，AI 台词会先翻译再生成语音。</p>}
+                                 {chatVoiceLang && <p className="text-[10px] text-emerald-600/70 mt-1.5">When a non-default language is selected, the AI's lines are translated first, then synthesized into voice.</p>}
                              </div>
                          )}
                      </div>
 
-                     {/* 时间感知 / 自定义时区 / 线下时间感知 已统一迁移至「神经链接」角色设定页 */}
+                     {/* Time awareness / custom timezone / offline time awareness have all been moved to the "Neural Link" character settings page */}
 
                      <div className="pt-2 border-t border-slate-100">
                          <button onClick={() => setModalType('history-manager')} className="w-full py-3 bg-slate-50 text-slate-600 font-bold rounded-2xl border border-slate-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
-                             查看原文范围 / 设置用户断点
+                             View Raw Text Range / Set User Breakpoint
                          </button>
-                         <p className="text-[10px] text-slate-400 mt-2 text-center">查看拉杆上限、记忆水位线，并可在最大范围内进一步缩小 AI 原文范围。</p>
+                         <p className="text-[10px] text-slate-400 mt-2 text-center">View the slider cap and memory watermark, and further narrow the AI's raw text range within the max range.</p>
                      </div>
-                     
-                     {/* 记忆宫殿：一键向量化所有聊天记录 */}
+
+                     {/* Memory Palace: one-click vectorize all chat history */}
                      {isMemoryPalaceEnabled && onForceVectorize && (
                          <div className="pt-2 border-t border-slate-100">
                              <button
@@ -659,38 +659,38 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                          {retainRecentForVectorize && <span className="text-white text-[11px] font-bold">✓</span>}
                                      </span>
                                      <span>
-                                         <span className="block text-xs font-bold text-slate-700">为我保留最近 10 条注入到上下文</span>
-                                         <span className="block text-[10px] text-slate-400 mt-0.5 leading-relaxed">不开启则处理到当前最后一条，已处理原文不再直接发送给模型。</span>
+                                         <span className="block text-xs font-bold text-slate-700">Keep the most recent 10 injected into context for me</span>
+                                         <span className="block text-[10px] text-slate-400 mt-0.5 leading-relaxed">If off, processes up through the current last message; processed raw text is no longer sent directly to the model.</span>
                                      </span>
                                  </span>
                              </button>
                              <button
-                                 onClick={() => { setModalType('memory-vectorize-confirm'); trackEvent('一键把聊天存进记忆宫殿'); }}
+                                 onClick={() => { setModalType('memory-vectorize-confirm'); trackEvent('One-Click Save Chat to Memory Palace'); }}
                                  disabled={isVectorizing}
                                  className="w-full py-3 bg-emerald-50 text-emerald-600 font-bold rounded-2xl border border-emerald-200 active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-70"
                              >
                                  {(vectorizePendingCount != null && vectorizePendingCount > 0)
-                                     ? `🏰 一键存进记忆宫殿 · 待处理 ${vectorizePendingCount} 条`
+                                     ? `🏰 One-Click Save to Memory Palace · ${vectorizePendingCount} pending`
                                      : (vectorizePendingCount === 0)
-                                         ? '🏰 同步原文范围 · 当前无待处理'
-                                         : '🏰 一键把所有聊天存进记忆宫殿'}
+                                         ? '🏰 Sync Raw Text Range · Nothing pending right now'
+                                         : '🏰 One-Click Save All Chat to Memory Palace'}
                              </button>
                              <p className="text-[10px] text-slate-400 mt-2 text-center leading-relaxed">
-                                 使用副 API 分批整理。正式开始前会再次说明影响，不会直接执行。
+                                 Uses the secondary API to process in batches. The impact will be explained again before it actually starts — it will not run immediately.
                              </p>
                          </div>
                      )}
 
                      <div className="pt-2 border-t border-slate-100">
-                         <label className="text-xs font-bold text-red-400 uppercase mb-3 block">危险区域 (Danger Zone)</label>
+                         <label className="text-xs font-bold text-red-400 uppercase mb-3 block">Danger Zone</label>
                          <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => setPreserveContext(!preserveContext)}>
                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${preserveContext ? 'bg-primary border-primary' : 'bg-slate-100 border-slate-300'}`}>
                                  {preserveContext && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
                              </div>
-                             <span className="text-sm text-slate-600">清空时保留最后10条记录 (维持语境)</span>
+                             <span className="text-sm text-slate-600">Keep the last 10 messages when clearing (preserve context)</span>
                          </div>
                          <button onClick={onClearHistory} className="w-full py-3 bg-red-50 text-red-500 font-bold rounded-2xl border border-red-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
-                             执行清空
+                             Clear Now
                          </button>
                      </div>
                 </div>
@@ -698,101 +698,101 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
             <Modal
                 isOpen={modalType === 'memory-vectorize-confirm'}
-                title="确认存进记忆宫殿"
+                title="Confirm Save to Memory Palace"
                 onClose={() => { if (!isVectorizing) setModalType('chat-settings'); }}
                 footer={isVectorizing ? (
                     <div className="w-full py-3 rounded-2xl bg-emerald-50 text-emerald-700 text-center text-sm font-bold flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                        {vectorizeProgress || '正在处理...'}
+                        {vectorizeProgress || 'Processing...'}
                     </div>
                 ) : (
                     <div className="w-full flex gap-2">
-                        <button type="button" onClick={() => setModalType('chat-settings')} className="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 font-bold">取消</button>
-                        <button type="button" onClick={onForceVectorize} className="flex-1 py-3 rounded-2xl bg-emerald-500 text-white font-bold">确认开始</button>
+                        <button type="button" onClick={() => setModalType('chat-settings')} className="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 font-bold">Cancel</button>
+                        <button type="button" onClick={onForceVectorize} className="flex-1 py-3 rounded-2xl bg-emerald-500 text-white font-bold">Confirm &amp; Start</button>
                     </div>
                 )}
             >
                 <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
                     <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-                        <p className="font-bold text-emerald-800 mb-2">按下确认后：</p>
+                        <p className="font-bold text-emerald-800 mb-2">After you confirm:</p>
                         <ul className="space-y-1.5 text-xs text-emerald-900/80 list-disc pl-4">
-                            <li>当前可处理的聊天内容会全部完成记忆整理。</li>
-                            <li>{retainRecentForVectorize ? '最近 10 条原文继续注入聊天上下文。' : '已处理原文不再直接注入聊天上下文。'}</li>
-                            <li>紫色水位线与橙色原文范围会同步，待处理统计从新水位重新开始。</li>
+                            <li>All currently processable chat content will be fully organized into memory.</li>
+                            <li>{retainRecentForVectorize ? 'The most recent 10 messages continue to be injected into chat context.' : 'Processed raw text is no longer directly injected into chat context.'}</li>
+                            <li>The purple watermark and orange raw text range will sync, and the pending count restarts from the new watermark.</li>
                         </ul>
                     </div>
-                    <p className="text-[11px] text-slate-400">处理期间请保持应用打开，不要清空聊天。任何一批失败都不会移动水位线，可安全重试。</p>
+                    <p className="text-[11px] text-slate-400">Please keep the app open during processing and do not clear the chat. If any batch fails, the watermark will not move, so it is safe to retry.</p>
                 </div>
             </Modal>
 
             <Modal
                 isOpen={modalType === 'memory-vectorize-result'}
-                title="记忆处理完成"
+                title="Memory Processing Complete"
                 onClose={() => { setModalType('none'); }}
-                footer={<button type="button" onClick={() => setModalType('none')} className="w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold">知道了</button>}
+                footer={<button type="button" onClick={() => setModalType('none')} className="w-full py-3 rounded-2xl bg-emerald-500 text-white font-bold">Got it</button>}
             >
                 <div className="space-y-3">
                     <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4 text-center">
                         <div className="text-2xl mb-1">✓</div>
-                        <p className="text-sm font-bold text-emerald-800">当前聊天的记忆处理边界已同步</p>
+                        <p className="text-sm font-bold text-emerald-800">This chat's memory-processing boundary has been synced</p>
                         <p className="text-[11px] text-emerald-700/70 mt-1">
-                            处理 {vectorizeResult?.processedMessages || 0} 条内容 · 新增 {vectorizeResult?.storedMemories || 0} 条长期记忆
+                            Processed {vectorizeResult?.processedMessages || 0} messages · Added {vectorizeResult?.storedMemories || 0} long-term memories
                         </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white p-3.5 text-xs text-slate-600 leading-relaxed">
                         {(vectorizeResult?.retainedMessages || 0) > 0
-                            ? <>最近 <b>{vectorizeResult?.retainedMessages}</b> 条原文会继续注入聊天上下文；更早的已处理原文不再重复注入。</>
-                            : <>已处理原文不会再直接注入聊天上下文，更早内容改由记忆宫殿按需召回。</>}
+                            ? <>The most recent <b>{vectorizeResult?.retainedMessages}</b> messages will continue to be injected into chat context; earlier processed raw text is no longer re-injected.</>
+                            : <>Processed raw text will no longer be directly injected into chat context — earlier content will instead be recalled by the Memory Palace as needed.</>}
                     </div>
-                    <p className="text-[11px] text-slate-400 text-center">向量化待处理统计已经从新的水位线重新开始。</p>
+                    <p className="text-[11px] text-slate-400 text-center">The vectorization pending count has restarted from the new watermark.</p>
                     {vectorizeResult?.waterlineAlreadyAhead && (
                         <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-2.5 leading-relaxed">
-                            最近 10 条此前已经处理过。为避免重复向量化，水位线没有回退，但这 10 条原文仍已按你的选择保留在上下文中。
+                            The most recent 10 messages were already processed before. To avoid re-vectorizing, the watermark has not been rolled back, but these 10 messages are still kept in context per your choice.
                         </p>
                     )}
                 </div>
             </Modal>
 
             {/* Archive Settings Modal */}
-            <Modal isOpen={modalType === 'archive-settings'} title="记忆归档设置" onClose={() => { if (!isSummarizing) setModalType('none'); }} footer={
+            <Modal isOpen={modalType === 'archive-settings'} title="Memory Archive Settings" onClose={() => { if (!isSummarizing) setModalType('none'); }} footer={
                 isSummarizing ?
-                <div className="w-full py-3 bg-slate-100 text-indigo-600 font-bold rounded-2xl text-center flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>{archiveProgress || '归档中...'}</div> :
-                <button onClick={onArchive} disabled={isSummarizing} className="w-full py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200">开始归档</button>
+                <div className="w-full py-3 bg-slate-100 text-indigo-600 font-bold rounded-2xl text-center flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>{archiveProgress || 'Archiving...'}</div> :
+                <button onClick={onArchive} disabled={isSummarizing} className="w-full py-3 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200">Start Archiving</button>
             }>
                 <div className="space-y-4">
                     {(() => {
                         const palaceOn = !!(activeCharacter as any).memoryPalaceEnabled;
                         const autoOn = !!(activeCharacter as any).autoArchiveEnabled;
                         const activePrompt = archivePrompts.find(p => p.id === selectedPromptId);
-                        const activeName = activePrompt?.name || '理性精炼 (Rational)';
+                        const activeName = activePrompt?.name || 'Rational Refinement';
                         if (palaceOn && autoOn) {
                             return (
                                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-800 leading-relaxed">
-                                    ✅ <b>自动归档已开启</b>。palace 处理后系统会按日期自动把聊天归档到"本月日度总结"。<br/>
-                                    自动归档走的是 <b>记忆宫殿内置风格</b>（保证向量检索质量稳定），
-                                    下方模板<b>只对这里的"开始归档"按钮生效</b>——你在这换风格不会影响自动归档。
+                                    ✅ <b>Auto-archive is on</b>. After Palace processing, the system automatically archives chat by date into "This Month's Daily Summary."<br/>
+                                    Auto-archive uses the <b>Memory Palace's built-in style</b> (to keep vector-retrieval quality stable);
+                                    the template below <b>only affects the "Start Archiving" button here</b> — changing the style here will not affect auto-archive.
                                 </div>
                             );
                         }
                         if (palaceOn && !autoOn) {
                             return (
                                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 leading-relaxed">
-                                    ⚠️ 记忆宫殿已开，但<b>自动归档没开</b>——记忆宫殿只在后台默默建记忆，不会写进月度总结。<br/>
-                                    想让它自动写 → 神经链接 → 角色 → 记忆宫殿开关下面的 <b>"📚 自动归档"</b>；
-                                    或者继续用下方按钮手动按当前选中的 <b>「{activeName}」</b> 风格跑。
+                                    ⚠️ Memory Palace is on, but <b>auto-archive is off</b> — Memory Palace only quietly builds memories in the background, and will not write into the monthly summary.<br/>
+                                    To make it write automatically → Neural Link → Character → the <b>"📚 Auto-Archive"</b> toggle below the Memory Palace switch;
+                                    or keep using the button below to run manually with the currently selected <b>"{activeName}"</b> style.
                                 </div>
                             );
                         }
                         return (
                             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-700 leading-relaxed">
-                                📋 <b>纯手动模式</b>（没开记忆宫殿）。下方按钮会用选中的
-                                <b className="text-slate-900"> 「{activeName}」</b> 风格把聊天按天总结到"本月日度总结"。
-                                归档完会自动隐藏已总结的旧消息（保留最近一部分可见）。
+                                📋 <b>Pure manual mode</b> (Memory Palace is off). The button below will use the selected
+                                <b className="text-slate-900"> "{activeName}"</b> style to summarize chat by day into "This Month's Daily Summary."
+                                Once archiving finishes, already-summarized old messages are automatically hidden (a recent portion stays visible).
                             </div>
                         );
                     })()}
                     <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                        <label className="text-[10px] font-bold text-indigo-400 uppercase mb-2 block">选择提示词模板</label>
+                        <label className="text-[10px] font-bold text-indigo-400 uppercase mb-2 block">Choose Prompt Template</label>
                         <div className="flex flex-col gap-2">
                             {archivePrompts.map(p => {
                                 const isSelected = selectedPromptId === p.id;
@@ -802,7 +802,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                         <span className={`text-xs font-bold ${isSelected ? 'text-indigo-700' : 'text-slate-600'}`}>{p.name}</span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={(e) => { e.stopPropagation(); setSelectedPromptId(p.id); onEditPrompt(); }} className="text-[10px] text-slate-400 hover:text-indigo-500 px-2 py-1 rounded bg-slate-100 hover:bg-indigo-50">编辑/查看</button>
+                                        <button onClick={(e) => { e.stopPropagation(); setSelectedPromptId(p.id); onEditPrompt(); }} className="text-[10px] text-slate-400 hover:text-indigo-500 px-2 py-1 rounded bg-slate-100 hover:bg-indigo-50">Edit / View</button>
                                         {!p.id.startsWith('preset_') && (
                                             <button onClick={(e) => { e.stopPropagation(); onDeletePrompt(p.id); }} className="text-[10px] text-red-300 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50">×</button>
                                         )}
@@ -811,52 +811,52 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                 );
                             })}
                         </div>
-                        <button onClick={onCreatePrompt} className="mt-3 w-full py-2 text-xs font-bold text-indigo-500 border border-dashed border-indigo-300 rounded-lg hover:bg-indigo-100">+ 新建自定义提示词</button>
+                        <button onClick={onCreatePrompt} className="mt-3 w-full py-2 text-xs font-bold text-indigo-500 border border-dashed border-indigo-300 rounded-lg hover:bg-indigo-100">+ New Custom Prompt</button>
                     </div>
                     <div className="text-[10px] text-slate-400 bg-slate-50 p-3 rounded-xl leading-relaxed">
-                        • <b>理性精炼</b>: 适合生成条理清晰的事件日志，便于 AI 长期记忆检索。<br/>
-                        • <b>日记风格</b>: 适合生成第一人称的角色日记，更有代入感和情感色彩。<br/>
-                        • 支持变量: <code>{'${dateStr}'}</code>, <code>{'${char.name}'}</code>, <code>{'${userProfile.name}'}</code>, <code>{'${rawLog}'}</code>
+                        • <b>Rational Refinement</b>: good for generating clearly organized event logs, easy for the AI's long-term memory retrieval.<br/>
+                        • <b>Diary Style</b>: good for generating first-person character diary entries, more immersive and emotionally colored.<br/>
+                        • Supported variables: <code>{'${dateStr}'}</code>, <code>{'${char.name}'}</code>, <code>{'${userProfile.name}'}</code>, <code>{'${rawLog}'}</code>
                     </div>
                 </div>
             </Modal>
 
             {/* Prompt Editor Modal */}
-            <Modal isOpen={modalType === 'prompt-editor'} title="编辑提示词" onClose={() => setModalType('archive-settings')} footer={<button onClick={onSavePrompt} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">保存预设</button>}>
+            <Modal isOpen={modalType === 'prompt-editor'} title="Edit Prompt" onClose={() => setModalType('archive-settings')} footer={<button onClick={onSavePrompt} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">Save Preset</button>}>
                 <div className="space-y-3">
-                    <input 
-                        value={editingPrompt?.name || ''} 
+                    <input
+                        value={editingPrompt?.name || ''}
                         onChange={e => setEditingPrompt((prev: any) => prev ? {...prev, name: e.target.value} : null)}
-                        placeholder="预设名称"
+                        placeholder="Preset name"
                         className="w-full px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20"
                     />
-                    <textarea 
-                        value={editingPrompt?.content || ''} 
+                    <textarea
+                        value={editingPrompt?.content || ''}
                         onChange={e => setEditingPrompt((prev: any) => prev ? {...prev, content: e.target.value} : null)}
                         className="w-full h-64 bg-slate-100 rounded-xl p-3 text-xs font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 leading-relaxed"
-                        placeholder="输入提示词内容..."
+                        placeholder="Enter prompt content..."
                     />
                 </div>
             </Modal>
 
             {/* History Manager Modal */}
             <Modal
-                isOpen={modalType === 'history-manager'} title="AI 原文读取范围" onClose={() => { setModalType('none'); setHistoryPage(0); setHistorySearch(''); }}
-                footer={<><button onClick={() => onSetHistoryStart(undefined)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl">清除用户断点</button><button onClick={() => { setModalType('none'); setHistoryPage(0); setHistorySearch(''); }} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">完成</button></>}
+                isOpen={modalType === 'history-manager'} title="AI Raw Text Read Range" onClose={() => { setModalType('none'); setHistoryPage(0); setHistorySearch(''); }}
+                footer={<><button onClick={() => onSetHistoryStart(undefined)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl">Clear User Breakpoint</button><button onClick={() => { setModalType('none'); setHistoryPage(0); setHistorySearch(''); }} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">Done</button></>}
             >
                 <div className="space-y-2 max-h-[50vh] overflow-y-auto no-scrollbar p-1">
-                    <p className="text-xs text-slate-400 text-center mb-2"><b>短按</b>消息 = 设置用户断点（只能缩小范围） · <b>长按</b>消息 = 跳转查看原文</p>
+                    <p className="text-xs text-slate-400 text-center mb-2"><b>Tap</b> a message = set a user breakpoint (can only narrow the range) · <b>Long-press</b> a message = jump to view the raw text</p>
                     <div className="grid gap-2 mb-2">
                         <div className="bg-violet-50 border border-violet-200 rounded-xl p-2.5 text-[11px] text-violet-800 leading-relaxed">
-                            <b>紫色 · 记忆宫殿水位线</b>：此前消息已经处理，不会因调整上下文再次向量化。
+                            <b>Purple · Memory Palace Watermark</b>: messages before this have already been processed and will not be re-vectorized by adjusting context.
                         </div>
                         <div className="bg-orange-50 border border-orange-200 rounded-xl p-2.5 text-[11px] text-orange-800 leading-relaxed">
-                            <b>橙色 · 最大范围起点</b>：由{contextRangeSnapshot?.mode === 'adaptive' ? (activeCharacter.contextFollowsMemoryPalaceHwm ? '记忆水位线' : '全自动记忆') : `拉杆 ${settingsContextLimit} 条`}决定，用户断点不能越过它读取更早内容。
-                            {contextRangeSnapshot?.mode === 'adaptive' && !contextRangeSnapshot.maxRangeStartMessageId && ' 当前水位线后为 0 条，因此列表中没有额外橙色起点。'}
+                            <b>Orange · Max Range Start</b>: determined by {contextRangeSnapshot?.mode === 'adaptive' ? (activeCharacter.contextFollowsMemoryPalaceHwm ? 'the memory watermark' : 'full-auto memory') : `the slider (${settingsContextLimit})`}, the user breakpoint cannot go past it to read earlier content.
+                            {contextRangeSnapshot?.mode === 'adaptive' && !contextRangeSnapshot.maxRangeStartMessageId && ' There are currently 0 messages after the watermark, so there is no extra orange start point in the list.'}
                         </div>
                         {contextRangeSnapshot?.userStartMessageId && (
                             <div className="bg-sky-50 border border-sky-200 rounded-xl p-2.5 text-[11px] text-sky-800 leading-relaxed">
-                                <b>蓝色 · 用户断点</b>：只在最大范围内进一步隐藏更早原文；被移动中的最大范围越过后会自动失效。
+                                <b>Blue · User Breakpoint</b>: only further hides earlier raw text within the max range; automatically becomes invalid once the moving max range passes it.
                             </div>
                         )}
                     </div>
@@ -866,7 +866,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                 type="text"
                                 value={historySearch}
                                 onChange={(e) => { setHistorySearch(e.target.value); setHistoryPage(0); }}
-                                placeholder="模糊搜索历史消息（关键词 / 字符顺序匹配）"
+                                placeholder="Fuzzy search history messages (keyword / character-order match)"
                                 className="w-full pl-8 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             />
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -891,21 +891,21 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                         return (<>
                             {query && (
                                 <div className="text-xs text-slate-500 px-1 py-1">
-                                    找到 <b className="text-primary">{filtered.length}</b> 条匹配
-                                    {filtered.length > HISTORY_SEARCH_MAX && <span className="text-slate-400">（仅显示前 {HISTORY_SEARCH_MAX} 条）</span>}
+                                    Found <b className="text-primary">{filtered.length}</b> matches
+                                    {filtered.length > HISTORY_SEARCH_MAX && <span className="text-slate-400">(showing only the first {HISTORY_SEARCH_MAX})</span>}
                                 </div>
                             )}
                             {!query && filtered.length === 0 && (
-                                <div className="text-xs text-slate-400 text-center py-4">暂无历史消息</div>
+                                <div className="text-xs text-slate-400 text-center py-4">No history messages yet</div>
                             )}
                             {query && filtered.length === 0 && (
-                                <div className="text-xs text-slate-400 text-center py-4">没有匹配的消息</div>
+                                <div className="text-xs text-slate-400 text-center py-4">No matching messages</div>
                             )}
                             {limited.length > HISTORY_PAGE_SIZE && (
                                 <div className="flex items-center justify-between px-1 py-1">
-                                    <button onClick={() => setHistoryPage(p => Math.max(0, p - 1))} disabled={historyPage === 0} className={`px-3 py-1 text-xs rounded-lg ${historyPage === 0 ? 'text-slate-300' : 'text-primary hover:bg-primary/10'}`}>上一页</button>
-                                    <span className="text-xs text-slate-400">{historyPage + 1} / {totalPages}（共 {limited.length} 条）</span>
-                                    <button onClick={() => setHistoryPage(p => Math.min(totalPages - 1, p + 1))} disabled={historyPage >= totalPages - 1} className={`px-3 py-1 text-xs rounded-lg ${historyPage >= totalPages - 1 ? 'text-slate-300' : 'text-primary hover:bg-primary/10'}`}>下一页</button>
+                                    <button onClick={() => setHistoryPage(p => Math.max(0, p - 1))} disabled={historyPage === 0} className={`px-3 py-1 text-xs rounded-lg ${historyPage === 0 ? 'text-slate-300' : 'text-primary hover:bg-primary/10'}`}>Previous</button>
+                                    <span className="text-xs text-slate-400">{historyPage + 1} / {totalPages} ({limited.length} total)</span>
+                                    <button onClick={() => setHistoryPage(p => Math.min(totalPages - 1, p + 1))} disabled={historyPage >= totalPages - 1} className={`px-3 py-1 text-xs rounded-lg ${historyPage >= totalPages - 1 ? 'text-slate-300' : 'text-primary hover:bg-primary/10'}`}>Next</button>
                                 </div>
                             )}
                             {pageMessages.map(m => {
@@ -938,15 +938,15 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                     >
                                         <span className="text-slate-400 font-mono whitespace-nowrap pt-0.5">[{new Date(m.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}]</span>
                                         <div className="flex-1 min-w-0">
-                                            <div className="font-bold text-slate-600 mb-0.5">{m.role === 'user' ? '我' : activeCharacter.name}</div>
+                                            <div className="font-bold text-slate-600 mb-0.5">{m.role === 'user' ? 'Me' : activeCharacter.name}</div>
                                             <div className="truncate">{renderHighlighted(m.content || '', query, contentClass)}</div>
                                         </div>
                                         <div className="flex flex-wrap justify-end gap-1 max-w-[42%]">
-                                            {isWatermark && <span className="text-violet-600 font-bold text-[9px] bg-white px-1.5 rounded-full border border-violet-200">水位线</span>}
-                                            {isMaxStart && <span className="text-orange-600 font-bold text-[9px] bg-white px-1.5 rounded-full border border-orange-200">最大范围</span>}
-                                            {isUserStart && <span className="text-sky-600 font-bold text-[9px] bg-white px-1.5 rounded-full border border-sky-200">用户断点</span>}
-                                            {!isWatermark && !isMaxStart && !isUserStart && isHidden && <span className="text-slate-400 font-bold text-[9px] bg-white px-1.5 rounded-full border border-slate-200">AI 不读原文</span>}
-                                            {!isWatermark && !isMaxStart && !isUserStart && isVectorized && !isHidden && <span className="text-violet-400 font-bold text-[9px] bg-white px-1.5 rounded-full border border-violet-100">已向量化</span>}
+                                            {isWatermark && <span className="text-violet-600 font-bold text-[9px] bg-white px-1.5 rounded-full border border-violet-200">Watermark</span>}
+                                            {isMaxStart && <span className="text-orange-600 font-bold text-[9px] bg-white px-1.5 rounded-full border border-orange-200">Max Range</span>}
+                                            {isUserStart && <span className="text-sky-600 font-bold text-[9px] bg-white px-1.5 rounded-full border border-sky-200">User Breakpoint</span>}
+                                            {!isWatermark && !isMaxStart && !isUserStart && isHidden && <span className="text-slate-400 font-bold text-[9px] bg-white px-1.5 rounded-full border border-slate-200">AI does not read this</span>}
+                                            {!isWatermark && !isMaxStart && !isUserStart && isVectorized && !isHidden && <span className="text-violet-400 font-bold text-[9px] bg-white px-1.5 rounded-full border border-violet-100">Vectorized</span>}
                                         </div>
                                     </div>
                                 );
@@ -961,59 +961,59 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                 </div>
             </Modal>
 
-            <Modal isOpen={modalType === 'message-options'} title="消息操作" onClose={() => setModalType('none')}>
+            <Modal isOpen={modalType === 'message-options'} title="Message Actions" onClose={() => setModalType('none')}>
                 <div className="space-y-3">
                     <button onClick={onEnterSelectionMode} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                        多选 / 批量删除
+                        Multi-select / Bulk Delete
                     </button>
                     <button onClick={onReplyMessage} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                        引用 / 回复
+                        Quote / Reply
                     </button>
                     {selectedMessage?.type === 'text' && (
                         <button onClick={onEditMessageStart} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                            编辑内容
+                            Edit Content
                         </button>
                     )}
                     {selectedMessage?.type === 'text' && (
                         <button onClick={onCopyMessage} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                            复制文字
+                            Copy Text
                         </button>
                     )}
                     {selectedMessage && onToggleMessageFavorite && (
                         <button onClick={() => { onToggleMessageFavorite(); setModalType('none'); }} className={`w-full py-3 font-medium rounded-2xl transition-colors flex items-center justify-center gap-2 ${messageFavorited ? 'bg-violet-100 text-violet-700 active:bg-violet-200' : 'bg-violet-50 text-violet-600 active:bg-violet-100'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={messageFavorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m11.48 3.499-2.13 4.316-4.763.692c-.963.14-1.348 1.323-.651 2.002l3.447 3.36-.814 4.744c-.165.96.842 1.691 1.703 1.238L12.532 17.6l4.26 2.24c.862.453 1.869-.278 1.704-1.238l-.814-4.744 3.447-3.36c.697-.679.312-1.862-.651-2.002l-4.763-.692-2.13-4.316c-.43-.873-1.675-.873-2.105.011Z" /></svg>
                             {messageFavorited
-                                ? (selectedMessage.type === 'image' ? '取消收藏图片' : '取消收藏聊天消息')
-                                : (selectedMessage.type === 'image' ? '收藏图片' : '收藏聊天消息')}
+                                ? (selectedMessage.type === 'image' ? 'Unfavorite Image' : 'Unfavorite Chat Message')
+                                : (selectedMessage.type === 'image' ? 'Favorite Image' : 'Favorite Chat Message')}
                         </button>
                     )}
                     {voiceAvailable && selectedMessage?.role === 'assistant' && selectedMessage?.type === 'text' && onGenerateVoice && (
                         <button onClick={() => { onGenerateVoice(); setModalType('none'); }} className="w-full py-3 bg-emerald-50 text-emerald-600 font-medium rounded-2xl active:bg-emerald-100 transition-colors flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg>
-                            转换语音
+                            Convert to Voice
                         </button>
                     )}
                     {voiceDownloadable && onDownloadVoice && (
                         <button onClick={() => { onDownloadVoice(); setModalType('none'); }} className="w-full py-3 bg-sky-50 text-sky-600 font-medium rounded-2xl active:bg-sky-100 transition-colors flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
-                            下载语音
+                            Download Voice
                         </button>
                     )}
                     {voiceCollectable && selectedMessage?.role === 'assistant' && onToggleVoiceFavorite && (
                         <button onClick={() => { onToggleVoiceFavorite(); setModalType('none'); }} className={`w-full py-3 font-medium rounded-2xl transition-colors flex items-center justify-center gap-2 ${voiceFavorited ? 'bg-amber-100 text-amber-700 active:bg-amber-200' : 'bg-amber-50 text-amber-600 active:bg-amber-100'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={voiceFavorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m11.48 3.499-2.13 4.316-4.763.692c-.963.14-1.348 1.323-.651 2.002l3.447 3.36-.814 4.744c-.165.96.842 1.691 1.703 1.238L12.532 17.6l4.26 2.24c.862.453 1.869-.278 1.704-1.238l-.814-4.744 3.447-3.36c.697-.679.312-1.862-.651-2.002l-4.763-.692-2.13-4.316c-.43-.873-1.675-.873-2.105.011Z" /></svg>
-                            {voiceFavorited ? '取消收藏语音' : '收藏语音'}
+                            {voiceFavorited ? 'Unfavorite Voice' : 'Favorite Voice'}
                         </button>
                     )}
                     <button onClick={onDeleteMessage} className="w-full py-3 bg-red-50 text-red-500 font-medium rounded-2xl active:bg-red-100 transition-colors flex items-center justify-center gap-2">
-                        删除消息
+                        Delete Message
                     </button>
                 </div>
             </Modal>
-            
+
              <Modal
-                isOpen={modalType === 'delete-emoji'} title="删除表情包" onClose={() => setModalType('none')}
-                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">取消</button><button onClick={onDeleteEmoji} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl">删除</button></>}
+                isOpen={modalType === 'delete-emoji'} title="Delete Emoji" onClose={() => setModalType('none')}
+                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">Cancel</button><button onClick={onDeleteEmoji} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl">Delete</button></>}
             >
                 <div className="flex flex-col items-center gap-4 py-2">
                     {Array.isArray(selectedEmoji) ? (
@@ -1026,13 +1026,13 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                         selectedEmoji && <TokenImg value={selectedEmoji.url} className="w-24 h-24 object-contain rounded-xl border" />
                     )}
                     <p className="text-center text-sm text-slate-500">
-                        {Array.isArray(selectedEmoji) ? `确定要删除这 ${selectedEmoji.length} 个表情包吗？` : "确定要删除这个表情包吗？"}
+                        {Array.isArray(selectedEmoji) ? `Are you sure you want to delete these ${selectedEmoji.length} emoji?` : "Are you sure you want to delete this emoji?"}
                     </p>
                 </div>
             </Modal>
 
             {/* Emoji Options Modal (shown on long-press) */}
-            <Modal isOpen={modalType === 'emoji-options'} title="表情包操作" onClose={() => setModalType('none')}>
+            <Modal isOpen={modalType === 'emoji-options'} title="Emoji Actions" onClose={() => setModalType('none')}>
                 <div className="flex flex-col items-center gap-4 py-1">
                     {selectedEmoji && !Array.isArray(selectedEmoji) && (
                         <div className="flex flex-col items-center gap-2">
@@ -1048,7 +1048,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
                             </svg>
-                            修改名称
+                            Rename
                         </button>
                         <button
                             onClick={() => setModalType('delete-emoji')}
@@ -1057,7 +1057,7 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                             </svg>
-                            删除
+                            Delete
                         </button>
                     </div>
                 </div>
@@ -1065,13 +1065,13 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
             {/* Rename Emoji Modal */}
             <Modal
-                isOpen={modalType === 'rename-emoji'} title="修改表情包名称" onClose={() => setModalType('none')}
-                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">取消</button><button onClick={onRenameEmoji} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">保存</button></>}
+                isOpen={modalType === 'rename-emoji'} title="Rename Emoji" onClose={() => setModalType('none')}
+                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">Cancel</button><button onClick={onRenameEmoji} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">Save</button></>}
             >
                 <input
                     value={newEmojiName}
                     onChange={e => setNewEmojiName(e.target.value)}
-                    placeholder="输入表情包名称..."
+                    placeholder="Enter emoji name..."
                     className="w-full bg-slate-100 rounded-2xl px-5 py-4 text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-slate-700"
                     autoFocus
                 />
@@ -1079,31 +1079,31 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
             {/* Delete Category Modal */}
             <Modal
-                isOpen={modalType === 'delete-category'} title="删除分类" onClose={() => setModalType('none')}
-                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">取消</button><button onClick={onDeleteCategory} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl">删除</button></>}
+                isOpen={modalType === 'delete-category'} title="Delete Category" onClose={() => setModalType('none')}
+                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">Cancel</button><button onClick={onDeleteCategory} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl">Delete</button></>}
             >
                 <div className="py-4 text-center">
-                    <p className="text-sm text-slate-600">确定要删除分类 <br/><span className="font-bold">"{selectedCategory?.name}"</span> 吗？</p>
-                    <p className="text-[10px] text-red-400 mt-2">注意：分类下的所有表情也将被删除！</p>
+                    <p className="text-sm text-slate-600">Are you sure you want to delete the category <br/><span className="font-bold">"{selectedCategory?.name}"</span>?</p>
+                    <p className="text-[10px] text-red-400 mt-2">Note: all emoji under this category will also be deleted!</p>
                 </div>
             </Modal>
 
             {/* Category Options Modal (shown on long-press) */}
-            <Modal isOpen={modalType === 'category-options'} title="分类操作" onClose={() => setModalType('none')}>
+            <Modal isOpen={modalType === 'category-options'} title="Category Actions" onClose={() => setModalType('none')}>
                 <div className="space-y-3">
                     <button onClick={openVisibilityModal} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
-                        设置可见角色
+                        Set Visible Characters
                     </button>
                     {selectedCategory && !selectedCategory.isSystem && selectedCategory.id !== 'default' && (
                         <button onClick={() => setModalType('delete-category')} className="w-full py-3 bg-red-50 text-red-500 font-medium rounded-2xl active:bg-red-100 transition-colors flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                             </svg>
-                            删除分类
+                            Delete Category
                         </button>
                     )}
                 </div>
@@ -1111,12 +1111,12 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
             {/* Category Visibility Modal */}
             <Modal
-                isOpen={modalType === 'category-visibility'} title={`"${selectedCategory?.name}" 可见角色`} onClose={() => setModalType('none')}
-                footer={<button onClick={handleSaveVisibility} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">保存设置</button>}
+                isOpen={modalType === 'category-visibility'} title={`"${selectedCategory?.name}" Visible Characters`} onClose={() => setModalType('none')}
+                footer={<button onClick={handleSaveVisibility} className="w-full py-3 bg-primary text-white font-bold rounded-2xl">Save Settings</button>}
             >
                 <div className="space-y-3">
                     <p className="text-xs text-slate-400 leading-relaxed">
-                        选择哪些角色可以使用此表情分组。不勾选任何角色表示所有角色均可使用。
+                        Choose which characters can use this emoji group. If none are checked, all characters can use it.
                     </p>
                     <div className="space-y-2 max-h-[40vh] overflow-y-auto no-scrollbar">
                         {allCharacters.map(c => (
@@ -1138,15 +1138,15 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                     </div>
                     {visibilitySelection.size > 0 && (
                         <div className="text-[11px] text-center text-slate-500 bg-slate-50 rounded-lg py-2">
-                            已选 <span className="font-bold text-primary">{visibilitySelection.size}</span> 个角色可使用此分组
+                            <span className="font-bold text-primary">{visibilitySelection.size}</span> character(s) selected who can use this group
                         </div>
                     )}
                 </div>
             </Modal>
 
             <Modal
-                isOpen={modalType === 'edit-message'} title="编辑内容" onClose={() => setModalType('none')}
-                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">取消</button><button onClick={onConfirmEditMessage} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">保存</button></>}
+                isOpen={modalType === 'edit-message'} title="Edit Content" onClose={() => setModalType('none')}
+                footer={<><button onClick={() => setModalType('none')} className="flex-1 py-3 bg-slate-100 rounded-2xl">Cancel</button><button onClick={onConfirmEditMessage} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">Save</button></>}
             >
                 <textarea
                     value={editContent}
@@ -1157,24 +1157,24 @@ const ChatModals: React.FC<ChatModalsProps> = ({
 
             {/* Schedule Modal */}
             <Modal
-                isOpen={modalType === 'schedule'} title={`${activeCharacter?.name || '角色'}の日程/情绪`} onClose={() => setModalType('none')}
+                isOpen={modalType === 'schedule'} title={`${activeCharacter?.name || 'Character'}'s Schedule / Mood`} onClose={() => setModalType('none')}
             >
                 <div className="max-h-[70vh] overflow-y-auto -mx-2 px-2">
-                    {/* 总开关：关闭时不调副 API、不生成日程、不注入情绪 buff */}
+                    {/* Master toggle: when off, does not call the secondary API, does not generate a schedule, does not inject emotion buffs */}
                     {onToggleScheduleFeature && (
                         <div className="mb-4 bg-slate-50 border border-slate-200 rounded-2xl p-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex-1 min-w-0 pr-3">
-                                    <p className="text-xs font-bold text-slate-700">日程与情绪 Buff</p>
+                                    <p className="text-xs font-bold text-slate-700">Schedule &amp; Emotion Buffs</p>
                                     <p className="text-[10px] text-slate-500 leading-relaxed mt-0.5">
                                         {isScheduleFeatureEnabled
-                                            ? '已开启：角色会有今日日程，并在聊天中带上当下情绪。'
-                                            : '已关闭：不调副 API，不生成日程，不注入情绪 buff。'}
+                                            ? 'On: the character will have a schedule for today, and carry their current mood into chat.'
+                                            : 'Off: no secondary API calls, no schedule generation, no emotion buffs injected.'}
                                     </p>
                                 </div>
                                 <button
                                     onClick={onToggleScheduleFeature}
-                                    aria-label="切换日程与情绪总开关"
+                                    aria-label="Toggle schedule and emotion master switch"
                                     className={`w-10 h-6 rounded-full p-1 transition-colors flex items-center flex-shrink-0 ${isScheduleFeatureEnabled ? 'bg-primary' : 'bg-slate-300'}`}
                                 >
                                     <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${isScheduleFeatureEnabled ? 'translate-x-4' : ''}`}></div>
@@ -1190,9 +1190,9 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                 <div className="mb-4">
                                     {!activeCharacter?.scheduleStyle && (
                                         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-3">
-                                            <p className="text-xs text-amber-700 font-bold mb-1">请选择日程风格</p>
+                                            <p className="text-xs text-amber-700 font-bold mb-1">Please choose a schedule style</p>
                                             <p className="text-[11px] text-amber-600 leading-relaxed">
-                                                不同风格会影响角色的内心独白生成方式。选择后会自动重新生成今日日程。
+                                                Different styles affect how the character's inner monologue is generated. Choosing one automatically regenerates today's schedule.
                                             </p>
                                         </div>
                                     )}
@@ -1206,8 +1206,8 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                                     : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                                             }`}
                                         >
-                                            <span className="block text-sm mb-0.5">生活系</span>
-                                            <span className="block text-[10px] opacity-70 font-normal">虚构日常 · 跑步做饭逛街</span>
+                                            <span className="block text-sm mb-0.5">Lifestyle</span>
+                                            <span className="block text-[10px] opacity-70 font-normal">Fictional daily life · running, cooking, shopping</span>
                                         </button>
                                         <button
                                             onClick={() => onScheduleStyleChange('mindful')}
@@ -1218,8 +1218,8 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                                     : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                                             }`}
                                         >
-                                            <span className="block text-sm mb-0.5">意识系</span>
-                                            <span className="block text-[10px] opacity-70 font-normal">真实内心 · 不虚构不说谎</span>
+                                            <span className="block text-sm mb-0.5">Mindful</span>
+                                            <span className="block text-[10px] opacity-70 font-normal">Real inner thoughts · no fiction, no lying</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1237,10 +1237,10 @@ const ChatModals: React.FC<ChatModalsProps> = ({
                                 isGenerating={isScheduleGenerating}
                             />
                             <p className="text-[10px] text-slate-400 text-center mt-3 leading-relaxed">
-                                点击日程项可编辑 · 长按可删除
+                                Tap a schedule item to edit · long-press to delete
                             </p>
 
-                            {/* 情绪 / 意识流 API — 与日程强制同步 */}
+                            {/* Emotion / stream-of-consciousness API — forced in sync with the schedule */}
                             {activeCharacter && apiPresets && onAddApiPreset && onSaveEmotion && onClearBuffs && (
                                 <EmotionSettingsPanel
                                     char={activeCharacter}

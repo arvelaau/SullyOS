@@ -74,10 +74,10 @@ describe('MessageItem module layout', () => {
         expect(markup).toContain('sully-html-source-bar');
         expect(markup).toContain('sully-html-source-toggle');
         expect(markup).toContain('aria-expanded="false"');
-        expect(markup).toContain('aria-label="展开 HTML 源码操作"');
-        expect(markup).toContain('aria-label="复制完整 HTML 源码"');
-        expect(markup).toContain('完整源码');
-        expect(markup).toContain('复制源码');
+        expect(markup).toContain('aria-label="Expand HTML source actions"');
+        expect(markup).toContain('aria-label="Copy full HTML source"');
+        expect(markup).toContain('Full Source');
+        expect(markup).toContain('Copy source');
     });
 
     it.each(moduleModes)('一起听卡片在 %s / %s 模式跟随模块位置且没有消息外侧头像', (align, avatarMode) => {
@@ -114,8 +114,8 @@ describe('MessageItem module layout', () => {
             metadata: { thinkingChain: '这是可以一键复制的完整心象。' },
         });
 
-        expect(markup).toContain('aria-label="心象：点击展开，长按复制全文"');
-        expect(markup).toContain('title="长按复制心象全文"');
+        expect(markup).toContain('aria-label="Psyche: tap to expand, long-press to copy full text"');
+        expect(markup).toContain('title="Long-press to copy the full Psyche text"');
         expect(markup).toContain('这是可以一键复制的完整心象');
         expect(markup).toContain('user-select:text');
         expect(markup).toContain('-webkit-touch-callout:default');

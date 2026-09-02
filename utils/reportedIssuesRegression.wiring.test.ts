@@ -38,13 +38,13 @@ describe('用户反馈回归保护', () => {
     it('默认版预设设置直接提供带人话说明的续写参数', () => {
         const maker = read('../components/date/story/StoryPresetMaker.tsx');
 
-        expect(maker).toContain("['temperature', '温度', 'Temperature'");
-        expect(maker).toContain("['topP', '候选范围', 'Top P'");
-        expect(maker).toContain("['frequencyPenalty', '重复惩罚', 'Frequency penalty'");
-        expect(maker).toContain("['presencePenalty', '话题惩罚', 'Presence penalty'");
-        expect(maker).toContain("['maxTokens', '最大输出', 'Max tokens'");
-        expect(maker).toContain('使用 Claude 时会自动按 1.0 发送');
-        expect(maker).toContain("<h2 className='text-sm font-bold'>续写参数</h2>");
+        expect(maker).toContain("['temperature', 'Temperature', 'Temperature'");
+        expect(maker).toContain("['topP', 'Candidate range', 'Top P'");
+        expect(maker).toContain("['frequencyPenalty', 'Repetition penalty', 'Frequency penalty'");
+        expect(maker).toContain("['presencePenalty', 'Topic penalty', 'Presence penalty'");
+        expect(maker).toContain("['maxTokens', 'Max output', 'Max tokens'");
+        expect(maker).toContain('when using Claude, it will automatically be sent as 1.0');
+        expect(maker).toContain("<h2 className='text-sm font-bold'>Continuation parameters</h2>");
     });
 
     it('剧情预设导出复用原生分享链路，不依赖 Android WebView 的 a.download', () => {
@@ -77,7 +77,7 @@ describe('用户反馈回归保护', () => {
         const item = read('../components/chat/MessageItem.tsx');
 
         expect(chat).toContain('chat_translate_expanded_${activeCharacterId}');
-        expect(modals).toContain('原文与译文同时展开');
+        expect(modals).toContain('Show original and translation together');
         expect(item).toContain('showExpandedTranslation');
         expect(item).toContain('{renderContent(langBContent)}');
     });

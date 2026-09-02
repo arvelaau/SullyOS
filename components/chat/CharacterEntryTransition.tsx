@@ -1,19 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useBlobRefUrl } from '../../utils/blobRef';
 
-// 角色切换「登场」过场 —— 不是换页/换 tab，而是「离开一个人，走进另一个人的空间」。
-// 设计：以「即将见到的这个人」的头像虚化铺底（ta 的色彩世界），中心头像带柔光浮现 + 名字升起 → 推进穿过进入聊天。
+// Character-switch "entrance" transition — not a page/tab change, but "leaving one person, stepping into another's space."
+// Design: the avatar of "the person you're about to see" fills the background, blurred (their world of color), with the
+// center avatar surfacing through a soft glow + the name rising up -> push through into the chat.
 //
-// 性能要点（修「数据多时卡顿 + 头像没看清就进聊天」）：
-//   · 全程只动 transform / opacity —— 这两类走合成器线程，主线程再忙（进聊天要挂载大量带图消息）也不掉帧；
-//     绝不动画化 filter:blur（每帧重栅格化，是之前卡顿的真凶）。虚化底图的 blur 是静态的，只栅格化一次。
-//   · 时间轴：头像先快速「对焦清晰」（缩放+淡入，非模糊），清晰后明确停留一拍让人看清脸与名字，再退场。
-// 可轻触跳过；尊重 prefers-reduced-motion；内联 @keyframes（CDN Tailwind 不可靠生成自定义 animate-*）。
+// Performance notes (fixing "stutters when there's a lot of data + entering chat before the avatar is even visible"):
+//   - Only animate transform / opacity for the whole sequence -- both run on the compositor thread, so no dropped frames
+//     even when the main thread is busy (entering chat mounts a lot of image-bearing messages). Never animate filter:blur
+//     (repaints every frame, the real culprit behind the old stutter). The blur on the background image is static, rasterized once.
+//   - Timeline: the avatar "snaps into focus" quickly first (scale + fade-in, not blur), then holds for a beat once
+//     sharp so the face and name are actually visible, then exits.
+// Tap to skip; respects prefers-reduced-motion; inline @keyframes (CDN Tailwind can't reliably generate custom animate-* classes).
 
 interface Props {
   name: string;
   avatar?: string;
-  /** 过场播完（或被跳过）后回调，由父组件卸载本层。 */
+  /** Callback fired once the transition finishes playing (or is skipped); the parent component unmounts this layer. */
   onDone: () => void;
 }
 
@@ -24,9 +27,9 @@ const prefersReducedMotion = () =>
 
 const CharacterEntryTransition: React.FC<Props> = ({ name, avatar, onDone }) => {
   const reduced = useMemo(prefersReducedMotion, []);
-  // 头像约 650ms 对焦清晰、名字约 780ms 到位 → 停留到 REVEAL_AT 让人看清，再退场。
-  const REVEAL_AT = reduced ? 220 : 1000; // 开始退场的时刻（清晰后的停留终点）
-  const EXIT = reduced ? 200 : 440;       // 退场（推进穿过 + 淡出）时长
+  // Avatar comes into focus around 650ms, name settles around 780ms -> hold until REVEAL_AT so it's visible, then exit.
+  const REVEAL_AT = reduced ? 220 : 1000; // when the exit begins (end of the hold, once sharp)
+  const EXIT = reduced ? 200 : 440;       // duration of the exit (push-through + fade-out)
   const TOTAL = REVEAL_AT + EXIT;
 
   const [exiting, setExiting] = useState(false);
@@ -40,13 +43,15 @@ const CharacterEntryTransition: React.FC<Props> = ({ name, avatar, onDone }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 轻触跳过：立刻进入退场（仍是平滑推进，不是硬切）
+  // Tap to skip: immediately enters the exit phase (still a smooth push-through, not a hard cut).
   const skip = () => { if (!exiting) { setExiting(true); window.setTimeout(finish, EXIT); } };
 
-  // 头像字段可能是 blobref 令牌，令牌拼进 url() 是加载不出来的地址。先解析成可用地址再拼，
-  // 判空也看解析结果——否则「没头像时改用主题色光场」那条分支永远走不到，整层过场会变成
-  // 一张透明膜，底下的聊天界面直接透出来。令牌解析完成前 resolvedAvatar 是 undefined，
-  // 那一帧走光场分支，照样铺满盖住聊天。
+  // The avatar field may be a blobref token; splicing the raw token into url() produces an address that
+  // never loads. Resolve it to a usable address first, and check emptiness against the resolved value too --
+  // otherwise the "fall back to a theme-color light field when there's no avatar" branch would never fire, and
+  // the whole transition layer would become a transparent film with the chat underneath showing straight through.
+  // Before the token finishes resolving, resolvedAvatar is undefined, so that frame takes the light-field branch
+  // anyway, still fully covering the chat.
   const resolvedAvatar = useBlobRefUrl(avatar);
   const avatarBg = resolvedAvatar ? `url(${resolvedAvatar})` : '';
 
@@ -65,9 +70,10 @@ const CharacterEntryTransition: React.FC<Props> = ({ name, avatar, onDone }) => 
         @keyframes charLineIn { from { opacity:0; transform: scaleX(0) } to { opacity:.7; transform: scaleX(1) } }
       `}</style>
 
-      {/* 氛围底：虚化头像 = ta 的色彩世界（静态 blur，只栅格化一次）。
-          关键：不做淡入 —— showEntry 一为真就「立刻」铺满盖住聊天，否则透明期会透出底下聊天界面，
-          变成「聊天先闪一下，过场才淡进来」的本末倒置。无头像时回退主题色光场。 */}
+      {/* Ambient background: blurred avatar = their world of color (static blur, rasterized once).
+          Key point: no fade-in here -- the moment showEntry becomes true it "instantly" covers the chat, otherwise
+          the transparent gap would let the chat underneath flash through first, which is backwards (chat flashes,
+          then the transition fades in). Falls back to a theme-color light field when there's no avatar. */}
       {avatarBg ? (
         <div className="absolute inset-0 bg-cover bg-center" style={{
           background: avatarBg, backgroundSize: 'cover', backgroundPosition: 'center',
@@ -78,10 +84,10 @@ const CharacterEntryTransition: React.FC<Props> = ({ name, avatar, onDone }) => 
           background: 'radial-gradient(120% 100% at 50% 40%, hsla(var(--primary-hue),55%,40%,0.9), #0c0b1e 70%)',
         }} />
       )}
-      {/* 压暗 + 暗角：让中心头像与名字清晰浮出（静态） */}
+      {/* Darken + vignette: makes the center avatar and name stand out clearly (static) */}
       <div className="absolute inset-0" style={{ background: 'radial-gradient(115% 95% at 50% 42%, rgba(8,8,18,0.35) 30%, rgba(6,6,16,0.78) 100%)' }} />
 
-      {/* 中心内容：退场时只对这层（无 filter，缩放廉价）做推进穿过；虚化底图随根层淡出即可。 */}
+      {/* Center content: on exit, only this layer (no filter, scaling is cheap) does the push-through; the blurred background just fades out with the root layer. */}
       <div
         className="relative flex flex-col items-center px-8"
         style={{
@@ -91,14 +97,14 @@ const CharacterEntryTransition: React.FC<Props> = ({ name, avatar, onDone }) => 
         }}
       >
         <div className="relative" style={{ width: 132, height: 132 }}>
-          {/* 柔光晕（在头像后绽放） */}
+          {/* Soft glow halo (blooms behind the avatar) */}
           <div className="absolute" style={{
             left: '50%', top: '50%', width: 230, height: 230, transform: 'translate(-50%,-50%)',
             borderRadius: '9999px', filter: 'blur(8px)',
             background: 'radial-gradient(circle, rgba(255,255,255,0.5) 0%, hsla(var(--primary-hue),80%,80%,0.32) 40%, transparent 66%)',
             animation: reduced ? 'charVeilIn 240ms ease-out both' : 'charGlowIn 680ms cubic-bezier(0.22,1,0.36,1) 40ms both',
           }} />
-          {/* 头像：缩放 + 淡入「对焦」，不用 filter:blur（避免每帧重栅格化卡顿） */}
+          {/* Avatar: scale + fade-in to "focus," no filter:blur (avoids per-frame repaint stutter) */}
           <div
             className="absolute inset-0 rounded-full bg-cover bg-center"
             style={{

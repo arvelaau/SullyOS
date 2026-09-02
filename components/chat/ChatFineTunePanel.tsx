@@ -2,11 +2,13 @@ import React from 'react';
 import { ChatFineTuneFields } from '../../types';
 
 /**
- * 聊天细节微调控件组（头像显隐/位置/贴边/对齐/垂直微调、字号、行距、气泡缩进等）。
- * 两处复用，交互保持一致（挡位按钮 + 滑杆）：
- *  - 外观 App「聊天细节微调」区块（全局，value = osTheme）
- *  - 聊天内「聊天装扮」弹窗（角色覆盖，value = 合并后的生效值，onChange 写进 char.chatFineTune）
- * 只渲染控件本身，区块外壳 / 开关 / 说明文案由调用方决定。
+ * Chat detail fine-tuning control group (avatar show/hide / position / edge-snap / alignment /
+ * vertical offset, font size, line height, bubble indent, etc.).
+ * Reused in two places, with consistent interaction (bucket buttons + slider):
+ *  - The Appearance App's "Chat Detail Fine-Tuning" section (global, value = osTheme)
+ *  - The in-chat "Chat Styling" modal (per-character override, value = the merged effective value,
+ *    onChange writes into char.chatFineTune)
+ * Only renders the controls themselves — the surrounding section shell / toggle / copy is up to the caller.
  */
 type Props = {
     value: ChatFineTuneFields;
@@ -25,36 +27,36 @@ export const ChatFineTunePanel: React.FC<Props> = ({ value, onChange }) => {
     return (
         <div className="space-y-4">
             <div>
-                <h3 className="text-[11px] font-bold text-slate-500 mb-2">头像显示</h3>
+                <h3 className="text-[11px] font-bold text-slate-500 mb-2">Avatar Display</h3>
                 <div className="flex gap-2 flex-wrap">
-                    {([['both', '全部显示'], ['hide_ai', '隐藏角色侧'], ['hide_user', '隐藏我的'], ['hide_both', '全部隐藏']] as const).map(([v, label]) => (
+                    {([['both', 'Show all'], ['hide_ai', 'Hide character side'], ['hide_user', 'Hide mine'], ['hide_both', 'Hide all']] as const).map(([v, label]) => (
                         <OptionButton key={v} active={(value.chatAvatarVisibility || 'both') === v} label={label} onClick={() => onChange({ chatAvatarVisibility: v })} />
                     ))}
                 </div>
                 {(value.chatAvatarVisibility || 'both') !== 'both' && (
                     <label className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
                         <input type="checkbox" checked={!!value.chatSnapToEdge} onChange={(e) => onChange({ chatSnapToEdge: e.target.checked })} className="accent-current" />
-                        隐藏的一侧气泡贴边（收回头像空位）
+                        Snap the hidden side's bubbles to the edge (close the empty avatar gap)
                     </label>
                 )}
             </div>
             <div>
-                <h3 className="text-[11px] font-bold text-slate-500 mb-2">头像位置</h3>
+                <h3 className="text-[11px] font-bold text-slate-500 mb-2">Avatar Position</h3>
                 <div className="flex gap-2 flex-wrap">
-                    <OptionButton active={(value.chatAvatarPlacement || 'beside') === 'beside'} label="气泡旁（默认）" desc="跟随头像出现频率" onClick={() => onChange({ chatAvatarPlacement: 'beside' })} />
-                    <OptionButton active={value.chatAvatarPlacement === 'above_group'} label="每轮气泡上方" desc="连续气泡共用一次头像" onClick={() => onChange({ chatAvatarPlacement: 'above_group' })} />
+                    <OptionButton active={(value.chatAvatarPlacement || 'beside') === 'beside'} label="Beside bubble (default)" desc="Follows how often the avatar appears" onClick={() => onChange({ chatAvatarPlacement: 'beside' })} />
+                    <OptionButton active={value.chatAvatarPlacement === 'above_group'} label="Above each round" desc="Consecutive bubbles share one avatar" onClick={() => onChange({ chatAvatarPlacement: 'above_group' })} />
                 </div>
             </div>
             {(value.chatAvatarPlacement || 'beside') === 'beside' && (
                 <div>
-                    <h3 className="text-[11px] font-bold text-slate-500 mb-2">头像对齐气泡</h3>
+                    <h3 className="text-[11px] font-bold text-slate-500 mb-2">Avatar Alignment to Bubble</h3>
                     <div className="flex gap-2 flex-wrap">
-                        {([['bottom', '底部（默认）'], ['top', '顶部'], ['center', '垂直居中']] as const).map(([v, label]) => (
+                        {([['bottom', 'Bottom (default)'], ['top', 'Top'], ['center', 'Center']] as const).map(([v, label]) => (
                             <OptionButton key={v} active={(value.chatAvatarAlign || 'bottom') === v} label={label} onClick={() => onChange({ chatAvatarAlign: v })} />
                         ))}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                        <span className="text-[11px] text-slate-500 shrink-0">垂直微调</span>
+                        <span className="text-[11px] text-slate-500 shrink-0">Vertical offset</span>
                         <input type="range" min={-16} max={16} step={2} value={value.chatAvatarOffsetY || 0}
                             onChange={(e) => onChange({ chatAvatarOffsetY: Number(e.target.value) })} className="flex-1 accent-current" />
                         <span className="text-[11px] font-mono text-slate-500 w-10 text-right">{value.chatAvatarOffsetY || 0}px</span>
@@ -62,39 +64,39 @@ export const ChatFineTunePanel: React.FC<Props> = ({ value, onChange }) => {
                 </div>
             )}
             <div>
-                <h3 className="text-[11px] font-bold text-slate-500 mb-2">气泡正文字号</h3>
+                <h3 className="text-[11px] font-bold text-slate-500 mb-2">Bubble Text Size</h3>
                 <div className="flex gap-2 flex-wrap">
-                    <OptionButton active={!value.chatBubbleFontSize} label="默认" onClick={() => onChange({ chatBubbleFontSize: 0 })} />
+                    <OptionButton active={!value.chatBubbleFontSize} label="Default" onClick={() => onChange({ chatBubbleFontSize: 0 })} />
                     {[12, 13, 14, 15, 16].map(v => (
                         <OptionButton key={v} active={value.chatBubbleFontSize === v} label={`${v}px`} onClick={() => onChange({ chatBubbleFontSize: v })} />
                     ))}
                 </div>
             </div>
             <div>
-                <h3 className="text-[11px] font-bold text-slate-500 mb-2">气泡正文行距</h3>
+                <h3 className="text-[11px] font-bold text-slate-500 mb-2">Bubble Line Height</h3>
                 <div className="flex gap-2 flex-wrap">
-                    <OptionButton active={!value.chatBubbleLineHeight} label="默认" onClick={() => onChange({ chatBubbleLineHeight: 0 })} />
+                    <OptionButton active={!value.chatBubbleLineHeight} label="Default" onClick={() => onChange({ chatBubbleLineHeight: 0 })} />
                     {[1.2, 1.35, 1.5, 1.7].map(v => (
                         <OptionButton key={v} active={value.chatBubbleLineHeight === v} label={String(v)} onClick={() => onChange({ chatBubbleLineHeight: v })} />
                     ))}
                 </div>
             </div>
             <div>
-                <h3 className="text-[11px] font-bold text-slate-500 mb-2">气泡与头像间距</h3>
+                <h3 className="text-[11px] font-bold text-slate-500 mb-2">Bubble-to-Avatar Spacing</h3>
                 <div className="flex gap-2 flex-wrap">
-                    <OptionButton active={!value.chatBubbleIndent} label="默认 (48px)" onClick={() => onChange({ chatBubbleIndent: 0 })} />
+                    <OptionButton active={!value.chatBubbleIndent} label="Default (48px)" onClick={() => onChange({ chatBubbleIndent: 0 })} />
                     {[28, 60, 72].map(v => (
                         <OptionButton key={v} active={value.chatBubbleIndent === v} label={`${v}px`} onClick={() => onChange({ chatBubbleIndent: v })} />
                     ))}
                 </div>
             </div>
             <div>
-                <h3 className="text-[11px] font-bold text-slate-500 mb-2">HTML / 心象 / 音乐卡片位置</h3>
+                <h3 className="text-[11px] font-bold text-slate-500 mb-2">HTML / Psyche / Music Card Position</h3>
                 <div className="flex gap-2 flex-wrap">
-                    <OptionButton active={(value.chatModuleAlign || 'center') === 'center'} label="水平居中（默认）" desc="卡片类内容居中显示" onClick={() => onChange({ chatModuleAlign: 'center' })} />
-                    <OptionButton active={value.chatModuleAlign === 'anchor'} label="贴气泡列" desc="跟气泡同侧，旧版观感" onClick={() => onChange({ chatModuleAlign: 'anchor' })} />
+                    <OptionButton active={(value.chatModuleAlign || 'center') === 'center'} label="Horizontally centered (default)" desc="Card-type content shown centered" onClick={() => onChange({ chatModuleAlign: 'center' })} />
+                    <OptionButton active={value.chatModuleAlign === 'anchor'} label="Snap to bubble column" desc="Same side as the bubble, legacy look" onClick={() => onChange({ chatModuleAlign: 'anchor' })} />
                 </div>
-                <p className="mt-1.5 text-[10px] text-slate-400">角色发的 HTML 卡片、心象（思考链）卡片和音乐（一起听）卡片的横向位置。预览里看不到卡片，进聊天看效果。</p>
+                <p className="mt-1.5 text-[10px] text-slate-400">Horizontal position of HTML cards, Psyche (thinking chain) cards, and Music (listen together) cards sent by the character. Cards aren't visible in the preview — check the effect in chat.</p>
             </div>
         </div>
     );

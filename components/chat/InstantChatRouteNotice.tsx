@@ -1,28 +1,30 @@
 /**
- * 「这一轮没上云，在本地生成」的提示条（输入框正上方那一条）。
+ * The "this turn didn't go to the cloud, generated locally instead" notice bar (the one directly above the input box).
  *
- * 为什么要有：即时对话的开关写着「已开启」，消息却在本地生成——这中间的落差过去只留在
- * console 和观察窗里，用户查不到。他能看到的只有本地直连失败时那条读不懂的网络报错，
- * 于是以为是自己网络坏了。线上真实故障里，有人就这么卡了四个小时。
+ * Why it exists: the Instant Chat toggle says "enabled," yet the message still generated locally -- that gap used to
+ * live only in the console and the observation panel, somewhere the user could never check. All they could see was
+ * an unreadable network error when the local direct connection failed, so they assumed their own network was broken.
+ * In a real production incident, someone got stuck like this for four hours.
  *
- * 只报两档，都是「用户想上云、实际没上」的情形：
- *   worker-outdated     问到了，那台 Worker 确实跑不动 → 指路去更新
- *   worker-unreachable  这一刻够不着云端 → 别叫人去更新，多半是网络，会自己好
+ * Only reports two cases, both being "the user wanted the cloud, but it didn't actually go there":
+ *   worker-outdated     checked in, and that Worker genuinely can't handle this path -> points them to update it
+ *   worker-unreachable  the cloud just wasn't reachable at this moment -> don't tell them to update, it's probably
+ *                       just the network and will fix itself
  *
- * 用户自己关掉的（disabled / char-disabled）、点单流程那种本该留在本地的，一律不出声——
- * 那些是正常行为，报了就成骚扰。
+ * Cases the user turned off themselves (disabled / char-disabled), or flows like ordering that are meant to stay
+ * local anyway, stay silent across the board -- those are normal behavior, and reporting them would just be noise.
  */
 import React, { useEffect, useState } from 'react';
 import { AMSG_INSTANT_CHAT_ROUTE_EVENT, type InstantChatRouteDetail } from '../../utils/amsgInstantChat';
 
 const NOTICES: Record<string, { title: string; hint: string }> = {
     'worker-outdated': {
-        title: '这一轮在本地生成',
-        hint: '云端那台 Worker 跑不动这条路，去设置里更新一下',
+        title: 'This turn generated locally',
+        hint: 'Your cloud Worker cannot handle this path -- go update it in Settings',
     },
     'worker-unreachable': {
-        title: '这一轮在本地生成',
-        hint: '一时连不上云端，网络恢复后会自己回去',
+        title: 'This turn generated locally',
+        hint: 'Could not reach the cloud right now -- it will switch back once the network recovers',
     },
 };
 
@@ -30,12 +32,12 @@ const InstantChatRouteNotice: React.FC<{ charId: string }> = ({ charId }) => {
     const [reason, setReason] = useState<string | null>(null);
 
     useEffect(() => {
-        // 换会话先清干净：上一个角色那轮的结论跟这个角色没关系。
+        // Clear out first when switching conversations: the previous character's conclusion for that turn has nothing to do with this character.
         setReason(null);
         const onRoute = (event: Event) => {
             const detail = (event as CustomEvent<InstantChatRouteDetail>).detail;
             if (!detail || detail.charId !== charId) return;
-            // reason 为 null（这一轮走成了云端）或不在名单里的原因，都当「没什么好说的」收起来。
+            // A null reason (this turn successfully went to the cloud) or a reason not on the list both count as "nothing worth mentioning" and get hidden.
             setReason(detail.reason && NOTICES[detail.reason] ? detail.reason : null);
         };
         window.addEventListener(AMSG_INSTANT_CHAT_ROUTE_EVENT, onRoute);

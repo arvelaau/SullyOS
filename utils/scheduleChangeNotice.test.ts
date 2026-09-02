@@ -22,7 +22,7 @@ describe('ScheduleChangeNotice', () => {
             onDone: () => {},
         }));
 
-        expect(html).toContain('未来日程已调整');
+        expect(html).toContain('Upcoming schedule updated');
         expect(html).toContain('18:30');
         expect(html).toContain('健身');
         expect(html).toContain('去超市');

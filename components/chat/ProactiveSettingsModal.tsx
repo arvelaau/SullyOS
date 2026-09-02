@@ -13,13 +13,13 @@ interface ProactiveSettingsModalProps {
 }
 
 const INTERVAL_OPTIONS = [
-    { label: '30 分钟', value: 30 },
-    { label: '1 小时', value: 60 },
-    { label: '2 小时', value: 120 },
-    { label: '4 小时', value: 240 },
-    { label: '8 小时', value: 480 },
-    { label: '12 小时', value: 720 },
-    { label: '24 小时', value: 1440 },
+    { label: '30 min', value: 30 },
+    { label: '1 hr', value: 60 },
+    { label: '2 hr', value: 120 },
+    { label: '4 hr', value: 240 },
+    { label: '8 hr', value: 480 },
+    { label: '12 hr', value: 720 },
+    { label: '24 hr', value: 1440 },
 ];
 
 const ProactiveSettingsModal: React.FC<ProactiveSettingsModalProps> = ({
@@ -69,30 +69,30 @@ const ProactiveSettingsModal: React.FC<ProactiveSettingsModalProps> = ({
     };
 
     return (
-        <Modal isOpen={isOpen} title="主动消息" onClose={onClose} footer={
+        <Modal isOpen={isOpen} title="Proactive Message" onClose={onClose} footer={
             <>
                 <button onClick={onClose} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl active:scale-95 transition-transform">
-                    取消
+                    Cancel
                 </button>
                 {isProactiveActive ? (
                     <button onClick={handleStop} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl active:scale-95 transition-transform shadow-lg">
-                        停止
+                        Stop
                     </button>
                 ) : null}
                 <button onClick={handleSave} className="flex-1 py-3 bg-violet-500 text-white font-bold rounded-2xl active:scale-95 transition-transform shadow-lg">
-                    {enabled ? '启动' : '保存'}
+                    {enabled ? 'Start' : 'Save'}
                 </button>
             </>
         }>
             <div className="space-y-5">
                 {/* Description */}
                 <p className="text-xs text-slate-400 leading-relaxed">
-                    开启后，{char.name} 会按照设定的间隔主动给你发消息，就像真人一样随手发来一条。
+                    Once enabled, {char.name} will proactively message you at the set interval, like a real person sending you a message on a whim.
                 </p>
 
                 {/* Enable Toggle */}
                 <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-700">启用主动消息</span>
+                    <span className="text-sm font-bold text-slate-700">Enable Proactive Message</span>
                     <button
                         onClick={() => setEnabled(!enabled)}
                         className={`w-12 h-7 rounded-full transition-colors relative ${enabled ? 'bg-violet-500' : 'bg-slate-200'}`}
@@ -105,7 +105,7 @@ const ProactiveSettingsModal: React.FC<ProactiveSettingsModalProps> = ({
                 {isProactiveActive && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-violet-50 rounded-xl border border-violet-100">
                         <span className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-violet-600 font-medium">主动消息进行中</span>
+                        <span className="text-xs text-violet-600 font-medium">Proactive message in progress</span>
                     </div>
                 )}
 
@@ -113,7 +113,7 @@ const ProactiveSettingsModal: React.FC<ProactiveSettingsModalProps> = ({
                 {enabled && (
                     <>
                         <div>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">发送间隔</label>
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Send Interval</label>
                             <div className="grid grid-cols-3 gap-2">
                                 {INTERVAL_OPTIONS.map(opt => (
                                     <button
@@ -133,7 +133,7 @@ const ProactiveSettingsModal: React.FC<ProactiveSettingsModalProps> = ({
                         {/* Secondary API Toggle */}
                         <div className="pt-2 border-t border-slate-100">
                             <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-bold text-slate-700">使用副 API</span>
+                                <span className="text-sm font-bold text-slate-700">Use Secondary API</span>
                                 <button
                                     onClick={() => { setUseSecondaryApi(!useSecondaryApi); setShowApiSection(!useSecondaryApi); }}
                                     className={`w-12 h-7 rounded-full transition-colors relative ${useSecondaryApi ? 'bg-violet-500' : 'bg-slate-200'}`}
@@ -142,7 +142,7 @@ const ProactiveSettingsModal: React.FC<ProactiveSettingsModalProps> = ({
                                 </button>
                             </div>
                             <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
-                                使用单独的 API 发送主动消息，避免消耗主 API 额度。不开启则使用主 API。
+                                Use a separate API to send proactive messages, so they do not eat into your main API quota. If off, the main API is used.
                             </p>
 
                             {showApiSection && (

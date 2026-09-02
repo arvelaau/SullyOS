@@ -179,8 +179,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         <div className={`${headerDensityClass} flex items-end shrink-0 z-30 sticky top-0 relative ${headerToneClass}`}>
             {selectionMode ? (
                 <div className="flex items-center justify-between w-full">
-                    <button onClick={onCancelSelection} className="text-sm font-bold text-slate-500 px-2 py-1">取消</button>
-                    <span className="text-sm font-bold text-slate-800">已选 {selectedCount} 项</span>
+                    <button onClick={onCancelSelection} className="text-sm font-bold text-slate-500 px-2 py-1">Cancel</button>
+                    <span className="text-sm font-bold text-slate-800">{selectedCount} selected</span>
                     <div className="w-10"></div>
                 </div>
             ) : (
@@ -202,7 +202,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                                 )}
                                 {isEmotionEvaluating && (
                                     <div className="text-[9px] px-1.5 py-0.5 bg-violet-50 text-violet-500 rounded-md font-semibold border border-violet-200 animate-pulse">
-                                        情绪分析中…
+                                        Analyzing mood…
                                     </div>
                                 )}
                             </div>
@@ -232,7 +232,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                                             onClick={(e) => { e.stopPropagation(); setIsBuffListExpanded(prev => !prev); }}
                                             className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-md font-bold border border-slate-300 text-slate-500 bg-slate-100/80 hover:bg-slate-200/70 transition-colors"
                                         >
-                                            {isBuffListExpanded ? '收起' : `展开 +${hiddenBuffCount}`}
+                                            {isBuffListExpanded ? 'Collapse' : `Expand +${hiddenBuffCount}`}
                                         </button>
                                     )}
                                 </div>
@@ -240,7 +240,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                         </div>
                     </div>
 
-                    <button onClick={onTriggerAI} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-full ml-auto" title="触发AI">
+                    <button onClick={onTriggerAI} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-full ml-auto" title="Trigger AI">
                         <Lightning className="w-5 h-5" weight="bold" />
                     </button>
                 </div>
@@ -249,7 +249,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             {/* Buff list panel */}
             {isBuffListExpanded && buffs.length > collapsedBuffCount && (
                 <div ref={buffPanelRef} className="absolute top-full left-4 right-4 mt-1 bg-white rounded-xl shadow-lg border border-slate-200 p-3 z-40">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">全部状态</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">All States</div>
                     <div className="max-h-36 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         <div className="flex flex-wrap gap-1.5">
                             {buffs.map(buff => (
@@ -285,7 +285,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                             </span>
                             <div className="text-xs font-bold tracking-wide" style={{ color: openBuff.color || '#db2777' }}>
                                 {INTENSITY_DOTS(openBuff.intensity)}{' '}
-                                {normalizeIntensity(openBuff.intensity) === 1 ? '轻微' : normalizeIntensity(openBuff.intensity) === 2 ? '中等' : '强烈'}
+                                {normalizeIntensity(openBuff.intensity) === 1 ? 'Mild' : normalizeIntensity(openBuff.intensity) === 2 ? 'Moderate' : 'Strong'}
                             </div>
                         </div>
                         <button onClick={() => setOpenBuff(null)} className="text-slate-300 hover:text-slate-500 text-lg leading-none px-1">{'\u00d7'}</button>
@@ -293,7 +293,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     {openBuff.description ? (
                         <p className="text-sm text-slate-600 leading-relaxed">{openBuff.description}</p>
                     ) : (
-                        <p className="text-xs text-slate-400 italic">暂无详情</p>
+                        <p className="text-xs text-slate-400 italic">No details yet</p>
                     )}
                 </div>
             )}
@@ -306,10 +306,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                             <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-red-100 text-xl shadow-inner">
                                 {confirmDeleteBuff.emoji || '🗑️'}
                             </div>
-                            <div className="font-bold text-slate-800 text-sm">删除情绪状态</div>
+                            <div className="font-bold text-slate-800 text-sm">Delete Emotion State</div>
                             <div className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                确定要删除「{confirmDeleteBuff.label}」吗？<br />
-                                对应的情绪提示词也会一并移除。
+                                Are you sure you want to delete "{confirmDeleteBuff.label}"?<br />
+                                Its matching emotion prompt will be removed as well.
                             </div>
                         </div>
                         <div className="flex gap-2.5">
@@ -317,13 +317,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                                 onClick={() => setConfirmDeleteBuff(null)}
                                 className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-colors"
                             >
-                                取消
+                                Cancel
                             </button>
                             <button
                                 onClick={handleConfirmDelete}
                                 className="flex-1 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-rose-500 to-red-500 rounded-2xl hover:from-rose-600 hover:to-red-600 shadow-lg shadow-red-200/80 transition-all"
                             >
-                                删除
+                                Delete
                             </button>
                         </div>
                     </div>
