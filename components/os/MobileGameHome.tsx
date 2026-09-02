@@ -91,7 +91,7 @@ const makeMgVars = (st: TgStyle): React.CSSProperties => {
 };
 
 // 经典梦幻粉紫（本皮肤的出厂默认，亮色）+ 共享 12 方案
-const MG_CLASSIC: TgStyle = { id: 'classic', name: '梦幻粉紫', hue: 262, dark: false, gold: false, mute: false };
+const MG_CLASSIC: TgStyle = { id: 'classic', name: 'Dreamy Pink-Purple', hue: 262, dark: false, gold: false, mute: false };
 const MG_CHOICES: TgStyle[] = [MG_CLASSIC, ...SCHEMES];
 const MG_STYLE_KEY = 'mg_style_v1';
 
@@ -121,19 +121,19 @@ const FONT_CN = `'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif`; // 中文圆润可
 const FONT_SCRIPT = `'Caveat', cursive`;              // 问候手写
 
 const QUICK_ENTRIES: { id: AppID; cn: string }[] = [
-    { id: AppID.Character, cn: '神经链接' },
-    { id: AppID.MemoryPalace, cn: '记忆宫殿' },
-    { id: AppID.Call, cn: '电话' },
-    { id: AppID.Room, cn: '小小窝' },
+    { id: AppID.Character, cn: 'Neural Link' },
+    { id: AppID.MemoryPalace, cn: 'Memory Palace' },
+    { id: AppID.Call, cn: 'Call' },
+    { id: AppID.Room, cn: 'Dwelling' },
 ];
 
 const GRID_CARDS: { id: AppID; cn: string; en: string }[] = [
-    { id: AppID.CheckPhone, cn: '查手机', en: 'PHONE' },
-    { id: AppID.Date, cn: '见面', en: 'CONTACTS' },
-    { id: AppID.User, cn: '档案', en: 'ARCHIVES' },
-    { id: AppID.Bank, cn: '存钱罐', en: 'PIGGYBANK' },
-    { id: AppID.Schedule, cn: '日程', en: 'SCHEDULE' },
-    { id: AppID.Settings, cn: '设置', en: 'SETTINGS' },
+    { id: AppID.CheckPhone, cn: 'Check Phone', en: 'PHONE' },
+    { id: AppID.Date, cn: 'Date', en: 'CONTACTS' },
+    { id: AppID.User, cn: 'Profile', en: 'ARCHIVES' },
+    { id: AppID.Bank, cn: 'Piggy Bank', en: 'PIGGYBANK' },
+    { id: AppID.Schedule, cn: 'Schedule', en: 'SCHEDULE' },
+    { id: AppID.Settings, cn: 'Settings', en: 'SETTINGS' },
 ];
 
 const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
@@ -205,7 +205,7 @@ const MobileGameHome: React.FC = () => {
             const raw = localStorage.getItem(MG_STYLE_KEY);
             if (raw) {
                 const p = JSON.parse(raw);
-                if (typeof p?.hue === 'number') return { id: p.id || 'custom', name: p.name || '自定义', hue: p.hue, dark: !!p.dark, gold: !!p.gold, mute: !!p.mute };
+                if (typeof p?.hue === 'number') return { id: p.id || 'custom', name: p.name || 'Custom', hue: p.hue, dark: !!p.dark, gold: !!p.gold, mute: !!p.mute };
             }
         } catch { /* 解析失败走默认 */ }
         return MG_CLASSIC;
@@ -237,7 +237,7 @@ const MobileGameHome: React.FC = () => {
             if (visible.length > 0) {
                 const last = visible[visible.length - 1];
                 const clean = last.content.replace(/\[.*?\]/g, '').trim();
-                setLastMessage(clean || (last.type === 'image' ? '[图片]' : '[消息]'));
+                setLastMessage(clean || (last.type === 'image' ? '[Image]' : '[Message]'));
             } else {
                 setLastMessage(target.description || '');
             }
@@ -276,8 +276,8 @@ const MobileGameHome: React.FC = () => {
     const dateNum = now.getDate();
 
     const charName = widgetChar?.name || 'SullyOS';
-    const tagline = (widgetChar?.description || '不知名种草姬').slice(0, 36);
-    const announcement = lastMessage || widgetChar?.description || '一切如常，等待新的故事发生。';
+    const tagline = (widgetChar?.description || 'Unknown trendsetter').slice(0, 36);
+    const announcement = lastMessage || widgetChar?.description || "Everything's the same as always, waiting for a new story to happen.";
     const expPct = Math.min(100, Math.round((stats.exp / stats.expMax) * 100));
     // 时钟卡角色：优先彼方 chibi 小贴纸（透明立绘），没有就头像融合
     const chibi = widgetChar ? getChibi(widgetChar) : null;
@@ -316,12 +316,12 @@ const MobileGameHome: React.FC = () => {
                         <span className="text-[9px]" style={{ color: PAL.peri }}>✦</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setMgPaletteOpen(v => !v)} aria-label="界面配色"
+                        <button onClick={() => setMgPaletteOpen(v => !v)} aria-label="Color scheme"
                             className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
                             style={{ background: 'var(--mg-chip)', border: '1px solid var(--mg-chip-line)', color: PAL.grape }}>
                             <span className="w-4 h-4">{MG_PALETTE_ICON}</span>
                         </button>
-                        <button onClick={() => openApp(AppID.Appearance)} aria-label="菜单" className="flex flex-col items-end gap-[3.5px] py-2 active:opacity-60 transition-opacity">
+                        <button onClick={() => openApp(AppID.Appearance)} aria-label="Menu" className="flex flex-col items-end gap-[3.5px] py-2 active:opacity-60 transition-opacity">
                             <span className="w-5 h-[2px] rounded-full" style={{ background: PAL.grape }} />
                             <span className="w-5 h-[2px] rounded-full" style={{ background: PAL.grape }} />
                             <span className="w-5 h-[2px] rounded-full" style={{ background: PAL.grape }} />
@@ -338,7 +338,7 @@ const MobileGameHome: React.FC = () => {
                             style={{ top: 'calc(var(--safe-top, 0px) + 2.9rem)', background: 'var(--mg-drawer)', border: '1.5px solid var(--mg-card-line)', boxShadow: '0 10px 26px var(--mg-glow20)' }}>
                             <div className="flex items-center gap-1.5 mb-2.5">
                                 <span className="w-4 h-4" style={{ color: PAL.grape }}>{MG_PALETTE_ICON}</span>
-                                <span className="text-[12px] font-bold tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>界面配色</span>
+                                <span className="text-[12px] font-bold tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>Color Scheme</span>
                                 <span className="text-[8px]" style={{ color: PAL.pink }}>✦</span>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
@@ -360,7 +360,7 @@ const MobileGameHome: React.FC = () => {
                                 })}
                             </div>
                             <p className="text-[8.5px] leading-relaxed mt-2 text-center" style={{ color: PAL.lilac, fontFamily: FONT_CN }}>
-                                暗色方案夜里超好看 ✦ 亮色会透出你的壁纸
+                                Dark schemes look amazing at night ✦ Light schemes let your wallpaper shine through
                             </p>
                         </div>
                     </>
@@ -485,7 +485,7 @@ const MobileGameHome: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[14px]" style={{ fontFamily: FONT_CN, color: PAL.grape }}>最新公告</span>
+                            <span className="text-[14px]" style={{ fontFamily: FONT_CN, color: PAL.grape }}>Latest Announcement</span>
                             <span className="px-1.5 py-px rounded text-[8px] font-bold tracking-wider" style={{ background: `linear-gradient(135deg, ${PAL.pink}, ${PAL.hot})`, color: '#fff' }}>NEW</span>
                         </div>
                         <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: PAL.lilac }}>{announcement}</p>
@@ -496,7 +496,7 @@ const MobileGameHome: React.FC = () => {
                 </button>
 
                 {/* ===== 快捷入口 ===== */}
-                <SectionLabel cn="快捷入口" en="SHORTCUTS" />
+                <SectionLabel cn="Quick Access" en="SHORTCUTS" />
                 <div className="grid grid-cols-4 gap-2.5 animate-fade-in">
                     {QUICK_ENTRIES.map(e => (
                         <button key={e.id} onClick={() => openApp(e.id)} className="flex flex-col items-center gap-2 active:scale-90 transition-transform">
@@ -510,7 +510,7 @@ const MobileGameHome: React.FC = () => {
                 </div>
 
                 {/* ===== 应用目录 ===== */}
-                <SectionLabel cn="应用目录" en="INDEX" />
+                <SectionLabel cn="App Directory" en="INDEX" />
                 <div className="grid grid-cols-2 gap-3">
                     {GRID_CARDS.map((card, i) => (
                         <button key={card.id} onClick={() => openApp(card.id)}
@@ -534,17 +534,17 @@ const MobileGameHome: React.FC = () => {
             <div className="absolute bottom-0 left-0 w-full px-3.5 z-30 pointer-events-none" style={{ paddingBottom: 'calc(var(--safe-bottom, 0px) + 0.75rem)' }}>
                 <div className="relative pointer-events-auto rounded-[1.9rem] px-3 py-2.5 flex items-end justify-between"
                     style={{ background: 'var(--mg-dock)', border: '1px solid var(--mg-dock-line)', boxShadow: '0 -6px 30px var(--mg-glow20), inset 0 1px 0 var(--mg-dock-line)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}>
-                    <DockItem id={AppID.Chat} cn="消息" badge={totalUnread} onClick={() => openApp(AppID.Chat)} />
-                    <DockItem id={AppID.Character} cn="好友" onClick={() => openApp(AppID.Character)} />
+                    <DockItem id={AppID.Chat} cn="Messages" badge={totalUnread} onClick={() => openApp(AppID.Chat)} />
+                    <DockItem id={AppID.Character} cn="Friends" onClick={() => openApp(AppID.Character)} />
                     {/* 中央罗盘 */}
-                    <button onClick={() => setDrawerOpen(true)} aria-label="全部应用" className="-mt-8 w-[4.2rem] h-[4.2rem] rounded-full flex items-center justify-center active:scale-95 transition-transform shrink-0"
+                    <button onClick={() => setDrawerOpen(true)} aria-label="All Apps" className="-mt-8 w-[4.2rem] h-[4.2rem] rounded-full flex items-center justify-center active:scale-95 transition-transform shrink-0"
                         style={{ background: `linear-gradient(135deg, ${PAL.pink}, ${PAL.peri}, ${PAL.lilac})`, padding: '3px', boxShadow: '0 8px 22px rgba(234,118,180,0.5)' }}>
                         <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #5a4d85, #6b5b95)' }}>
                             <StarBurst className="w-8 h-8" fill="#ffffff" />
                         </div>
                     </button>
-                    <DockItem id={AppID.Social} cn="动态" onClick={() => openApp(AppID.Social)} />
-                    <DockItem id={AppID.ThemeMaker} cn="创作" onClick={() => openApp(AppID.ThemeMaker)} />
+                    <DockItem id={AppID.Social} cn="Feed" onClick={() => openApp(AppID.Social)} />
+                    <DockItem id={AppID.ThemeMaker} cn="Create" onClick={() => openApp(AppID.ThemeMaker)} />
                 </div>
             </div>
 
@@ -552,8 +552,8 @@ const MobileGameHome: React.FC = () => {
             {drawerOpen && (
                 <div className="absolute inset-0 z-40 flex flex-col animate-fade-in" style={{ background: 'var(--mg-drawer)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }} onClick={() => setDrawerOpen(false)}>
                     <div className="flex items-center justify-between px-6" style={{ paddingTop: 'calc(var(--safe-top, 0px) + 1.25rem)', paddingBottom: '0.5rem' }}>
-                        <h2 className="text-lg tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>全部应用</h2>
-                        <button onClick={(e) => { e.stopPropagation(); setDrawerOpen(false); }} aria-label="关闭" className="w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'var(--mg-chip)', border: '1px solid var(--mg-chip-line)' }}>
+                        <h2 className="text-lg tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>All Apps</h2>
+                        <button onClick={(e) => { e.stopPropagation(); setDrawerOpen(false); }} aria-label="Close" className="w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform" style={{ background: 'var(--mg-chip)', border: '1px solid var(--mg-chip-line)' }}>
                             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke={PAL.ink} strokeWidth="2.5"><path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
                         </button>
                     </div>

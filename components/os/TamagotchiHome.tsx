@@ -171,15 +171,15 @@ const FLOOR_HORIZON = 65; // 与 RoomApp 一致：地平线 65%
 // 摆位副本（去掉了舞台用不到的 descriptionPrompt）。Sully 首次进过小小窝后 roomConfig
 // 会自动落库，此副本只服务于「装完还没进过屋」的新档。
 const FALLBACK_DEFAULT: RoomItem[] = [
-    { id: 'desk', name: '书桌', type: 'furniture', image: FURNITURE_ICONS.sofa, x: 20, y: 55, scale: 1.2, rotation: 0, isInteractive: true },
-    { id: 'plant', name: '盆栽', type: 'decor', image: FURNITURE_ICONS.plant, x: 85, y: 40, scale: 0.8, rotation: 0, isInteractive: true },
+    { id: 'desk', name: 'Desk', type: 'furniture', image: FURNITURE_ICONS.sofa, x: 20, y: 55, scale: 1.2, rotation: 0, isInteractive: true },
+    { id: 'plant', name: 'Potted Plant', type: 'decor', image: FURNITURE_ICONS.plant, x: 85, y: 40, scale: 0.8, rotation: 0, isInteractive: true },
 ];
 const FALLBACK_SULLY: RoomItem[] = [
-    { id: 'item-1768927221380', name: 'Sully床', type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/BED.png', x: 78.46, y: 97.39, scale: 2.4, rotation: 0, isInteractive: true },
-    { id: 'item-1768927255102', name: 'Sully电脑桌', type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DNZ.png', x: 28.85, y: 69.94, scale: 2.4, rotation: 0, isInteractive: true },
-    { id: 'item-1768927271632', name: 'Sully垃圾桶', type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/LJT.png', x: 10.28, y: 80.5, scale: 0.9, rotation: 0, isInteractive: true },
-    { id: 'item-1768927286526', name: 'Sully洞洞板', type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DDB.png', x: 32.61, y: 48.72, scale: 2.6, rotation: 0, isInteractive: true },
-    { id: 'item-1768927303472', name: 'Sully书柜', type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/SG.png', x: 79.84, y: 68.94, scale: 2, rotation: 0, isInteractive: true },
+    { id: 'item-1768927221380', name: "Sully's Bed", type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/BED.png', x: 78.46, y: 97.39, scale: 2.4, rotation: 0, isInteractive: true },
+    { id: 'item-1768927255102', name: "Sully's Computer Desk", type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DNZ.png', x: 28.85, y: 69.94, scale: 2.4, rotation: 0, isInteractive: true },
+    { id: 'item-1768927271632', name: "Sully's Trash Can", type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/LJT.png', x: 10.28, y: 80.5, scale: 0.9, rotation: 0, isInteractive: true },
+    { id: 'item-1768927286526', name: "Sully's Pegboard", type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DDB.png', x: 32.61, y: 48.72, scale: 2.6, rotation: 0, isInteractive: true },
+    { id: 'item-1768927303472', name: "Sully's Bookshelf", type: 'furniture', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/SG.png', x: 79.84, y: 68.94, scale: 2, rotation: 0, isInteractive: true },
 ];
 const FALLBACK_WALL = 'radial-gradient(circle at 50% 50%, #fdfbf7 0%, #e2e8f0 100%)';
 const FALLBACK_FLOOR = 'repeating-linear-gradient(90deg, #e7e5e4 0px, #e7e5e4 20px, #d6d3d1 21px)';
@@ -272,11 +272,11 @@ const StageItem = React.memo<{ item: RoomItem; onTap: (item: RoomItem) => void }
 // ─── 挂在横幅下的小电子钟（时钟功能为主，天色只是表盘氛围）────────────
 // 表盘小屏按时段换底：清晨/白天/黄昏/夜晚/夜深啦；SVG 太阳/弯月，无 emoji 无大云窗。
 const CLOCK_PHASES = {
-    dawn: { label: '清晨', bg: 'linear-gradient(160deg, #ffe9d6, #ffd9e8)', fg: '#9a6f4d', sub: 'rgba(154,111,77,0.75)' },
-    day: { label: '白天', bg: 'linear-gradient(160deg, #bfe0f7, #e8f5fd)', fg: '#3f6f9e', sub: 'rgba(63,111,158,0.75)' },
-    dusk: { label: '黄昏', bg: 'linear-gradient(160deg, #ffc9a3, #e8a7c8)', fg: '#7d4458', sub: 'rgba(125,68,88,0.8)' },
-    night: { label: '夜晚', bg: 'linear-gradient(160deg, #3a3560, #575083)', fg: '#f0edff', sub: 'rgba(240,237,255,0.75)' },
-    late: { label: '夜深啦', bg: 'linear-gradient(160deg, #232045, #3a3560)', fg: '#e4defc', sub: 'rgba(228,222,252,0.78)' },
+    dawn: { label: 'Dawn', bg: 'linear-gradient(160deg, #ffe9d6, #ffd9e8)', fg: '#9a6f4d', sub: 'rgba(154,111,77,0.75)' },
+    day: { label: 'Day', bg: 'linear-gradient(160deg, #bfe0f7, #e8f5fd)', fg: '#3f6f9e', sub: 'rgba(63,111,158,0.75)' },
+    dusk: { label: 'Dusk', bg: 'linear-gradient(160deg, #ffc9a3, #e8a7c8)', fg: '#7d4458', sub: 'rgba(125,68,88,0.8)' },
+    night: { label: 'Night', bg: 'linear-gradient(160deg, #3a3560, #575083)', fg: '#f0edff', sub: 'rgba(240,237,255,0.75)' },
+    late: { label: 'Late Night', bg: 'linear-gradient(160deg, #232045, #3a3560)', fg: '#e4defc', sub: 'rgba(228,222,252,0.78)' },
 } as const;
 type ClockPhase = keyof typeof CLOCK_PHASES;
 const clockPhaseOf = (h: number): ClockPhase => (h >= 23 || h < 5) ? 'late' : h < 8 ? 'dawn' : h < 17 ? 'day' : h < 20 ? 'dusk' : 'night';
@@ -343,7 +343,7 @@ const LiveBoard = React.memo<{
                             <span className="text-[7px] font-bold tracking-[0.22em] text-white" style={{ fontFamily: FONT_PX }}>{night ? 'REST' : 'LIVE'}</span>
                         </span>
                     </div>
-                    <div className="text-[19px] font-bold truncate" style={{ fontFamily: FONT_CN, color: ink, textShadow: glow, letterSpacing: '0.12em' }}>{night ? '休息中' : '营业中'}</div>
+                    <div className="text-[19px] font-bold truncate" style={{ fontFamily: FONT_CN, color: ink, textShadow: glow, letterSpacing: '0.12em' }}>{night ? 'Closed' : 'Open'}</div>
                     <div className="flex items-center gap-1.5 mt-1.5">
                         <span className="text-[6px] tracking-[0.2em]" style={{ color: dim }}>·····</span>
                         <span className="text-[7px] font-bold tracking-[0.34em]" style={{ fontFamily: FONT_PX, color: sub }}>{night ? 'OFF AIR' : 'ON AIR'}</span>
@@ -358,7 +358,7 @@ const LiveBoard = React.memo<{
                                 <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="8" /><path d="M12 7.5V12l3 2" /></svg>
                             )}
                         </span>
-                        <span className="text-[7px] font-bold tracking-[0.34em]" style={{ fontFamily: FONT_PX, color: sub }}>{phase === 'late' ? '夜深啦' : 'TIME'}</span>
+                        <span className="text-[7px] font-bold tracking-[0.34em]" style={{ fontFamily: FONT_PX, color: sub }}>{phase === 'late' ? 'LATE NIGHT' : 'TIME'}</span>
                     </div>
                     <div className="text-[24px] font-bold tabular-nums" style={{ fontFamily: FONT_PX, color: ink, textShadow: glow, letterSpacing: '0.06em' }}>{hh}:{mm}</div>
                     <div className="relative mt-1.5 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, transparent, var(--tg-macc) 30%, var(--tg-macc) 70%, transparent)' }}>
@@ -455,7 +455,7 @@ const Actor = React.memo<{
         };
 
         // 气泡优先级：戳一戳台词 > 未读提醒
-        const bubble = pokeText || (unread > 0 ? `♥ ${unread} 条新消息!` : '');
+        const bubble = pokeText || (unread > 0 ? `♥ ${unread} new messages!` : '');
         const bubbleIsChat = !pokeText && unread > 0;
 
         return (
@@ -617,7 +617,7 @@ const DayScroll = React.memo<{ slots: { time: string; text: string; passed: bool
             }}>
             <div className="absolute inset-[4px] rounded-[0.85rem] pointer-events-none" style={{ border: '1px solid var(--tg-frame-a22)' }} />
             <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold" style={{ fontFamily: FONT_CN, color: PAL.grape }}>今天的一天 ✦</span>
+                <span className="text-[11px] font-bold" style={{ fontFamily: FONT_CN, color: PAL.grape }}>Today ✦</span>
                 <button onClick={onClose} className="px-1" style={{ color: PAL.fade }}>×</button>
             </div>
             {slots.length > 0 ? (
@@ -630,13 +630,13 @@ const DayScroll = React.memo<{ slots: { time: string; text: string; passed: bool
                             {/* 偷看这一刻：调 API 演一段角色行为（小剧场） */}
                             <button onClick={() => onPeek(i)} className="shrink-0 px-2 py-[3px] rounded-full text-[9px] font-bold active:scale-95"
                                 style={{ background: s.current ? `linear-gradient(135deg, ${PAL.pink}, ${PAL.hot})` : PAL.card, color: s.current ? '#fff' : PAL.grape, border: `1.5px solid ${s.current ? 'transparent' : PAL.frameSoft}`, fontFamily: FONT_CN }}>
-                                偷看
+                                Peek
                             </button>
                         </div>
                     ))}
                 </div>
             ) : (
-                <p className="text-[10px] leading-relaxed" style={{ fontFamily: FONT_CN, color: PAL.fade }}>今天的日程还没生成——去聊两句，ta 的一天就会长出来。</p>
+                <p className="text-[10px] leading-relaxed" style={{ fontFamily: FONT_CN, color: PAL.fade }}>Today's schedule hasn't been generated yet — chat a bit and their day will take shape.</p>
             )}
         </div>
     </>
@@ -645,9 +645,9 @@ const DayScroll = React.memo<{ slots: { time: string; text: string; passed: bool
 // ─── 右侧世界之门：家园 / 像素家园 / 梦境——细线胶囊，跟随界面风格 + ◆连饰 ───
 const WorldPortals = React.memo<{ onHome: () => void; onPixel: () => void; onDream: () => void }>(({ onHome, onPixel, onDream }) => {
     const portals = [
-        { key: 'home', label: '家园', en: 'HOME', icon: ICON.door, onClick: onHome },
-        { key: 'pixel', label: '像素', en: 'PIXEL', icon: ICON.tv, onClick: onPixel },
-        { key: 'dream', label: '梦境', en: 'DREAM', icon: ICON.moon, onClick: onDream },
+        { key: 'home', label: 'Homeland', en: 'HOME', icon: ICON.door, onClick: onHome },
+        { key: 'pixel', label: 'Pixel', en: 'PIXEL', icon: ICON.tv, onClick: onPixel },
+        { key: 'dream', label: 'Dream', en: 'DREAM', icon: ICON.moon, onClick: onDream },
     ];
     return (
         <div className="absolute right-3 z-[35] flex flex-col items-center" style={{ top: 'calc(var(--chrome-top, var(--safe-top, 0px)) + 10rem)' }}>
@@ -678,7 +678,7 @@ const WorldPortals = React.memo<{ onHome: () => void; onPixel: () => void; onDre
 const FloorPhone = React.memo<{ unread: number; open: boolean; msgs: { id: number; mine: boolean; text: string }[]; onToggle: () => void; onChat: () => void }>(
     ({ unread, open, msgs, onToggle, onChat }) => (
         <>
-            <button onClick={onToggle} aria-label="ta 的手机"
+            <button onClick={onToggle} aria-label="their phone"
                 className="absolute left-4 z-[30] active:scale-90 transition-transform"
                 style={{ bottom: 'calc(var(--safe-bottom, 0px) + 7.6rem)' }}>
                 <div className="relative w-9 h-12 rounded-[10px] p-[3px] rotate-[-8deg]"
@@ -721,11 +721,11 @@ const FloorPhone = React.memo<{ unread: number; open: boolean; msgs: { id: numbe
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-[10px] mb-2.5" style={{ fontFamily: FONT_CN, color: PAPER.dim }}>还没聊过天，说点什么吧。</p>
+                            <p className="text-[10px] mb-2.5" style={{ fontFamily: FONT_CN, color: PAPER.dim }}>Haven't talked yet — say something.</p>
                         )}
                         <button onClick={onChat} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl active:scale-[0.99] transition-transform"
                             style={{ background: PAPER.cream, border: `2px solid ${PAPER.lineSoft}` }}>
-                            <span className="flex-1 text-left text-[10.5px]" style={{ color: PAPER.dim, fontFamily: FONT_CN }}>回点什么…</span>
+                            <span className="flex-1 text-left text-[10.5px]" style={{ color: PAPER.dim, fontFamily: FONT_CN }}>Reply with something…</span>
                             <span className="w-5.5 h-5.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0"
                                 style={{ background: `linear-gradient(135deg, #f4a6cc, ${PAPER.hot})` }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff" className="w-3 h-3"><path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" /></svg>
@@ -811,9 +811,9 @@ const TamagotchiHome: React.FC = () => {
             const ref = await putImageBlob(blob);
             setBoardImg(ref);
             try { localStorage.setItem(`tama_board_img_${charId}`, ref); } catch { /* 存不进也能用到刷新前 */ }
-            addToast('看板图已更新 ✦', 'success');
+            addToast('Board image updated ✦', 'success');
         } catch (err: any) {
-            addToast(err?.message || '图片处理失败', 'error');
+            addToast(err?.message || 'Image processing failed', 'error');
         }
     }, [addToast, char?.id]);
     const clearBoardImg = useCallback(() => {
@@ -842,11 +842,11 @@ const TamagotchiHome: React.FC = () => {
             const raw = localStorage.getItem(STYLE_KEY);
             if (raw) {
                 const p = JSON.parse(raw);
-                if (typeof p?.hue === 'number') return { id: p.id || 'custom', name: p.name || '自定义', hue: p.hue, dark: !!p.dark, gold: !!p.gold, mute: !!p.mute };
+                if (typeof p?.hue === 'number') return { id: p.id || 'custom', name: p.name || 'Custom', hue: p.hue, dark: !!p.dark, gold: !!p.gold, mute: !!p.mute };
             }
             const legacy = localStorage.getItem(LEGACY_HUE_KEY);
             const n = legacy === null ? NaN : parseInt(legacy, 10);
-            if (Number.isFinite(n)) return { id: 'custom', name: '自定义', hue: ((n % 360) + 360) % 360, dark: false, gold: false, mute: false };
+            if (Number.isFinite(n)) return { id: 'custom', name: 'Custom', hue: ((n % 360) + 360) % 360, dark: false, gold: false, mute: false };
         } catch { /* 解析失败走默认 */ }
         return SCHEMES[0];
     });
@@ -922,10 +922,10 @@ const TamagotchiHome: React.FC = () => {
 
     // 一句心声：innerState（情绪评估落的）→ 日程意识流 → 占位
     useEffect(() => {
-        if (!char) { setHeartLine('新的一天。'); return; }
+        if (!char) { setHeartLine('A new day.'); return; }
         const inner = getLastInnerState(char.id);
         const flow = schedule?.flowNarrative?.[getFlowNarrativeKey(getScheduleWallClock(char).getHours())] || '';
-        setHeartLine(inner || flow || '新的一天。');
+        setHeartLine(inner || flow || 'A new day.');
     }, [char?.id, char?.customTimezoneEnabled, char?.customTimezone, lastMsgTimestamp, schedule]);
 
     // 桌面小屋只做本地展示交互：走过去 + 念一句 + 观察旁白。
@@ -934,8 +934,8 @@ const TamagotchiHome: React.FC = () => {
         if (!char) return;
         const saved = (char.savedRoomState?.items || {}) as Record<string, { description?: string; reaction?: string }>;
         const cached = saved[item.id] || saved[item.name];
-        const reaction = cached?.reaction || '(盯…)';
-        const desc = cached?.description || `${item.name}静静地摆在那里。`;
+        const reaction = cached?.reaction || '(stares...)';
+        const desc = cached?.description || `${item.name} sits quietly there.`;
         setNudge(p => ({ x: item.x, y: Math.min(92, Math.max(FLOOR_HORIZON + 5, item.y + 5)), seq: p.seq + 1 }));
         setSay(p => ({ text: reaction.length > 64 ? reaction.slice(0, 64) + '…' : reaction, seq: p.seq + 1 }));
         setObservation(desc);
@@ -967,12 +967,12 @@ const TamagotchiHome: React.FC = () => {
                 const isUrl = cand.startsWith('http') || cand.startsWith('data') || cand.startsWith('blob:');
                 const h = isUrl ? await hueFromImage(cand) : hueFromGradient(cand);
                 if (h !== null) {
-                    applyStyle({ ...style, id: 'custom', name: '小窝色', hue: ((Math.round(h) % 360) + 360) % 360, gold: false, mute: false });
-                    addToast('已提取小窝主色 ✦', 'success');
+                    applyStyle({ ...style, id: 'custom', name: 'Room Hue', hue: ((Math.round(h) % 360) + 360) % 360, gold: false, mute: false });
+                    addToast("Extracted your room's main color ✦", 'success');
                     return;
                 }
             }
-            addToast('没提取到明显的主色，试试选个方案', 'info');
+            addToast("Couldn't extract a clear main color — try picking a scheme instead", 'info');
         } finally {
             setExtracting(false);
         }
@@ -998,7 +998,7 @@ const TamagotchiHome: React.FC = () => {
     // 墙上木牌：当前时段；还没开始/没日程给引导文案
     const signText = curSlot
         ? `${curSlot.startTime} · ${curSlot.activity}`
-        : (schedule ? `稍后 · ${nextSlot?.activity || '…'}（${nextSlot?.startTime || ''}）` : '今天想做什么？');
+        : (schedule ? `Later · ${nextSlot?.activity || '…'} (${nextSlot?.startTime || ''})` : 'What do you want to do today?');
     // 纸卷：当日全程
     const scrollSlots = useMemo(() => (schedule?.slots || []).map(s => ({
         time: s.startTime,
@@ -1080,13 +1080,13 @@ const TamagotchiHome: React.FC = () => {
                             </div>
                         </div>
                         {/* 调色（SVG，不用 emoji） */}
-                        <button onClick={() => setPaletteOpen(v => !v)} aria-label="界面风格"
+                        <button onClick={() => setPaletteOpen(v => !v)} aria-label="Interface style"
                             className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-transform"
                             style={{ background: PAL.cardHi, border: `1.5px solid ${PAL.frameSoft}`, color: PAL.grape }}>
                             <span className="w-4 h-4">{ICON.palette}</span>
                         </button>
                         {/* 通话圆钮（聊天入口已经够多：dock/气泡卡/地板手机，这颗给打电话） */}
-                        <button onClick={() => openApp(AppID.Call)} aria-label="通话"
+                        <button onClick={() => openApp(AppID.Call)} aria-label="Call"
                             className="relative w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-transform"
                             style={{ background: PAL.cardHi, border: `1.5px solid ${PAL.frame}`, color: PAL.grape }}>
                             <svg viewBox="0 0 24 24" className="w-[17px] h-[17px]" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
@@ -1110,7 +1110,7 @@ const TamagotchiHome: React.FC = () => {
                         <div className="absolute inset-[4px] rounded-[0.85rem] pointer-events-none" style={{ border: '1px solid var(--tg-frame-a22)' }} />
                         <div className="flex items-center gap-1.5 mb-2.5">
                             <span className="w-4 h-4" style={{ color: PAL.grape }}>{ICON.palette}</span>
-                            <span className="text-[12px] font-bold tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>界面风格</span>
+                            <span className="text-[12px] font-bold tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>Interface Style</span>
                             <span className="text-[8px]" style={{ color: PAL.gold }}>✦</span>
                         </div>
                         <div className="grid grid-cols-3 gap-2 mb-3">
@@ -1134,15 +1134,15 @@ const TamagotchiHome: React.FC = () => {
                         <button onClick={extractRoomHue} disabled={extracting}
                             className="w-full py-2 rounded-xl text-[11px] font-bold active:scale-95 transition-transform disabled:opacity-60 flex items-center justify-center gap-1.5"
                             style={{ background: PAL.card, border: `1.5px solid ${PAL.frame}`, color: PAL.grape, fontFamily: FONT_CN }}>
-                            <span className="w-3.5 h-3.5">{DOCK_GLYPHS.home}</span>{extracting ? '正在打量小窝…' : '提取小窝主色'}
+                            <span className="w-3.5 h-3.5">{DOCK_GLYPHS.home}</span>{extracting ? 'Looking around the room…' : "Extract Room's Main Color"}
                         </button>
                         <p className="text-[8.5px] leading-relaxed mt-2 text-center" style={{ color: PAL.fade, fontFamily: FONT_CN }}>
-                            从 ta 的墙纸 / 地板 / 立绘里找主色，保留当前明暗基调
+                            Finds the main color from their wallpaper / floor / portrait, keeping the current light/dark tone
                         </p>
                         {/* ── 看板 Banner：换图 / 字色 / 恢复默认（铅笔从 banner 上收进来了） ── */}
                         <div className="h-px my-2.5" style={{ background: 'var(--tg-frame-a22)' }} />
                         <div className="flex items-center gap-1.5 mb-2">
-                            <span className="text-[11px] font-bold tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>看板</span>
+                            <span className="text-[11px] font-bold tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.grape }}>Board</span>
                             <span className="text-[6.5px] font-bold tracking-[0.28em]" style={{ fontFamily: FONT_PX, color: PAL.fade }}>BANNER</span>
                         </div>
                         <div className="flex gap-2">
@@ -1150,16 +1150,16 @@ const TamagotchiHome: React.FC = () => {
                                 className="flex-1 py-2 rounded-xl text-[10.5px] font-bold active:scale-95 transition-transform flex items-center justify-center gap-1.5"
                                 style={{ background: PAL.card, border: `1.5px solid ${PAL.frameSoft}`, color: PAL.grape, fontFamily: FONT_CN }}>
                                 <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                                {boardImg ? '换一张图' : '上传横图'}
+                                {boardImg ? 'Change Image' : 'Upload Banner Image'}
                             </button>
                             {boardImg && (
                                 <>
-                                    <button onClick={() => boardColorRef.current?.click()} aria-label="看板文字颜色"
+                                    <button onClick={() => boardColorRef.current?.click()} aria-label="Board text color"
                                         className="w-[2.4rem] py-2 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
                                         style={{ background: PAL.card, border: `1.5px solid ${PAL.frameSoft}` }}>
                                         <span className="w-3.5 h-3.5 rounded-full" style={{ background: boardFg || (style.dark ? '#ffffff' : 'var(--tg-grape)'), boxShadow: '0 0 0 1.5px var(--tg-frame-a30)' }} />
                                     </button>
-                                    <button onClick={clearBoardImg} aria-label="恢复默认看板"
+                                    <button onClick={clearBoardImg} aria-label="Reset to default board"
                                         className="w-[2.4rem] py-2 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
                                         style={{ background: PAL.card, border: `1.5px solid ${PAL.frameSoft}`, color: PAL.fade }}>
                                         <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
@@ -1217,8 +1217,8 @@ const TamagotchiHome: React.FC = () => {
                             style={{ background: PAL.card, border: `1.5px solid ${PAL.frameSoft}`, boxShadow: '0 8px 22px var(--tg-glow35)' }}>
                             <div className="absolute inset-[4px] rounded-[1.45rem] pointer-events-none" style={{ border: '1px solid var(--tg-frame-a22)' }} />
                             <Sparkles items={[[7, 14, 7, PAL.frame, 0.6], [93, 18, 7, PAL.frame, 0.55], [50, -8, 8, PAL.frame, 0.8, true]]} />
-                            <DockBtn glyph={DOCK_GLYPHS.heart} cn="约会" en="DATE" onClick={() => openApp(AppID.Date)} />
-                            <DockBtn glyph={DOCK_GLYPHS.neural} cn="神经链接" en="LINK" onClick={() => openApp(AppID.Character)} />
+                            <DockBtn glyph={DOCK_GLYPHS.heart} cn="Date" en="DATE" onClick={() => openApp(AppID.Date)} />
+                            <DockBtn glyph={DOCK_GLYPHS.neural} cn="Neural Link" en="LINK" onClick={() => openApp(AppID.Character)} />
                             {/* 中央星徽：点开全部应用抽屉 */}
                             <button onClick={() => setDrawerOpen(true)} className="relative flex flex-col items-center gap-1 -mt-8 active:scale-95 transition-transform">
                                 <div className="relative w-[3.7rem] h-[3.7rem] rounded-full flex items-center justify-center"
@@ -1228,12 +1228,12 @@ const TamagotchiHome: React.FC = () => {
                                     <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 text-[8px]" style={{ color: PAL.frame, animation: 'tama-twinkle 2s ease-in-out infinite' }}>✦</span>
                                 </div>
                                 <div className="flex flex-col items-center leading-none gap-[3px]">
-                                    <span className="text-[11px]" style={{ fontFamily: FONT_CN, color: PAL.grape }}>全部</span>
+                                    <span className="text-[11px]" style={{ fontFamily: FONT_CN, color: PAL.grape }}>All</span>
                                     <span className="text-[6px] font-bold" style={{ fontFamily: FONT_PX, color: PAL.fade, letterSpacing: '0.16em' }}>ALL</span>
                                 </div>
                             </button>
-                            <DockBtn glyph={DOCK_GLYPHS.album} cn="记忆" en="MEMORY" onClick={() => openApp(AppID.MemoryPalace)} />
-                            <DockBtn glyph={DOCK_GLYPHS.gear} cn="设置" en="SETTING" onClick={() => openApp(AppID.Settings)} />
+                            <DockBtn glyph={DOCK_GLYPHS.album} cn="Memory" en="MEMORY" onClick={() => openApp(AppID.MemoryPalace)} />
+                            <DockBtn glyph={DOCK_GLYPHS.gear} cn="Settings" en="SETTING" onClick={() => openApp(AppID.Settings)} />
                         </div>
                     </div>
                 </>
@@ -1247,7 +1247,7 @@ const TamagotchiHome: React.FC = () => {
                     <p className="relative text-[12px] text-center leading-relaxed" style={{ fontFamily: FONT_PX, color: PAL.fade }}>EMPTY EGG…</p>
                     <button onClick={() => openApp(AppID.Character)} className="relative px-5 py-2.5 rounded-2xl text-[13px] font-bold text-white active:scale-95 transition-transform"
                         style={{ background: `linear-gradient(135deg, ${PAL.pink}, ${PAL.hot})`, border: '2px solid rgba(255,255,255,0.8)', boxShadow: '0 5px 14px var(--tg-hotglow45)', fontFamily: FONT_CN }}>
-                        去神经链接领养一只
+                        Go adopt one at Neural Link
                     </button>
                 </div>
             )}
@@ -1269,8 +1269,8 @@ const TamagotchiHome: React.FC = () => {
             {drawerOpen && (
                 <div className="absolute inset-0 z-40 flex flex-col animate-fade-in" style={{ background: 'var(--tg-drawer)' }} onClick={() => setDrawerOpen(false)}>
                     <div className="flex items-center justify-between px-6" style={{ paddingTop: 'calc(var(--chrome-top, var(--safe-top, 0px)) + 1.25rem)', paddingBottom: '0.5rem' }}>
-                        <h2 className="text-lg tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.ink }}>全部应用</h2>
-                        <button onClick={(e) => { e.stopPropagation(); setDrawerOpen(false); }} aria-label="关闭"
+                        <h2 className="text-lg tracking-wide" style={{ fontFamily: FONT_CN, color: PAL.ink }}>All Apps</h2>
+                        <button onClick={(e) => { e.stopPropagation(); setDrawerOpen(false); }} aria-label="Close"
                             className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-transform"
                             style={{ background: PAL.cardHi, border: `1.5px solid ${PAL.frameSoft}` }}>
                             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: PAL.ink }}><path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" /></svg>

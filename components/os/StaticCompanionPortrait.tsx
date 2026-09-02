@@ -25,7 +25,7 @@ const StaticCompanionPortrait: React.FC<StaticCompanionPortraitProps> = ({
   spriteConfig,
   touchEnabled = false,
   onAvatarTouch,
-  surfaceLabel = '桌面形象',
+  surfaceLabel = 'desktop portrait',
   testId = 'companion-static-portrait-stage',
 }) => {
   const imageUrl = useBlobRefUrl(value);
@@ -43,7 +43,7 @@ const StaticCompanionPortrait: React.FC<StaticCompanionPortraitProps> = ({
 
   if (!imageUrl) return (
     <div className="absolute inset-0 flex items-center justify-center px-8 text-center text-xs text-white/55">
-      <div><ImageSquare size={30} className="mx-auto mb-2" />请导入 PNG / GIF，或选择已有的见面立绘</div>
+      <div><ImageSquare size={30} className="mx-auto mb-2" />Import a PNG / GIF, or pick an existing Date portrait</div>
     </div>
   );
 
@@ -51,7 +51,7 @@ const StaticCompanionPortrait: React.FC<StaticCompanionPortraitProps> = ({
     <div className="pointer-events-none absolute inset-0 flex items-end justify-center overflow-hidden px-[4%] pb-[2%]" data-testid={testId}>
       <img
         src={imageUrl}
-        alt={`${characterName}的${surfaceLabel}`}
+        alt={`${characterName}'s ${surfaceLabel}`}
         draggable={false}
         className={`pointer-events-auto max-h-[96%] max-w-full select-none object-contain drop-shadow-[0_18px_35px_rgba(0,0,0,.38)] ${touchEnabled ? 'cursor-pointer' : 'cursor-default'}`}
         style={{

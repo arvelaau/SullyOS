@@ -45,8 +45,8 @@ describe('CompanionHome touch request boundaries', () => {
     expect(voiceSource).toContain('languageBoost: options.voiceLanguage || undefined');
     expect(source).toContain('data-testid="companion-startup-preset-select"');
     expect(source).toContain('data-testid="companion-touch-preset-select"');
-    expect(source).toContain('保存为新预设');
-    expect(source).toContain('生成并保存新预设');
+    expect(source).toContain('Save as New Preset');
+    expect(source).toContain('Generate and save new preset');
   });
 
   it('sequences a local touch impulse and uses the center star for real apps', () => {
@@ -150,7 +150,7 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain("[data-companion-frame='magazine'] .companion-dock-primary-frame");
     expect(source).toContain("[data-companion-frame='archive'] .companion-dock-primary-frame");
     expect(source).toContain("[data-companion-frame='idol'] .companion-dock-primary-frame");
-    expect(source).toContain('aria-label="打开全部功能"');
+    expect(source).toContain('aria-label="Open all features"');
     for (const id of ['tech', 'otome', 'cat', 'magazine', 'archive', 'idol']) {
       expect(frameSource).toContain(`id: '${id}'`);
     }
@@ -177,18 +177,18 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain("@media (orientation:landscape) and (min-width:720px)");
     expect(source).toContain("[data-companion-frame='otome'] .companion-stage-canvas");
     expect(source).toContain('width:100%');
-    expect(otomeSource).toContain("key: AppID.Date, label: '见面'");
+    expect(otomeSource).toContain("key: AppID.Date, label: 'Date'");
     expect(otomeSource).toContain("testId: 'companion-otome-date-button'");
     expect(otomeSource).toContain('className="otome-day-progress"');
     expect(otomeSource).toContain('className="otome-episode-ribbon pointer-events-auto" onClick={openCharacterSchedule}');
-    expect(otomeSource).toContain('当前行程 ·');
+    expect(otomeSource).toContain('Current itinerary ·');
     expect(otomeSource).not.toContain("id: AppID.Schedule, label: '日程'");
     expect(otomeSource).not.toContain("{ id: AppID.SpecialMoments, label: '日程'");
-    expect(otomeSource).toContain("{ key: AppID.SpecialMoments, label: '时光'");
-    expect(otomeSource).toContain("key: AppID.Call, label: '通话'");
+    expect(otomeSource).toContain("{ key: AppID.SpecialMoments, label: 'Moments'");
+    expect(otomeSource).toContain("key: AppID.Call, label: 'Call'");
     expect(otomeSource).toContain('openApp(AppID.VRWorld)');
     expect(otomeSource).not.toContain('openApp(AppID.WorldHome)');
-    expect(otomeSource).toContain("key: AppID.Date, label: '篇章'");
+    expect(otomeSource).toContain("key: AppID.Date, label: 'Chapter'");
     expect(otomeSource).not.toContain('otome-signal-dot');
     expect(otomeSource).not.toContain('ResourceBar');
     expect(otomeSource).not.toContain('otome-rank-badge');
@@ -211,9 +211,9 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain('<CatCompanionChrome');
     expect(source).toContain("frameStyle === 'otome' || frameStyle === 'cat' || frameStyle === 'magazine' || frameStyle === 'archive' || frameStyle === 'idol'");
     expect(catSource).toContain('NIGHT COMPANION');
-    expect(catSource).toContain('CURRENT ROUTE · 当前行程');
+    expect(catSource).toContain('CURRENT ROUTE · Current Schedule');
     expect(catSource).toContain('onClick={openCharacterSchedule}');
-    expect(catSource).toContain("id: AppID.Date, label: '见面'");
+    expect(catSource).toContain("id: AppID.Date, label: 'Date'");
     expect(catSource).toContain("id: 'wardrobe'");
     expect(catSource).toContain('action: openWardrobe');
     expect(catCss).toContain("[data-companion-frame='cat'] .companion-dialogue-shell");
@@ -283,7 +283,7 @@ describe('CompanionHome touch request boundaries', () => {
     expect(cardbookSource).toContain('data-testid="companion-cardbook-chrome"');
     expect(cardbookSource).toContain('LUMINA CARD ARCHIVE');
     expect(cardbookSource).toContain("testId: 'companion-cardbook-wardrobe-button'");
-    expect(cardbookSource).toContain('今日卡面 · CURRENT ROUTE');
+    expect(cardbookSource).toContain("Today's Card · CURRENT ROUTE");
     expect(cardbookCss).toContain('.cardbook-tools');
     expect(cardbookCss).toContain('.cardbook-dock .is-primary');
     expect(frameSource).toContain("name: '星愿卡册'");
@@ -340,7 +340,7 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain("setEditingPanel(staticCompanionActive ? 'stage' : 'character')");
     expect(source).toContain('staticMode={staticCompanionActive}');
     expect(wardrobeSource).toContain('data-testid="companion-wardrobe-discovery-tip"');
-    expect(wardrobeSource).toContain('场景与构图');
+    expect(wardrobeSource).toContain('Scene & Composition');
   });
 
   it('offers built-in model quality control and pauses hidden Live2D stages', () => {
@@ -366,7 +366,7 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain("setStageCurtainPhase('opening')");
     expect(curtainSource).toContain('data-testid="companion-stage-loading-curtain"');
     expect(curtainSource).toContain("data-phase={phase}");
-    expect(curtainSource).toContain('校准舞台比例');
+    expect(curtainSource).toContain('Calibrating stage proportions');
     expect(curtainSource).toContain('translate3d(-104%,0,0)');
     expect(stageSource).toContain('onModelError?: (message: string) => void');
   });
@@ -398,20 +398,20 @@ describe('CompanionHome touch request boundaries', () => {
     expect(source).toContain('data-testid="companion-startup-precision"');
     expect(source).toContain('data-testid="companion-startup-cue-editor"');
     expect(source).toContain('startupEditorPerformance');
-    expect(source).toContain('精调只修改当前这一句，不会清空动作编排');
+    expect(source).toContain('Fine-tuning only edits this one sentence and does not clear the action choreography');
     expect(source).toContain('data-testid="companion-generate-startup-performance"');
     expect(source).toContain('data-testid="companion-save-startup"');
     expect(source).not.toContain('requestCompanionStartupDraft');
     expect(source).not.toContain('data-testid="companion-generate-startup"');
-    expect(source).toContain('中文原文（界面显示）');
-    expect(source).toContain('语音译文（实际朗读）');
-    expect(source).toContain("label: '开机自启'");
+    expect(source).toContain('Original Chinese text (shown in the UI)');
+    expect(source).toContain('Voice translation (actually spoken)');
+    expect(source).toContain("label: 'Startup'");
     expect(source).toContain('onModelReady={handleStageModelReady}');
     expect(source).toContain('COMPANION_BOOT_LOCK_PERFORMANCE');
     expect(source).toContain('const companionStartupPlayedThisSession = new Set<string>()');
     expect(source).toContain('const [startupHeadLocked, setStartupHeadLocked] = useState(() => !startupAlreadyPlayed)');
     expect(source).toContain('companionStartupPlayedThisSession.add(character.id)');
-    expect(source).toContain('从 App 返回桌面不会重复播放');
+    expect(source).toContain('returning to the desktop from an app does not replay it');
     expect(source).toContain('headMotionLocked={startupHeadLocked}');
     expect(source).toContain("if (kind === 'startup') setStartupHeadLocked(false)");
     expect(source).toContain('audio.onended = () => {');

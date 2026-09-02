@@ -40,16 +40,16 @@ const IdolCompanionChrome: React.FC<IdolCompanionChromeProps> = ({
 }) => {
   const time = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   const stageTools = [
-    { id: 'touch', label: '互动', eyebrow: 'TOUCH', Icon: HandTap, action: openTouchSettings },
-    { id: 'wardrobe', label: '换装', eyebrow: 'STYLE', Icon: TShirt, action: openWardrobe, testId: 'companion-idol-wardrobe-button' },
-    { id: 'appearance', label: '舞美', eyebrow: 'SCENE', Icon: Sparkle, action: () => openApp(AppID.Appearance) },
+    { id: 'touch', label: 'Interact', eyebrow: 'TOUCH', Icon: HandTap, action: openTouchSettings },
+    { id: 'wardrobe', label: 'Outfit', eyebrow: 'STYLE', Icon: TShirt, action: openWardrobe, testId: 'companion-idol-wardrobe-button' },
+    { id: 'appearance', label: 'Staging', eyebrow: 'SCENE', Icon: Sparkle, action: () => openApp(AppID.Appearance) },
   ];
   const dock = [
-    { id: AppID.Chat, label: '对话', Icon: ChatCircleDots, action: () => openApp(AppID.Chat) },
-    { id: AppID.Call, label: '通话', Icon: VideoCamera, action: () => openApp(AppID.Call) },
-    { id: 'live', label: '舞台', Icon: Broadcast, action: openAllApps, primary: true },
-    { id: AppID.SpecialMoments, label: '时光', Icon: Heart, action: () => openApp(AppID.SpecialMoments) },
-    { id: AppID.Music, label: '音乐', Icon: Icons.Music, action: () => openApp(AppID.Music) },
+    { id: AppID.Chat, label: 'Chat', Icon: ChatCircleDots, action: () => openApp(AppID.Chat) },
+    { id: AppID.Call, label: 'Call', Icon: VideoCamera, action: () => openApp(AppID.Call) },
+    { id: 'live', label: 'Stage', Icon: Broadcast, action: openAllApps, primary: true },
+    { id: AppID.SpecialMoments, label: 'Moments', Icon: Heart, action: () => openApp(AppID.SpecialMoments) },
+    { id: AppID.Music, label: 'Music', Icon: Icons.Music, action: () => openApp(AppID.Music) },
   ];
 
   return (
@@ -59,7 +59,7 @@ const IdolCompanionChrome: React.FC<IdolCompanionChromeProps> = ({
           <span className="idol-live-avatar"><TokenImg value={character.avatar} alt="" /></span>
           <span className="idol-live-copy"><small>NOW ON STAGE</small><strong>{character.name}</strong></span>
         </button>
-        <div className="idol-live-status" aria-label="正在直播">
+        <div className="idol-live-status" aria-label="Live now">
           <i aria-hidden /><strong>LIVE</strong><span>{time}</span>
         </div>
       </header>
@@ -70,7 +70,7 @@ const IdolCompanionChrome: React.FC<IdolCompanionChromeProps> = ({
         <small>STAGE · 08</small>
       </div>
 
-      <aside className="idol-stage-tools pointer-events-auto" aria-label="直播舞台工具">
+      <aside className="idol-stage-tools pointer-events-auto" aria-label="Live stage tools">
         {stageTools.map(({ id, label, eyebrow, Icon, action, testId }, index) => (
           <button key={id} type="button" onClick={action} data-testid={testId} data-companion-wardrobe-trigger={id === 'wardrobe' ? 'true' : undefined}>
             <span>0{index + 1}</span><Icon weight="bold" />
@@ -81,16 +81,16 @@ const IdolCompanionChrome: React.FC<IdolCompanionChromeProps> = ({
 
       <button type="button" className="idol-live-route pointer-events-auto" onClick={openCharacterSchedule}>
         <span><i aria-hidden /> CURRENT SET</span>
-        <strong>{currentScheduleSlot?.activity || '自由互动时间'}</strong>
-        <small>{currentScheduleSlot ? `${currentScheduleSlot.startTime}${currentScheduleSlot.location ? ` · ${currentScheduleSlot.location}` : ''}` : '打开今天的舞台行程'}</small>
+        <strong>{currentScheduleSlot?.activity || 'Free interaction time'}</strong>
+        <small>{currentScheduleSlot ? `${currentScheduleSlot.startTime}${currentScheduleSlot.location ? ` · ${currentScheduleSlot.location}` : ''}` : "Open today's stage schedule"}</small>
         <em>{dayProgress}%</em>
       </button>
 
-      <div className="idol-live-caption" aria-hidden><span>YOUR FRONT ROW</span><i /><small>映像与心跳同频</small></div>
+      <div className="idol-live-caption" aria-hidden><span>YOUR FRONT ROW</span><i /><small>Vision and heartbeat, in sync</small></div>
 
-      <nav className="idol-live-dock pointer-events-auto" aria-label="偶像直播导航">
+      <nav className="idol-live-dock pointer-events-auto" aria-label="Idol live nav">
         {dock.map(({ id, label, Icon, action, primary }) => (
-          <button key={id} type="button" onClick={action} className={primary ? 'is-live' : ''} aria-label={primary ? '打开全部功能' : label}>
+          <button key={id} type="button" onClick={action} className={primary ? 'is-live' : ''} aria-label={primary ? 'Open all features' : label}>
             <span><Icon weight={primary ? 'fill' : 'regular'} /></span><small>{label}</small>
           </button>
         ))}

@@ -311,8 +311,8 @@ const GlobalMiniPlayer: React.FC = () => {
             boxShadow: '0 6px 18px rgba(0,0,0,0.35)',
             border: '1px solid rgba(255,255,255,0.25)',
           }}
-          aria-label="音乐播放器（点击展开，拖动移位，长按隐藏）"
-          title="点击展开 · 拖动移位 · 长按隐藏"
+          aria-label="Music player (tap to expand, drag to move, long-press to hide)"
+          title="Tap to expand · Drag to move · Long-press to hide"
         >
           <TokenImg
             value={current.albumPic}
@@ -368,8 +368,8 @@ const GlobalMiniPlayer: React.FC = () => {
           onPointerCancel={onExpandedHandleUp}
           className="shrink-0 flex items-center justify-center px-1 cursor-grab active:cursor-grabbing touch-none select-none"
           style={{ alignSelf: 'stretch' }}
-          aria-label="拖动调整位置（点击收起）"
-          title="上下拖动 · 点击收起"
+          aria-label="Drag to reposition (tap to collapse)"
+          title="Drag up/down · Tap to collapse"
         >
           <div className="w-1 h-7 rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }} />
         </div>
@@ -412,8 +412,8 @@ const GlobalMiniPlayer: React.FC = () => {
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
             className="p-1.5 rounded-full text-white/70 active:scale-95 transition-transform ml-0.5"
-            aria-label="收起播放器"
-            title="收起成小球"
+            aria-label="Collapse player"
+            title="Collapse to bubble"
           >
             <CaretDown size={14} weight="bold" />
           </button>
@@ -421,8 +421,8 @@ const GlobalMiniPlayer: React.FC = () => {
           <button
             onClick={(e) => { e.stopPropagation(); hide(); }}
             className="p-1.5 rounded-full text-white/70 active:scale-95 transition-transform"
-            aria-label="隐藏播放器（切到下一首时会再出现）"
-            title="隐藏（下一首会再出现）"
+            aria-label="Hide player (reappears on next track)"
+            title="Hide (reappears on next track)"
           >
             <X size={14} weight="bold" />
           </button>

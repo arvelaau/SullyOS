@@ -16,8 +16,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     isOpen, 
     title, 
     message, 
-    confirmText = '确认', 
-    cancelText = '取消', 
+    confirmText = 'Confirm',
+    cancelText = 'Cancel',
     variant = 'info', 
     onConfirm, 
     onCancel 

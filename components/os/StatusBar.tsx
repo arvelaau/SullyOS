@@ -134,35 +134,35 @@ const StatusBar: React.FC = () => {
           </button>
       )}
 
-      <Modal 
-          isOpen={showLogModal} 
-          title="系统调试终端" 
+      <Modal
+          isOpen={showLogModal}
+          title="System Debug Terminal"
           onClose={() => setShowLogModal(false)}
           footer={
               <div className="flex gap-2 w-full">
-                  <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(systemLogs, null, 2)); }} className="flex-1 py-3 bg-slate-100 font-bold rounded-xl text-slate-600">复制 JSON</button>
-                  <button onClick={clearLogs} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-200">清空日志</button>
+                  <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(systemLogs, null, 2)); }} className="flex-1 py-3 bg-slate-100 font-bold rounded-xl text-slate-600">Copy JSON</button>
+                  <button onClick={clearLogs} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-200">Clear Log</button>
               </div>
           }
       >
           {hasIndexedDbBackingStoreError && (
               <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
-                  <div className="font-bold mb-1">检测到浏览器存储无法打开</div>
-                  <div>请先不要清除浏览器数据、格式化或重置 SullyOS。彻底关闭浏览器后重启设备，并确认仍从原来的网址进入；若恢复打开，请立即完整导出备份。此错误通常来自浏览器/WebView 的站点存储，而不是应用主动删除数据。</div>
+                  <div className="font-bold mb-1">Browser storage failed to open</div>
+                  <div>Please don't clear browser data, format, or reset SullyOS yet. Fully close the browser and restart the device, then make sure you're opening the same URL as before; if it starts working again, export a full backup right away. This error usually comes from the browser/WebView's site storage, not from the app deleting data on its own.</div>
               </div>
           )}
           {hasNetworkFailure && (
               <details className="mb-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs leading-relaxed text-sky-900">
-                  <summary className="font-bold cursor-pointer select-none">网络连接失败？按这个顺序自查</summary>
+                  <summary className="font-bold cursor-pointer select-none">Connection failed? Check in this order</summary>
                   <ol className="mt-2 list-decimal pl-4 space-y-1">
                       {NETWORK_SELF_CHECK_STEPS.map(step => <li key={step}>{step}</li>)}
                   </ol>
-                  <div className="mt-2 opacity-80">日志里的「初判」和「连通性复检」两行已经替你缩小了范围，先看那两行再动手。</div>
+                  <div className="mt-2 opacity-80">The "initial verdict" and "connectivity recheck" lines in the log have already narrowed things down for you — check those two lines first.</div>
               </details>
           )}
           <div className="h-64 bg-slate-900 rounded-xl p-3 overflow-y-auto font-mono text-[10px] space-y-2 no-scrollbar shadow-inner">
               {systemLogs.length === 0 ? (
-                  <div className="text-slate-500 text-center mt-20">系统运行正常，暂无错误日志。</div>
+                  <div className="text-slate-500 text-center mt-20">System running normally, no error logs.</div>
               ) : (
                   systemLogs.map(log => (
                       <div key={log.id} className="border-b border-white/10 pb-2 mb-2 last:border-0 last:mb-0 last:pb-0">

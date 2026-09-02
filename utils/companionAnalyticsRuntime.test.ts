@@ -9,15 +9,15 @@ describe('静态陪伴与视频快照 Umami 埋点', () => {
 
   it('覆盖静态形象和桌面触碰功能', () => {
     for (const eventName of [
-      '切换桌面陪伴形象来源',
-      '导入桌面静态形象',
-      '切换桌面见面立绘衣服',
-      '移除桌面静态形象',
+      'Switch Desktop Companion Image Source',
+      'Import Desktop Static Image',
+      'Switch Desktop Date Portrait Outfit',
+      'Remove Desktop Static Image',
     ]) {
       expect(appearance).toContain(`trackEvent('${eventName}'`);
     }
-    expect(companion).toContain("trackEvent('生成桌面触碰反馈'");
-    expect(companion).toContain("trackEvent('切换桌面见面立绘衣服'");
+    expect(companion).toContain("trackEvent('Generate Desktop Touch Feedback'");
+    expect(companion).toContain("trackEvent('Switch Desktop Date Portrait Outfit'");
   });
 
   it('覆盖快照选择、留存和通话结束', () => {
@@ -64,7 +64,7 @@ describe('静态陪伴与视频快照 Umami 埋点', () => {
   it('埋点参数不包含文本、角色名、文件名或 Blob 引用', () => {
     const analyticsLines = [appearance, companion, call]
       .flatMap(source => source.split('\n'))
-      .filter(line => line.includes('trackEvent(') || line.includes('来源:') || line.includes('形象:') || line.includes('模式:'));
+      .filter(line => line.includes('trackEvent(') || line.includes('来源:') || line.includes('形象:') || line.includes('模式:') || line.includes("'Avatar Type':") || line.includes('Voice:'));
     const payload = analyticsLines.join('\n');
     expect(payload).not.toMatch(/character\.name|selectedChar\.name|file\.name|imageRef|snapshot\.ref|\binput\b|assistantText/);
   });

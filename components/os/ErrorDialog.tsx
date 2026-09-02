@@ -32,10 +32,10 @@ const ErrorDialog: React.FC<ErrorDialogProps> = ({ isOpen, title, details, onClo
             }
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
-            trackEvent('复制报错详情', { 复制结果: '成功' });
+            trackEvent('Copy Error Details', { 'Copy Result': 'Succeeded' });
         } catch {
             setCopied(false);
-            trackEvent('复制报错详情', { 复制结果: '失败' });
+            trackEvent('Copy Error Details', { 'Copy Result': 'Failed' });
         }
     };
 
@@ -65,13 +65,13 @@ const ErrorDialog: React.FC<ErrorDialogProps> = ({ isOpen, title, details, onClo
                         onClick={handleCopy}
                         className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 active:scale-95 transition-transform"
                     >
-                        {copied ? '已复制' : '复制'}
+                        {copied ? 'Copied' : 'Copy'}
                     </button>
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-red-500 rounded-xl text-sm font-bold text-white shadow-lg shadow-red-200 active:scale-95 transition-transform"
                     >
-                        关闭
+                        Close
                     </button>
                 </div>
             </div>

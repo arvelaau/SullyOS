@@ -28,8 +28,8 @@ const NowPlayingSquareWidget: React.FC<{ contentColor: string }> = ({ contentCol
 
   // 用户自己上传的封面存的是 blobref 令牌，得解析成可渲染的地址；网易云那种 http 直链原样透传。
   const albumPic = useBlobRefUrl(current?.albumPic);
-  const title = current?.name || '抽一张来听';
-  const artists = current?.artists || '— 轻触，进入';
+  const title = current?.name || 'Pick something to play';
+  const artists = current?.artists || '— Tap to open';
   const statusText = !hasSong ? 'Standby' : (playing ? 'Now Playing' : 'Paused');
   const dotColor = paper ? (!hasSong ? '#a66f52' : '#788369') : (!hasSong ? '#fbbf24' : (playing ? '#4ade80' : '#fbbf24'));
 

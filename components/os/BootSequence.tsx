@@ -64,9 +64,9 @@ const BootSequence: React.FC<Props> = ({ dataReady, wallpaper, onDone }) => {
         // 只报区间不报精确毫秒。注意这里的时长带 HOLD 下限（完整版 2000ms / 极短版 520ms），
         // 真正有信息量的是 3-8s / 8s+ 这条尾巴 —— 数据加载慢才会落到那儿。
         const waited = now - startRef.current;
-        trackEvent('冷启动等待数据就绪', {
-          等待档位: waited < 1000 ? '<1s' : waited < 3000 ? '1-3s' : waited < 8000 ? '3-8s' : '8s+',
-          开场版本: cinematic ? '完整版' : '极短版',
+        trackEvent('Cold Start Waited for Data Ready', {
+          'Wait Bucket': waited < 1000 ? '<1s' : waited < 3000 ? '1-3s' : waited < 8000 ? '3-8s' : '8s+',
+          'Boot Version': cinematic ? 'Full' : 'Minimal',
         });
         return;
       }
@@ -87,9 +87,9 @@ const BootSequence: React.FC<Props> = ({ dataReady, wallpaper, onDone }) => {
   const skip = () => {
     if (phase !== 'exit') {
       setPhase('exit');
-      trackEvent('跳过开机动画', {
-        数据是否已就绪: dataReady ? '是' : '否',
-        开场版本: cinematic ? '完整版' : '极短版',
+      trackEvent('Skip Boot Animation', {
+        'Data Ready': dataReady ? 'Yes' : 'No',
+        'Boot Version': cinematic ? 'Full' : 'Minimal',
       });
     }
   };
@@ -234,7 +234,7 @@ const BootSequence: React.FC<Props> = ({ dataReady, wallpaper, onDone }) => {
             letterSpacing: '0.3em',
             animation: cinematic ? 'bootSoftIn 1200ms ease-out 1250ms both' : 'bootSoftIn 500ms ease-out 250ms both',
           }}>
-            欢迎回家！
+            Welcome home!
           </div>
         </div>
       </div>
@@ -243,7 +243,7 @@ const BootSequence: React.FC<Props> = ({ dataReady, wallpaper, onDone }) => {
       {cinematic && !exiting && (
         <div className="absolute bottom-10 left-0 right-0 text-center text-[10px] tracking-[0.3em] text-white/40"
              style={{ animation: 'bootHintIn 800ms ease-out 1800ms both' }}>
-          轻触进入
+          Tap to enter
         </div>
       )}
     </div>

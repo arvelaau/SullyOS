@@ -28,7 +28,7 @@ const PersonaSimIndicator: React.FC = () => {
                     ? <Sparkle size={16} weight="fill" className="text-white" />
                     : <span className="w-3.5 h-3.5 border-2 border-[#b89bff]/40 border-t-[#b89bff] rounded-full animate-spin" />}
                 <span className={`text-[12px] font-semibold ${ready ? 'text-white' : 'text-white/85'}`}>
-                    {ready ? '演出已就绪 · 进入' : `演出生成中${sim.charName ? ' · ' + sim.charName : ''}`}
+                    {ready ? 'Performance ready · Enter' : `Generating performance${sim.charName ? ' · ' + sim.charName : ''}`}
                 </span>
                 {ready && <CaretRight size={13} weight="bold" className="text-white/90" />}
             </button>

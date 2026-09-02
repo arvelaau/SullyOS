@@ -153,37 +153,37 @@ interface DayPeriod {
 const DAY_PERIODS: DayPeriod[] = [
   {
     key: 'dawn',
-    label: '夜半独处',
+    label: 'Alone at midnight',
     skyGlow: 'rgba(96,104,182,0.34)',
     tint: '#8d9bea',
   },
   {
     key: 'morning',
-    label: '清晨',
+    label: 'Early morning',
     skyGlow: 'rgba(255,196,138,0.4)',
     tint: '#ffcf9b',
   },
   {
     key: 'day',
-    label: '午后',
+    label: 'Afternoon',
     skyGlow: 'rgba(168,214,255,0.36)',
     tint: '#b4dcff',
   },
   {
     key: 'dusk',
-    label: '黄昏',
+    label: 'Dusk',
     skyGlow: 'rgba(255,158,120,0.4)',
     tint: '#ffb08d',
   },
   {
     key: 'evening',
-    label: '夜晚',
+    label: 'Evening',
     skyGlow: 'rgba(178,150,255,0.38)',
     tint: '#c6adff',
   },
   {
     key: 'night',
-    label: '深夜',
+    label: 'Late night',
     skyGlow: 'rgba(112,118,196,0.34)',
     tint: '#96a2f2',
   },
@@ -203,26 +203,26 @@ const STARTUP_POSE_CONTROLS: Array<{
   label: string;
   hint: string;
 }> = [
-  { key: 'eyeX', label: '眼睛左右', hint: '左 − / 右 +' },
-  { key: 'eyeY', label: '眼睛高低', hint: '低 − / 高 +' },
-  { key: 'bodyX', label: '身体左右', hint: '左 − / 右 +' },
-  { key: 'bodyY', label: '身体俯仰', hint: '后 − / 前 +' },
-  { key: 'bodyZ', label: '身体侧倾', hint: '右 − / 左 +' },
+  { key: 'eyeX', label: 'Eyes left/right', hint: 'left − / right +' },
+  { key: 'eyeY', label: 'Eyes up/down', hint: 'down − / up +' },
+  { key: 'bodyX', label: 'Body left/right', hint: 'left − / right +' },
+  { key: 'bodyY', label: 'Body lean', hint: 'back − / forward +' },
+  { key: 'bodyZ', label: 'Body tilt', hint: 'right − / left +' },
 ];
 
 const STARTUP_EMOTION_LABELS: Record<string, string> = {
-  neutral: '自然', happy: '开心', sad: '低落', angry: '生气', fearful: '害怕',
-  disgusted: '嫌弃', surprised: '惊讶', calm: '平静', relaxed: '放松',
+  neutral: 'Neutral', happy: 'Happy', sad: 'Sad', angry: 'Angry', fearful: 'Fearful',
+  disgusted: 'Disgusted', surprised: 'Surprised', calm: 'Calm', relaxed: 'Relaxed',
 };
 
 const STARTUP_GESTURE_LABELS: Record<string, string> = {
-  idle: '静止入场', talk: '自然说话', nod: '点头', shake: '摇头', tilt: '歪头',
-  explain: '解释', wave: '挥手', shy: '害羞', 'lean-in': '靠近', 'lean-back': '后退',
+  idle: 'Idle entrance', talk: 'Natural talking', nod: 'Nod', shake: 'Shake head', tilt: 'Tilt head',
+  explain: 'Explain', wave: 'Wave', shy: 'Shy', 'lean-in': 'Lean in', 'lean-back': 'Lean back',
 };
 
 const STARTUP_FACE_LABELS: Record<string, string> = {
-  wink: '眨眼', grin: '咧嘴', pout: '撅嘴', blush: '脸红', 'eyes-closed': '闭眼',
-  'smile-eyes': '笑眼', 'brow-up': '挑眉', 'brow-sad': '忧眉', 'brow-angry': '压眉',
+  wink: 'Wink', grin: 'Grin', pout: 'Pout', blush: 'Blush', 'eyes-closed': 'Eyes closed',
+  'smile-eyes': 'Smiling eyes', 'brow-up': 'Raised brow', 'brow-sad': 'Sad brow', 'brow-angry': 'Furrowed brow',
 };
 // ── 背景预设：华丽渐变场景（companionBackground = `preset:<id>`）──
 interface CompanionBgPreset {
@@ -236,7 +236,7 @@ interface CompanionBgPreset {
 const COMPANION_BG_PRESETS: CompanionBgPreset[] = [
   {
     id: 'galaxy',
-    name: '星河',
+    name: 'Galaxy',
     tint: '#b9a6ff',
     css: [
       'radial-gradient(1.4px 1.4px at 18% 22%, rgba(255,255,255,.9), transparent 55%)',
@@ -252,7 +252,7 @@ const COMPANION_BG_PRESETS: CompanionBgPreset[] = [
   },
   {
     id: 'aurora',
-    name: '极光',
+    name: 'Aurora',
     tint: '#8ef0d0',
     css: [
       'radial-gradient(60% 42% at 32% 18%, rgba(84,230,180,.34), transparent 68%)',
@@ -263,7 +263,7 @@ const COMPANION_BG_PRESETS: CompanionBgPreset[] = [
   },
   {
     id: 'sakura',
-    name: '樱夜',
+    name: 'Sakura Night',
     tint: '#ffb7cf',
     css: [
       'radial-gradient(2px 2px at 24% 26%, rgba(255,183,207,.85), transparent 60%)',
@@ -276,7 +276,7 @@ const COMPANION_BG_PRESETS: CompanionBgPreset[] = [
   },
   {
     id: 'sunset',
-    name: '落日海',
+    name: 'Sunset Sea',
     tint: '#ffb98a',
     css: [
       'radial-gradient(70% 46% at 50% 14%, rgba(255,166,98,.5), transparent 66%)',
@@ -286,7 +286,7 @@ const COMPANION_BG_PRESETS: CompanionBgPreset[] = [
   },
   {
     id: 'moonsea',
-    name: '月海',
+    name: 'Moon Sea',
     tint: '#a9c8ff',
     css: [
       'radial-gradient(18% 12% at 72% 16%, rgba(235,242,255,.85), rgba(235,242,255,.12) 60%, transparent 72%)',
@@ -296,7 +296,7 @@ const COMPANION_BG_PRESETS: CompanionBgPreset[] = [
   },
   {
     id: 'velvet',
-    name: '丝绒',
+    name: 'Velvet',
     tint: '#e0b8ff',
     css: [
       'radial-gradient(80% 55% at 50% 0%, rgba(190,120,255,.35), transparent 66%)',
@@ -560,13 +560,13 @@ const CompanionHome: React.FC = () => {
         getFlowNarrativeKey(getScheduleWallClock(character).getHours())
       ];
       setHudContent({
-        thought: compactCompanionHudText(getLastInnerState(character.id) || scheduleThought, '尚未记录心声'),
-        recentChat: compactCompanionHudText(latestAssistant?.content, '还没有聊天记录'),
+        thought: compactCompanionHudText(getLastInnerState(character.id) || scheduleThought, 'No inner voice recorded yet'),
+        recentChat: compactCompanionHudText(latestAssistant?.content, 'No chat history yet'),
         schedule,
       });
     }).catch(() => {
       if (!cancelled) {
-        setHudContent({ thought: '', recentChat: '还没有聊天记录', schedule: null });
+        setHudContent({ thought: '', recentChat: 'No chat history yet', schedule: null });
       }
     });
     return () => { cancelled = true; };
@@ -866,7 +866,7 @@ const CompanionHome: React.FC = () => {
         return;
       }
       setStartupHeadLocked(true);
-      setLine({ text, translation: translation || undefined, label: '开机自启', kind: 'startup' });
+      setLine({ text, translation: translation || undefined, label: 'Startup', kind: 'startup' });
       setPerformance(normalizeCompanionStartupPerformance(cues?.[0]?.direction || startup.performance));
       setMotionState('speaking');
       scheduleCompanionPerformanceCues(cues, companionLineFallbackDuration(text.length));
@@ -888,8 +888,8 @@ const CompanionHome: React.FC = () => {
     [character, performance.emotion, performance.faces],
   );
   const touchPackContentLabel = activeCompanionSource === 'upload'
-    ? '台词'
-    : activeCompanionSource === 'date' ? '台词与表情' : '台词与动作';
+    ? 'lines'
+    : activeCompanionSource === 'date' ? 'lines and expressions' : 'lines and actions';
   const modelActions = useMemo<AvatarTouchModelAction[]>(() => {
     if (staticCompanionActive) return [];
     if (character?.videoAvatar?.format === 'live2d') {
@@ -901,7 +901,7 @@ const CompanionHome: React.FC = () => {
           tags: action.tags,
         }));
     }
-    return vrmExpressions.map(name => ({ id: name, name: `自定义表情：${name}` }));
+    return vrmExpressions.map(name => ({ id: name, name: `Custom Expression: ${name}` }));
   }, [character?.videoAvatar, staticCompanionActive, vrmExpressions]);
   const wardrobeActions = useMemo(
     () => !staticCompanionActive && character?.videoAvatar?.format === 'live2d' ? getLive2DWardrobeActions(character.videoAvatar) : [],
@@ -917,7 +917,7 @@ const CompanionHome: React.FC = () => {
       : activeCompanionSource === 'upload'
         ? listUploadedCompanionOutfits(character?.companionAvatar).map(outfit => ({
             id: outfit.imageRef,
-            name: outfit.fileName || '静态图片',
+            name: outfit.fileName || 'Static Image',
             preview: outfit.imageRef,
             expressionCount: 1,
           }))
@@ -934,7 +934,7 @@ const CompanionHome: React.FC = () => {
     updateCharacter(character.id, {
       videoAvatar: { ...character.videoAvatar, activeWardrobeActionId: action.id },
     });
-    addToast(`已手动切换：${action.name}`, 'success');
+    addToast(`Manually switched to: ${action.name}`, 'success');
   };
 
   const selectStaticOutfit = (outfitId: string) => {
@@ -943,7 +943,7 @@ const CompanionHome: React.FC = () => {
       const companionAvatar = selectUploadedCompanionOutfit(character.companionAvatar, outfitId);
       if (!companionAvatar) return;
       updateCharacter(character.id, { companionAvatar });
-      addToast('静态衣服已切换', 'success');
+      addToast('Static outfit switched', 'success');
       return;
     }
     if (activeCompanionSource !== 'date') return;
@@ -955,8 +955,8 @@ const CompanionHome: React.FC = () => {
         skinSetId: companionSkinSetPatchValue(outfitId),
       },
     });
-    trackEvent('切换桌面见面立绘衣服');
-    addToast('桌面衣服已切换', 'success');
+    trackEvent('Switch Desktop Date Portrait Outfit');
+    addToast('Desktop outfit switched', 'success');
   };
 
   const selectModelOutfit = (assetId: string) => {
@@ -969,7 +969,7 @@ const CompanionHome: React.FC = () => {
       ...patch,
       companionAvatar: { version: 1, ...character.companionAvatar, source: 'model' },
     });
-    addToast(`已切换模型：${patch.videoAvatar?.fileName || '当前外观'}`, 'success');
+    addToast(`Model switched: ${patch.videoAvatar?.fileName || 'Current appearance'}`, 'success');
   };
 
   const deleteModelOutfit = async (assetId: string) => {
@@ -1002,7 +1002,7 @@ const CompanionHome: React.FC = () => {
       || (item.videoAvatarWardrobe || []).some(model => model.assetId === assetId)
     ));
     if (!usedElsewhere) await deleteAvatarModel(removed);
-    addToast(`${removed.fileName} 已从衣橱删除${usedElsewhere ? '（共享模型文件仍保留）' : ''}`, 'success');
+    addToast(`${removed.fileName} removed from wardrobe${usedElsewhere ? ' (shared model file kept)' : ''}`, 'success');
   };
 
   const deleteStaticOutfit = async (imageRef: string) => {
@@ -1021,7 +1021,7 @@ const CompanionHome: React.FC = () => {
       || (item.dateSkinSets || []).some(skin => Object.values(skin.sprites).includes(imageRef))
     ));
     if (!usedElsewhere) await deleteBlobRefIfUnreferenced(imageRef);
-    addToast(`${removed.fileName || '静态图片'} 已从衣橱删除${usedElsewhere ? '（共享图片文件仍保留）' : ''}`, 'success');
+    addToast(`${removed.fileName || 'Static Image'} removed from wardrobe${usedElsewhere ? ' (shared image file kept)' : ''}`, 'success');
   };
 
   const deleteWardrobeAction = async (actionId: string) => {
@@ -1033,7 +1033,7 @@ const CompanionHome: React.FC = () => {
       ? { id: videoAvatar.activeWardrobeActionId, nonce: Date.now() + Math.random() }
       : null);
     updateCharacter(character.id, { videoAvatar });
-    addToast(`${action.name} 已从衣橱移除；动作库仍保留`, 'success');
+    addToast(`${action.name} removed from wardrobe; action library kept`, 'success');
   };
 
   const importWardrobeOutfit = () => {
@@ -1057,9 +1057,9 @@ const CompanionHome: React.FC = () => {
         if (activeCompanionSource === 'upload') {
           const extension = file.name.split('.').pop()?.toLowerCase();
           if (!['png', 'gif'].includes(extension || '') || !['image/png', 'image/gif'].includes(file.type)) {
-            throw new Error('图片衣橱只支持 PNG / GIF');
+            throw new Error('Image wardrobe only supports PNG / GIF');
           }
-          if (file.size > 20 * 1024 * 1024) throw new Error('图片超过 20 MB，请压缩后再导入');
+          if (file.size > 20 * 1024 * 1024) throw new Error('Image exceeds 20 MB, please compress before importing');
           const imageRef = await putImageBlob(file);
           updateCharacter(character.id, {
             companionAvatar: addUploadedCompanionOutfit(character.companionAvatar, {
@@ -1070,15 +1070,15 @@ const CompanionHome: React.FC = () => {
               importedAt: Date.now(),
             }),
           });
-          addToast(`${file.name} 已加入图片衣橱`, 'success');
+          addToast(`${file.name} added to image wardrobe`, 'success');
           return;
         }
 
         const currentModel = character.videoAvatar;
-        if (!currentModel) throw new Error('请先设置一个动态模型');
+        if (!currentModel) throw new Error('Please set an animated model first');
         if (currentModel.format === 'live2d') {
-          if (!/\.zip$/i.test(file.name)) throw new Error('Live2D 衣橱只能继续导入 Live2D ZIP');
-          if (file.size > 200 * 1024 * 1024) throw new Error('Live2D ZIP 超过 200 MB');
+          if (!/\.zip$/i.test(file.name)) throw new Error('Live2D wardrobe only accepts Live2D ZIP imports');
+          if (file.size > 200 * 1024 * 1024) throw new Error('Live2D ZIP exceeds 200 MB');
           const model = await saveLive2DModelFromZip(file);
           const patch = storeCompanionModelOutfit(character, model);
           updateCharacter(character.id, {
@@ -1087,12 +1087,12 @@ const CompanionHome: React.FC = () => {
           });
           closeWardrobe();
           setWardrobeLive2DSettings(model);
-          addToast(`${file.name} 已加入 Live2D 衣橱，请设置它的换装按键`, 'success');
+          addToast(`${file.name} added to Live2D wardrobe, please set its outfit-change trigger`, 'success');
           return;
         }
 
-        if (!/\.vrm$/i.test(file.name)) throw new Error('VRM 衣橱只能继续导入 VRM');
-        if (file.size > 80 * 1024 * 1024) throw new Error('VRM 超过 80 MB，请降低纹理尺寸后再导入');
+        if (!/\.vrm$/i.test(file.name)) throw new Error('VRM wardrobe only accepts VRM imports');
+        if (file.size > 80 * 1024 * 1024) throw new Error('VRM exceeds 80 MB, please reduce texture size before importing');
         const model = await saveAvatarModel(file);
         const patch = storeCompanionModelOutfit(character, model);
         updateCharacter(character.id, {
@@ -1100,9 +1100,9 @@ const CompanionHome: React.FC = () => {
           companionAvatar: { version: 1, ...character.companionAvatar, source: 'model' },
         });
         closeWardrobe();
-        addToast(`${file.name} 已加入 VRM 衣橱`, 'success');
+        addToast(`${file.name} added to VRM wardrobe`, 'success');
       } catch (error: any) {
-        addToast(error?.message || '衣橱导入失败', 'error');
+        addToast(error?.message || 'Wardrobe import failed', 'error');
       } finally {
         setWardrobeImportBusy(false);
         removeInput();
@@ -1196,15 +1196,15 @@ const CompanionHome: React.FC = () => {
     setEditing(false);
     addToast(
       touchRegionsDraft.length
-        ? `角色构图与 ${touchRegionsDraft.length} 个触摸圈已保存`
-        : faceAnchorDraftEnabled ? '角色构图与面部特写锚点已保存' : '角色构图已保存',
+        ? `Character composition and ${touchRegionsDraft.length} touch zone(s) saved`
+        : faceAnchorDraftEnabled ? 'Character composition and face close-up anchor saved' : 'Character composition saved',
       'success',
     );
   };
   const chooseBuiltinSullyQuality = (quality: BuiltinSullyLive2DQuality) => {
     if (!character || !builtinSullyAvatar || builtinSullyAvatar.builtinQuality === quality) return;
     updateCharacter(character.id, { videoAvatar: setBuiltinSullyLive2DQuality(builtinSullyAvatar, quality) });
-    addToast(quality === 'hd' ? 'Sully 已切到高清 4K；低端设备建议使用 2K' : 'Sully 已切回轻量 2K', quality === 'hd' ? 'info' : 'success');
+    addToast(quality === 'hd' ? 'Sully switched to HD 4K; 2K is recommended on lower-end devices' : 'Sully switched back to lightweight 2K', quality === 'hd' ? 'info' : 'success');
   };
   const chooseImportedLive2DTextureQuality = (quality: 'balanced' | 'hd') => {
     if (!character?.videoAvatar || character.videoAvatar.format !== 'live2d' || character.videoAvatar.builtIn) return;
@@ -1219,8 +1219,8 @@ const CompanionHome: React.FC = () => {
     setStageCurtainPhase('covered');
     addToast(
       quality === 'hd'
-        ? '模型已切到高清 4K；首次切换会建立独立运行缓存'
-        : '模型已切回默认轻量 2K；更省内存、更不易闪退',
+        ? 'Model switched to HD 4K; a separate runtime cache will be built on first switch'
+        : 'Model switched back to default lightweight 2K; uses less memory and is less likely to crash',
       quality === 'hd' ? 'info' : 'success',
     );
   };
@@ -1249,13 +1249,13 @@ const CompanionHome: React.FC = () => {
       if (!file) return removeInput();
       try {
         if (file.size > 20 * 1024 * 1024) {
-          addToast('图片超过 20 MB，请压缩后再用作背景', 'error');
+          addToast('Image exceeds 20 MB, please compress before using as a background', 'error');
           return;
         }
         await applyCompanionBackground(await putImageBlob(file));
-        addToast('桌面背景已更新', 'success');
+        addToast('Desktop background updated', 'success');
       } catch (error: any) {
-        addToast(error?.message || '背景导入失败', 'error');
+        addToast(error?.message || 'Background import failed', 'error');
       } finally {
         removeInput();
       }
@@ -1358,7 +1358,7 @@ const CompanionHome: React.FC = () => {
     loadStartupDraft(preset.startup);
     setSelectedStartupPresetId(preset.id);
     setStartupPresetName(preset.name);
-    addToast(`已切换开机预设「${preset.name}」`, 'success');
+    addToast(`Switched to startup preset "${preset.name}"`, 'success');
   };
 
   const selectTouchPreset = (presetId: string) => {
@@ -1380,33 +1380,33 @@ const CompanionHome: React.FC = () => {
     setSelectedTouchPresetId(preset.id);
     setTouchPresetName(preset.name);
     touchCursorRef.current = {};
-    addToast(`已切换触摸预设「${preset.name}」`, 'success');
+    addToast(`Switched to touch preset "${preset.name}"`, 'success');
   };
 
   const deleteStartupPreset = () => {
     if (!character || !selectedStartupPresetId || settingsGenerating) return;
     const preset = character.companionTouchSettings?.startupPresets?.find(item => item.id === selectedStartupPresetId);
-    if (!preset || !window.confirm(`删除开机预设「${preset.name}」？`)) return;
+    if (!preset || !window.confirm(`Delete startup preset "${preset.name}"?`)) return;
     const before = companionTouchSettingsBase();
     const after = removeCompanionStartupPreset(before, selectedStartupPresetId);
     updateCharacter(character.id, { companionTouchSettings: after });
     cleanupUnreferencedCompanionVoices(before, after);
     setSelectedStartupPresetId('');
     setStartupPresetName('');
-    addToast('开机预设已删除；当前草稿仍保留', 'success');
+    addToast('Startup preset deleted; current draft kept', 'success');
   };
 
   const deleteTouchPreset = () => {
     if (!character || !selectedTouchPresetId || settingsGenerating) return;
     const preset = character.companionTouchSettings?.touchPresets?.find(item => item.id === selectedTouchPresetId);
-    if (!preset || !window.confirm(`删除触摸预设「${preset.name}」？`)) return;
+    if (!preset || !window.confirm(`Delete touch preset "${preset.name}"?`)) return;
     const before = companionTouchSettingsBase();
     const after = removeCompanionTouchPreset(before, selectedTouchPresetId);
     updateCharacter(character.id, { companionTouchSettings: after });
     cleanupUnreferencedCompanionVoices(before, after);
     setSelectedTouchPresetId('');
     setTouchPresetName('');
-    addToast('触摸预设已删除；当前反馈仍保留', 'success');
+    addToast('Touch preset deleted; current feedback kept', 'success');
   };
 
   const patchStartupPerformance = (patch: Partial<AvatarPerformanceDirection>) => {
@@ -1510,11 +1510,11 @@ const CompanionHome: React.FC = () => {
     if (!character || settingsGenerating) return;
     const startup = makeStartupSettings();
     if (startup.enabled && !startup.line) {
-      addToast('开启开机自启前，请先填写中文原文', 'error');
+      addToast('Fill in the original Chinese text before enabling startup autoplay', 'error');
       return;
     }
     if (startup.enabled && startup.voiceLanguage && !startup.translation) {
-      addToast(`已选择 ${voiceLanguageLabel(startup.voiceLanguage)}，请填写对应的语音译文`, 'error');
+      addToast(`${voiceLanguageLabel(startup.voiceLanguage)} selected — please fill in the matching voice translation text`, 'error');
       return;
     }
     const saved = saveCompanionStartupPreset(
@@ -1528,7 +1528,7 @@ const CompanionHome: React.FC = () => {
     setStartupPerformance(normalizeCompanionStartupPerformance(startup.performance));
     setSelectedStartupPresetId(saved.preset.id);
     setStartupPresetName(saved.preset.name);
-    addToast(`已保存新的开机预设「${saved.preset.name}」`, 'success');
+    addToast(`Saved new startup preset "${saved.preset.name}"`, 'success');
   };
 
   const previewStartup = () => {
@@ -1537,16 +1537,16 @@ const CompanionHome: React.FC = () => {
     const translation = normalizeCompanionDialogue(startupTranslation, character.name);
     const spokenText = translation || text;
     if (!text) {
-      addToast('请先填写中文原文', 'error');
+      addToast('Please fill in the original Chinese text first', 'error');
       return;
     }
     if (startupVoiceLanguage && !translation) {
-      addToast(`请填写 ${voiceLanguageLabel(startupVoiceLanguage)} 语音译文`, 'error');
+      addToast(`Please fill in the ${voiceLanguageLabel(startupVoiceLanguage)} voice translation text`, 'error');
       return;
     }
     setTouchSettingsOpen(false);
     setStartupHeadLocked(true);
-    setLine({ text, translation: translation || undefined, label: '开机预演', kind: 'startup' });
+    setLine({ text, translation: translation || undefined, label: 'Startup Preview', kind: 'startup' });
     const cues = companionPerformanceCuePackMatches(
       text,
       translation,
@@ -1572,11 +1572,11 @@ const CompanionHome: React.FC = () => {
     const originalText = normalizeCompanionDialogue(startupLine, character.name);
     const translation = normalizeCompanionDialogue(startupTranslation, character.name);
     if (!originalText) {
-      addToast('请先填写开机中文原文', 'error');
+      addToast('Please fill in the startup original Chinese text first', 'error');
       return;
     }
     if (startupVoiceLanguage && !translation) {
-      addToast(`请填写 ${voiceLanguageLabel(startupVoiceLanguage)} 语音译文`, 'error');
+      addToast(`Please fill in the ${voiceLanguageLabel(startupVoiceLanguage)} voice translation text`, 'error');
       return;
     }
     const requestToken = ++requestTokenRef.current;
@@ -1605,11 +1605,11 @@ const CompanionHome: React.FC = () => {
       setStartupPerformanceCuePhase('start');
       setStartupPerformance(cues[0].direction);
       setSelectedStartupPresetId('');
-      addToast(`已按台词编排 ${cues.length} 个动作拍点；点击“保存为新预设”后永久复用`, 'success');
+      addToast(`Choreographed ${cues.length} action beat(s) from the line; click "Save as New Preset" to reuse permanently`, 'success');
     } catch (error: any) {
       if (!mountedRef.current || requestToken !== requestTokenRef.current) return;
       console.warn('[companion] startup performance direction failed:', error);
-      addToast(error?.message || '开机动作编排失败；未保存，也不会重试', 'error');
+      addToast(error?.message || 'Startup action choreography failed; not saved, will not retry', 'error');
     } finally {
       if (requestToken === requestTokenRef.current) {
         busyRef.current = false;
@@ -1623,16 +1623,16 @@ const CompanionHome: React.FC = () => {
     const originalText = normalizeCompanionDialogue(startupLine, character.name);
     const translation = normalizeCompanionDialogue(startupTranslation, character.name);
     if (!originalText) {
-      addToast('先填写开机中文原文，再生成语音包', 'error');
+      addToast('Fill in the startup original Chinese text first, then generate the voice pack', 'error');
       return;
     }
     if (startupVoiceLanguage && !translation) {
-      addToast(`请填写 ${voiceLanguageLabel(startupVoiceLanguage)} 语音译文`, 'error');
+      addToast(`Please fill in the ${voiceLanguageLabel(startupVoiceLanguage)} voice translation text`, 'error');
       return;
     }
     const spokenText = translation || originalText;
     if (!characterHasVoice(character, apiConfig)) {
-      addToast('这个角色还没有配置可用音色，请先去语音设置配置', 'error');
+      addToast('This character does not have a usable voice configured yet — please set one up in voice settings first', 'error');
       return;
     }
     const requestToken = ++requestTokenRef.current;
@@ -1677,11 +1677,11 @@ const CompanionHome: React.FC = () => {
       setStartupLine(originalText);
       setStartupTranslation(translation);
       setSelectedStartupPresetId('');
-      addToast('开机语音包已生成并永久保存在本地；保存为预设后可随时切换', 'success');
+      addToast('Startup voice pack generated and saved permanently on this device; save as a preset to switch anytime', 'success');
     } catch (error: any) {
       if (!mountedRef.current || requestToken !== requestTokenRef.current) return;
       console.warn('[companion] startup voice pack generation failed:', error);
-      addToast(error?.message || '开机语音包生成失败', 'error');
+      addToast(error?.message || 'Startup voice pack generation failed', 'error');
     } finally {
       if (requestToken === requestTokenRef.current) {
         busyRef.current = false;
@@ -1693,11 +1693,11 @@ const CompanionHome: React.FC = () => {
   const generateTouchReactionPack = async () => {
     if (!character || settingsGenerating) return;
     if (!touchDraftZones.length) {
-      addToast('请至少选择一个可触摸部位', 'error');
+      addToast('Please select at least one touchable area', 'error');
       return;
     }
     if (touchGenerateVoice && !characterHasVoice(character, apiConfig)) {
-      addToast('这个角色还没有配置可用音色，先关闭语音勾选或去语音设置配置', 'error');
+      addToast('This character does not have a usable voice configured yet — turn off the voice checkbox or set one up in voice settings first', 'error');
       return;
     }
     const requestToken = ++requestTokenRef.current;
@@ -1758,21 +1758,21 @@ const CompanionHome: React.FC = () => {
       setSelectedTouchPresetId(saved.preset.id);
       setTouchPresetName(saved.preset.name);
       touchCursorRef.current = {};
-      trackEvent('生成桌面触碰反馈', {
-        形象: activeCompanionSource === 'upload'
-          ? '静态图片'
-          : activeCompanionSource === 'date' ? '见面立绘' : '动态模型',
-        语音: touchGenerateVoice,
+      trackEvent('Generate Desktop Touch Feedback', {
+        'Avatar Type': activeCompanionSource === 'upload'
+          ? 'Static Image'
+          : activeCompanionSource === 'date' ? 'Date Portrait' : 'Animated Model',
+        Voice: touchGenerateVoice,
       });
-      const voiceSummary = touchGenerateVoice ? ` · 本地语音 ${voiceGenerated}/${voiceTotal}` : '';
-      addToast(`已保存新的触摸预设「${saved.preset.name}」${voiceSummary}`, 'success');
+      const voiceSummary = touchGenerateVoice ? ` · Local voice ${voiceGenerated}/${voiceTotal}` : '';
+      addToast(`Saved new touch preset "${saved.preset.name}"${voiceSummary}`, 'success');
       if (voiceFailures) {
-        addToast(`${voiceFailures} 条语音未能保存，触摸时只演动作与台词，不会临时调用 TTS`, 'info');
+        addToast(`${voiceFailures} voice clip(s) could not be saved; touch will only play actions and lines, without calling TTS on the fly`, 'info');
       }
     } catch (error: any) {
       if (!mountedRef.current || requestToken !== requestTokenRef.current) return;
       console.warn('[companion] touch reaction pack failed:', error);
-      addToast(error?.message || '触摸反馈包生成失败', 'error');
+      addToast(error?.message || 'Touch feedback pack generation failed', 'error');
     } finally {
       if (requestToken === requestTokenRef.current) {
         busyRef.current = false;
@@ -1877,7 +1877,7 @@ const CompanionHome: React.FC = () => {
         : direction
     );
     setRipple({ nonce: hit.nonce, x: hit.normalizedX, y: hit.normalizedY, force: touchForce });
-    showTouchBanner(hit, `你戳了戳${character.name}的${avatarTouchTargetLabel(hit)}`);
+    showTouchBanner(hit, `You poked ${character.name}'s ${avatarTouchTargetLabel(hit)}`);
     setPerformance(applyAvatarTouchForce(keepBuiltinSullyHeadClose(buildImmediateTouchPerformance(hit.zone)), hit));
     setMotionState('speaking');
 
@@ -1886,7 +1886,7 @@ const CompanionHome: React.FC = () => {
     const reactions = settings?.reactions?.[hit.zone] || [];
     if (!enabled || !reactions.length) {
       settleAfter(18);
-      addToast(`“${avatarTouchZoneLabel(hit.zone)}”还没有本地反馈，点右侧触摸设置生成一次即可`, 'info');
+      addToast(`"${avatarTouchZoneLabel(hit.zone)}" has no local feedback yet — tap Touch Settings on the right to generate it`, 'info');
       return;
     }
 
@@ -1898,7 +1898,7 @@ const CompanionHome: React.FC = () => {
     const spokenText = translation || text;
     if (!text) {
       settleAfter(18);
-      addToast('这条缓存台词为空，请在触摸设置中补生成反馈包', 'error');
+      addToast('This cached line is empty — generate the feedback pack again in Touch Settings', 'error');
       return;
     }
 
@@ -1906,7 +1906,7 @@ const CompanionHome: React.FC = () => {
     // over. This timer never calls the API; repeated taps simply replace it.
     touchDialogueTimerRef.current = window.setTimeout(() => {
       if (!mountedRef.current) return;
-      setLine({ text, translation: translation || undefined, label: `触摸 · ${avatarTouchZoneLabel(hit.zone)}`, kind: 'touch' });
+      setLine({ text, translation: translation || undefined, label: `Touch · ${avatarTouchZoneLabel(hit.zone)}`, kind: 'touch' });
       setPerformance(applyAvatarTouchForce(
         keepBuiltinSullyHeadClose(reaction.performance || buildImmediateTouchPerformance(hit.zone)),
         hit,
@@ -1935,8 +1935,8 @@ const CompanionHome: React.FC = () => {
       <div className="flex h-full w-full items-center justify-center px-8 text-center text-white/70">
         <div>
           <Sparkle size={28} className="mx-auto mb-3" />
-          <div className="text-sm">先创建并选择一个角色，再来使用触感陪伴桌面。</div>
-          <button onClick={() => openApp(AppID.Character)} className="mt-4 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs">去选择角色</button>
+          <div className="text-sm">Create and select a character first to use the touch companion desktop.</div>
+          <button onClick={() => openApp(AppID.Character)} className="mt-4 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs">Go select a character</button>
         </div>
       </div>
     );
@@ -2298,7 +2298,7 @@ const CompanionHome: React.FC = () => {
       {wardrobeDiscoveryActive && !editing && !touchSettingsOpen && !appStarOpen && !wardrobeOpen && (
         <div className="pointer-events-none absolute inset-x-0 bottom-[6.9rem] z-[47] flex justify-center px-5" data-testid="companion-wardrobe-discovery-nudge">
           <div className="rounded-full border border-white/20 bg-black/60 px-4 py-2 text-[10px] font-medium text-white/90 shadow-[0_10px_34px_rgba(0,0,0,.35)] backdrop-blur-xl">
-            想换场景？衣橱入口正在发光 ✦
+            Want a new scene? The wardrobe entrance is glowing ✦
           </div>
         </div>
       )}
@@ -2455,7 +2455,7 @@ const CompanionHome: React.FC = () => {
           openWardrobe={openWardrobe}
           openTouchSettings={openTouchSettings}
           openAllApps={() => setAppStarOpen(open => !open)}
-          onHome={() => addToast('已经在月庭主页了', 'info')}
+          onHome={() => addToast('Already on the Moon Court home', 'info')}
         />
       )}
 
@@ -2469,7 +2469,7 @@ const CompanionHome: React.FC = () => {
           openWardrobe={openWardrobe}
           openTouchSettings={openTouchSettings}
           openAllApps={() => setAppStarOpen(open => !open)}
-          onHome={() => addToast('已经在夜巡主页了', 'info')}
+          onHome={() => addToast('Already on the Night Patrol home', 'info')}
         />
       )}
 
@@ -2557,7 +2557,7 @@ const CompanionHome: React.FC = () => {
               )),
             }));
             setWardrobeLive2DSettings(null);
-            addToast('Live2D 衣橱模型已保存', 'success');
+            addToast('Live2D wardrobe model saved', 'success');
           }}
         />
       )}
@@ -2592,29 +2592,29 @@ const CompanionHome: React.FC = () => {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-[13px] font-semibold tracking-wide sm:text-[15px]">{character.name}</span>
-                  <span className="block text-[8px] tracking-[0.14em] text-white/50 sm:text-[9px]">{period.label} · {activeCompanionSource === 'upload' ? '静态形象' : activeCompanionSource === 'date' ? '见面表情同步' : character.videoAvatar ? '动作同步中' : '等待形象'}</span>
+                  <span className="block text-[8px] tracking-[0.14em] text-white/50 sm:text-[9px]">{period.label} · {activeCompanionSource === 'upload' ? 'Static avatar' : activeCompanionSource === 'date' ? 'Date expression sync' : character.videoAvatar ? 'Motion syncing' : 'Waiting for avatar'}</span>
                 </span>
               </button>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="text-[11px] tabular-nums tracking-[0.14em] text-white/75 sm:text-[13px]">{hh}:{mm}</span>
-                <button onClick={() => openApp(AppID.Appearance)} className="companion-hud-gear flex h-9 w-9 items-center justify-center border bg-black/20 text-white/80 active:scale-[.96] sm:h-11 sm:w-11" style={{ borderColor: `${uiTint}70` }} aria-label="外观设置">
+                <button onClick={() => openApp(AppID.Appearance)} className="companion-hud-gear flex h-9 w-9 items-center justify-center border bg-black/20 text-white/80 active:scale-[.96] sm:h-11 sm:w-11" style={{ borderColor: `${uiTint}70` }} aria-label="Appearance settings">
                   <Gear size={18} />
                 </button>
               </div>
             </header>
             <div className="companion-hud-grid grid grid-cols-3 border-t border-white/10">
               <button onClick={() => openApp(AppID.CheckPhone)} className="min-w-0 border-r border-white/10 px-3 py-2 text-left active:bg-white/5 sm:px-4 sm:py-2.5" data-testid="companion-hud-thought">
-                <span className="flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] sm:text-[9px]" style={{ color: uiTint }}><Sparkle size={11} weight="fill" />当前心声</span>
-                <span className="mt-1 block h-8 overflow-hidden text-[9px] leading-4 text-white/80 sm:h-9 sm:text-[11px]" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{hudContent.thought || '尚未记录心声'}</span>
+                <span className="flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] sm:text-[9px]" style={{ color: uiTint }}><Sparkle size={11} weight="fill" />Current inner voice</span>
+                <span className="mt-1 block h-8 overflow-hidden text-[9px] leading-4 text-white/80 sm:h-9 sm:text-[11px]" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{hudContent.thought || 'No inner voice recorded yet'}</span>
               </button>
               <button onClick={() => openApp(AppID.Chat)} className="min-w-0 border-r border-white/10 px-3 py-2 text-left active:bg-white/5 sm:px-4 sm:py-2.5" data-testid="companion-hud-chat">
-                <span className="flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] sm:text-[9px]" style={{ color: uiTint }}><Icons.Chat className="h-[11px] w-[11px] sm:h-[13px] sm:w-[13px]" />最近聊天</span>
-                <span className="mt-1 block h-8 overflow-hidden text-[9px] leading-4 text-white/80 sm:h-9 sm:text-[11px]" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{hudContent.recentChat || '还没有聊天记录'}</span>
+                <span className="flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] sm:text-[9px]" style={{ color: uiTint }}><Icons.Chat className="h-[11px] w-[11px] sm:h-[13px] sm:w-[13px]" />Recent chat</span>
+                <span className="mt-1 block h-8 overflow-hidden text-[9px] leading-4 text-white/80 sm:h-9 sm:text-[11px]" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{hudContent.recentChat || 'No chat history yet'}</span>
               </button>
               <button onClick={() => openApp(AppID.Schedule)} className="min-w-0 px-3 py-2 text-left active:bg-white/5 sm:px-4 sm:py-2.5" data-testid="companion-hud-schedule">
-                <span className="flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] sm:text-[9px]" style={{ color: uiTint }}><Icons.Schedule className="h-[11px] w-[11px] sm:h-[13px] sm:w-[13px]" />此刻日程</span>
+                <span className="flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] sm:text-[9px]" style={{ color: uiTint }}><Icons.Schedule className="h-[11px] w-[11px] sm:h-[13px] sm:w-[13px]" />Current schedule</span>
                 <span className="mt-1 block h-8 overflow-hidden text-[9px] leading-4 text-white/80 sm:h-9 sm:text-[11px]" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                  {currentScheduleSlot ? `${currentScheduleSlot.emoji || '◌'} ${currentScheduleSlot.startTime} ${currentScheduleSlot.activity}` : '今天还没有日程'}
+                  {currentScheduleSlot ? `${currentScheduleSlot.emoji || '◌'} ${currentScheduleSlot.startTime} ${currentScheduleSlot.activity}` : 'No schedule today'}
                 </span>
               </button>
             </div>
@@ -2626,7 +2626,7 @@ const CompanionHome: React.FC = () => {
       {!editing && !independentChrome && !touchSettingsOpen && !appStarOpen && (
         <aside
           className="companion-side-rail absolute right-1 top-[28%] z-30 flex w-16 flex-col items-center gap-1.5 pb-3 pt-3 text-white sm:w-20"
-          aria-label="角色快捷轨道"
+          aria-label="Character quick-access rail"
           data-testid="companion-ornate-action-rail"
           data-visual-style="ornate-flat"
           data-ui-scale="medium"
@@ -2641,12 +2641,12 @@ const CompanionHome: React.FC = () => {
           <span className="pointer-events-none absolute right-1 top-0 text-[8px] leading-none" style={{ color: uiTint }} aria-hidden>✦</span>
 
           <button onClick={openTouchSettings} className="companion-rail-button group relative z-10 flex flex-col items-center gap-1 active:scale-[.97]" data-testid="companion-touch-settings-button">
-            {!preparedReactionCount && <span className="absolute right-0 top-0 z-20 h-1.5 w-1.5 rounded-full bg-[#ff5d9e] ring-2 ring-[#1a1028]" aria-label="尚未生成触摸反馈" />}
+            {!preparedReactionCount && <span className="absolute right-0 top-0 z-20 h-1.5 w-1.5 rounded-full bg-[#ff5d9e] ring-2 ring-[#1a1028]" aria-label="Touch feedback not yet generated" />}
             <span className="companion-rail-shape relative flex h-10 w-10 rotate-45 items-center justify-center rounded-[0.72rem] border sm:h-12 sm:w-12" style={{ background: `${uiTint}50`, borderColor: `${uiTint}ec` }}>
               <span className="companion-rail-shape-inner absolute inset-[3px] rounded-[0.55rem] border" style={{ borderColor: `${uiTint}78` }} />
               <HandTap className="companion-rail-icon relative h-[18px] w-[18px] -rotate-45 text-white sm:h-[21px] sm:w-[21px]" weight="bold" />
             </span>
-            <span className="text-[8px] tracking-[0.08em] text-white/95 sm:text-[9px]">触摸</span>
+            <span className="text-[8px] tracking-[0.08em] text-white/95 sm:text-[9px]">Touch</span>
           </button>
 
           <button
@@ -2658,7 +2658,7 @@ const CompanionHome: React.FC = () => {
               <span className="companion-rail-shape-inner absolute inset-[3px] rounded-[0.55rem] border" style={{ borderColor: `${uiTint}2f` }} />
               <Icons.Appearance className="companion-rail-icon relative h-[17px] w-[17px] -rotate-45 text-white/95 sm:h-5 sm:w-5" />
             </span>
-            <span className="text-[8px] tracking-[0.08em] text-white/90 sm:text-[9px]">外观</span>
+            <span className="text-[8px] tracking-[0.08em] text-white/90 sm:text-[9px]">Appearance</span>
           </button>
 
           <button onClick={openWardrobe} className="companion-rail-button group relative z-10 flex flex-col items-center gap-1 active:scale-[.97]" data-testid="companion-real-wardrobe-button" data-companion-wardrobe-trigger="true">
@@ -2666,12 +2666,12 @@ const CompanionHome: React.FC = () => {
               <span className="companion-rail-shape-inner absolute inset-[3px] rounded-[0.55rem] border" style={{ borderColor: `${uiTint}2f` }} />
               <TShirt className="companion-rail-icon relative h-[17px] w-[17px] -rotate-45 text-white/95 sm:h-5 sm:w-5" weight="bold" />
             </span>
-            <span className="text-[8px] tracking-[0.08em] text-white/90 sm:text-[9px]">衣橱</span>
+            <span className="text-[8px] tracking-[0.08em] text-white/90 sm:text-[9px]">Wardrobe</span>
           </button>
 
           {[
-            { id: AppID.Call, icon: 'Call' as const, label: '通话' },
-            { id: AppID.Character, icon: 'Character' as const, label: '角色' },
+            { id: AppID.Call, icon: 'Call' as const, label: 'Call' },
+            { id: AppID.Character, icon: 'Character' as const, label: 'Character' },
           ].map(item => {
             const Icon = Icons[item.icon];
             return (
@@ -2704,17 +2704,17 @@ const CompanionHome: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <HandTap size={20} weight="bold" style={{ color: uiTint }} />
-                  <h2 className="text-[15px] font-semibold tracking-wide text-white">触摸设置</h2>
+                  <h2 className="text-[15px] font-semibold tracking-wide text-white">Touch Settings</h2>
                 </div>
                 <p className="mt-1 max-w-[24rem] text-[10px] leading-relaxed text-white/50">
-                  先选可触摸部位，再一次生成整包反馈。以后每次戳戳只轮播本地台词和动作，不会逐次调用 API。
+                  Pick the touchable areas first, then generate the whole feedback pack in one go. After that, every poke just cycles through local lines and actions — no repeated API calls.
                 </p>
               </div>
               <button
                 onClick={() => setTouchSettingsOpen(false)}
                 disabled={settingsGenerating}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/[0.06] text-white/70 disabled:opacity-30"
-                aria-label="关闭触摸设置"
+                aria-label="Close touch settings"
               ><Check size={15} /></button>
             </div>
 
@@ -2734,11 +2734,11 @@ const CompanionHome: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <Sparkle size={14} weight="fill" style={{ color: uiTint }} />
-                    <h3 className="text-[12px] font-semibold tracking-wide text-white">开机自启</h3>
+                    <h3 className="text-[12px] font-semibold tracking-wide text-white">Startup Autoplay</h3>
                     <span className="border border-white/12 px-1.5 py-0.5 text-[7px] tracking-[0.16em] text-white/45">HOME INTRO</span>
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-[9px] text-white/48">
-                    <span>{startupEnabled ? '已开启' : '未开启'} · {startupLine.trim() ? '已填写开机演出' : '点击展开设置'}</span>
+                    <span>{startupEnabled ? 'On' : 'Off'} · {startupLine.trim() ? 'Startup performance filled in' : 'Tap to expand settings'}</span>
                     <CaretDown
                       size={11}
                       className={`shrink-0 transition-transform ${startupSettingsExpanded ? 'rotate-180' : ''}`}
@@ -2777,10 +2777,10 @@ const CompanionHome: React.FC = () => {
                   disabled={settingsGenerating || !startupPresets.length}
                   onChange={event => selectStartupPreset(event.target.value)}
                   data-testid="companion-startup-preset-select"
-                  aria-label="选择开机预设"
+                  aria-label="Select startup preset"
                   className="min-w-0 border border-white/12 bg-[#151021] px-3 py-2 text-[10px] text-white/82 outline-none disabled:opacity-45"
                 >
-                  <option value="">{startupPresets.length ? `选择已保存预设（${startupPresets.length}）` : '还没有开机预设'}</option>
+                  <option value="">{startupPresets.length ? `Select saved preset (${startupPresets.length})` : 'No startup presets yet'}</option>
                   {startupPresets.map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
                 </select>
                 <button
@@ -2788,15 +2788,15 @@ const CompanionHome: React.FC = () => {
                   disabled={settingsGenerating || !selectedStartupPresetId}
                   onClick={deleteStartupPreset}
                   data-testid="companion-delete-startup-preset"
-                  aria-label="删除所选开机预设"
+                  aria-label="Delete selected startup preset"
                   className="flex h-9 w-9 items-center justify-center border border-white/12 text-white/58 disabled:opacity-30"
                 ><Trash size={14} /></button>
               </div>
               <p className="mt-3 text-[9px] leading-relaxed text-white/48">
-                中文原文、语音译文和动作都由你手动填写。每次刷新或重启后演一次；从 App 返回桌面不会重复播放。演出期间暂停随机转头。
+                You manually fill in the original Chinese text, the voice translation, and the actions. It plays once after every refresh or restart; returning to the desktop from an app does not replay it. Random head turns pause during the performance.
               </p>
               <label className="mt-3 block text-[8px] tracking-[0.12em] text-white/48" htmlFor="companion-startup-line">
-                中文原文（界面显示）
+                Original Chinese text (shown in the UI)
               </label>
               <textarea
                 id="companion-startup-line"
@@ -2808,11 +2808,11 @@ const CompanionHome: React.FC = () => {
                   setSelectedStartupPresetId('');
                   setStartupLine(event.target.value);
                 }}
-                placeholder="手动填写一句只有这个角色会说的话。"
+                placeholder="Write a line that only this character would say."
                 className="mt-1 min-h-[72px] w-full resize-y border border-white/12 bg-black/15 px-3 py-2 text-[11px] leading-relaxed text-white outline-none placeholder:text-white/24 focus:border-white/30 disabled:opacity-45"
               />
               <label className="mt-3 block text-[8px] tracking-[0.12em] text-white/48" htmlFor="companion-startup-voice-language">
-                语音语言
+                Voice language
               </label>
               <select
                 id="companion-startup-voice-language"
@@ -2822,17 +2822,17 @@ const CompanionHome: React.FC = () => {
                 onChange={event => {
                   setSelectedStartupPresetId('');
                   setStartupVoiceLanguage(event.target.value);
-                  trackEvent('设置桌面陪伴语音语种', { 用途: '开机', 语种: voiceLanguageAnalyticsValue(event.target.value) });
+                  trackEvent('Set Desktop Companion Voice Language', { Purpose: 'Startup', Language: voiceLanguageAnalyticsValue(event.target.value) });
                 }}
                 className="mt-1 w-full border border-white/12 bg-[#151021] px-3 py-2 text-[10px] text-white/82 outline-none disabled:opacity-45"
               >
                 {VOICE_LANGUAGE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.value ? option.label : '中文原文（不翻译）'}</option>
+                  <option key={option.value} value={option.value}>{option.value ? option.label : 'Original Chinese text (no translation)'}</option>
                 ))}
               </select>
 
               <label className="mt-3 block text-[8px] tracking-[0.12em] text-white/48" htmlFor="companion-startup-translation">
-                语音译文（实际朗读）
+                Voice translation (actually spoken)
               </label>
               <textarea
                 id="companion-startup-translation"
@@ -2844,7 +2844,7 @@ const CompanionHome: React.FC = () => {
                   setSelectedStartupPresetId('');
                   setStartupTranslation(event.target.value);
                 }}
-                placeholder={startupVoiceLanguage ? `手动填写 ${voiceLanguageLabel(startupVoiceLanguage)} 译文。` : '默认中文时可留空，将直接朗读上面的中文原文。'}
+                placeholder={startupVoiceLanguage ? `Write the ${voiceLanguageLabel(startupVoiceLanguage)} translation.` : 'Leave blank to read the Chinese text above directly when the default (Chinese) is selected.'}
                 className="mt-1 min-h-[64px] w-full resize-y border border-white/12 bg-black/15 px-3 py-2 text-[11px] leading-relaxed text-white outline-none placeholder:text-white/24 focus:border-white/30 disabled:opacity-45"
               />
 
@@ -2855,7 +2855,7 @@ const CompanionHome: React.FC = () => {
                 onClick={previewStartup}
                 className="mt-2 w-full border border-white/14 bg-white/[0.025] py-2 text-[9px] font-medium text-white/76 transition active:scale-[.98] disabled:opacity-35"
               >
-                预演一次
+                Preview once
               </button>
 
               <button
@@ -2867,22 +2867,22 @@ const CompanionHome: React.FC = () => {
               >
                 <Sparkle size={12} style={{ color: uiTint }} />
                 {startupActionGenerating
-                  ? '动作导演正在编排（只请求一次）…'
+                  ? 'Action director is choreographing (one request only)…'
                   : startupCuesMatchDraft
-                    ? `重新编排动作 · 当前 ${startupPerformanceCues.length} 拍`
-                    : '让动作导演按台词编排'}
+                    ? `Re-choreograph actions · currently ${startupPerformanceCues.length} beat(s)`
+                    : 'Let the action director choreograph from the lines'}
               </button>
               <div className="mt-1 text-center text-[7px] leading-relaxed text-white/30">
-                一次 LLM 回复严格为每句话生成一个动作；失败不重试、不兜底。锁头只禁止头部转动，表情、手臂、身体与专属动作照常演出。
+                One LLM reply generates exactly one action per sentence; no retry and no fallback on failure. Head lock only blocks head rotation — expressions, arms, body, and model-specific actions still perform normally.
               </div>
 
               {startupCuesMatchDraft && (
                 <div className="mt-3" data-testid="companion-startup-cue-editor">
-                  <div className="mb-1.5 text-[8px] tracking-[0.1em] text-white/46">逐句动作</div>
+                  <div className="mb-1.5 text-[8px] tracking-[0.1em] text-white/46">Per-sentence actions</div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
                     {startupPerformanceCues.map((cue, index) => {
                       const selected = index === selectedStartupCueIndex;
-                      const sentence = startupCueSentences[index]?.text || `动作 ${index + 1}`;
+                      const sentence = startupCueSentences[index]?.text || `Action ${index + 1}`;
                       return (
                         <button
                           key={`${cue.at}-${index}`}
@@ -2898,9 +2898,9 @@ const CompanionHome: React.FC = () => {
                             color: selected ? uiTint : 'rgba(255,255,255,.58)',
                           }}
                         >
-                          <span className="block text-[8px] font-semibold">第 {index + 1} 句 · {Math.round(cue.at * 100)}%</span>
+                          <span className="block text-[8px] font-semibold">Sentence {index + 1} · {Math.round(cue.at * 100)}%</span>
                           <span className="mt-0.5 block truncate text-[7px] opacity-70">{sentence}</span>
-                          <span className="mt-1 block text-[7px] opacity-55">起始 → {cue.holdMs || 900}ms → {cue.endDirection ? '收尾' : '未设收尾'}</span>
+                          <span className="mt-1 block text-[7px] opacity-55">Start → {cue.holdMs || 900}ms → {cue.endDirection ? 'End pose' : 'No end pose set'}</span>
                         </button>
                       );
                     })}
@@ -2912,17 +2912,17 @@ const CompanionHome: React.FC = () => {
                       onClick={() => setStartupPerformanceCuePhase('start')}
                       className="border px-2 py-1.5 text-[8px]"
                       style={{ borderColor: startupPerformanceCuePhase === 'start' ? `${uiTint}aa` : 'rgba(255,255,255,.12)', color: startupPerformanceCuePhase === 'start' ? uiTint : 'rgba(255,255,255,.5)' }}
-                    >1 · 起始动作</button>
+                    >1 · Start pose</button>
                     <button
                       type="button"
                       aria-pressed={startupPerformanceCuePhase === 'end'}
                       onClick={() => setStartupPerformanceCuePhase('end')}
                       className="border px-2 py-1.5 text-[8px]"
                       style={{ borderColor: startupPerformanceCuePhase === 'end' ? `${uiTint}aa` : 'rgba(255,255,255,.12)', color: startupPerformanceCuePhase === 'end' ? uiTint : 'rgba(255,255,255,.5)' }}
-                    >2 · 收尾动作</button>
+                    >2 · End pose</button>
                   </div>
                   <label className="mt-2 block text-[8px] text-white/46">
-                    <span className="flex justify-between"><span>中段保持时长</span><span className="font-mono">{selectedStartupCue?.holdMs || 900}ms</span></span>
+                    <span className="flex justify-between"><span>Mid-hold duration</span><span className="font-mono">{selectedStartupCue?.holdMs || 900}ms</span></span>
                     <input
                       type="range"
                       min={120}
@@ -2943,7 +2943,7 @@ const CompanionHome: React.FC = () => {
               )}
 
               <label className="mt-3 block text-[8px] tracking-[0.12em] text-white/48" htmlFor="companion-startup-preset-name">
-                新预设名称
+                New preset name
               </label>
               <input
                 id="companion-startup-preset-name"
@@ -2952,11 +2952,11 @@ const CompanionHome: React.FC = () => {
                 maxLength={40}
                 disabled={settingsGenerating}
                 onChange={event => setStartupPresetName(event.target.value)}
-                placeholder={`开机演出 ${startupPresets.length + 1}`}
+                placeholder={`Startup Performance ${startupPresets.length + 1}`}
                 className="mt-1 w-full border border-white/12 bg-black/15 px-3 py-2 text-[10px] text-white outline-none placeholder:text-white/24 disabled:opacity-45"
               />
               <div className="mt-1 text-[7px] leading-relaxed text-white/30">
-                保存始终新建一套，不会覆盖下拉菜单里的旧预设；已生成语音也随各自预设独立保留。
+                Saving always creates a new preset; it will not overwrite the old ones in the dropdown. Generated voice is kept independently with each preset.
               </div>
 
               <button
@@ -2968,26 +2968,26 @@ const CompanionHome: React.FC = () => {
               >
                 <SpeakerHigh size={12} style={{ color: uiTint }} />
                 {startupVoiceGenerating
-                  ? '正在生成并永久保存语音包…'
-                  : startupVoiceMatchesDraft ? '重新生成开机语音包' : '生成并永久保存开机语音包'}
+                  ? 'Generating and saving the voice pack permanently…'
+                  : startupVoiceMatchesDraft ? 'Regenerate startup voice pack' : 'Generate and permanently save startup voice pack'}
               </button>
               <div className="mt-1 text-center text-[7px] leading-relaxed text-white/30">
                 {!touchVoiceAvailable
-                  ? '角色尚未配置可用音色'
+                  ? 'This character has no usable voice configured yet'
                   : startupVoiceMatchesDraft
-                    ? `已保存${savedStartup?.voiceGeneratedAt ? ` · ${new Date(savedStartup.voiceGeneratedAt).toLocaleString()}` : ''}，以后开机直接复用`
+                    ? `Saved${savedStartup?.voiceGeneratedAt ? ` · ${new Date(savedStartup.voiceGeneratedAt).toLocaleString()}` : ''} — reused directly at every startup from now on`
                     : savedStartup?.voiceAssetId
-                      ? '当前台词已变化；旧语音仍保存在本地，重新生成后才会播放'
-                      : '生成一次后写入本地语音资产，刷新或重启不会重新调用 TTS'}
+                      ? 'The current line has changed; the old voice is still saved locally and will play again once regenerated'
+                      : 'Generate once to write to local voice assets — a refresh or restart will not re-call TTS'}
               </div>
 
               <details className="mt-3 border-t border-white/10 pt-2" data-testid="companion-startup-precision">
                 <summary className="cursor-pointer select-none text-[9px] font-medium tracking-wide text-white/62">
-                  {startupCuesMatchDraft ? `精调第 ${selectedStartupCueIndex + 1} 句` : '精调默认动作'} · 眼 / 身体 / 过冲回正
+                  {startupCuesMatchDraft ? `Fine-tune sentence ${selectedStartupCueIndex + 1}` : 'Fine-tune default action'} · Eyes / Body / Overshoot recovery
                 </summary>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <label className="text-[8px] text-white/46">
-                    情绪
+                    Emotion
                     <select
                       value={startupEditorPerformance.emotion}
                       disabled={settingsGenerating}
@@ -2998,7 +2998,7 @@ const CompanionHome: React.FC = () => {
                     </select>
                   </label>
                   <label className="text-[8px] text-white/46">
-                    主动作
+                    Main gesture
                     <select
                       value={startupEditorPerformance.gesture}
                       disabled={settingsGenerating}
@@ -3011,7 +3011,7 @@ const CompanionHome: React.FC = () => {
                 </div>
 
                 <div className="mt-3">
-                  <div className="text-[8px] text-white/46">微表情（最多 4 个）</div>
+                  <div className="text-[8px] text-white/46">Micro-expressions (up to 4)</div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {AVATAR_FACES.map(face => {
                       const selected = startupEditorPerformance.faces?.includes(face) || false;
@@ -3042,7 +3042,7 @@ const CompanionHome: React.FC = () => {
 
                 {modelActions.length > 0 && (
                   <label className="mt-3 block text-[8px] text-white/46">
-                    模型专属动作（可选）
+                    Model-specific action (optional)
                     <select
                       value={startupEditorPerformance.modelAction || ''}
                       disabled={settingsGenerating}
@@ -3052,7 +3052,7 @@ const CompanionHome: React.FC = () => {
                       })}
                       className="mt-1 w-full border border-white/12 bg-[#151021] px-2 py-2 text-[9px] text-white/82 outline-none"
                     >
-                      <option value="">不指定</option>
+                      <option value="">None</option>
                       {modelActions.map(action => <option key={action.id} value={action.id}>{action.name}</option>)}
                     </select>
                   </label>
@@ -3087,7 +3087,7 @@ const CompanionHome: React.FC = () => {
 
                 <div className="mt-3 grid grid-cols-2 gap-4">
                   <label className="text-[8px] text-white/46">
-                    <span className="flex justify-between"><span>轻微过冲</span><span className="font-mono">{Math.round((startupEditorPerformance.precision?.overshoot || 0) * 100)}%</span></span>
+                    <span className="flex justify-between"><span>Slight overshoot</span><span className="font-mono">{Math.round((startupEditorPerformance.precision?.overshoot || 0) * 100)}%</span></span>
                     <input
                       type="range"
                       min={0}
@@ -3101,7 +3101,7 @@ const CompanionHome: React.FC = () => {
                     />
                   </label>
                   <label className="text-[8px] text-white/46">
-                    <span className="flex justify-between"><span>回正时长</span><span className="font-mono">{startupEditorPerformance.precision?.settleMs || 920}ms</span></span>
+                    <span className="flex justify-between"><span>Settle duration</span><span className="font-mono">{startupEditorPerformance.precision?.settleMs || 920}ms</span></span>
                     <input
                       type="range"
                       min={320}
@@ -3116,7 +3116,7 @@ const CompanionHome: React.FC = () => {
                   </label>
                 </div>
                 <div className="mt-2 text-[7px] leading-relaxed text-white/30">
-                  精调只修改当前这一句，不会清空动作编排。开机台词播放完之前头部固定正中；身体、手臂、表情和模型专属动作保持独立。
+                  Fine-tuning only edits this one sentence and does not clear the action choreography. The head stays locked forward until the startup line finishes; body, arms, expressions, and model-specific actions stay independent.
                 </div>
               </details>
 
@@ -3128,7 +3128,7 @@ const CompanionHome: React.FC = () => {
                 className="mt-3 w-full border py-2.5 text-[10px] font-semibold tracking-wide transition active:scale-[.99] disabled:opacity-45"
                 style={{ borderColor: `${uiTint}9c`, background: `${uiTint}18`, color: uiTint }}
               >
-                保存为新预设
+                Save as New Preset
               </button>
               </div>
               )}
@@ -3136,7 +3136,7 @@ const CompanionHome: React.FC = () => {
 
             <div className="mb-2 mt-5 flex items-center gap-2 text-[8px] tracking-[0.16em] text-white/42">
               <span className="h-px flex-1 bg-white/10" />
-              触摸反馈包
+              Touch Feedback Pack
               <span className="h-px flex-1 bg-white/10" />
             </div>
             <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
@@ -3145,10 +3145,10 @@ const CompanionHome: React.FC = () => {
                 disabled={settingsGenerating || !touchPresets.length}
                 onChange={event => selectTouchPreset(event.target.value)}
                 data-testid="companion-touch-preset-select"
-                aria-label="选择触摸预设"
+                aria-label="Select touch preset"
                 className="min-w-0 border border-white/12 bg-[#151021] px-3 py-2 text-[10px] text-white/82 outline-none disabled:opacity-45"
               >
-                <option value="">{touchPresets.length ? `选择已保存预设（${touchPresets.length}）` : '还没有触摸预设'}</option>
+                <option value="">{touchPresets.length ? `Select saved preset (${touchPresets.length})` : 'No touch presets yet'}</option>
                 {touchPresets.map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
               </select>
               <button
@@ -3156,7 +3156,7 @@ const CompanionHome: React.FC = () => {
                 disabled={settingsGenerating || !selectedTouchPresetId}
                 onClick={deleteTouchPreset}
                 data-testid="companion-delete-touch-preset"
-                aria-label="删除所选触摸预设"
+                aria-label="Delete selected touch preset"
                 className="flex h-9 w-9 items-center justify-center border border-white/12 text-white/58 disabled:opacity-30"
               ><Trash size={14} /></button>
             </div>
@@ -3179,7 +3179,7 @@ const CompanionHome: React.FC = () => {
                   >
                     <span>
                       <span className="block text-[11px] font-medium text-white/90">{avatarTouchZoneLabel(zone)}</span>
-                      <span className="mt-0.5 block text-[8px] text-white/40">{count ? `已有 ${count} 条` : '尚未生成'}</span>
+                      <span className="mt-0.5 block text-[8px] text-white/40">{count ? `${count} already generated` : 'Not yet generated'}</span>
                     </span>
                     <span
                       className="flex h-5 w-5 items-center justify-center rounded-full border text-[10px]"
@@ -3191,7 +3191,7 @@ const CompanionHome: React.FC = () => {
             </div>
 
             <label className="mt-3 block text-[8px] tracking-[0.12em] text-white/48" htmlFor="companion-touch-voice-language">
-              触摸语音语言
+              Touch voice language
             </label>
             <select
               id="companion-touch-voice-language"
@@ -3201,16 +3201,16 @@ const CompanionHome: React.FC = () => {
               onChange={event => {
                 setSelectedTouchPresetId('');
                 setTouchVoiceLanguage(event.target.value);
-                trackEvent('设置桌面陪伴语音语种', { 用途: '触摸', 语种: voiceLanguageAnalyticsValue(event.target.value) });
+                trackEvent('Set Desktop Companion Voice Language', { Purpose: 'Touch', Language: voiceLanguageAnalyticsValue(event.target.value) });
               }}
               className="mt-1 w-full border border-white/12 bg-[#151021] px-3 py-2 text-[10px] text-white/82 outline-none disabled:opacity-45"
             >
               {VOICE_LANGUAGE_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>{option.value ? option.label : '中文原文（不翻译）'}</option>
+                <option key={option.value} value={option.value}>{option.value ? option.label : 'Original Chinese text (no translation)'}</option>
               ))}
             </select>
             <div className="mt-1 text-[7px] leading-relaxed text-white/30">
-              反馈包会把中文原文与{touchVoiceLanguage ? ` ${voiceLanguageLabel(touchVoiceLanguage)} ` : '中文'}语音文本分开保存；界面显示原文，语音只朗读译文。
+              The feedback pack saves the original Chinese text separately from the {touchVoiceLanguage ? ` ${voiceLanguageLabel(touchVoiceLanguage)} ` : 'Chinese'} voice text; the UI shows the original text, while voice only reads the translation.
             </div>
 
             <button
@@ -3232,11 +3232,11 @@ const CompanionHome: React.FC = () => {
             >
               <SpeakerHigh size={17} style={{ color: touchGenerateVoice ? uiTint : 'rgba(255,255,255,.55)' }} />
               <span className="min-w-0 flex-1">
-                <span className="block text-[11px] font-medium text-white/90">同时生成语音</span>
+                <span className="block text-[11px] font-medium text-white/90">Also generate voice</span>
                 <span className="mt-0.5 block text-[8px] leading-relaxed text-white/42">
                   {touchVoiceAvailable
-                    ? '勾选后预先合成并保存在本地；触摸时不会临时调用 TTS'
-                    : `角色尚未配置可用音色，当前只生成${touchPackContentLabel}`}
+                    ? 'When checked, synthesizes ahead of time and saves it locally; TTS will not be called on the fly during touch'
+                    : `This character has no usable voice configured yet — currently only generating ${touchPackContentLabel}`}
                 </span>
               </span>
               <span
@@ -3252,7 +3252,7 @@ const CompanionHome: React.FC = () => {
             </button>
 
             <label className="mt-3 block text-[8px] tracking-[0.12em] text-white/48" htmlFor="companion-touch-preset-name">
-              新预设名称
+              New preset name
             </label>
             <input
               id="companion-touch-preset-name"
@@ -3261,11 +3261,11 @@ const CompanionHome: React.FC = () => {
               maxLength={40}
               disabled={settingsGenerating}
               onChange={event => setTouchPresetName(event.target.value)}
-              placeholder={`触摸反馈 ${touchPresets.length + 1}`}
+              placeholder={`Touch Feedback ${touchPresets.length + 1}`}
               className="mt-1 w-full border border-white/12 bg-black/15 px-3 py-2 text-[10px] text-white outline-none placeholder:text-white/24 disabled:opacity-45"
             />
             <div className="mt-1 text-[7px] leading-relaxed text-white/30">
-              每次生成都会保存为新预设；旧反馈包和它引用的本地语音不会被覆盖。
+              Every generation saves as a new preset; old feedback packs and the local voice they reference are not overwritten.
             </div>
 
             <button
@@ -3278,14 +3278,14 @@ const CompanionHome: React.FC = () => {
               <Sparkle size={15} weight="fill" />
               {touchGenerating
                 ? touchVoiceProgress
-                  ? `正在合成本地语音 ${touchVoiceProgress.completed}/${touchVoiceProgress.total}…`
-                  : `正在生成${touchPackContentLabel}…`
-                : '生成并保存新预设'}
+                  ? `Synthesizing local voice ${touchVoiceProgress.completed}/${touchVoiceProgress.total}…`
+                  : `Generating ${touchPackContentLabel}…`
+                : 'Generate and save new preset'}
             </button>
             <div className="mt-2 text-center text-[8px] tracking-wide text-white/30">
               {savedTouchSettings?.generatedAt
-                ? `上次生成 ${new Date(savedTouchSettings.generatedAt).toLocaleString()} · 台词 ${preparedReactionCount} 条 · 语音 ${preparedVoiceCount} 条`
-                : `${touchPackContentLabel}正常只请求一次；语音仅在勾选时批量预生成`}
+                ? `Last generated ${new Date(savedTouchSettings.generatedAt).toLocaleString()} · ${preparedReactionCount} line(s) · ${preparedVoiceCount} voice clip(s)`
+                : `Generating ${touchPackContentLabel} normally only requires one request; voice is only batch-pregenerated when checked`}
             </div>
           </section>
         </div>
@@ -3354,7 +3354,7 @@ const CompanionHome: React.FC = () => {
                 style={{ color: uiTint }}
                 data-testid="companion-next-cached-reaction"
               >
-                <ArrowClockwise size={11} /> 换一句 · 本地轮播
+                <ArrowClockwise size={11} /> Next line · local rotation
               </button>
             )}
           </div>
@@ -3367,7 +3367,7 @@ const CompanionHome: React.FC = () => {
           <button
             className="absolute inset-0 z-[35] bg-black/25 backdrop-blur-[1px]"
             onClick={() => setAppStarOpen(false)}
-            aria-label="关闭功能星盘"
+            aria-label="Close feature constellation"
           />
           <section
             className="absolute inset-x-3 z-40 max-h-[52vh] overflow-hidden border border-white/20 shadow-2xl backdrop-blur-2xl"
@@ -3383,9 +3383,9 @@ const CompanionHome: React.FC = () => {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div>
                 <div className="flex items-center gap-2 text-[13px] font-semibold tracking-[0.16em] text-white">
-                  <Sparkle size={15} weight="fill" style={{ color: uiTint }} /> 功能星盘
+                  <Sparkle size={15} weight="fill" style={{ color: uiTint }} /> Feature Constellation
                 </div>
-                <div className="mt-0.5 text-[8px] tracking-[0.18em] text-white/35">SULLYOS · 全部真实功能</div>
+                <div className="mt-0.5 text-[8px] tracking-[0.18em] text-white/35">SULLYOS · All Real Features</div>
               </div>
               <button onClick={() => setAppStarOpen(false)} className="h-7 w-7 border border-white/15 text-[12px] text-white/60 active:scale-90">×</button>
             </div>
@@ -3411,7 +3411,7 @@ const CompanionHome: React.FC = () => {
                 })}
                 <button onClick={openTouchSettings} className="flex min-w-0 flex-col items-center gap-1.5 text-white/70 active:scale-90">
                   <span className="flex h-10 w-10 items-center justify-center border border-white/15 bg-white/[0.055]" style={{ color: uiTint }}><HandTap size={19} weight="bold" /></span>
-                  <span className="text-[9px] tracking-wide">触摸设置</span>
+                  <span className="text-[9px] tracking-wide">Touch Settings</span>
                 </button>
               </div>
             </div>
@@ -3423,7 +3423,7 @@ const CompanionHome: React.FC = () => {
         <nav
           className="companion-bottom-dock absolute inset-x-3 z-40 h-[5.65rem] overflow-visible"
           style={{ bottom: 'max(0.5rem, calc(var(--safe-bottom, 0px) + 0.35rem))' }}
-          aria-label="陪伴桌面导航"
+          aria-label="Companion desktop navigation"
           data-testid="companion-ornate-dock"
           data-visual-style="ornate-flat"
         >
@@ -3441,8 +3441,8 @@ const CompanionHome: React.FC = () => {
           <span className="pointer-events-none absolute right-[7%] top-2 text-[5px] text-white/60" aria-hidden>✦</span>
           <div className="relative z-10 grid h-full grid-cols-5 items-center gap-1 px-2">
             {[
-              { id: AppID.Chat, icon: Icons.Chat, label: '聊天' },
-              { id: AppID.Schedule, icon: Icons.Schedule, label: '日程' },
+              { id: AppID.Chat, icon: Icons.Chat, label: 'Chat' },
+              { id: AppID.Schedule, icon: Icons.Schedule, label: 'Schedule' },
             ].map(item => (
               <button key={item.id} onClick={() => launchCompanionApp(item.id)} className="companion-dock-item flex h-full flex-col items-center justify-center gap-1 text-white/90 active:scale-[.97]">
                 <span className="companion-dock-shape flex h-10 w-10 rotate-45 items-center justify-center rounded-[0.7rem] border bg-black/15 sm:h-12 sm:w-12" style={{ borderColor: `${uiTint}72` }}>
@@ -3455,7 +3455,7 @@ const CompanionHome: React.FC = () => {
               onClick={() => setAppStarOpen(open => !open)}
               className="companion-dock-primary group relative flex h-full flex-col items-center justify-center gap-0.5 text-white"
               aria-expanded={appStarOpen}
-              aria-label="打开全部功能"
+              aria-label="Open all features"
               data-testid="companion-app-star-button"
             >
               <span className="companion-dock-primary-frame relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border sm:h-[4.25rem] sm:w-[4.25rem]" style={{ borderColor: `${uiTint}c4`, background: `${palette.panelBottom}f5` }}>
@@ -3467,18 +3467,18 @@ const CompanionHome: React.FC = () => {
                       <span className="mt-0.5 text-[5px] tracking-[0.18em]">INDEX</span>
                     </span>
                   ) : frameStyle === 'archive' ? (
-                    <span className="companion-dock-primary-glyph font-serif text-[21px] leading-none">集</span>
+                    <span className="companion-dock-primary-glyph font-serif text-[21px] leading-none">ALL</span>
                   ) : (
                     <Sparkle className="companion-dock-primary-glyph relative" size={23} weight="fill" />
                   )}
                   <span className="companion-dock-primary-mark absolute right-0.5 top-0.5 text-[6px] text-white/90">{frameStyle === 'idol' ? 'LIVE' : '✦'}</span>
                 </span>
               </span>
-              <span className="companion-dock-primary-label text-[9px] font-semibold tracking-[0.18em] sm:text-[10px]" style={{ color: uiTint }}>功能</span>
+              <span className="companion-dock-primary-label text-[9px] font-semibold tracking-[0.18em] sm:text-[10px]" style={{ color: uiTint }}>Features</span>
             </button>
             {[
-              { id: AppID.Music, icon: Icons.Music, label: '音乐' },
-              { id: AppID.Settings, icon: Icons.Settings, label: '设置' },
+              { id: AppID.Music, icon: Icons.Music, label: 'Music' },
+              { id: AppID.Settings, icon: Icons.Settings, label: 'Settings' },
             ].map(item => (
               <button key={item.id} onClick={() => launchCompanionApp(item.id)} className="companion-dock-item flex h-full flex-col items-center justify-center gap-1 text-white/90 active:scale-[.97]">
                 <span className="companion-dock-shape flex h-10 w-10 rotate-45 items-center justify-center rounded-[0.7rem] border bg-black/15 sm:h-12 sm:w-12" style={{ borderColor: `${uiTint}72` }}>
@@ -3498,7 +3498,7 @@ const CompanionHome: React.FC = () => {
               className="pointer-events-none absolute left-4 z-40 border-l px-3 py-2 text-left backdrop-blur-md"
               style={{ top: 'max(2.4rem, calc(var(--safe-top, 0px) + .8rem))', right: compositionEditorCollapsed ? '3rem' : 'min(84vw, 22rem)', borderColor: `${uiTint}90`, background: `${palette.panelBottom}a8`, transition: 'right 200ms ease' }}
             >
-              <span className="text-[9px] leading-relaxed text-white/78">拖动角色 · 双指缩放 · 虚线框为可视区</span>
+              <span className="text-[9px] leading-relaxed text-white/78">Drag character · pinch to zoom · dashed box is the visible area</span>
             </div>
           )}
           <div
@@ -3513,7 +3513,7 @@ const CompanionHome: React.FC = () => {
             >
               <header className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-1.5 text-[12px] font-semibold tracking-[0.12em]"><Crop size={14} weight="bold" style={{ color: uiTint }} />角色构图</div>
+                  <div className="flex items-center gap-1.5 text-[12px] font-semibold tracking-[0.12em]"><Crop size={14} weight="bold" style={{ color: uiTint }} />Character Composition</div>
                   <div className="mt-0.5 text-[8px] tracking-[0.13em] text-white/36">CHARACTER INSPECTOR</div>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -3521,26 +3521,26 @@ const CompanionHome: React.FC = () => {
                     type="button"
                     onClick={() => setCompositionEditorCollapsed(true)}
                     className="flex h-7 w-7 items-center justify-center rounded-full border border-white/15 text-white/55 transition active:scale-90"
-                    aria-label="暂时折叠角色构图面板"
-                    title="暂时折叠"
+                    aria-label="Temporarily collapse character composition panel"
+                    title="Collapse for now"
                     data-testid="companion-collapse-composition"
                   ><CaretRight size={12} weight="bold" /></button>
-                  <button onClick={cancelCompositionEditor} className="rounded-full border border-white/15 px-3 py-1.5 text-[10px] text-white/60 active:scale-95">取消</button>
+                  <button onClick={cancelCompositionEditor} className="rounded-full border border-white/15 px-3 py-1.5 text-[10px] text-white/60 active:scale-95">Cancel</button>
                   <button
                     onClick={saveCompositionEditor}
                     className="inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[10px] font-semibold text-[#171126] shadow active:scale-95"
                     style={{ background: `linear-gradient(120deg, ${uiTint}, #fff)` }}
                     data-testid="companion-save-composition"
                   >
-                    <Check size={12} weight="bold" /> 保存
+                    <Check size={12} weight="bold" /> Save
                   </button>
                 </div>
               </header>
 
               <div className="relative mt-4 grid grid-cols-2 border-b border-white/10">
                 {([
-                  ['character', '角色'],
-                  ['stage', '舞台'],
+                  ['character', 'Character'],
+                  ['stage', 'Stage'],
                 ] as const).map(([id, label]) => (
                   <button
                     key={id}
@@ -3555,8 +3555,8 @@ const CompanionHome: React.FC = () => {
                 <div className="mt-3" data-testid="companion-character-crop-editor">
                   {!character.videoAvatar ? (
                     <div className="rounded-2xl border border-dashed border-white/15 px-4 py-5 text-center">
-                      <div className="text-[11px] text-white/70">还没有可裁剪的视频角色</div>
-                      <button onClick={() => openApp(AppID.Call)} className="mt-2 rounded-full border border-white/15 px-3 py-1.5 text-[10px] text-white/55">去导入 VRM / Live2D</button>
+                      <div className="text-[11px] text-white/70">No animated character to crop yet</div>
+                      <button onClick={() => openApp(AppID.Call)} className="mt-2 rounded-full border border-white/15 px-3 py-1.5 text-[10px] text-white/55">Go import VRM / Live2D</button>
                     </div>
                   ) : (
                     <>
@@ -3564,15 +3564,15 @@ const CompanionHome: React.FC = () => {
                         <div className="mb-3 rounded-2xl border border-white/10 bg-black/15 p-2.5" data-testid="companion-builtin-quality-picker">
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">内置模型画质</div>
-                              <div className="mt-0.5 text-[8px] text-white/32">2K 默认更稳；4K 仅在高性能设备使用</div>
+                              <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">Built-in model quality</div>
+                              <div className="mt-0.5 text-[8px] text-white/32">2K default is more stable; use 4K only on high-performance devices</div>
                             </div>
                             <span className="text-[8px] text-white/35">{builtinSullyAvatar.builtinQuality === 'hd' ? '≈85 MB' : '≈21 MB'}</span>
                           </div>
                           <div className="mt-2 grid grid-cols-2 gap-1.5">
                             {([
-                              { value: 'balanced' as const, label: '轻量 2K' },
-                              { value: 'hd' as const, label: '高清 4K' },
+                              { value: 'balanced' as const, label: 'Lightweight 2K' },
+                              { value: 'hd' as const, label: 'HD 4K' },
                             ]).map(option => {
                               const active = builtinSullyAvatar.builtinQuality === option.value;
                               return (
@@ -3590,13 +3590,13 @@ const CompanionHome: React.FC = () => {
                       {character.videoAvatar.format === 'live2d' && !builtinSullyAvatar && (
                         <div className="mb-3 rounded-2xl border border-white/10 bg-black/15 p-2.5" data-testid="companion-live2d-texture-quality-picker">
                           <div>
-                            <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">运行纹理画质</div>
-                            <div className="mt-0.5 text-[8px] leading-relaxed text-white/32">默认 2K 更稳；4K 会占用更多内存，并单独建立运行缓存</div>
+                            <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">Runtime texture quality</div>
+                            <div className="mt-0.5 text-[8px] leading-relaxed text-white/32">2K default is more stable; 4K uses more memory and builds a separate runtime cache</div>
                           </div>
                           <div className="mt-2 grid grid-cols-2 gap-1.5">
                             {([
-                              { value: 'balanced' as const, label: '轻量 2K' },
-                              { value: 'hd' as const, label: '高清 4K' },
+                              { value: 'balanced' as const, label: 'Lightweight 2K' },
+                              { value: 'hd' as const, label: 'HD 4K' },
                             ]).map(option => {
                               const currentQuality = character.videoAvatar?.format === 'live2d' && character.videoAvatar.textureQuality === 'hd' ? 'hd' : 'balanced';
                               const active = currentQuality === option.value;
@@ -3621,7 +3621,7 @@ const CompanionHome: React.FC = () => {
                           onClick={() => setCompositionFramingMode('base')}
                           className={`border px-2 py-2 text-[9px] transition ${compositionFramingMode === 'base' ? 'bg-white/12 text-white' : 'border-white/10 text-white/42'}`}
                           style={compositionFramingMode === 'base' ? { borderColor: `${uiTint}88` } : undefined}
-                        >日常构图</button>
+                        >Everyday Composition</button>
                         <button
                           type="button"
                           aria-pressed={compositionFramingMode === 'face'}
@@ -3632,7 +3632,7 @@ const CompanionHome: React.FC = () => {
                           }}
                           className={`border px-2 py-2 text-[9px] transition ${compositionFramingMode === 'face' ? 'bg-white/12 text-white' : 'border-white/10 text-white/42'}`}
                           style={compositionFramingMode === 'face' ? { borderColor: `${uiTint}88` } : undefined}
-                        >面部特写锚点{faceAnchorDraftEnabled ? ' · 已设' : ''}</button>
+                        >Face Close-up Anchor{faceAnchorDraftEnabled ? ' · Set' : ''}</button>
                         {character.videoAvatar.format === 'live2d' && (
                           <button
                             type="button"
@@ -3641,26 +3641,26 @@ const CompanionHome: React.FC = () => {
                             onClick={() => setCompositionFramingMode('touch')}
                             className={`border px-2 py-2 text-[9px] transition ${compositionFramingMode === 'touch' ? 'bg-white/12 text-white' : 'border-white/10 text-white/42'}`}
                             style={compositionFramingMode === 'touch' ? { borderColor: `${uiTint}88` } : undefined}
-                          >触摸圈选{touchRegionsDraft.length ? ` · ${touchRegionsDraft.length}` : ''}</button>
+                          >Touch Zone Circling{touchRegionsDraft.length ? ` · ${touchRegionsDraft.length}` : ''}</button>
                         )}
                       </div>
                       {compositionFramingMode === 'face' && (
                         <div className="mb-3 border-l px-2.5 py-2 text-[8px] leading-relaxed text-white/48" style={{ borderColor: `${uiTint}88`, background: `${uiTint}0f` }}>
-                          把脸拖到画面中心并调整到理想大小。保存后，摸脸或 AI 使用「拉近」镜头只会落到这个位置，不再按全身比例猜。
+                          Drag the face to the center of the frame and resize it to the ideal size. After saving, touching the face or the AI using a "zoom in" camera will land only on this position, no longer guessed from the full-body proportions.
                         </div>
                       )}
                       {compositionFramingMode === 'touch' && character.videoAvatar.format === 'live2d' && (
                         <div className="mb-3 rounded-2xl border border-white/10 bg-black/15 p-2.5" data-testid="companion-touch-region-editor-panel">
                           <div className="text-[8px] leading-relaxed text-white/55">
-                            先选部位，再在左侧模型上按住拖动，圈出椭圆区域。同一部位可画多个圈；圈会跟随这个模型，不受半身、全身或构图缩放影响。
+                            First select an area, then press and drag on the model to the left to draw an oval zone. Multiple circles can be drawn on the same area; circles follow this model and are not affected by half-body, full-body, or composition scaling.
                           </div>
                           <div className="mt-2 grid grid-cols-5 gap-1">
                             {([
-                              { zone: 'head', label: '头', color: '#f5c86a' },
-                              { zone: 'face', label: '脸', color: '#ff8fb7' },
-                              { zone: 'hand', label: '手', color: '#77d9dd' },
-                              { zone: 'body', label: '身体', color: '#9ba8ff' },
-                              { zone: 'other', label: '其他', color: '#c6cbd5' },
+                              { zone: 'head', label: 'Head', color: '#f5c86a' },
+                              { zone: 'face', label: 'Face', color: '#ff8fb7' },
+                              { zone: 'hand', label: 'Hand', color: '#77d9dd' },
+                              { zone: 'body', label: 'Body', color: '#9ba8ff' },
+                              { zone: 'other', label: 'Other', color: '#c6cbd5' },
                             ] as const).map(item => {
                               const count = touchRegionsDraft.filter(region => region.zone === item.zone).length;
                               const active = touchRegionEditingZone === item.zone;
@@ -3680,26 +3680,26 @@ const CompanionHome: React.FC = () => {
                             })}
                           </div>
                           <div className="mt-2 flex items-center justify-between border-t border-white/8 pt-2">
-                            <span className="text-[8px] text-white/35">重叠时优先较小的圈</span>
+                            <span className="text-[8px] text-white/35">The smaller circle wins on overlap</span>
                             <span className="flex gap-1">
                               <button
                                 type="button"
                                 disabled={!touchRegionsDraft.some(region => region.zone === touchRegionEditingZone)}
                                 onClick={() => setTouchRegionsDraft(current => current.filter(region => region.zone !== touchRegionEditingZone))}
                                 className="rounded-full px-2 py-1 text-[8px] text-rose-200/65 disabled:opacity-25"
-                              >清除此部位</button>
+                              >Clear this area</button>
                               <button
                                 type="button"
                                 disabled={!touchRegionsDraft.length}
                                 onClick={() => setTouchRegionsDraft([])}
                                 className="rounded-full px-2 py-1 text-[8px] text-rose-200/65 disabled:opacity-25"
-                              >全部清除</button>
+                              >Clear all</button>
                             </span>
                           </div>
                         </div>
                       )}
                       <div className="flex items-center justify-between">
-                        <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">{compositionFramingMode === 'face' ? '面部锚点大小与位置' : compositionFramingMode === 'touch' ? '圈选时的模型位置' : '大小与位置'}</div>
+                        <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">{compositionFramingMode === 'face' ? 'Face anchor size and position' : compositionFramingMode === 'touch' ? 'Model position while circling' : 'Size and position'}</div>
                         <button
                           onClick={() => {
                             if (compositionFramingMode === 'face') setFaceFramingDraft(makeFaceFramingSeed());
@@ -3707,12 +3707,12 @@ const CompanionHome: React.FC = () => {
                           }}
                           className="inline-flex items-center gap-1 rounded-full border border-white/12 px-2 py-1 text-[9px] text-white/50 active:scale-95"
                         >
-                          <ArrowClockwise size={10} weight="bold" /> {compositionFramingMode === 'face' ? '重置锚点' : compositionFramingMode === 'touch' ? '重置构图' : '全部重置'}
+                          <ArrowClockwise size={10} weight="bold" /> {compositionFramingMode === 'face' ? 'Reset anchor' : compositionFramingMode === 'touch' ? 'Reset composition' : 'Reset all'}
                         </button>
                       </div>
 
                       <label className="mt-2.5 block">
-                        <span className="flex items-center justify-between text-[9px] text-white/58"><span>{compositionFramingMode === 'face' ? '特写大小' : '角色大小'}</span><b className="font-mono text-white/82">{compositionFramingDraft.scale.toFixed(2)}×</b></span>
+                        <span className="flex items-center justify-between text-[9px] text-white/58"><span>{compositionFramingMode === 'face' ? 'Close-up size' : 'Character size'}</span><b className="font-mono text-white/82">{compositionFramingDraft.scale.toFixed(2)}×</b></span>
                         <span className="mt-1.5 flex items-center gap-2">
                           <button onClick={() => setCompositionFramingDraft(current => ({ ...current, scale: Math.max(framingScaleMin, current.scale - .1) }))} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[.04] active:scale-90"><Minus size={11} /></button>
                           <input type="range" min={framingScaleMin} max={framingScaleMax} step="0.01" value={compositionFramingDraft.scale} onChange={event => setCompositionFramingDraft(current => ({ ...current, scale: Number(event.target.value) }))} className="h-1.5 min-w-0 flex-1 cursor-pointer accent-fuchsia-300" data-testid={compositionFramingMode === 'face' ? 'companion-face-framing-scale' : 'companion-framing-scale'} />
@@ -3721,8 +3721,8 @@ const CompanionHome: React.FC = () => {
                       </label>
 
                       {([
-                        ['offsetX', '左右位置', framingOffsetXMax],
-                        ['offsetY', '上下位置', framingOffsetYMax],
+                        ['offsetX', 'Left/right position', framingOffsetXMax],
+                        ['offsetY', 'Up/down position', framingOffsetYMax],
                       ] as const).map(([key, label, limit]) => (
                         <label key={key} className="mt-2.5 block">
                           <span className="flex items-center justify-between text-[9px] text-white/58"><span>{label}</span><b className="font-mono text-white/82">{Math.round(compositionFramingDraft[key] * 100)}%</b></span>
@@ -3730,25 +3730,25 @@ const CompanionHome: React.FC = () => {
                         </label>
                       ))}
                       <div className="mt-2 flex gap-2">
-                        <button onClick={() => setCompositionFramingDraft(current => ({ ...current, offsetX: 0, offsetY: 0 }))} className="flex-1 rounded-xl border border-white/12 bg-white/[.045] py-2 text-[9px] text-white/58 active:scale-[.98]"><ArrowsOutCardinal className="mr-1 inline" size={11} />角色居中</button>
+                        <button onClick={() => setCompositionFramingDraft(current => ({ ...current, offsetX: 0, offsetY: 0 }))} className="flex-1 rounded-xl border border-white/12 bg-white/[.045] py-2 text-[9px] text-white/58 active:scale-[.98]"><ArrowsOutCardinal className="mr-1 inline" size={11} />Center character</button>
                         {compositionFramingMode === 'face' ? (
-                          <button onClick={() => { setFaceAnchorDraftEnabled(false); setCompositionFramingMode('base'); }} className="flex-1 rounded-xl border border-rose-300/20 bg-rose-950/20 py-2 text-[9px] text-rose-200/65 active:scale-[.98]">清除锚点</button>
+                          <button onClick={() => { setFaceAnchorDraftEnabled(false); setCompositionFramingMode('base'); }} className="flex-1 rounded-xl border border-rose-300/20 bg-rose-950/20 py-2 text-[9px] text-rose-200/65 active:scale-[.98]">Clear anchor</button>
                         ) : (
-                          <button onClick={() => setFramingDraft(defaultCompanionFraming)} className="flex-1 rounded-xl border border-white/12 bg-white/[.045] py-2 text-[9px] text-white/58 active:scale-[.98]">适配舞台</button>
+                          <button onClick={() => setFramingDraft(defaultCompanionFraming)} className="flex-1 rounded-xl border border-white/12 bg-white/[.045] py-2 text-[9px] text-white/58 active:scale-[.98]">Fit to stage</button>
                         )}
                       </div>
 
                       {compositionFramingMode === 'base' && <div className="mt-3 border-t border-white/10 pt-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">自定义裁剪</div>
-                            <div className="mt-0.5 text-[8px] text-white/32">收紧虚线框，隐藏角色画布的多余边缘</div>
+                            <div className="text-[9px] font-semibold tracking-[0.16em] text-white/48">Custom Crop</div>
+                            <div className="mt-0.5 text-[8px] text-white/32">Tighten the dashed box to hide the extra edges of the character canvas</div>
                           </div>
-                          {cropAdjusted && <button onClick={() => setCropDraft(DEFAULT_STAGE_CROP)} className="rounded-full px-2 py-1 text-[9px] text-white/45 active:scale-95">清空裁剪</button>}
+                          {cropAdjusted && <button onClick={() => setCropDraft(DEFAULT_STAGE_CROP)} className="rounded-full px-2 py-1 text-[9px] text-white/45 active:scale-95">Clear crop</button>}
                         </div>
                         <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
                           {([
-                            ['top', '上边'], ['bottom', '下边'], ['left', '左边'], ['right', '右边'],
+                            ['top', 'Top'], ['bottom', 'Bottom'], ['left', 'Left'], ['right', 'Right'],
                           ] as const).map(([edge, label]) => (
                             <label key={edge} className="block">
                               <span className="flex justify-between text-[8px] text-white/52"><span>{label}</span><b className="font-mono text-white/75">{Math.round(cropDraft[edge] * 100)}%</b></span>
@@ -3764,11 +3764,11 @@ const CompanionHome: React.FC = () => {
 
               {editingPanel === 'stage' && (
                 <div className="mt-3">
-                  <div className="text-[9px] tracking-[0.2em] text-white/40">舞台背景</div>
+                  <div className="text-[9px] tracking-[0.2em] text-white/40">Stage Background</div>
                   <div className="mt-2 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                     <button onClick={() => { void applyCompanionBackground(undefined); }} className={`flex shrink-0 flex-col items-center gap-1 active:scale-95 ${!background ? '' : 'opacity-70'}`}>
                       <span className="h-14 w-[4.5rem] rounded-xl border" style={{ borderColor: !background ? uiTint : 'rgba(255,255,255,.14)', borderWidth: !background ? 2 : 1, background: `radial-gradient(120% 70% at 50% -12%, ${period.skyGlow}, transparent 70%), linear-gradient(180deg, ${palette.baseTop}, ${palette.baseBottom})` }} />
-                      <span className="text-[9px] text-white/60">时段天光</span>
+                      <span className="text-[9px] text-white/60">Time-of-day sky</span>
                     </button>
                     {COMPANION_BG_PRESETS.map(preset => {
                       const active = background === `preset:${preset.id}`;
@@ -3783,17 +3783,17 @@ const CompanionHome: React.FC = () => {
                       <span className="flex h-14 w-[4.5rem] items-center justify-center rounded-xl border bg-white/[0.06] text-white/60" style={{ borderColor: backgroundImageUrl ? uiTint : 'rgba(255,255,255,.14)', borderWidth: backgroundImageUrl ? 2 : 1, ...(backgroundImageUrl ? { backgroundImage: `url(${backgroundImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}) }}>
                         {!backgroundImageUrl && <UploadSimple size={16} weight="bold" />}
                       </span>
-                      <span className="text-[9px] text-white/60">{backgroundImageUrl ? '换一张' : '自定义'}</span>
+                      <span className="text-[9px] text-white/60">{backgroundImageUrl ? 'Change' : 'Custom'}</span>
                     </button>
                     {backgroundImageUrl && (
                       <button onClick={() => { void applyCompanionBackground(undefined); }} className="flex shrink-0 flex-col items-center gap-1 active:scale-95">
                         <span className="flex h-14 w-[4.5rem] items-center justify-center rounded-xl border border-rose-300/30 bg-rose-950/40 text-rose-200/80"><Trash size={15} weight="bold" /></span>
-                        <span className="text-[9px] text-rose-200/60">移除</span>
+                        <span className="text-[9px] text-rose-200/60">Remove</span>
                       </button>
                     )}
                   </div>
                   <div className="mt-4 border-t border-white/10 pt-3" data-testid="companion-frame-style-picker">
-                    <div className="text-[9px] tracking-[0.2em] text-white/40">舞台视觉语言</div>
+                    <div className="text-[9px] tracking-[0.2em] text-white/40">Stage Visual Style</div>
                     <div className="mt-2 divide-y divide-white/8 border-y border-white/8">
                       {COMPANION_FRAME_STYLES.map(style => {
                         const active = frameStyle === style.id;
@@ -3814,7 +3814,7 @@ const CompanionHome: React.FC = () => {
                               <span className="mt-0.5 block text-[8px] leading-relaxed text-white/38">{style.description}</span>
                             </span>
                             <span className="flex h-5 w-5 shrink-0 items-center justify-center border border-white/10 text-white/18" style={active ? { borderColor: `${uiTint}88`, color: uiTint, background: `${uiTint}12` } : undefined}>
-                              {active && <Check size={12} weight="bold" aria-label="当前框架" />}
+                              {active && <Check size={12} weight="bold" aria-label="Current frame" />}
                             </span>
                           </button>
                         );
@@ -3831,11 +3831,11 @@ const CompanionHome: React.FC = () => {
               onClick={() => setCompositionEditorCollapsed(false)}
               className="absolute right-0 z-[51] flex items-center gap-1 rounded-l-2xl border border-r-0 border-white/20 px-2 py-3 text-[9px] font-medium tracking-[0.08em] text-white/75 shadow-2xl backdrop-blur-xl transition active:translate-x-0.5"
               style={{ top: 'max(4.5rem, calc(var(--safe-top, 0px) + 3rem))', background: `linear-gradient(165deg, ${palette.panelTop}ee, ${palette.panelBottom}f8)`, boxShadow: `-12px 0 32px ${palette.shadow}a8` }}
-              aria-label="展开角色构图面板"
+              aria-label="Expand character composition panel"
               data-testid="companion-expand-composition"
             >
               <CaretLeft size={12} weight="bold" style={{ color: uiTint }} />
-              <span className="[writing-mode:vertical-rl]">展开构图</span>
+              <span className="[writing-mode:vertical-rl]">Expand composition</span>
             </button>
           )}
         </>

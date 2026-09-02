@@ -29,7 +29,7 @@ const DreamSimIndicator: React.FC = () => {
                     ? <MoonStars size={16} weight="fill" className="text-[#15121c]" />
                     : <span className="w-3.5 h-3.5 border-2 border-[#cdd6ff]/40 border-t-[#cdd6ff] rounded-full animate-spin" />}
                 <span className={`text-[12px] font-semibold ${ready ? 'text-[#15121c]' : 'text-white/85'}`}>
-                    {ready ? '梦已成形 · 进入' : `梦正在成形${sim.charName ? ' · ' + sim.charName : ''}`}
+                    {ready ? 'Dream ready · Enter' : `Dream forming${sim.charName ? ' · ' + sim.charName : ''}`}
                 </span>
                 {ready && <CaretRight size={13} weight="bold" className="text-[#15121c]/80" />}
             </button>

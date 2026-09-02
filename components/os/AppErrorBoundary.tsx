@@ -4,16 +4,16 @@ import { trackEvent } from '../../utils/analytics';
 import { INSTALLED_APPS, HIDDEN_APP_NAMES } from '../../constants';
 import { AppID } from '../../types';
 
-const ERROR_COPY_LABEL = '\u590d\u5236\u62a5\u9519\u4fe1\u606f';
-const ERROR_COPIED_LABEL = '\u5df2\u590d\u5236';
-const ERROR_MANUAL_COPY_LABEL = '\u8bf7\u624b\u52a8\u590d\u5236';
-const ERROR_PROMPT_LABEL = '\u8bf7\u624b\u52a8\u590d\u5236\u62a5\u9519\u4fe1\u606f';
-const ERROR_TITLE = '\u5e94\u7528\u8fd0\u884c\u9519\u8bef';
-const ERROR_RETURN_LABEL = '\u8fd4\u56de\u684c\u9762';
-const CHUNK_ERROR_TITLE = '\u8d44\u6e90\u52a0\u8f7d\u5931\u8d25';
-const CHUNK_ERROR_HINT = '\u5e94\u7528\u7ec4\u4ef6\u6ca1\u6709\u52a0\u8f7d\u6210\u529f\uff0c\u901a\u5e38\u662f\u7248\u672c\u521a\u66f4\u65b0\u6216\u7f51\u7edc\u77ac\u65ad\u5bfc\u81f4\u7684\uff0c\u5237\u65b0\u4e00\u6b21\u5373\u53ef\u6062\u590d\u3002';
-const CHUNK_ERROR_RELOADING = '\u6b63\u5728\u81ea\u52a8\u5237\u65b0\u6062\u590d\u2026';
-const CHUNK_ERROR_RELOAD_LABEL = '\u5237\u65b0\u91cd\u8bd5';
+const ERROR_COPY_LABEL = 'Copy error info';
+const ERROR_COPIED_LABEL = 'Copied';
+const ERROR_MANUAL_COPY_LABEL = 'Please copy manually';
+const ERROR_PROMPT_LABEL = 'Please manually copy the error info';
+const ERROR_TITLE = 'App Runtime Error';
+const ERROR_RETURN_LABEL = 'Back to Home';
+const CHUNK_ERROR_TITLE = 'Resource Load Failed';
+const CHUNK_ERROR_HINT = 'An app component failed to load. This is usually caused by a version update or a brief network interruption - refreshing once should fix it.';
+const CHUNK_ERROR_RELOADING = 'Automatically refreshing to recover...';
+const CHUNK_ERROR_RELOAD_LABEL = 'Refresh & Retry';
 
 type AppErrorBoundaryProps = {
     children: React.ReactNode;
@@ -63,18 +63,18 @@ class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundary
         console.error('App Crash:', error, errorInfo);
         // 使用统计: 只报「哪个 App 崩了 + 是哪一类崩」。报错文本留在 console, 不进上报。
         const appName = this.currentAppName();
-        trackEvent('触发 App 崩溃兜底页', {
-            错误类型: isChunkLoadError(error) ? '资源加载失败' : '运行错误',
-            ...(appName ? { 所在App: appName } : {}),
+        trackEvent('App Crash Fallback Page Shown', {
+            'Error Type': isChunkLoadError(error) ? 'Resource Load Failed' : 'Runtime Error',
+            ...(appName ? { App: appName } : {}),
         });
         // chunk 加载失败: Safari 会把失败缓存进模块表, 同一 URL 本页内重试必失败,
         // 只有整页 reload 能恢复 — 自动刷一次 (冷却期内返回 false, 留给手动按钮)。
         if (isChunkLoadError(error) && tryAutoReloadForChunkError()) {
-            trackEvent('自动刷新恢复资源加载失败', { 恢复方式: '已自动刷新' });
+            trackEvent('Auto-Refresh Recovered Resource Load Failure', { 'Recovery Method': 'Auto-refreshed' });
             this.setState({ autoReloading: true });
         } else if (isChunkLoadError(error)) {
             // 走到这里 = 是 chunk 错但没自动刷（冷却期内 / sessionStorage 不可用），页面还在。
-            trackEvent('自动刷新恢复资源加载失败', { 恢复方式: '冷却期内不刷' });
+            trackEvent('Auto-Refresh Recovered Resource Load Failure', { 'Recovery Method': 'Not refreshed (cooldown)' });
         }
     }
 
@@ -116,7 +116,7 @@ class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundary
                 await navigator.clipboard.writeText(errText);
                 this.updateCopyLabel(ERROR_COPIED_LABEL);
                 // 只报走了哪条复制路径, 报错文本本身一个字都不发。
-                trackEvent('复制报错信息', { 复制结果: '剪贴板成功' });
+                trackEvent('Copy Error Info', { 'Copy Result': 'Clipboard succeeded' });
                 return;
             }
         } catch {
@@ -138,7 +138,7 @@ class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundary
 
             if (copied) {
                 this.updateCopyLabel(ERROR_COPIED_LABEL);
-                trackEvent('复制报错信息', { 复制结果: 'execCommand 兜底成功' });
+                trackEvent('Copy Error Info', { 'Copy Result': 'execCommand fallback succeeded' });
                 return;
             }
         } catch {
@@ -147,12 +147,12 @@ class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundary
 
         window.prompt(ERROR_PROMPT_LABEL, errText);
         this.updateCopyLabel(ERROR_MANUAL_COPY_LABEL);
-        trackEvent('复制报错信息', { 复制结果: '需手动复制' });
+        trackEvent('Copy Error Info', { 'Copy Result': 'Manual copy required' });
     };
 
     private handleClose = () => {
-        trackEvent('从崩溃页返回桌面', {
-            错误类型: this.state.isChunkError ? '资源加载失败' : '运行错误',
+        trackEvent('Return to Home from Crash Page', {
+            'Error Type': this.state.isChunkError ? 'Resource Load Failed' : 'Runtime Error',
         });
         this.setState({
             hasError: false,
@@ -165,7 +165,7 @@ class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundary
     };
 
     private handleReload = () => {
-        trackEvent('点刷新重试（资源加载失败）');
+        trackEvent('Tap Refresh & Retry (Resource Load Failed)');
         window.location.reload();
     };
 
