@@ -92,7 +92,7 @@ export const INSTALLED_APPS: AppConfig[] = [
   { id: AppID.Date, name: 'Date', icon: 'Date', color: 'pink' },
   { id: AppID.User, name: 'Profile', icon: 'User', color: 'blue' },
   { id: AppID.Bank, name: 'Piggy Bank', icon: 'Bank', color: 'lime' }, // Hidden
-  { id: AppID.Journal, name: 'Diary Exchange', icon: 'Journal', color: 'amber' },
+  { id: AppID.Journal, name: 'Exchange Diary', icon: 'Journal', color: 'amber' },
   // { id: AppID.Handbook, name: 'Handbook', icon: 'Handbook', color: 'fuchsia' }, // Hidden temporarily, pending update
   { id: AppID.Social, name: 'Spark', icon: 'Social', color: 'red' },
   { id: AppID.Study, name: 'Study Room', icon: 'Study', color: 'emerald' },
