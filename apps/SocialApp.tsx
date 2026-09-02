@@ -188,7 +188,7 @@ const SocialApp: React.FC = () => {
     const [socialProfile, setSocialProfile] = useState<SocialAppProfile>({
         name: userProfile.name,
         avatar: userProfile.avatar,
-        bio: '这个人很懒，什么都没写。'
+        bio: "This person is lazy and hasn't written anything yet."
     });
     const [userSparkId, setUserSparkId] = useState('95279527');
     const [userBgImage, setUserBgImage] = useState('');
@@ -274,7 +274,7 @@ const SocialApp: React.FC = () => {
                 setSocialProfile({
                     name: userProfile.name,
                     avatar: userProfile.avatar,
-                    bio: userProfile.bio || '这个人很懒，什么都没写。'
+                    bio: userProfile.bio || "This person is lazy and hasn't written anything yet."
                 });
             }
         };
@@ -292,8 +292,8 @@ const SocialApp: React.FC = () => {
             if (!initialHandles[c.id] || initialHandles[c.id].length === 0) {
                 initialHandles[c.id] = [{ 
                     id: 'default', 
-                    handle: c.socialProfile?.handle || c.name, 
-                    note: '主账号' 
+                    handle: c.socialProfile?.handle || c.name,
+                    note: 'Main account'
                 }];
             }
         });
@@ -335,14 +335,14 @@ const SocialApp: React.FC = () => {
     const addSubAccount = (charId: string) => {
         const newAcct: SubAccount = {
             id: `sub-${Date.now()}`,
-            handle: '新马甲',
-            note: '身份备注'
+            handle: 'New Alt',
+            note: 'Identity note'
         };
         setCharacterHandles(prev => ({
             ...prev,
             [charId]: [...(prev[charId] || []), newAcct]
         }));
-        trackEvent('给角色添加一个马甲');
+        trackEvent('Add an Alt Account to Character');
     };
 
     const updateSubAccount = (charId: string, acctId: string, field: keyof SubAccount, value: string) => {
@@ -370,9 +370,9 @@ const SocialApp: React.FC = () => {
                 setUserBgImage(ref);
                 // Save to DB Assets
                 await DB.saveAsset('spark_user_bg', ref);
-                addToast('背景图已更新', 'success');
+                addToast('Background image updated', 'success');
             } catch (err) {
-                addToast('图片处理失败', 'error');
+                addToast('Image processing failed', 'error');
             }
         }
     };
@@ -386,7 +386,7 @@ const SocialApp: React.FC = () => {
                 const blob = await processImageToBlob(file);
                 const ref = await putImageBlob(blob);
                 setSocialProfile(prev => ({ ...prev, avatar: ref }));
-                trackEvent('更换 Spark 头像');
+                trackEvent('Change Spark Avatar');
             } catch (err: any) {
                 addToast(err.message, 'error');
             }
@@ -398,7 +398,7 @@ const SocialApp: React.FC = () => {
         // Save Profile to DB Assets（avatar 是 blobref 令牌，二进制在 IndexedDB）
         await DB.saveAsset('spark_social_profile', JSON.stringify(socialProfile));
         setIsEditingId(false);
-        addToast('主页资料已保存 (仅在 Spark 生效)', 'success');
+        addToast('Profile saved (Spark only)', 'success');
     };
 
     const prependPostsToFeed = (newPosts: SocialPost[]) => {
@@ -430,12 +430,12 @@ const SocialApp: React.FC = () => {
 
     // --- AI Logic (Updated for Multi-Handle) ---
     const handleRefresh = async () => {
-        if (!apiConfig.apiKey) { addToast('请配置 API Key', 'error'); return; }
+        if (!apiConfig.apiKey) { addToast('Please configure your API Key', 'error'); return; }
         if (refreshRequestRef.current) return;
         const controller = new AbortController();
         refreshRequestRef.current = controller;
         setIsRefreshing(true);
-        trackEvent('刷新 Spark 推荐流');
+        trackEvent('Refresh Spark Recommendations');
         try {
             const shuffledChars = [...characters].sort(() => 0.5 - Math.random());
             const selectedChars = shuffledChars.slice(0, Math.min(3, characters.length));
@@ -498,7 +498,7 @@ ${charContexts}
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.apiKey}` },
                 body: JSON.stringify({ model: apiConfig.model, messages: [{ role: "user", content: prompt }], temperature: 0.95, max_tokens: 8000 }),
                 signal: controller.signal,
-                __sullyMeta: { appId: 'social', appName: 'Spark', purpose: '刷新推荐流' },
+                __sullyMeta: { appId: 'social', appName: 'Spark', purpose: 'Refresh recommendations feed' },
             } as RequestInit);
             if (!response.ok) throw new Error(await apiErrorMessage(response));
             const data = await safeResponseJson(response);
@@ -536,7 +536,7 @@ ${charContexts}
                     id: `post-${Date.now()}-${Math.random()}`,
                     authorName: item.authorName || 'Unknown',
                     authorAvatar: avatar,
-                    title: item.title || '无标题',
+                    title: item.title || 'Untitled',
                     content: item.content || '...',
                     images,
                     likes: item.likes || 0,
@@ -551,9 +551,9 @@ ${charContexts}
                 };
             });
             prependPostsToFeed(newPosts);
-            addToast('首页已刷新: 冲浪模式开启', 'success');
+            addToast('Feed refreshed: surf mode on', 'success');
         } catch (e: any) {
-            if (e?.name !== 'AbortError') addToast('刷新失败: ' + e.message, 'error');
+            if (e?.name !== 'AbortError') addToast('Refresh failed: ' + e.message, 'error');
         } finally {
             if (refreshRequestRef.current === controller) {
                 refreshRequestRef.current = null;
@@ -636,7 +636,7 @@ ${contextPrompt}
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.apiKey}` },
                 body: JSON.stringify({ model: apiConfig.model, messages: [{ role: "user", content: prompt }], temperature: 0.8 }),
                 signal: controller.signal,
-                __sullyMeta: { appId: 'social', appName: 'Spark', purpose: '生成帖子评论' },
+                __sullyMeta: { appId: 'social', appName: 'Spark', purpose: 'Generate post comments' },
             } as RequestInit);
             if (!response.ok) throw new Error(await apiErrorMessage(response));
             const data = await safeResponseJson(response);
@@ -677,7 +677,7 @@ ${contextPrompt}
                 }));
             }
         } catch (e: any) {
-            if (e?.name !== 'AbortError') addToast(`评论加载失败: ${e?.message || e}`, 'error');
+            if (e?.name !== 'AbortError') addToast(`Failed to load comments: ${e?.message || e}`, 'error');
         } finally {
             if (commentRequestRef.current?.controller === controller) {
                 commentRequestRef.current = null;
@@ -737,7 +737,7 @@ ${identityMap}
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.apiKey}` },
                 body: JSON.stringify({ model: apiConfig.model, messages: [{ role: "user", content: prompt }], temperature: 0.9 }),
                 signal: controller.signal,
-                __sullyMeta: { appId: 'social', appName: 'Spark', purpose: '回复用户评论' },
+                __sullyMeta: { appId: 'social', appName: 'Spark', purpose: 'Reply to user comment' },
             } as RequestInit);
             if (!response.ok) throw new Error(await apiErrorMessage(response));
             const data = await safeResponseJson(response);
@@ -763,7 +763,7 @@ ${identityMap}
                             id: `cmt-reply-${Date.now()}-${Math.random()}`,
                             authorName: authorName,
                             authorAvatar: avatar,
-                            content: `回复 @${socialProfile.name}: ${c.content}`,
+                            content: `Reply to @${socialProfile.name}: ${c.content}`,
                             likes: Math.floor(Math.random() * 10),
                             isCharacter: !!char,
                             authorType: char ? 'character' : 'stranger',
@@ -775,11 +775,11 @@ ${identityMap}
                         ...current,
                         comments: mergeSocialComments(current.comments || [], newReplies),
                     }));
-                    addToast(`收到 ${newReplies.length} 条新回复`, 'info');
+                    addToast(`Got ${newReplies.length} new replies`, 'info');
                 }
             }
         } catch (e: any) {
-            if (e?.name !== 'AbortError') addToast(`回复生成失败: ${e?.message || e}`, 'error');
+            if (e?.name !== 'AbortError') addToast(`Failed to generate replies: ${e?.message || e}`, 'error');
         } finally {
             if (replyRequestRef.current?.controller === controller) {
                 replyRequestRef.current = null;
@@ -791,11 +791,11 @@ ${identityMap}
     const handleShare = async (targetId: string, isGroup: boolean) => {
         if (!selectedPost) return;
         try {
-            await DB.saveMessage({ charId: isGroup ? 'user' : targetId, groupId: isGroup ? targetId : undefined, role: 'user', type: 'social_card', content: '[分享帖子]', metadata: { post: selectedPost } });
+            await DB.saveMessage({ charId: isGroup ? 'user' : targetId, groupId: isGroup ? targetId : undefined, role: 'user', type: 'social_card', content: '[Shared Post]', metadata: { post: selectedPost } });
             setShowShareModal(false);
-            addToast('分享成功', 'success');
-            trackEvent('分享帖子到聊天');
-        } catch (e) { addToast('分享失败', 'error'); }
+            addToast('Shared successfully', 'success');
+            trackEvent('Share Post to Chat');
+        } catch (e) { addToast('Share failed', 'error'); }
     };
 
     const handleCreatePost = () => {
@@ -804,7 +804,7 @@ ${identityMap}
             id: `user-post-${Date.now()}`,
             authorName: socialProfile.name, // Use Local Identity
             authorAvatar: socialProfile.avatar, // Use Local Identity
-            title: newPostTitle || '无标题',
+            title: newPostTitle || 'Untitled',
             content: newPostContent,
             // Sticker selector stores twemoji codepoints (eg "2728"); convert to the real emoji char
             // so that the feed/detail views render an emoji instead of the raw codepoint text.
@@ -821,11 +821,11 @@ ${identityMap}
         prependPostsToFeed([post]);
         setNewPostContent(''); setNewPostTitle(''); 
         setIsCreateOpen(false); // Close Modal
-        setActiveTab('home'); 
-        addToast('发布成功', 'success');
+        setActiveTab('home');
+        addToast('Posted successfully', 'success');
     };
 
-    const handleDeletePost = (postId: string) => { removePostFromFeed(postId); addToast('帖子已删除', 'success'); trackEvent('删除一条帖子'); };
+    const handleDeletePost = (postId: string) => { removePostFromFeed(postId); addToast('Post deleted', 'success'); trackEvent('Delete a Post'); };
     const handleLike = (e: any, post: SocialPost) => {
         e.stopPropagation();
         updatePostInFeed(post.id, current => ({
@@ -833,7 +833,7 @@ ${identityMap}
             isLiked: !current.isLiked,
             likes: current.isLiked ? current.likes - 1 : current.likes + 1,
         }));
-        trackEvent('点赞一条帖子', { action: post.isLiked ? 'unlike' : 'like' });
+        trackEvent('Like a Post', { action: post.isLiked ? 'unlike' : 'like' });
     };
     
     const handleSendComment = async () => { 
@@ -887,8 +887,8 @@ ${identityMap}
         setSelectedPost(null);
         DB.clearSocialPosts();
         setShowSettings(false);
-        addToast('推荐流已清空', 'success');
-        trackEvent('清空 Spark 推荐流');
+        addToast('Feed cleared', 'success');
+        trackEvent('Clear Spark Feed');
     };
 
     // --- Renderers ---
@@ -945,7 +945,7 @@ ${identityMap}
                             <TokenImg value={selectedPost.authorAvatar} className="w-8 h-8 rounded-full object-cover border border-white/50" />
                             <span className="text-sm font-bold text-slate-800">{selectedPost.authorName}</span>
                         </div>
-                        <button onClick={() => { setShowShareModal(true); trackEvent('打开分享帖子面板'); }} className="p-2 -m-2 active:opacity-60"><Icons.Share onClick={() => setShowShareModal(true)} className="w-6 h-6 text-slate-800 cursor-pointer hover:text-[#ff2442]" /></button>
+                        <button onClick={() => { setShowShareModal(true); trackEvent('Open Share Post Panel'); }} className="p-2 -m-2 active:opacity-60"><Icons.Share onClick={() => setShowShareModal(true)} className="w-6 h-6 text-slate-800 cursor-pointer hover:text-[#ff2442]" /></button>
                     </div>
 
                     {/* Scrollable Area */}
@@ -970,12 +970,12 @@ ${identityMap}
                         {/* Comments Section */}
                         <div className="px-6 pb-6">
                             <div className="text-sm font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <span>共 {selectedPost.comments.length} 条评论</span>
+                                <span>{selectedPost.comments.length} comments</span>
                                 {(loadingComments || isReplyingToUser) && <div className="w-3 h-3 border-2 border-slate-300 border-t-[#ff2442] rounded-full animate-spin"></div>}
                             </div>
                             
                             <div className="space-y-6">
-                                {selectedPost.comments.length === 0 && !loadingComments && <div className="text-center text-slate-300 text-xs py-10">快来抢沙发...</div>}
+                                {selectedPost.comments.length === 0 && !loadingComments && <div className="text-center text-slate-300 text-xs py-10">Be the first to comment...</div>}
                                 {selectedPost.comments.map(c => (
                                     <div key={c.id} className="flex gap-3 animate-fade-in group">
                                         <TokenImg value={c.authorAvatar} className="w-9 h-9 rounded-full object-cover shrink-0 border border-slate-100" />
@@ -1005,10 +1005,10 @@ ${identityMap}
                                     onChange={(e) => setCommentInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSendComment()}
                                     disabled={loadingComments || isReplyingToUser}
-                                    placeholder="说点什么..."
+                                    placeholder="Say something..."
                                     className="bg-transparent text-sm w-full outline-none text-slate-800 placeholder:text-slate-400 disabled:opacity-50"
                                 />
-                                {commentInput.trim() && <button disabled={loadingComments || isReplyingToUser} onClick={handleSendComment} className="text-[#ff2442] font-bold text-sm animate-fade-in disabled:opacity-40">发送</button>}
+                                {commentInput.trim() && <button disabled={loadingComments || isReplyingToUser} onClick={handleSendComment} className="text-[#ff2442] font-bold text-sm animate-fade-in disabled:opacity-40">Send</button>}
                             </div>
                             <div className="flex gap-5 text-slate-600 shrink-0 items-center">
                                 <div className="flex flex-col items-center gap-0.5">
@@ -1016,8 +1016,8 @@ ${identityMap}
                                     <span className="text-[10px] font-medium">{selectedPost.likes}</span>
                                 </div>
                                 <div className="flex flex-col items-center gap-0.5">
-                                    <Icons.Star filled={selectedPost.isCollected} onClick={() => { updatePostInFeed(selectedPost.id, current => ({ ...current, isCollected: !current.isCollected })); trackEvent('收藏一条帖子', { action: selectedPost.isCollected ? 'uncollect' : 'collect' }); }} className="w-6 h-6" />
-                                    <span className="text-[10px] font-medium">{selectedPost.isCollected ? '已收藏' : '收藏'}</span>
+                                    <Icons.Star filled={selectedPost.isCollected} onClick={() => { updatePostInFeed(selectedPost.id, current => ({ ...current, isCollected: !current.isCollected })); trackEvent('Save a Post', { action: selectedPost.isCollected ? 'uncollect' : 'collect' }); }} className="w-6 h-6" />
+                                    <span className="text-[10px] font-medium">{selectedPost.isCollected ? 'Saved' : 'Save'}</span>
                                 </div>
                             </div>
                         </div>
@@ -1032,11 +1032,11 @@ ${identityMap}
         <div className="h-full w-full bg-gradient-to-br from-rose-50 via-slate-50 to-teal-50 flex flex-col font-sans relative text-slate-900 overflow-hidden">
             
             {/* --- Modals (Settings, Share) --- */}
-            <Modal isOpen={showSettings} title="身份管理" onClose={() => setShowSettings(false)}>
+            <Modal isOpen={showSettings} title="Identity Management" onClose={() => setShowSettings(false)}>
                 <div className="space-y-6">
                     <div className="max-h-[50vh] overflow-y-auto no-scrollbar space-y-6 px-1">
                         <p className="text-xs text-slate-400 bg-slate-50 p-2 rounded-lg">
-                            为角色添加“马甲”(Sub-Accounts)。AI 发帖时会根据内容选择合适的身份。
+                            Add "Alt Accounts" (Sub-Accounts) for characters. The AI will pick a suitable identity based on the post content when posting.
                         </p>
                         {/* 分组筛选（没建分组时不渲染） */}
                         <CharacterGroupFilterBar characters={characters} groups={characterGroups} value={identityGroupId} onChange={setIdentityGroupId} className="!mt-3 -mx-1 px-1" />
@@ -1045,7 +1045,7 @@ ${identityMap}
                                 <div className="flex items-center gap-2">
                                     <TokenImg value={c.avatar} className="w-6 h-6 rounded-full object-cover" />
                                     <span className="text-sm font-bold text-slate-700">{c.name}</span>
-                                    <button onClick={() => addSubAccount(c.id)} className="ml-auto text-[10px] bg-[#ff2442] text-white px-2 py-1 rounded-full shadow-sm active:scale-95 transition-transform">+ 添加马甲</button>
+                                    <button onClick={() => addSubAccount(c.id)} className="ml-auto text-[10px] bg-[#ff2442] text-white px-2 py-1 rounded-full shadow-sm active:scale-95 transition-transform">+ Add Alt</button>
                                 </div>
                                 
                                 <div className="space-y-2 pl-4 border-l-2 border-slate-100">
@@ -1053,7 +1053,7 @@ ${identityMap}
                                         <div key={acct.id} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm space-y-2 relative group">
                                             <div className="flex gap-2">
                                                 <div className="flex-1">
-                                                    <label className="text-[9px] text-slate-400 uppercase font-bold">网名 (Handle)</label>
+                                                    <label className="text-[9px] text-slate-400 uppercase font-bold">Handle</label>
                                                     <input 
                                                         value={acct.handle} 
                                                         onChange={(e) => updateSubAccount(c.id, acct.id, 'handle', e.target.value)} 
@@ -1063,37 +1063,37 @@ ${identityMap}
                                                 <button 
                                                     onClick={() => deleteSubAccount(c.id, acct.id)}
                                                     className="text-slate-300 hover:text-red-400 p-1"
-                                                    title="删除"
+                                                    title="Delete"
                                                 >
                                                     ×
                                                 </button>
                                             </div>
                                             <div>
-                                                <label className="text-[9px] text-slate-400 uppercase font-bold">备注 (Context Note)</label>
-                                                <input 
-                                                    value={acct.note} 
-                                                    onChange={(e) => updateSubAccount(c.id, acct.id, 'note', e.target.value)} 
-                                                    placeholder="例如: 吐槽号 / 认真模式"
+                                                <label className="text-[9px] text-slate-400 uppercase font-bold">Note (Context)</label>
+                                                <input
+                                                    value={acct.note}
+                                                    onChange={(e) => updateSubAccount(c.id, acct.id, 'note', e.target.value)}
+                                                    placeholder="e.g. Rant account / Serious mode"
                                                     className="w-full text-xs text-slate-500 bg-slate-50 rounded px-2 py-1 focus:bg-white transition-colors outline-none" 
                                                 />
                                             </div>
                                         </div>
                                     ))}
                                     {(characterHandles[c.id]?.length || 0) === 0 && (
-                                        <div className="text-[10px] text-red-400 italic flex items-center gap-1"><Warning size={12} weight="bold" /> 请至少保留一个身份</div>
+                                        <div className="text-[10px] text-red-400 italic flex items-center gap-1"><Warning size={12} weight="bold" /> Please keep at least one identity</div>
                                     )}
                                 </div>
                             </div>
                         ))}
                     </div>
                     <div className="flex gap-3 pt-2">
-                        <button onClick={handleClearFeed} className="flex-1 py-3 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl text-xs active:bg-slate-50">清空推荐流</button>
-                        <button onClick={() => setShowSettings(false)} className="flex-1 py-3 bg-[#ff2442] text-white font-bold rounded-xl text-xs shadow-lg shadow-red-200 active:scale-95 transition-transform">完成</button>
+                        <button onClick={handleClearFeed} className="flex-1 py-3 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl text-xs active:bg-slate-50">Clear Feed</button>
+                        <button onClick={() => setShowSettings(false)} className="flex-1 py-3 bg-[#ff2442] text-white font-bold rounded-xl text-xs shadow-lg shadow-red-200 active:scale-95 transition-transform">Done</button>
                     </div>
                 </div>
             </Modal>
 
-            <Modal isOpen={showShareModal} title="分享帖子" onClose={() => setShowShareModal(false)}>
+            <Modal isOpen={showShareModal} title="Share Post" onClose={() => setShowShareModal(false)}>
                 {/* 分组筛选（没建分组时不渲染） */}
                 <CharacterGroupFilterBar characters={characters} groups={characterGroups} value={shareGroupId} onChange={setShareGroupId} className="mb-1 px-2" />
                 <div className="grid grid-cols-4 gap-4 p-2">
@@ -1112,14 +1112,14 @@ ${identityMap}
                     {/* Create Header —— 自理安全区：外层扛 safe-top + 背景，内层保持 h-14 内容栏（同主栏，避开 border-box 吃 padding） */}
                     <div className="sticky top-0 z-20 bg-white border-b border-slate-50" style={{ paddingTop: 'var(--safe-top)' }}>
                         <div className="h-14 flex items-center justify-between px-4">
-                            <button onClick={() => setIsCreateOpen(false)} className="text-slate-600 text-sm font-bold px-2 py-1">取消</button>
-                            <span className="text-sm font-bold text-slate-800">发布笔记</span>
+                            <button onClick={() => setIsCreateOpen(false)} className="text-slate-600 text-sm font-bold px-2 py-1">Cancel</button>
+                            <span className="text-sm font-bold text-slate-800">New Post</span>
                             <button
                                 onClick={handleCreatePost}
                                 disabled={!newPostContent.trim()}
                                 className={`px-4 py-1.5 rounded-full text-xs font-bold text-white transition-all ${newPostContent.trim() ? 'bg-[#ff2442] shadow-md shadow-red-200' : 'bg-slate-200 text-slate-400'}`}
                             >
-                                发布
+                                Post
                             </button>
                         </div>
                     </div>
@@ -1129,19 +1129,19 @@ ${identityMap}
                         <input 
                             value={newPostTitle} 
                             onChange={e => setNewPostTitle(e.target.value)} 
-                            placeholder="填写标题会有更多赞哦~" 
-                            className="text-xl font-black placeholder:text-slate-300 outline-none mb-4 w-full" 
+                            placeholder="Add a title for more likes~"
+                            className="text-xl font-black placeholder:text-slate-300 outline-none mb-4 w-full"
                         />
-                        <textarea 
-                            value={newPostContent} 
-                            onChange={e => setNewPostContent(e.target.value)} 
-                            placeholder="分享你此刻的想法..." 
+                        <textarea
+                            value={newPostContent}
+                            onChange={e => setNewPostContent(e.target.value)}
+                            placeholder="Share what's on your mind..."
                             className="w-full h-auto min-h-[200px] resize-none outline-none text-base leading-relaxed placeholder:text-slate-300 font-medium" 
                         />
                         
                         {/* Sticker Selector - Flowing after text */}
                         <div className="mt-4 pt-4 border-t border-slate-50">
-                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">添加心情贴纸 (Sticker)</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Add a Mood Sticker</p>
                             <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
                                 {STICKER_OPTIONS.map(sticker => (
                                     <button
@@ -1168,10 +1168,10 @@ ${identityMap}
                     <div className="h-11 flex items-center justify-between px-4">
                         <button onClick={closeApp} className="p-1"><Icons.Back onClick={closeApp} /></button>
                         <div className="flex gap-6 text-base font-bold text-slate-300">
-                            <button className={`${activeTab === 'home' ? 'text-slate-800 scale-110 border-b-2 border-[#ff2442] pb-1' : 'hover:text-slate-500'} transition-all`} onClick={() => { setActiveTab('home'); trackEvent('切换 Spark 主标签', { tab: 'home' }); }}>发现</button>
-                            <button className={`${activeTab === 'me' ? 'text-slate-800 scale-110 border-b-2 border-[#ff2442] pb-1' : 'hover:text-slate-500'} transition-all`} onClick={() => { setActiveTab('me'); trackEvent('切换 Spark 主标签', { tab: 'me' }); }}>我的</button>
+                            <button className={`${activeTab === 'home' ? 'text-slate-800 scale-110 border-b-2 border-[#ff2442] pb-1' : 'hover:text-slate-500'} transition-all`} onClick={() => { setActiveTab('home'); trackEvent('Switch Spark Main Tab', { tab: 'home' }); }}>Discover</button>
+                            <button className={`${activeTab === 'me' ? 'text-slate-800 scale-110 border-b-2 border-[#ff2442] pb-1' : 'hover:text-slate-500'} transition-all`} onClick={() => { setActiveTab('me'); trackEvent('Switch Spark Main Tab', { tab: 'me' }); }}>Me</button>
                         </div>
-                        <button onClick={() => { setShowSettings(true); trackEvent('打开身份管理面板'); }} className="text-slate-800 font-bold text-sm">管理</button>
+                        <button onClick={() => { setShowSettings(true); trackEvent('Open Identity Management Panel'); }} className="text-slate-800 font-bold text-sm">Manage</button>
                     </div>
                 </div>
 
@@ -1184,11 +1184,11 @@ ${identityMap}
                             <div className="flex items-center justify-center py-3">
                                 {isRefreshing ? (
                                     <div className="text-center text-xs text-[#ff2442] font-bold animate-pulse flex items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-[#ff2442] border-t-transparent rounded-full animate-spin"></div> 正在获取新鲜事...
+                                        <div className="w-4 h-4 border-2 border-[#ff2442] border-t-transparent rounded-full animate-spin"></div> Fetching fresh content...
                                     </div>
                                 ) : (
                                     <button onClick={handleRefresh} className="px-6 py-2 bg-white/80 backdrop-blur-md rounded-full text-xs font-bold text-slate-500 shadow-sm border border-white hover:text-[#ff2442] active:scale-95 transition-all">
-                                        点击刷新推荐流
+                                        Tap to refresh feed
                                     </button>
                                 )}
                             </div>
@@ -1209,7 +1209,7 @@ ${identityMap}
                                         <TokenImg value={userProfile.avatar} className="w-full h-full object-cover blur-2xl opacity-60 scale-125" />
                                     )}
                                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <span className="text-white text-xs font-bold bg-black/30 px-3 py-1 rounded-full backdrop-blur-md">更换背景</span>
+                                        <span className="text-white text-xs font-bold bg-black/30 px-3 py-1 rounded-full backdrop-blur-md">Change Background</span>
                                     </div>
                                     <input type="file" ref={userBgInputRef} className="hidden" accept="image/*" onChange={handleUserBgUpload} />
                                 </div>
@@ -1219,14 +1219,14 @@ ${identityMap}
                                     <div className="w-24 h-24 rounded-full p-1 bg-white/90 backdrop-blur-md shadow-lg relative group cursor-pointer" onClick={() => socialAvatarInputRef.current?.click()}>
                                         <TokenImg value={socialProfile.avatar} className="w-full h-full rounded-full object-cover" />
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-full">
-                                            <span className="text-white text-[10px] font-bold">更换</span>
+                                            <span className="text-white text-[10px] font-bold">Change</span>
                                         </div>
                                         <input type="file" ref={socialAvatarInputRef} className="hidden" accept="image/*" onChange={handleSocialAvatarUpload} />
                                     </div>
 
                                     <div className="flex gap-2 mb-2">
                                         <button onClick={() => { setIsEditingId(!isEditingId); if(isEditingId) saveUserProfileChanges(); }} className="px-4 py-1.5 rounded-full border border-slate-200/60 bg-white/50 backdrop-blur-sm text-xs font-bold text-slate-600 hover:bg-white transition-colors">
-                                            {isEditingId ? '保存资料' : '编辑资料'}
+                                            {isEditingId ? 'Save Profile' : 'Edit Profile'}
                                         </button>
                                         <button className="p-1.5 rounded-full border border-slate-200/60 bg-white/50 backdrop-blur-sm text-slate-600 hover:bg-white transition-colors"><Icons.Share className="w-4 h-4" /></button>
                                     </div>
@@ -1259,27 +1259,27 @@ ${identityMap}
                                 
                                 {isEditingId ? (
                                     <textarea 
-                                        value={socialProfile.bio} 
+                                        value={socialProfile.bio}
                                         onChange={e => setSocialProfile({...socialProfile, bio: e.target.value})}
                                         className="w-full mt-3 text-sm text-slate-600 bg-slate-50 p-2 rounded-lg outline-none resize-none border border-slate-200 focus:border-primary/50"
                                         rows={3}
-                                        placeholder="填写你的个人简介..."
+                                        placeholder="Write your bio..."
                                     />
                                 ) : (
                                     <p className="text-sm text-slate-600 mt-3 leading-relaxed font-light">{socialProfile.bio}</p>
                                 )}
 
                                 <div className="flex gap-6 mt-5 bg-white/40 p-4 rounded-2xl border border-white/50 shadow-sm">
-                                    <div className="text-center"><span className="block font-bold text-slate-800">142</span><span className="text-[10px] text-slate-400">关注</span></div>
-                                    <div className="text-center"><span className="block font-bold text-slate-800">12.5k</span><span className="text-[10px] text-slate-400">粉丝</span></div>
-                                    <div className="text-center"><span className="block font-bold text-slate-800">8902</span><span className="text-[10px] text-slate-400">获赞与收藏</span></div>
+                                    <div className="text-center"><span className="block font-bold text-slate-800">142</span><span className="text-[10px] text-slate-400">Following</span></div>
+                                    <div className="text-center"><span className="block font-bold text-slate-800">12.5k</span><span className="text-[10px] text-slate-400">Followers</span></div>
+                                    <div className="text-center"><span className="block font-bold text-slate-800">8902</span><span className="text-[10px] text-slate-400">Likes &amp; Saves</span></div>
                                 </div>
                             </div>
 
                             {/* Sticky Tabs */}
                             <div className="sticky top-0 bg-white/90 backdrop-blur-md z-10 border-b border-slate-100 flex">
-                                <button onClick={() => { setProfileTab('notes'); trackEvent('切换个人主页子标签', { tab: 'notes' }); }} className={`flex-1 py-3 text-sm font-bold transition-colors ${profileTab === 'notes' ? 'text-slate-900 border-b-2 border-[#ff2442]' : 'text-slate-400'}`}>笔记</button>
-                                <button onClick={() => { setProfileTab('collects'); trackEvent('切换个人主页子标签', { tab: 'collects' }); }} className={`flex-1 py-3 text-sm font-bold transition-colors ${profileTab === 'collects' ? 'text-slate-900 border-b-2 border-[#ff2442]' : 'text-slate-400'}`}>收藏</button>
+                                <button onClick={() => { setProfileTab('notes'); trackEvent('Switch Profile Sub-tab', { tab: 'notes' }); }} className={`flex-1 py-3 text-sm font-bold transition-colors ${profileTab === 'notes' ? 'text-slate-900 border-b-2 border-[#ff2442]' : 'text-slate-400'}`}>Notes</button>
+                                <button onClick={() => { setProfileTab('collects'); trackEvent('Switch Profile Sub-tab', { tab: 'collects' }); }} className={`flex-1 py-3 text-sm font-bold transition-colors ${profileTab === 'collects' ? 'text-slate-900 border-b-2 border-[#ff2442]' : 'text-slate-400'}`}>Saved</button>
                             </div>
 
                             <div className="p-2 min-h-[300px] bg-slate-50/50 pb-24">
@@ -1300,7 +1300,7 @@ ${identityMap}
                                 {feed.filter(p => profileTab === 'notes' ? (p.authorType === 'user' || (!p.authorType && p.authorName === socialProfile.name)) : p.isCollected).length === 0 && (
                                     <div className="flex flex-col items-center justify-center py-20 text-slate-300 gap-2">
                                         <Package size={48} className="text-slate-300 opacity-30" />
-                                        <span className="text-xs">空空如也</span>
+                                        <span className="text-xs">Nothing here yet</span>
                                     </div>
                                 )}
                             </div>
@@ -1310,11 +1310,11 @@ ${identityMap}
 
                 {/* Bottom Navigation - Floating Glass Island (Only shown when not creating) */}
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] h-16 bg-white/80 backdrop-blur-2xl rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/50 flex items-center justify-around z-40">
-                    <button onClick={() => { setActiveTab('home'); trackEvent('切换 Spark 主标签', { tab: 'home' }); }} className={`text-sm font-medium flex flex-col items-center justify-center gap-0.5 transition-all w-12 h-12 rounded-full ${activeTab === 'home' ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                    <button onClick={() => { setActiveTab('home'); trackEvent('Switch Spark Main Tab', { tab: 'home' }); }} className={`text-sm font-medium flex flex-col items-center justify-center gap-0.5 transition-all w-12 h-12 rounded-full ${activeTab === 'home' ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                         <House size={24} weight={activeTab === 'home' ? 'fill' : 'regular'} />
                     </button>
-                    <button onClick={() => { setIsCreateOpen(true); trackEvent('打开发布笔记面板'); }} className="w-12 h-12 bg-[#ff2442] text-white rounded-full flex items-center justify-center shadow-lg shadow-red-200 active:scale-95 transition-transform text-2xl font-light -mt-6 border-4 border-white/50">+</button>
-                    <button onClick={() => { setActiveTab('me'); trackEvent('切换 Spark 主标签', { tab: 'me' }); }} className={`text-sm font-medium flex flex-col items-center justify-center gap-0.5 transition-all w-12 h-12 rounded-full ${activeTab === 'me' ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                    <button onClick={() => { setIsCreateOpen(true); trackEvent('Open New Post Panel'); }} className="w-12 h-12 bg-[#ff2442] text-white rounded-full flex items-center justify-center shadow-lg shadow-red-200 active:scale-95 transition-transform text-2xl font-light -mt-6 border-4 border-white/50">+</button>
+                    <button onClick={() => { setActiveTab('me'); trackEvent('Switch Spark Main Tab', { tab: 'me' }); }} className={`text-sm font-medium flex flex-col items-center justify-center gap-0.5 transition-all w-12 h-12 rounded-full ${activeTab === 'me' ? 'text-slate-900 bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                         <User size={24} />
                     </button>
                 </div>
