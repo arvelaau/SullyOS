@@ -35,11 +35,11 @@ const XhsStockApp: React.FC = () => {
 
     const handleAdd = async () => {
         const url = newUrl.trim();
-        if (!url) { addToast('请填写图片URL', 'error'); return; }
-        if (!/^https?:\/\//i.test(url)) { addToast('URL必须以 http(s):// 开头', 'error'); return; }
+        if (!url) { addToast('Please enter an image URL', 'error'); return; }
+        if (!/^https?:\/\//i.test(url)) { addToast('URL must start with http(s)://', 'error'); return; }
 
         const tags = newTags.split(/[,，\s#]+/).map(t => t.trim()).filter(Boolean);
-        if (tags.length === 0) { addToast('至少填一个标签', 'error'); return; }
+        if (tags.length === 0) { addToast('Please enter at least one tag', 'error'); return; }
 
         const img: XhsStockImage = {
             id: `xhs_stock_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -55,19 +55,19 @@ const XhsStockApp: React.FC = () => {
         setPreviewOk(null);
         setView('list');
         await loadImages();
-        addToast('图片已入库', 'success');
+        addToast('Image added to library', 'success');
     };
 
     const handleDelete = (img: XhsStockImage) => {
         setConfirmDialog({
             isOpen: true,
-            title: '删除图片',
-            message: `确定删除这张图片吗？\n标签: ${img.tags.join(', ')}`,
+            title: 'Delete Image',
+            message: `Are you sure you want to delete this image?\nTags: ${img.tags.join(', ')}`,
             variant: 'danger',
             onConfirm: async () => {
                 await DB.deleteXhsStockImage(img.id);
                 await loadImages();
-                addToast('已删除', 'success');
+                addToast('Deleted', 'success');
                 setConfirmDialog(null);
             }
         });
@@ -77,7 +77,7 @@ const XhsStockApp: React.FC = () => {
         <div className="p-5 space-y-5 animate-fade-in">
             {/* URL Input */}
             <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">图片URL</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Image URL</label>
                 <input
                     type="url"
                     value={newUrl}
@@ -100,7 +100,7 @@ const XhsStockApp: React.FC = () => {
                     />
                     {previewOk === false && (
                         <div className="absolute inset-0 flex items-center justify-center bg-red-50/90">
-                            <span className="text-sm text-red-500 font-medium">图片加载失败，请检查URL</span>
+                            <span className="text-sm text-red-500 font-medium">Image failed to load, please check the URL</span>
                         </div>
                     )}
                 </div>
@@ -108,12 +108,12 @@ const XhsStockApp: React.FC = () => {
 
             {/* Tags Input */}
             <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">标签 (空格/逗号分隔)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Tags (space/comma separated)</label>
                 <input
                     type="text"
                     value={newTags}
                     onChange={e => setNewTags(e.target.value)}
-                    placeholder="美食 咖啡 下午茶 或 #穿搭 #日常"
+                    placeholder="food coffee afternoon-tea or #outfit #daily"
                     className="w-full px-4 py-3 rounded-2xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder:text-slate-300"
                 />
                 {newTags && (
@@ -131,7 +131,7 @@ const XhsStockApp: React.FC = () => {
                 disabled={!newUrl || previewOk === false}
                 className="w-full py-3.5 bg-gradient-to-r from-red-400 to-rose-500 text-white font-bold rounded-2xl shadow-lg active:scale-[0.98] transition-transform disabled:opacity-40 disabled:pointer-events-none text-sm"
             >
-                添加到图库
+                Add to Library
             </button>
         </div>
     );
@@ -145,7 +145,7 @@ const XhsStockApp: React.FC = () => {
                         onClick={() => setFilterTag(null)}
                         className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${!filterTag ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-500'}`}
                     >
-                        全部 ({images.length})
+                        All ({images.length})
                     </button>
                     {allTags.map(tag => {
                         const count = images.filter(img => img.tags.includes(tag)).length;
@@ -155,7 +155,7 @@ const XhsStockApp: React.FC = () => {
                                 onClick={() => {
                                     const nextTag = filterTag === tag ? null : tag;
                                     setFilterTag(nextTag);
-                                    if (nextTag) trackEvent('按标签筛选图库');
+                                    if (nextTag) trackEvent('Filter Library by Tag');
                                 }}
                                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filterTag === tag ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-500'}`}
                             >
@@ -172,8 +172,8 @@ const XhsStockApp: React.FC = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-14 h-14 opacity-40">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                     </svg>
-                    <span className="text-sm">还没有囤图</span>
-                    <span className="text-xs text-slate-300">点右上角 + 添加图片</span>
+                    <span className="text-sm">No images stocked yet</span>
+                    <span className="text-xs text-slate-300">Tap the + in the top-right to add an image</span>
                 </div>
             ) : (
                 <div className="grid grid-cols-3 gap-1 p-1">
@@ -226,7 +226,7 @@ const XhsStockApp: React.FC = () => {
                 title={confirmDialog?.title || ''}
                 message={confirmDialog?.message || ''}
                 variant={confirmDialog?.variant}
-                confirmText="确认"
+                confirmText="Confirm"
                 onConfirm={confirmDialog?.onConfirm || (() => setConfirmDialog(null))}
                 onCancel={() => setConfirmDialog(null)}
             />
@@ -240,13 +240,13 @@ const XhsStockApp: React.FC = () => {
                         </svg>
                     </button>
                     <h1 className="text-lg font-semibold text-slate-800 ml-2 tracking-tight">
-                        {view === 'add' ? '添加图片' : '小红书图库'}
+                        {view === 'add' ? 'Add Image' : 'Xiaohongshu Gallery'}
                     </h1>
                     <span className="text-xs text-slate-400 ml-2 font-mono">{images.length}</span>
                     <div className="flex-1" />
                     {view === 'list' && (
                         <button
-                            onClick={() => { setView('add'); trackEvent('打开囤图添加表单'); }}
+                            onClick={() => { setView('add'); trackEvent('Open Add Image Form'); }}
                             className="w-9 h-9 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md active:scale-90 transition-transform"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">

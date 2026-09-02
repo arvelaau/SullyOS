@@ -22,10 +22,10 @@ const PREVIEW_SAMPLES: { code: string; label: string; boost: string; text: strin
 ];
 const PREVIEW_TEXT = PREVIEW_SAMPLES[0].text;
 const SOUND_EFFECTS_OPTIONS = [
-  { value: '', label: '无音效' },
-  { value: 'spacious_echo', label: '空旷回声' },
-  { value: 'auditorium_echo', label: '礼堂回声' },
-  { value: 'lofi_telephone', label: 'LoFi 电话' },
+  { value: '', label: 'No Effect' },
+  { value: 'spacious_echo', label: 'Spacious Echo' },
+  { value: 'auditorium_echo', label: 'Auditorium Echo' },
+  { value: 'lofi_telephone', label: 'LoFi Telephone' },
 ];
 
 interface TimberWeight {
@@ -38,7 +38,7 @@ interface TimberWeight {
 const convertHexAudioToBlob = (hexAudio: string, mimeType = 'audio/mpeg'): Blob => {
   const cleanHex = hexAudio.trim().replace(/^0x/i, '');
   if (!cleanHex || cleanHex.length % 2 !== 0 || /[^\da-f]/i.test(cleanHex)) {
-    throw new Error('MiniMax 返回的 HEX 音频数据格式异常');
+    throw new Error('MiniMax returned malformed HEX audio data');
   }
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < cleanHex.length; i += 2) {
@@ -49,9 +49,9 @@ const convertHexAudioToBlob = (hexAudio: string, mimeType = 'audio/mpeg'): Blob 
 
 const fetchRemoteAudioBlob = async (sourceUrl: string): Promise<Blob> => {
   const response = await fetch(sourceUrl, { cache: 'no-store' });
-  if (!response.ok) throw new Error(`音频下载失败（HTTP ${response.status}）`);
+  if (!response.ok) throw new Error(`Audio download failed (HTTP ${response.status})`);
   const blob = await response.blob();
-  if (!blob.size) throw new Error('音频下载为空文件');
+  if (!blob.size) throw new Error('Audio downloaded as an empty file');
   return blob;
 };
 
@@ -120,15 +120,15 @@ const VoiceDesignerApp: React.FC = () => {
   // ── Load voices ──
   const handleLoadVoices = async () => {
     const apiKey = resolveMiniMaxApiKey(apiConfig);
-    if (!apiKey) return addToast('请先在设置里配置 MiniMax API Key', 'error');
+    if (!apiKey) return addToast('Please configure the MiniMax API Key in Settings first', 'error');
     setIsLoadingVoices(true);
     try {
       const result = await fetchMiniMaxVoices(apiKey, 'all');
       const allVoices = [...result.system_voice, ...result.voice_cloning, ...result.voice_generation];
       setAvailableVoices(allVoices);
-      addToast(`已加载 ${allVoices.length} 个音色`, 'success');
+      addToast(`Loaded ${allVoices.length} voices`, 'success');
     } catch (err: any) {
-      addToast(err?.message || '加载音色失败', 'error');
+      addToast(err?.message || 'Failed to load voices', 'error');
     } finally {
       setIsLoadingVoices(false);
     }
@@ -152,7 +152,7 @@ const VoiceDesignerApp: React.FC = () => {
   const buildPayload = (text: string, languageBoost?: string) => {
     const validTimbers = timberWeights.filter(tw => tw.voice_id.trim());
     if (validTimbers.length === 0) {
-      addToast('请至少添加一个音色', 'error');
+      addToast('Please add at least one voice', 'error');
       return null;
     }
 
@@ -238,9 +238,9 @@ const VoiceDesignerApp: React.FC = () => {
   // ── Preview ──
   const handlePreview = async () => {
     const apiKey = resolveMiniMaxApiKey(apiConfig);
-    if (!apiKey) return addToast('请先在设置里配置 MiniMax API Key', 'error');
+    if (!apiKey) return addToast('Please configure the MiniMax API Key in Settings first', 'error');
     const text = previewText.trim();
-    if (!text) return addToast('请输入试听文本', 'error');
+    if (!text) return addToast('Please enter preview text', 'error');
 
     const boost = PREVIEW_SAMPLES.find(s => s.code === previewLang)?.boost;
     const payload = buildPayload(text, boost);
@@ -269,11 +269,11 @@ const VoiceDesignerApp: React.FC = () => {
         const data = await response.json();
         const statusCode = data?.base_resp?.status_code;
         if (!response.ok || (typeof statusCode === 'number' && statusCode !== 0)) {
-          throw new Error(data?.base_resp?.status_msg || `调用失败（HTTP ${response.status}）`);
+          throw new Error(data?.base_resp?.status_msg || `Call failed (HTTP ${response.status})`);
         }
 
         const audioRaw = data?.data?.audio;
-        if (!audioRaw || typeof audioRaw !== 'string') throw new Error('接口没有返回音频数据');
+        if (!audioRaw || typeof audioRaw !== 'string') throw new Error('The API did not return audio data');
 
         if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
         let blob: Blob;
@@ -289,7 +289,7 @@ const VoiceDesignerApp: React.FC = () => {
       setAudioUrl(url);
       setTimeout(() => { audioRef.current?.play().catch(() => {}); }, 50);
     } catch (err: any) {
-      addToast(err?.message || '预览失败', 'error');
+      addToast(err?.message || 'Preview failed', 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -298,7 +298,7 @@ const VoiceDesignerApp: React.FC = () => {
   // ── Bake voice: server synthesizes long audio with timber_weights → upload → clone ──
   const handleBakeVoice = async () => {
     const apiKey = resolveMiniMaxApiKey(apiConfig);
-    if (!apiKey) return addToast('请先在设置里配置 MiniMax API Key', 'error');
+    if (!apiKey) return addToast('Please configure the MiniMax API Key in Settings first', 'error');
 
     const payload = buildPayload('');  // just to validate timber_weights
     if (!payload) return;
@@ -309,7 +309,7 @@ const VoiceDesignerApp: React.FC = () => {
       const timestamp = Date.now().toString(36);
       const customVoiceId = `vc${charName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toLowerCase()}${timestamp}`;
 
-      addToast('正在合成长音频并克隆声音，请稍候...', 'success');
+      addToast('Synthesizing a long audio clip and cloning the voice, please wait...', 'success');
 
       const groupId = (apiConfig.minimaxGroupId || '').trim();
       const region = apiConfig.minimaxRegion === 'overseas' ? 'overseas' : 'domestic';
@@ -331,12 +331,12 @@ const VoiceDesignerApp: React.FC = () => {
       });
       const data = await safeResponseJson(res);
       if (!res.ok || data?.error) {
-        throw new Error(data?.error || `固定声音失败（HTTP ${res.status}）`);
+        throw new Error(data?.error || `Failed to fix the voice (HTTP ${res.status})`);
       }
 
       // Replace timber_weights with the new fixed voice_id
-      setTimberWeights([{ id: `baked-${Date.now()}`, voice_id: customVoiceId, voice_name: `固定音色 (${customVoiceId})`, weight: 1 }]);
-      addToast(`声音已固定！voice_id: ${customVoiceId}`, 'success');
+      setTimberWeights([{ id: `baked-${Date.now()}`, voice_id: customVoiceId, voice_name: `Fixed Voice (${customVoiceId})`, weight: 1 }]);
+      addToast(`Voice fixed! voice_id: ${customVoiceId}`, 'success');
 
       // Play the clone preview if available
       const cloneAudio = data?.clone_data?.data?.audio;
@@ -354,7 +354,7 @@ const VoiceDesignerApp: React.FC = () => {
         setTimeout(() => { audioRef.current?.play().catch(() => {}); }, 50);
       }
     } catch (err: any) {
-      addToast(err?.message || '固定声音失败', 'error');
+      addToast(err?.message || 'Failed to fix the voice', 'error');
     } finally {
       setIsBaking(false);
     }
@@ -362,9 +362,9 @@ const VoiceDesignerApp: React.FC = () => {
 
   // ── Apply to character ──
   const handleApply = () => {
-    if (!selectedChar) return addToast('没有选中角色', 'error');
+    if (!selectedChar) return addToast('No character selected', 'error');
     const validTimbers = timberWeights.filter(tw => tw.voice_id.trim());
-    if (validTimbers.length === 0) return addToast('请至少添加一个音色', 'error');
+    if (validTimbers.length === 0) return addToast('Please add at least one voice', 'error');
 
     const hasModify = modifyPitch !== 0 || modifyIntensity !== 0 || modifyTimbre !== 0 || soundEffect;
     const updatedProfile = {
@@ -374,7 +374,7 @@ const VoiceDesignerApp: React.FC = () => {
         provider: 'minimax' as const,
         voiceId: validTimbers.length === 1 ? validTimbers[0].voice_id.trim() : '',
         minimaxParamVersion,
-        voiceName: validTimbers.length === 1 ? (validTimbers[0].voice_name || validTimbers[0].voice_id) : `混合音色 (${validTimbers.length}个)`,
+        voiceName: validTimbers.length === 1 ? (validTimbers[0].voice_name || validTimbers[0].voice_id) : `Mixed Voice (${validTimbers.length})`,
         source: 'custom' as const,
         model: model || DEFAULT_MODEL,
         notes: validTimbers.length > 1 ? validTimbers.map(tw => `${tw.voice_id}×${tw.weight}`).join(' + ') : '',
@@ -399,8 +399,8 @@ const VoiceDesignerApp: React.FC = () => {
       },
     };
     updateCharacter(selectedChar.id, updatedProfile);
-    trackEvent('把捏好的声音应用到角色');
-    addToast(`已将捏好的声音应用到「${selectedChar.name}」`, 'success');
+    trackEvent('Apply Crafted Voice to Character');
+    addToast(`Applied the crafted voice to "${selectedChar.name}"`, 'success');
   };
 
   const filteredVoices = useMemo(() => {
@@ -429,27 +429,27 @@ const VoiceDesignerApp: React.FC = () => {
       {/* Header */}
       <header className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-sm shrink-0" style={{ paddingTop: 'max(0.75rem, var(--safe-top))' }}>
         <div>
-          <h2 className="text-sm font-bold text-slate-800">捏声音</h2>
+          <h2 className="text-sm font-bold text-slate-800">Craft Voice</h2>
           <p className="text-[10px] text-slate-400">
-            {selectedChar ? `为「${selectedChar.name}」设计声线` : 'MiniMax 音色设计器'}
+            {selectedChar ? `Design a voice strand for "${selectedChar.name}"` : 'MiniMax Voice Designer'}
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={handleApply} className="text-[10px] px-3 py-1.5 rounded-full bg-violet-500 text-white font-bold flex items-center gap-1 active:scale-95 transition-transform">
-            <FloppyDisk size={12} weight="bold" /> 应用
+            <FloppyDisk size={12} weight="bold" /> Apply
           </button>
-          <button onClick={() => closeApp()} className="text-[10px] px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 font-bold">关闭</button>
+          <button onClick={() => closeApp()} className="text-[10px] px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 font-bold">Close</button>
         </div>
       </header>
 
       {/* Tabs */}
       <div className="flex border-b border-slate-100 bg-white/60 shrink-0">
-        <button onClick={() => { setTab('mix'); trackEvent('切换捏声音标签页', { tab: 'mix' }); }} className={`flex-1 py-2.5 text-xs font-semibold transition-colors relative ${tab === 'mix' ? 'text-violet-600' : 'text-slate-400'}`}>
-          混合音色
+        <button onClick={() => { setTab('mix'); trackEvent('Switch Voice Designer Tab', { tab: 'mix' }); }} className={`flex-1 py-2.5 text-xs font-semibold transition-colors relative ${tab === 'mix' ? 'text-violet-600' : 'text-slate-400'}`}>
+          Mix Voices
           {tab === 'mix' && <div className="absolute bottom-0 left-1/4 w-1/2 h-0.5 bg-violet-500 rounded-full" />}
         </button>
-        <button onClick={() => { setTab('modify'); trackEvent('切换捏声音标签页', { tab: 'modify' }); }} className={`flex-1 py-2.5 text-xs font-semibold transition-colors relative ${tab === 'modify' ? 'text-violet-600' : 'text-slate-400'}`}>
-          音色微调
+        <button onClick={() => { setTab('modify'); trackEvent('Switch Voice Designer Tab', { tab: 'modify' }); }} className={`flex-1 py-2.5 text-xs font-semibold transition-colors relative ${tab === 'modify' ? 'text-violet-600' : 'text-slate-400'}`}>
+          Fine-tune Voice
           {tab === 'modify' && <div className="absolute bottom-0 left-1/4 w-1/2 h-0.5 bg-violet-500 rounded-full" />}
         </button>
       </div>
@@ -459,8 +459,8 @@ const VoiceDesignerApp: React.FC = () => {
 
         <div className="bg-white rounded-2xl p-4 border border-violet-100 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold text-slate-700">MiniMax 合成参数</span>
-            <span className="text-[9px] text-slate-400">按角色保存</span>
+            <span className="text-xs font-bold text-slate-700">MiniMax Synthesis Parameters</span>
+            <span className="text-[9px] text-slate-400">Saved per character</span>
           </div>
           <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
             <button
@@ -468,20 +468,20 @@ const VoiceDesignerApp: React.FC = () => {
               onClick={() => setMinimaxParamVersion('legacy')}
               className={`rounded-lg px-2 py-2 text-[10px] font-bold transition-colors ${minimaxParamVersion === 'legacy' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-400'}`}
             >
-              经典参数
+              Classic Parameters
             </button>
             <button
               type="button"
               onClick={() => setMinimaxParamVersion('natural-v2')}
               className={`rounded-lg px-2 py-2 text-[10px] font-bold transition-colors ${minimaxParamVersion === 'natural-v2' ? 'bg-violet-500 text-white shadow-sm' : 'text-slate-400'}`}
             >
-              新版自然参数
+              New Natural Parameters
             </button>
           </div>
           <p className="text-[10px] leading-relaxed text-slate-400">
             {minimaxParamVersion === 'natural-v2'
-              ? '试听与聊天、见面、电话统一参数；使用模型原生标点韵律，不再给每个标点自动硬塞停顿。'
-              : '完整保留原有参数、自动停顿和限幅规则，老角色默认继续使用这一档。'}
+              ? 'Uses the same parameters for preview, chat, dates, and calls; relies on the native punctuation-driven pacing of the model instead of forcing a pause at every punctuation mark.'
+              : 'Fully preserves the original parameters, auto-pause, and limiting rules; older characters keep using this tier by default.'}
           </p>
         </div>
 
@@ -490,33 +490,33 @@ const VoiceDesignerApp: React.FC = () => {
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-700">声线配方</span>
+                <span className="text-xs font-bold text-slate-700">Voice Recipe</span>
                 <div className="flex gap-2">
                   {availableVoices.length === 0 && (
                     <button onClick={handleLoadVoices} disabled={isLoadingVoices}
                       className="text-[10px] px-2 py-1 rounded bg-violet-50 text-violet-600 font-bold hover:bg-violet-100 disabled:opacity-50">
-                      {isLoadingVoices ? '加载中...' : '加载音色库'}
+                      {isLoadingVoices ? 'Loading...' : 'Load Voice Library'}
                     </button>
                   )}
                   <button onClick={addTimberSlot} className="text-[10px] px-2 py-1 rounded bg-emerald-50 text-emerald-600 font-bold hover:bg-emerald-100 flex items-center gap-0.5">
-                    <Plus size={10} weight="bold" /> 加声线
+                    <Plus size={10} weight="bold" /> Add Strand
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400">添加多个音色并调节权重来混合出独特声线。单个音色也可以，后续在「音色微调」里精调。</p>
+              <p className="text-[10px] text-slate-400">Add multiple voices and adjust their weights to mix a unique voice strand. A single voice also works — fine-tune it later under "Fine-tune Voice".</p>
             </div>
 
             <div className="flex items-start gap-1.5 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
               <Warning size={13} weight="fill" className="text-amber-500 shrink-0 mt-0.5" />
               <p className="text-[10px] text-amber-700 leading-relaxed">
-                建议<b>只融合同一种语言</b>的音色。比如想要韩语角色，就只挑韩语音色来融——混入其它语种的音色容易让角色说话<b>带口音</b>。融好后用上方多语种样例分别试听确认。
+                It is recommended to <b>only mix voices from the same language</b>. For example, for a Korean-speaking character, only pick Korean voices to mix — mixing in voices from other languages can easily give the character an <b>accent</b>. Once mixed, use the multi-language samples above to preview and confirm.
               </p>
             </div>
 
             {timberWeights.map((tw, index) => (
               <div key={tw.id} className="bg-white rounded-2xl p-3 border border-slate-100 shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-500">声线 #{index + 1}</span>
+                  <span className="text-[10px] font-bold text-slate-500">Voice Strand #{index + 1}</span>
                   {timberWeights.length > 1 && (
                     <button onClick={() => removeTimberSlot(index)} className="text-slate-300 hover:text-red-400 p-1">
                       <Trash size={14} />
@@ -528,24 +528,24 @@ const VoiceDesignerApp: React.FC = () => {
                     value={tw.voice_id}
                     onChange={e => updateTimberVoiceId(index, e.target.value)}
                     className="flex-1 bg-slate-50 rounded-xl px-3 py-2 text-xs border border-slate-200 focus:border-violet-300 transition-colors"
-                    placeholder="输入 voice_id 或从库中选"
+                    placeholder="Enter a voice_id or pick from the library"
                   />
                   {availableVoices.length > 0 && (
-                    <button onClick={() => { setPickingForIndex(index); setShowVoicePicker(true); trackEvent('打开音色选择器'); }}
+                    <button onClick={() => { setPickingForIndex(index); setShowVoicePicker(true); trackEvent('Open Voice Picker'); }}
                       className="text-[10px] px-2 py-2 rounded-xl bg-violet-50 text-violet-600 font-bold hover:bg-violet-100 shrink-0">
-                      选
+                      Pick
                     </button>
                   )}
                 </div>
                 {tw.voice_name && <div className="text-[10px] text-slate-400 px-1">{tw.voice_name}</div>}
-                <Slider label="权重" value={tw.weight} min={1} max={100} step={1} onChange={v => updateTimberWeight(index, v)} />
+                <Slider label="Weight" value={tw.weight} min={1} max={100} step={1} onChange={v => updateTimberWeight(index, v)} />
               </div>
             ))}
 
             {timberWeights.length === 0 && (
               <div className="text-center py-8 text-slate-300">
                 <SpeakerHigh size={40} className="mx-auto mb-2 opacity-30" />
-                <p className="text-xs">还没有声线，点击上方「加声线」开始</p>
+                <p className="text-xs">No voice strands yet, tap "Add Strand" above to start</p>
               </div>
             )}
           </>
@@ -555,19 +555,19 @@ const VoiceDesignerApp: React.FC = () => {
         {tab === 'modify' && (
           <>
             <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
-              <span className="text-xs font-bold text-slate-700">基础参数</span>
-              <Slider label="语速" value={speed} min={0.5} max={2} step={0.1} onChange={setSpeed} unit="x" />
-              <Slider label="音量" value={volume} min={0} max={2} step={0.1} onChange={setVolume} />
-              <Slider label="基础音调" value={pitch} min={-12} max={12} step={1} onChange={setPitch} />
+              <span className="text-xs font-bold text-slate-700">Basic Parameters</span>
+              <Slider label="Speed" value={speed} min={0.5} max={2} step={0.1} onChange={setSpeed} unit="x" />
+              <Slider label="Volume" value={volume} min={0} max={2} step={0.1} onChange={setVolume} />
+              <Slider label="Base Pitch" value={pitch} min={-12} max={12} step={1} onChange={setPitch} />
             </div>
 
             <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
-              <span className="text-xs font-bold text-slate-700">音色修饰</span>
-              <Slider label="音调偏移" value={modifyPitch} min={-100} max={100} step={1} onChange={setModifyPitch} />
-              <Slider label="强度" value={modifyIntensity} min={-100} max={100} step={1} onChange={setModifyIntensity} />
-              <Slider label="音色" value={modifyTimbre} min={-100} max={100} step={1} onChange={setModifyTimbre} />
+              <span className="text-xs font-bold text-slate-700">Voice Modifiers</span>
+              <Slider label="Pitch Offset" value={modifyPitch} min={-100} max={100} step={1} onChange={setModifyPitch} />
+              <Slider label="Intensity" value={modifyIntensity} min={-100} max={100} step={1} onChange={setModifyIntensity} />
+              <Slider label="Timbre" value={modifyTimbre} min={-100} max={100} step={1} onChange={setModifyTimbre} />
               <div className="space-y-1">
-                <span className="text-[11px] text-slate-500">音效</span>
+                <span className="text-[11px] text-slate-500">Sound Effect</span>
                 <select value={soundEffect} onChange={e => setSoundEffect(e.target.value)}
                   className="w-full bg-slate-50 rounded-xl px-3 py-2 text-xs border border-slate-200">
                   {SOUND_EFFECTS_OPTIONS.map(opt => (
@@ -578,19 +578,19 @@ const VoiceDesignerApp: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
-              <span className="text-xs font-bold text-slate-700">情感</span>
+              <span className="text-xs font-bold text-slate-700">Emotion</span>
               <div className="flex flex-wrap gap-1.5">
                 {['', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'calm'].map(em => (
                   <button key={em} onClick={() => setEmotion(em)}
                     className={`text-[10px] px-2.5 py-1.5 rounded-full font-semibold transition-colors ${emotion === em ? 'bg-violet-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                    {em === '' ? '自动' : em === 'happy' ? '开心' : em === 'sad' ? '伤感' : em === 'angry' ? '生气' : em === 'fearful' ? '恐惧' : em === 'disgusted' ? '厌恶' : em === 'surprised' ? '惊讶' : '平静'}
+                    {em === '' ? 'Auto' : em === 'happy' ? 'Happy' : em === 'sad' ? 'Sad' : em === 'angry' ? 'Angry' : em === 'fearful' ? 'Fearful' : em === 'disgusted' ? 'Disgusted' : em === 'surprised' ? 'Surprised' : 'Calm'}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-2">
-              <span className="text-xs font-bold text-slate-700">TTS 模型</span>
+              <span className="text-xs font-bold text-slate-700">TTS Model</span>
               <input value={model} onChange={e => setModel(e.target.value)}
                 className="w-full bg-slate-50 rounded-xl px-3 py-2 text-xs border border-slate-200"
                 placeholder="speech-2.8-hd" />
@@ -601,13 +601,13 @@ const VoiceDesignerApp: React.FC = () => {
         {/* ── Preview Section (always visible) ── */}
         <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl p-4 border border-violet-100 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-violet-700">试听预览</span>
-            <span className="text-[9px] text-violet-400">点语种切换样例</span>
+            <span className="text-xs font-bold text-violet-700">Preview</span>
+            <span className="text-[9px] text-violet-400">Tap a language to switch samples</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {PREVIEW_SAMPLES.map(s => (
               <button key={s.code}
-                onClick={() => { setPreviewLang(s.code); setPreviewText(s.text); trackEvent('切换试听语种样例', { lang: s.code }); }}
+                onClick={() => { setPreviewLang(s.code); setPreviewText(s.text); trackEvent('Switch Preview Language Sample', { lang: s.code }); }}
                 className={`text-[10px] px-2.5 py-1 rounded-full font-bold transition-colors ${previewLang === s.code ? 'bg-violet-500 text-white' : 'bg-white text-violet-500 border border-violet-200 hover:bg-violet-100'}`}>
                 {s.label}
               </button>
@@ -615,11 +615,11 @@ const VoiceDesignerApp: React.FC = () => {
           </div>
           <textarea value={previewText} onChange={e => setPreviewText(e.target.value)}
             rows={2} className="w-full bg-white rounded-xl px-3 py-2 text-xs border border-violet-200 resize-none"
-            placeholder="输入试听文本..." />
+            placeholder="Enter preview text..." />
           <div className="flex gap-2">
             <button onClick={handlePreview} disabled={isGenerating}
               className="flex-1 py-2 rounded-xl bg-violet-500 hover:bg-violet-400 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform">
-              <SpeakerHigh size={14} weight="bold" /> {isGenerating ? '合成中...' : '试听'}
+              <SpeakerHigh size={14} weight="bold" /> {isGenerating ? 'Synthesizing...' : 'Preview'}
             </button>
             {audioUrl && (
               <>
@@ -633,19 +633,19 @@ const VoiceDesignerApp: React.FC = () => {
           {audioUrl && timberWeights.filter(tw => tw.voice_id.trim()).length > 1 && (
             <div className="space-y-1.5">
               <p className="text-[10px] text-emerald-600/80 text-center">
-                <Check size={12} weight="bold" className="inline" /> 混合声线已就绪，直接点「应用」即可使用。通话时会实时混合，效果与试听一致。
+                <Check size={12} weight="bold" className="inline" /> The mixed voice strand is ready — tap "Apply" to use it directly. It mixes in real time during calls, matching this preview.
               </p>
               <details className="group">
                 <summary className="text-[10px] text-slate-400 text-center cursor-pointer hover:text-slate-500 select-none">
-                  高级：固定为独立 voice_id（克隆）▸
+                  Advanced: fix as a standalone voice_id (clone) ▸
                 </summary>
                 <div className="mt-2 space-y-1.5 pt-2 border-t border-slate-100">
                   <p className="text-[10px] text-amber-600/70 text-center">
-                    <Warning size={12} weight="bold" className="inline" /> 克隆会从试听音频中提取音色特征，生成的声音可能与混合试听有差异。仅在需要固定 voice_id 时使用。
+                    <Warning size={12} weight="bold" className="inline" /> Cloning extracts voice characteristics from the preview audio; the resulting voice may differ slightly from the mixed preview. Only use this when you need a fixed voice_id.
                   </p>
                   <button onClick={handleBakeVoice} disabled={isBaking}
                     className="w-full py-2 rounded-xl bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-slate-600 text-xs font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform">
-                    <Lock size={14} weight="bold" /> {isBaking ? '固定中...' : '固定声音（克隆）'}
+                    <Lock size={14} weight="bold" /> {isBaking ? 'Fixing...' : 'Fix Voice (Clone)'}
                   </button>
                 </div>
               </details>
@@ -656,16 +656,16 @@ const VoiceDesignerApp: React.FC = () => {
 
         {/* Summary */}
         <div className="bg-slate-50 rounded-2xl p-3 text-[10px] text-slate-400 space-y-1">
-          <div>声线数: {timberWeights.filter(tw => tw.voice_id.trim()).length}</div>
+          <div>Voice strands: {timberWeights.filter(tw => tw.voice_id.trim()).length}</div>
           {timberWeights.filter(tw => tw.voice_id.trim()).length > 1 && (
-            <div>配方: {timberWeights.filter(tw => tw.voice_id.trim()).map(tw => `${tw.voice_id}×${tw.weight}`).join(' + ')}</div>
+            <div>Recipe: {timberWeights.filter(tw => tw.voice_id.trim()).map(tw => `${tw.voice_id}×${tw.weight}`).join(' + ')}</div>
           )}
           {(modifyPitch !== 0 || modifyIntensity !== 0 || modifyTimbre !== 0) && (
-            <div>微调: pitch={modifyPitch} intensity={modifyIntensity} timbre={modifyTimbre}</div>
+            <div>Modifiers: pitch={modifyPitch} intensity={modifyIntensity} timbre={modifyTimbre}</div>
           )}
-          {soundEffect && <div>音效: {soundEffect}</div>}
-          {emotion && <div>情感: {emotion}</div>}
-          <div>参数: {minimaxParamVersion === 'natural-v2' ? '新版自然参数' : '经典参数'}</div>
+          {soundEffect && <div>Sound effect: {soundEffect}</div>}
+          {emotion && <div>Emotion: {emotion}</div>}
+          <div>Parameters: {minimaxParamVersion === 'natural-v2' ? 'New Natural Parameters' : 'Classic Parameters'}</div>
         </div>
 
         {/* Bottom spacer */}
@@ -677,13 +677,13 @@ const VoiceDesignerApp: React.FC = () => {
         <div className="absolute inset-0 z-50 bg-black/40 flex items-end">
           <div className="bg-white w-full rounded-t-3xl max-h-[70%] flex flex-col animate-slide-up">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <span className="text-sm font-bold text-slate-700">选择音色</span>
-              <button onClick={() => setShowVoicePicker(false)} className="text-xs px-3 py-1 bg-slate-100 rounded-full">关闭</button>
+              <span className="text-sm font-bold text-slate-700">Select Voice</span>
+              <button onClick={() => setShowVoicePicker(false)} className="text-xs px-3 py-1 bg-slate-100 rounded-full">Close</button>
             </div>
             <div className="px-4 pt-3 shrink-0">
               <input value={voiceSearch} onChange={e => setVoiceSearch(e.target.value)}
                 className="w-full bg-slate-50 rounded-xl px-3 py-2 text-xs border border-slate-200"
-                placeholder="搜索音色名或 ID..." />
+                placeholder="Search by voice name or ID..." />
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {filteredVoices.map(v => (
@@ -692,13 +692,13 @@ const VoiceDesignerApp: React.FC = () => {
                   setShowVoicePicker(false);
                 }}
                   className="w-full text-left px-3 py-2 rounded-xl text-xs hover:bg-violet-50 border border-transparent hover:border-violet-200 transition-colors">
-                  <div className="font-medium text-slate-700 truncate">{v.voice_name || '未命名'}</div>
+                  <div className="font-medium text-slate-700 truncate">{v.voice_name || 'Unnamed'}</div>
                   <div className="text-[10px] text-slate-400 truncate">{v.voice_id}</div>
                 </button>
               ))}
               {filteredVoices.length === 0 && (
                 <div className="text-center py-8 text-slate-300 text-xs">
-                  {availableVoices.length === 0 ? '请先加载音色库' : '没有找到匹配的音色'}
+                  {availableVoices.length === 0 ? 'Please load the voice library first' : 'No matching voices found'}
                 </div>
               )}
             </div>

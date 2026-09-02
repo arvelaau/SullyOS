@@ -51,16 +51,16 @@ const MusicApp: React.FC = () => {
       const blob: Blob | null = entry instanceof Blob
         ? entry
         : (entry?.blob instanceof Blob ? entry.blob : null);
-      if (!blob) { addToast('音频文件丢失', 'error'); return; }
+      if (!blob) { addToast('Audio file missing', 'error'); return; }
       const mime = current.localMimeType || (entry && !(entry instanceof Blob) ? entry.mimeType : '') || blob.type || 'audio/mpeg';
       const ext = /wav/i.test(mime) ? 'wav' : /ogg/i.test(mime) ? 'ogg' : /flac/i.test(mime) ? 'flac' : /m4a|aac|mp4/i.test(mime) ? 'm4a' : 'mp3';
       const safe = (current.name || 'song').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80);
-      const result = await shareOrDownloadBlob({ blob, fileName: `${safe}.${ext}`, shareTitle: current.name || '生成的歌曲' });
+      const result = await shareOrDownloadBlob({ blob, fileName: `${safe}.${ext}`, shareTitle: current.name || 'Generated Song' });
       if (result === 'cancelled') return;
-      addToast(result === 'shared' ? '已打开系统保存/分享' : '已开始下载', 'success');
-      trackEvent('下载生成的歌到本地文件');
+      addToast(result === 'shared' ? 'Opened system save/share' : 'Download started', 'success');
+      trackEvent('Download Generated Song to Local File');
     } catch {
-      addToast('下载失败', 'error');
+      addToast('Download failed', 'error');
     }
   }, [current, addToast]);
 
@@ -68,8 +68,8 @@ const MusicApp: React.FC = () => {
     const order: ('loop' | 'single' | 'shuffle')[] = ['loop', 'single', 'shuffle'];
     const next = order[(order.indexOf(playMode) + 1) % order.length];
     setPlayMode(next);
-    trackEvent('切换播放模式', { mode: next });
-    addToast(next === 'loop' ? '列表循环' : next === 'single' ? '单曲循环' : '随机播放', 'info');
+    trackEvent('Switch Play Mode', { mode: next });
+    addToast(next === 'loop' ? 'List Loop' : next === 'single' ? 'Single Loop' : 'Shuffle', 'info');
   }, [playMode, setPlayMode, addToast]);
 
   // 伴听 char 名单（用于 MiniPlayer / 播放页徽章）—— 带头像，给"小情侣"头像块用
@@ -122,7 +122,7 @@ const MusicApp: React.FC = () => {
   const doSearch = useCallback(async () => {
     const kw = keyword.trim(); if (!kw) return;
     setSearching(true);
-    trackEvent('搜索一首歌');
+    trackEvent('Search for a Song');
     try {
       const r = await musicApi.search(cfg, kw);
       const songs: Song[] = (r?.result?.songs || []).map((s: any) => ({
@@ -135,11 +135,11 @@ const MusicApp: React.FC = () => {
       }));
       setResults(songs);
       if (!songs.length) {
-        const hint = r?.msg || r?.message || (r?.code != null ? `code=${r.code}` : '') || '无数据';
-        addToast(`没找到: ${hint}`, 'info');
+        const hint = r?.msg || r?.message || (r?.code != null ? `code=${r.code}` : '') || 'No data';
+        addToast(`Not found: ${hint}`, 'info');
       }
     } catch (e: any) {
-      addToast(`搜索失败：${e.message}`, 'error');
+      addToast(`Search failed: ${e.message}`, 'error');
     } finally {
       setSearching(false);
     }
@@ -159,7 +159,7 @@ const MusicApp: React.FC = () => {
               onClick={() => setView('profile')}
               className="p-1.5 rounded-full transition-all"
               style={{ color: C.primary }}
-              title="我的"
+              title="Profile"
             >
               <UserIcon size={16} weight="bold" />
             </button>
@@ -197,7 +197,7 @@ const MusicApp: React.FC = () => {
             className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] cursor-pointer"
             style={{ background: `${C.vip}18`, color: C.vip, border: `1px solid ${C.vip}30` }}
           >
-            未登录 — 点击登录网易云
+            Not logged in — tap to log into NetEase Cloud
           </button>
         </div>
       )}
@@ -212,7 +212,7 @@ const MusicApp: React.FC = () => {
               <Sparkle size={8} className="absolute -bottom-2 -left-2" color={C.lavender} delay={1.5} />
             </div>
             <div className="text-xs italic" style={{ color: C.faint, fontFamily: `'Georgia', serif` }}>
-              搜一首想听的歌吧
+              Search for a song you'd like to hear
             </div>
           </div>
         )}
@@ -226,7 +226,7 @@ const MusicApp: React.FC = () => {
             duration={fmtTime(s.duration)}
             isVip={s.fee === 1}
             isActive={current?.id === s.id}
-            onClick={() => { playSong(s); trackEvent('播放搜索结果里的一首歌'); }}
+            onClick={() => { playSong(s); trackEvent('Play a Song from Search Results'); }}
           />
         ))}
       </div>
@@ -237,14 +237,14 @@ const MusicApp: React.FC = () => {
           artists={current.artists}
           albumPic={current.albumPic}
           playing={playing}
-          onTap={() => { setView('player'); trackEvent('打开播放页'); }}
-          onPrev={() => { prevSong(); trackEvent('切歌（上一首/下一首）', { direction: 'prev' }); }}
+          onTap={() => { setView('player'); trackEvent('Open Player Page'); }}
+          onPrev={() => { prevSong(); trackEvent('Switch Song (Prev/Next)', { direction: 'prev' }); }}
           onToggle={togglePlay}
-          onNext={() => { nextSong(); trackEvent('切歌（上一首/下一首）', { direction: 'next' }); }}
+          onNext={() => { nextSong(); trackEvent('Switch Song (Prev/Next)', { direction: 'next' }); }}
           userAvatar={userProfile?.avatar}
           userName={userProfile?.name}
           companions={companions}
-          onKickCompanion={charId => { removeListeningPartner(charId); trackEvent('结束和角色的一起听'); }}
+          onKickCompanion={charId => { removeListeningPartner(charId); trackEvent('End Listening Together with Character'); }}
           charsWithSong={charsWithSong}
           regenStatus={isCurrentRegenerating ? regeneratingStatus : undefined}
         />
@@ -286,10 +286,10 @@ const MusicApp: React.FC = () => {
                 <div className="text-center space-y-1.5 px-3">
                   <div className="w-7 h-7 mx-auto border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <div className="text-[10px] tracking-[0.2em] text-white font-semibold" style={{ fontFamily: 'Georgia, serif' }}>
-                    正在重录
+                    Re-recording
                   </div>
                   <div className="text-[9px] text-white/80 truncate max-w-[120px]" style={{ fontFamily: 'monospace' }}>
-                    {regeneratingStatus || '处理中…'}
+                    {regeneratingStatus || 'Processing…'}
                   </div>
                 </div>
               </div>
@@ -306,7 +306,7 @@ const MusicApp: React.FC = () => {
               }}
             >
               <Sparkle size={9} color={C.sakura} delay={0} />
-              <span>新版本即将到来 · {regeneratingStatus || '处理中'}</span>
+              <span>New version coming soon · {regeneratingStatus || 'Processing'}</span>
               <Sparkle size={9} color={C.lavender} delay={0.5} />
             </div>
           )}
@@ -424,21 +424,21 @@ const MusicApp: React.FC = () => {
             <PlayControls
               playing={playing}
               loading={loadingSong}
-              onPrev={() => { prevSong(); trackEvent('切歌（上一首/下一首）', { direction: 'prev' }); }}
+              onPrev={() => { prevSong(); trackEvent('Switch Song (Prev/Next)', { direction: 'prev' }); }}
               onToggle={togglePlay}
-              onNext={() => { nextSong(); trackEvent('切歌（上一首/下一首）', { direction: 'next' }); }}
+              onNext={() => { nextSong(); trackEvent('Switch Song (Prev/Next)', { direction: 'next' }); }}
             />
           </div>
 
           <div className="shrink-0 mt-3 w-full">
             <SubActions
               liked={liked}
-              onLike={() => { toggleLike(); trackEvent('收藏或取消收藏当前歌', { action: liked ? 'unlike' : 'like' }); }}
+              onLike={() => { toggleLike(); trackEvent('Favorite/Unfavorite Current Song', { action: liked ? 'unlike' : 'like' }); }}
               showSync={!!(current.local && current.localLyrics && lyric.length > 0)}
               onSync={() => {
                 setSyncDraft(lyric.map(l => l.t));
                 setShowLyricSync(true);
-                trackEvent('打开歌词对轴面板');
+                trackEvent('Open Lyric Sync Panel');
               }}
               showDownload={!!(current.local && current.localAssetKey)}
               onDownload={downloadCurrentLocal}
@@ -455,7 +455,7 @@ const MusicApp: React.FC = () => {
   const renderSettings = () => {
     const setDraft = (updates: Partial<typeof cfg>) => setCfg({ ...cfg, ...updates });
     const commit = () => {
-      addToast('已保存', 'success');
+      addToast('Saved', 'success');
       setView('search');
     };
     const followsCentral = !cfg.workerUrl.trim();
@@ -463,14 +463,14 @@ const MusicApp: React.FC = () => {
       <div className="flex flex-col h-full relative"
         style={{ background: `linear-gradient(180deg, #ffffff 0%, ${C.bg} 50%, ${C.bgDeep} 100%)` }}>
         <BokehBg />
-        <MizuHeader title="设置" onBack={() => setView('search')} />
+        <MizuHeader title="Settings" onBack={() => setView('search')} />
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 text-sm relative z-10 shizuku-scrollbar">
           <div className="rounded-2xl p-3.5 shizuku-glass" style={{ boxShadow: `0 2px 16px ${C.glow}08` }}>
             <div className="text-[10px] mb-2 tracking-wider flex items-center justify-between" style={{ color: C.muted }}>
-              <span className="flex items-center gap-1.5"><Sparkle size={6} color={C.glow} delay={0} /> 服务地址</span>
+              <span className="flex items-center gap-1.5"><Sparkle size={6} color={C.glow} delay={0} /> Service Address</span>
               {!followsCentral && (
                 <button onClick={() => setDraft({ workerUrl: '' })}
-                  className="text-[9px] underline" style={{ color: C.muted }}>改回跟随中心</button>
+                  className="text-[9px] underline" style={{ color: C.muted }}>Revert to following central</button>
               )}
             </div>
             <input className="w-full rounded-xl px-3 py-2 outline-none text-xs shizuku-glass" value={cfg.workerUrl}
@@ -478,28 +478,28 @@ const MusicApp: React.FC = () => {
               style={{ color: C.text }} />
             <div className="text-[9px] mt-1.5 italic" style={{ color: C.faint }}>
               {followsCentral
-                ? <>跟随「设置 → 网络代理」：{effectiveWorkerUrl}</>
-                : <>只在音乐里用这个地址，「设置 → 网络代理」改了也不跟</>}
+                ? <>Follows "Settings → Network Proxy": {effectiveWorkerUrl}</>
+                : <>Only uses this address for Music; changes to "Settings → Network Proxy" won't follow</>}
             </div>
           </div>
           <div className="rounded-2xl p-3.5 shizuku-glass" style={{ boxShadow: `0 2px 16px ${C.glow}08` }}>
             <div className="text-[10px] mb-2 tracking-wider flex items-center gap-1.5" style={{ color: C.muted }}>
-              <Sparkle size={6} color={C.sakura} delay={0.5} /> 会员 Cookie
+              <Sparkle size={6} color={C.sakura} delay={0.5} /> Membership Cookie
             </div>
             <textarea className="w-full rounded-xl px-3 py-2 outline-none text-[10px] shizuku-glass" rows={3} value={cfg.cookie}
-              onChange={e => setDraft({ cookie: e.target.value })} placeholder="MUSIC_U=xxx 或直接粘贴值..."
+              onChange={e => setDraft({ cookie: e.target.value })} placeholder="MUSIC_U=xxx or paste value directly..."
               style={{ color: C.text, fontFamily: 'monospace', resize: 'none' }} />
             <div className="text-[9px] mt-1.5 italic" style={{ color: C.faint }}>
-              也可以在「我的」页面里扫码 / 手机号登录，自动填入 cookie
+              You can also scan a QR code or log in with your phone number on the "Profile" page to auto-fill the cookie
             </div>
           </div>
           <div className="rounded-2xl p-3.5 shizuku-glass" style={{ boxShadow: `0 2px 16px ${C.glow}08` }}>
             <div className="text-[10px] mb-2 tracking-wider flex items-center gap-1.5" style={{ color: C.muted }}>
-              <Sparkle size={6} color={C.lavender} delay={1} /> 音质
+              <Sparkle size={6} color={C.lavender} delay={1} /> Audio Quality
             </div>
             <div className="grid grid-cols-5 gap-1.5">
               {(['standard', 'higher', 'exhigh', 'lossless', 'hires'] as const).map(q => (
-                <button key={q} onClick={() => { setDraft({ quality: q }); trackEvent('切换音质档位', { quality: q }); }}
+                <button key={q} onClick={() => { setDraft({ quality: q }); trackEvent('Switch Audio Quality Tier', { quality: q }); }}
                   className="py-2 rounded-xl text-[10px] transition-all"
                   style={{
                     background: cfg.quality === q ? `linear-gradient(135deg, ${C.primary}, ${C.accent})` : C.glass,
@@ -511,16 +511,16 @@ const MusicApp: React.FC = () => {
                 >{q}</button>
               ))}
             </div>
-            <div className="text-[9px] mt-1.5 italic" style={{ color: C.faint }}>lossless / hires 需要黑胶 SVIP</div>
+            <div className="text-[9px] mt-1.5 italic" style={{ color: C.faint }}>lossless / hires requires Vinyl SVIP</div>
           </div>
           <div className="space-y-3 pt-1">
             <button
               onClick={async () => {
-                trackEvent('运行音乐服务诊断');
+                trackEvent('Run Music Service Diagnostics');
                 const lines: string[] = [];
                 const ck = normalizeCookie(cfg.cookie);
-                lines.push(`Worker: ${effectiveWorkerUrl}${followsCentral ? '（跟随中心）' : '（音乐单独设的）'}`);
-                lines.push(`Cookie: ${ck ? ck.slice(0, 18) + '...(' + ck.length + 'c)' : '(未填)'}`);
+                lines.push(`Worker: ${effectiveWorkerUrl}${followsCentral ? ' (follows central)' : ' (set separately for Music)'}`);
+                lines.push(`Cookie: ${ck ? ck.slice(0, 18) + '...(' + ck.length + 'c)' : '(not set)'}`);
                 try {
                   const res = await fetch(`${effectiveWorkerUrl}/netease/search`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json', ...(ck ? { 'X-Netease-Cookie': ck } : {}) },
@@ -529,16 +529,16 @@ const MusicApp: React.FC = () => {
                   lines.push(`HTTP ${res.status}`);
                   const txt = await res.text(); lines.push(txt.slice(0, 800));
                   try { const j = JSON.parse(txt); lines.push(`---\ncode=${j.code}  songs=${j?.result?.songs?.length ?? 'N/A'}`); } catch {}
-                } catch (e: any) { lines.push(`异常: ${e.message}`); }
+                } catch (e: any) { lines.push(`Error: ${e.message}`); }
                 alert(lines.join('\n'));
               }}
               className="w-full py-2.5 rounded-2xl text-[10px] tracking-wider shizuku-glass transition-all"
               style={{ color: C.vip, border: `1px solid ${C.vip}30` }}
-            >诊断（搜索晴天）</button>
+            >Diagnose (search 晴天)</button>
             <button onClick={commit}
               className="w-full py-3 rounded-2xl text-xs text-white tracking-wider transition-all relative overflow-hidden"
               style={{ background: `linear-gradient(135deg, ${C.primary}, ${C.accent})`, boxShadow: `0 3px 18px ${C.glow}30` }}>
-              <span className="relative z-10">保存</span>
+              <span className="relative z-10">Save</span>
               <div className="absolute inset-0 pointer-events-none" style={{
                 background: `linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%)`,
                 backgroundSize: '200% 100%', animation: 'shizuku-shimmer 3s ease-in-out infinite',
@@ -561,7 +561,7 @@ const MusicApp: React.FC = () => {
           onOpenPlayer={() => setView('player')}
           onOpenSearch={() => setView('search')}
           onOpenSettings={() => setView('settings')}
-          onVisitChar={id => { setVisitCharId(id); setView('visit_char'); trackEvent('进入角色音乐角落'); }}
+          onVisitChar={id => { setVisitCharId(id); setView('visit_char'); trackEvent('Enter Character Music Corner'); }}
         />
       )}
       {/* 手动对轴 modal — 全屏覆盖，不开新 view */}
@@ -596,8 +596,8 @@ const MusicApp: React.FC = () => {
           // 重新 playSong 让 LyricLine 立即用新时间
           playSong(updated, { alsoSetQueue: false });
           setShowLyricSync(false);
-          addToast('对轴已保存 ✦', 'success');
-          trackEvent('保存歌词对轴');
+          addToast('Sync saved ✦', 'success');
+          trackEvent('Save Lyric Sync');
         };
 
         return (
@@ -608,17 +608,17 @@ const MusicApp: React.FC = () => {
             <div className="relative z-10 shizuku-glass-strong"
               style={{ borderBottom: `1px solid rgba(255,255,255,0.3)`, paddingTop: 'var(--safe-top)' }}>
               <div className="flex items-center justify-between h-12 px-4">
-                <button onClick={() => setShowLyricSync(false)} className="text-[11px] px-2 py-1 rounded-full" style={{ color: C.muted }}>取消</button>
+                <button onClick={() => setShowLyricSync(false)} className="text-[11px] px-2 py-1 rounded-full" style={{ color: C.muted }}>Cancel</button>
                 <div className="flex items-center gap-1.5">
                   <Crosshair size={13} weight="duotone" color={C.primary} />
-                  <span className="text-[12px] tracking-[0.25em]" style={{ color: C.primary, fontFamily: 'Georgia, serif' }}>歌词对轴</span>
+                  <span className="text-[12px] tracking-[0.25em]" style={{ color: C.primary, fontFamily: 'Georgia, serif' }}>Lyric Sync</span>
                 </div>
                 <button onClick={saveSync} className="text-[11px] font-bold px-3 py-1 rounded-full"
                   style={{
                     background: `linear-gradient(135deg, ${C.primary}, ${C.accent})`,
                     color: 'white',
                     boxShadow: `0 2px 10px ${C.glow}50`,
-                  }}>保存</button>
+                  }}>Save</button>
               </div>
             </div>
 
@@ -656,10 +656,10 @@ const MusicApp: React.FC = () => {
               </div>
               <div className="flex items-center justify-between gap-2">
                 <button onClick={resetAuto} className="text-[10px] underline" style={{ color: C.muted }}>
-                  重置为均匀分布
+                  Reset to even distribution
                 </button>
                 <p className="text-[10px] flex-1 text-right" style={{ color: C.muted }}>
-                  播放时点 ⊙ 把当前时间设给那一句
+                  Tap ⊙ during playback to set the current time for that line
                 </p>
               </div>
             </div>
@@ -667,7 +667,7 @@ const MusicApp: React.FC = () => {
             {/* Lyric list with tap-to-set */}
             <div className="flex-1 overflow-y-auto px-3 pb-6 shizuku-scrollbar relative z-10 pt-1">
               {lyric.length === 0 ? (
-                <div className="text-center text-[11px] py-12" style={{ color: C.faint }}>没有歌词可对轴</div>
+                <div className="text-center text-[11px] py-12" style={{ color: C.faint }}>No lyrics to sync</div>
               ) : (
                 <div className="space-y-1.5">
                   {lyric.map((l, i) => {
@@ -693,7 +693,7 @@ const MusicApp: React.FC = () => {
                             border: `1px solid ${C.primary}30`,
                             color: C.primary,
                           }}
-                          title="把这一句设到当前播放时间"
+                          title="Set this line to the current playback time"
                         >
                           ⊙
                         </button>
@@ -717,7 +717,7 @@ const MusicApp: React.FC = () => {
                               onClick={() => seek(duration > 0 ? t / duration : 0)}
                               className="text-[9px] px-1 rounded ml-auto"
                               style={{ color: C.accent }}
-                            >跳到此处</button>
+                            >Jump here</button>
                           </div>
                         </div>
                       </div>

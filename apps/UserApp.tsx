@@ -21,7 +21,7 @@ const UserApp: React.FC = () => {
                 // 头像存令牌，二进制单独躺在 blob_assets 里（省掉 base64 那 ~33% 的膨胀）。
                 // 同一张图之前存过就复用它的令牌；转不动时原样还回这条 data URL，图不会丢。
                 updateUserProfile({ avatar: await migrateDataUrlToRef(base64) });
-                addToast('头像已更新', 'success');
+                addToast('Avatar updated', 'success');
             } catch (err: any) {
                 addToast(err.message, 'error');
             }
@@ -38,14 +38,14 @@ const UserApp: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                         </svg>
                     </button>
-                    <h1 className="text-lg font-bold text-slate-700 tracking-wide">个人档案</h1>
+                    <h1 className="text-lg font-bold text-slate-700 tracking-wide">Profile</h1>
                 </div>
                 {/* Tab：我的档案 / 生活记录 */}
                 <div className="flex gap-1.5 px-4 pb-2.5">
-                    {([['profile', '我的档案'], ['life', '生活记录']] as const).map(([key, label]) => (
+                    {([['profile', 'My Profile'], ['life', 'Life Records']] as const).map(([key, label]) => (
                         <button
                             key={key}
-                            onClick={() => { setTab(key); trackEvent('切换个人档案标签页', { tab: key }); }}
+                            onClick={() => { setTab(key); trackEvent('Switch Profile Tab', { tab: key }); }}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                                 tab === key ? 'bg-primary text-white shadow-sm' : 'bg-slate-100 text-slate-400'
                             }`}
@@ -87,16 +87,16 @@ const UserApp: React.FC = () => {
                             </div>
                         </div>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarChange} />
-                        <p className="mt-2 text-center text-[10px] text-slate-400">整体头像：所有聊天的默认。想在某个角色那儿换一副面孔？下面「分角色聊天头像」里设。</p>
+                        <p className="mt-2 text-center text-[10px] text-slate-400">Overall avatar: the default for all chats. Want a different face for a specific character? Set it below under "Per-character chat avatar".</p>
 
                         {/* Name field */}
                         <div className="mt-4">
-                            <label className="text-[11px] font-bold text-slate-400 tracking-widest block text-center mb-1">你的名字</label>
+                            <label className="text-[11px] font-bold text-slate-400 tracking-widest block text-center mb-1">Your Name</label>
                             <div className="relative">
                                 <input
                                     value={userProfile.name}
                                     onChange={(e) => updateUserProfile({ name: e.target.value })}
-                                    placeholder="点击输入名字"
+                                    placeholder="Tap to enter a name"
                                     className="w-full bg-slate-50 focus:bg-white border border-transparent focus:border-primary/30 rounded-2xl px-4 py-3 text-xl font-bold text-slate-800 text-center outline-none transition-all placeholder:text-slate-300 placeholder:font-normal"
                                 />
                             </div>
@@ -115,14 +115,14 @@ const UserApp: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
                             </svg>
                         </span>
-                        <h2 className="text-sm font-bold text-slate-700">关于我 / 设定</h2>
+                        <h2 className="text-sm font-bold text-slate-700">About Me / Settings</h2>
                     </div>
-                    <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">这些信息会发送给 AI，以便它更好地了解你（例如：大学生、喜欢吃辣、性格内向）。</p>
+                    <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">This information is sent to the AI so it can get to know you better (e.g. college student, likes spicy food, introverted).</p>
                     <textarea
                         value={userProfile.bio}
                         onChange={(e) => updateUserProfile({ bio: e.target.value })}
                         className="w-full h-52 bg-slate-50 focus:bg-white border border-slate-100 focus:border-primary/30 rounded-2xl px-4 py-3 text-sm text-slate-700 leading-relaxed resize-none outline-none transition-all placeholder:text-slate-300"
-                        placeholder="描述你自己..."
+                        placeholder="Describe yourself..."
                     />
                 </div>
                 </>}

@@ -22,79 +22,79 @@ import { trackEvent } from '../utils/analytics';
 
 const FAQ_DATA = [
     {
-        q: "1. 进不去网页 / 白屏 / 点了没反应",
-        reason: "网络有点小脾气，不够通畅。",
-        solution: "需要一点点“魔法”才能连上外网。\n如果你不知道什么是“梯子/魔法”，请自行搜索一下~ \n这不是软件坏啦，是网路不通。",
+        q: "1. Can't load pages / white screen / taps don't respond",
+        reason: "Your network connection is being a bit temperamental.",
+        solution: "You'll need a bit of \"magic\" to connect to the outside internet.\nIf you don't know what a \"ladder/magic\" is, please search for it yourself~ \nThis isn't the software being broken, it's the network being blocked.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1fa84.png",
         color: "bg-blue-50 text-blue-700"
     },
     {
-        q: "2. 发了消息，角色不回我？",
-        reason: "为了帮大家省额度，角色不会自动秒回，他在等你戳他。",
-        solution: "发完消息后，请注意观察顶部标题栏右边的 **闪电按钮**。\n点一下它，戳戳他，他就会思考并回复啦！",
+        q: "2. I sent a message but the character isn't replying?",
+        reason: "To help everyone save on quota, characters don't auto-reply instantly — they're waiting for you to poke them.",
+        solution: "After sending a message, look for the **lightning bolt button** on the right side of the top title bar.\nTap it to poke them, and they'll think it over and reply!",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4a4.png",
         color: "bg-yellow-50 text-yellow-700"
     },
     {
-        q: "3. 为什么拉取不到模型列表？",
-        reason: "很多时候是填写的地址（URL）差了一点点。",
-        solution: "请仔细检查你的链接：\n1. 后面是不是漏掉了 `/v1` 这个小尾巴？\n2. 复制时是否多带了空格？\n3. 地址不对是敲不开门的哦。",
+        q: "3. Why can't I fetch the model list?",
+        reason: "Often it's because the address (URL) you entered is slightly off.",
+        solution: "Please carefully check your link:\n1. Did you forget the `/v1` suffix at the end?\n2. Did you accidentally copy an extra space?\n3. A wrong address just won't open the door.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f50d.png",
         color: "bg-red-50 text-red-700"
     },
     {
-        q: "4. 出现红色弹窗 (API 报错)",
-        reason: "情况A：如果你最近发了很多高清图，或者聊得太久了。\n情况B：没发图也报错？可能是提供接口的那边欠费或波动。",
-        solution: "**情况A**：进【设置】，把“上下文条数”调低一点（例如 20-50）。\n**情况B**：请直接联系你购买/获取 API 的那个渠道哦，模拟器本身是无辜哒。",
+        q: "4. A red popup appears (API error)",
+        reason: "Case A: if you've recently sent a lot of HD images, or chatted for a long time.\nCase B: getting an error even without sending images? The API provider on the other end may be out of balance or having issues.",
+        solution: "**Case A**: go to [Settings] and lower the \"context message count\" a bit (e.g. 20-50).\n**Case B**: please contact the channel you purchased/obtained your API from directly — the simulator itself is innocent.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/26a0.png",
         color: "bg-orange-50 text-orange-700"
     },
     {
-        q: "5. 气泡主题 / 导入角色",
-        reason: "想要个性化？想换角色？",
-        solution: "**换气泡**：\n点顶部的名字 → 下滑找“气泡样式”。\n\n**导角色**：\n只支持导入本模拟器导出的 .json 文件（专属护照），不兼容酒馆图片卡和其他小手机角色卡。",
+        q: "5. Bubble themes / importing characters",
+        reason: "Want to personalize? Want to switch characters?",
+        solution: "**Change bubble**:\nTap the name at the top → scroll down to find \"Bubble Style\".\n\n**Import character**:\nOnly supports importing .json files exported from this simulator (a dedicated passport), not compatible with tavern image cards or other phone-sim character cards.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3a8.png",
         color: "bg-purple-50 text-purple-700"
     },
     {
-        q: "6. 碎碎念：关于 API（接口）",
-        reason: "用公益/白嫖的不稳定？花钱买的报错？",
-        solution: "公益的不稳定是常态。\n花钱买的请找卖家售后。\n作者和群友也是为爱发电，但是大家并不是专业的。",
+        q: "6. A few words about APIs",
+        reason: "Free/community APIs unstable? Paid ones erroring out?",
+        solution: "Instability is the norm for free/community APIs.\nFor paid ones, please contact the seller for support.\nThe author and community members are also doing this out of passion, but nobody here is a professional.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4ac.png",
         color: "bg-slate-50 text-slate-700"
     },
     {
-        q: "7. 遇到奇怪的 Bug 怎么办？",
-        reason: "可以在群里问，但严肃报修需要“病历本”。",
-        solution: "请去桌面【设置】→【数据备份】导出 JSON 文件发给我。\n只有复现了问题，才能修好它。",
+        q: "7. What to do if you hit a weird bug?",
+        reason: "You can ask in the group, but a serious bug report needs a \"medical chart\".",
+        solution: "Please go to the desktop [Settings] → [Data Backup], export the JSON file and send it to me.\nOnly by reproducing the issue can it be fixed.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f691.png",
         color: "bg-rose-50 text-rose-700"
     },
     {
-        q: "8. 关于提问礼仪",
-        reason: "拒绝低气压。",
-        solution: "遇到问题深呼吸，直接发截图 + 描述发生了什么。\n欢迎大家积极讨论，但是避免通篇抱怨，散发负面情绪解决不了问题，还会劝退想帮你的人。",
+        q: "8. About asking questions politely",
+        reason: "No room for bad vibes.",
+        solution: "When you hit a problem, take a breath and just send a screenshot + description of what happened.\nEveryone is welcome to discuss actively, but avoid venting an entire wall of complaints — spreading negativity doesn't solve problems, and it drives away the people who want to help you.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2764.png",
         color: "bg-pink-50 text-pink-700"
     },
     {
-        q: "9. 小屋里角色立绘怎么更换？",
-        reason: "想给角色换个造型/衣服。",
-        solution: "1. 进入小屋，点击顶部的「装修」按钮进入编辑模式。\n2. **直接点击**画面中央的角色小人。\n3. 选择一张透明背景的图片上传即可。\n(注意：这里更换的是小屋专属的 Q 版/Chibi 立绘，不是聊天头像哦)",
+        q: "9. How do I change a character's portrait in the Dwelling?",
+        reason: "Want to give a character a new look/outfit?",
+        solution: "1. Enter the Dwelling, tap the \"Decorate\" button at the top to enter edit mode.\n2. **Directly tap** the character figure in the center of the screen.\n3. Just select and upload an image with a transparent background.\n(Note: this changes the Dwelling-exclusive chibi portrait, not the chat avatar)",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3e0.png",
         color: "bg-indigo-50 text-indigo-700"
     },
     {
-        q: "10. 导入的表情包不显示 / 导入没反应？",
-        reason: "通常是格式不对，或者链接无效。",
-        solution: "1. **严格检查格式**：必须是 `名字--URL`，中间是**两个减号**！\n   错误：`滑稽 http://...`\n   正确：`滑稽--http://...`\n2. **检查链接**：必须是图片直链（.jpg/.png/.gif 结尾）。\n3. **一行一个**：不要把所有内容写在一行里。",
+        q: "10. Imported stickers don't show up / importing does nothing?",
+        reason: "Usually the format is wrong, or the link is invalid.",
+        solution: "1. **Check the format strictly**: it must be `name--URL`, with **two hyphens** in the middle!\n   Wrong: `funny http://...`\n   Correct: `funny--http://...`\n2. **Check the link**: it must be a direct image link (ending in .jpg/.png/.gif).\n3. **One per line**: don't write everything on a single line.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f5bc.png",
         color: "bg-cyan-50 text-cyan-700"
     },
     {
-        q: "11. 点聊天输入框没反应 / 键盘唤不起来？",
-        reason: "多半是随备份一起导入的美化在捣乱：白框自定义 CSS、气泡主题或聊天背景把输入框盖住/禁用了。这类数据跟着备份走，所以重启、重新导入备份都没用，而全新页面（没导数据）反而正常。",
-        solution: "按顺序排查：\n1. 【外观】→【聊天界面】→ **还原白框美化**（一键清掉全局和所有角色的白框 CSS）。\n2. 点顶部角色名 → 把「气泡样式」换回默认。\n3. 关掉该角色的聊天背景图。\n4. 还不行：换个浏览器（如 Safari）打开同一链接导入备份试试；仍复现请把备份 JSON 按第 7 条发给作者。",
+        q: "11. Tapping the chat input box does nothing / keyboard won't come up?",
+        reason: "Usually it's some styling that came in with a backup causing trouble: Whitebox custom CSS, a bubble theme, or a chat background is covering/disabling the input box. This kind of data travels with the backup, so restarting or re-importing the backup won't help, while a fresh page (no data imported) works fine.",
+        solution: "Check in this order:\n1. [Appearance] → [Chat Interface] → **Restore Whitebox Styling** (clears global and all characters' Whitebox CSS in one tap).\n2. Tap the character name at the top → switch \"Bubble Style\" back to default.\n3. Turn off that character's chat background image.\n4. Still not working: try opening the same link in a different browser (e.g. Safari) and import the backup there; if it still happens, send the backup JSON to the author per item 7.",
         icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2328.png",
         color: "bg-teal-50 text-teal-700"
     }
@@ -112,104 +112,104 @@ interface ChangelogEntry {
 const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     {
         id: CHANGELOG_2026_08_30,
-        title: '2026 年 8 月 30 日 · 协同工作台',
-        subtitle: '角色协同工作双模式 · Word / PDF 与文件交付 · 可安装美化、角色卡和世界书 · 独立文件库与归档记忆 · 协同数据随系统备份导入导出',
+        title: 'August 30, 2026 · Collaboration Workspace',
+        subtitle: 'Dual-mode character collaboration · Word / PDF and file delivery · Installable styling, character cards, and worldbooks · Dedicated file library and archived memory · Collaboration data included in system backup import/export',
         date: '2026-08-30',
         src: 'changelogs/2026-8-30.html',
         accent: 'from-indigo-100 to-stone-100 border-indigo-200',
     },
     {
         id: CHANGELOG_2026_08_10,
-        title: '2026 年 8 月 10 日 · Live2D 陪伴升级',
-        subtitle: '新增 VRM / Live2D 视频通话 · 新增面向 Live2D 的「触感陪伴」桌面主题',
+        title: 'August 10, 2026 · Live2D Companion Upgrade',
+        subtitle: 'New VRM / Live2D video calls · New "L2D Companion Desktop" theme for Live2D',
         date: '2026-08-10',
         src: 'changelogs/2026-8-10.html',
         accent: 'from-emerald-100 to-sky-100 border-emerald-200',
     },
     {
         id: CHANGELOG_2026_08_03,
-        title: '2026 年 8 月 3 日 · 主动消息 2.0',
-        subtitle: '角色到点自己发消息，App 关着也收得到 · 三种排任务的方式（面板 / 聊天里说一句 / 角色给自己排）· 到点现取时间天气节日热搜与当天作息 · 连发不重样、只做事时不推空消息 · 后台照样能用 MCP 与搜索 · 想找话说的那类会让路，闹钟和承诺照发 · 需自部署 Cloudflare Worker + D1',
+        title: 'August 3, 2026 · Proactive Message 2.0',
+        subtitle: 'Characters send messages on their own at the scheduled time, delivered even with the app closed · Three ways to schedule a task (panel / say it in chat / character schedules for themselves) · Fetches live time, weather, holidays, trending topics, and daily routine at fire time · Does not repeat itself back-to-back, skips empty pushes when there is nothing to say · MCP and search still work in the background · "Looking for something to say" tasks yield right of way, alarms and promises still fire · Requires self-deployed Cloudflare Worker + D1',
         date: '2026-08-03',
         src: 'changelogs/2026-8-3.html',
         accent: 'from-violet-100 to-sky-100 border-violet-200',
     },
     {
         id: CHANGELOG_2026_07_10,
-        title: '2026 年 7 月 10 日 · 生活统计',
-        subtitle: '档案「生活统计」四模块 + 角色注入代记 · 彼方全服写诗 · 捏人换画风 + PSD 批量导入 + 手办区 · 神经链接角色分组 · 小屋装修大升级 + 家园「凌晨」段 · 记忆宫殿门牌（测试中）· 专属提示铃声 · 壁纸/小屋图改存 Blob · 一大批 iOS 适配与散修',
+        title: 'July 10, 2026 · Life Records',
+        subtitle: 'Four Life Records modules in Profile + character-logged entries · Server-wide relay poems in Beyond · Character Creator art-style switching + PSD batch import + Figure Studio · Neural Link character grouping · Major Dwelling decoration upgrade + "late night" segment in Homeland · Memory Palace room plates (in testing) · Custom notification sound · Wallpaper/Dwelling images now store as Blobs · A big batch of iOS compatibility fixes and cleanup',
         date: '2026-07-10',
         src: 'changelogs/2026-7-10.html',
         accent: 'from-rose-100 to-violet-100 border-rose-200',
     },
     {
         id: CHANGELOG_2026_06_26,
-        title: '2026 年 6 月 26 日 · 梦境盲盒',
-        subtitle: '小屋梦境系统（进屋刷新 · 集齐 13 款梦境盲盒）· 查手机联系人模式 + 智能体（char 的小手机）· 见面状态栏与设置前移 · 日程窥得更细 · 时间感知归位神经链接 · TTS 新增鱼声 API',
+        title: 'June 26, 2026 · Dream Blind Box',
+        subtitle: 'Dwelling dream system (refreshes on entry · collect all 13 dream blind boxes) · Check Phone contact mode + agent (a phone belonging to the character) · Date status bar and settings moved up · Finer-grained schedule peeking · Time awareness moved back to Neural Link · New Fish Audio API for TTS',
         date: '2026-06-26',
         src: 'changelogs/2026-6-26.html',
         accent: 'from-indigo-100 to-violet-100 border-indigo-200',
     },
     {
         id: CHANGELOG_2026_06_21,
-        title: '2026 年 6 月 21 日 · 查手机翻新',
-        subtitle: '查手机 UI 翻新 + 新增「人格模拟」（可指定一场 Screenlife 演出，设置里可选是否发送给角色）· 外观新增手游风 · 小红书 Lite 可直接分享帖子给角色',
+        title: 'June 21, 2026 · Check Phone Overhaul',
+        subtitle: 'Check Phone UI overhaul + new "Persona Sim" (script a Screenlife performance, with an option in settings for whether to send it to the character) · New mobile-game-style theme in Appearance · Xiaohongshu Lite can now share posts directly with the character',
         date: '2026-06-21',
         src: 'changelogs/2026-6-21.html',
         accent: 'from-violet-100 to-fuchsia-100 border-violet-200',
     },
     {
         id: CHANGELOG_2026_06_14,
-        title: '2026 年 6 月 14 日 · 家园上线',
-        subtitle: '小屋翻新 · 「家园」多角色大世界（真实时间 / 模拟时间二选一）· 瑞幸咖啡点单',
+        title: 'June 14, 2026 · Homeland Launch',
+        subtitle: 'Dwelling overhaul · "Homeland" multi-character shared world (choice of real time / simulated time) · Luckin Coffee ordering',
         date: '2026-06-14',
         src: 'changelogs/2026-6-14.html',
         accent: 'from-violet-100 to-purple-100 border-violet-200',
     },
     {
         id: CHANGELOG_2026_06_05,
-        title: '2026 年 6 月 5 日 · 彼方上线',
-        subtitle: '角色自主登入的 VR 小世界 · 邮局漂流信 · 留言簿原话上墙 · 隐藏小人',
+        title: 'June 5, 2026 · Beyond Launch',
+        subtitle: 'A small VR world characters log into on their own · Post Office drift letters · Guestbook quotes posted to the wall · Hidden figures',
         date: '2026-06-05',
         src: 'changelogs/2026-6-5.html',
         accent: 'from-indigo-100 to-purple-100 border-indigo-200',
     },
     {
         id: CHANGELOG_2026_05_27,
-        title: '2026 年 5 月 27 日 · 小更新',
-        subtitle: '情绪 buff 也接入 Instant Push · 发完即走，聊天和情绪都不用一直开着 App（附配置视频）',
+        title: 'May 27, 2026 · Minor Update',
+        subtitle: 'Mood buffs now also connect to Instant Push · Send and go, no need to keep the app open for either chat or moods (setup video included)',
         date: '2026-05-27',
         src: 'changelogs/2026-5-27.html',
         accent: 'from-rose-100 to-amber-100 border-rose-200',
     },
     {
         id: CHANGELOG_2026_05_17,
-        title: '2026 年 5 月 17 日 · 小更新',
-        subtitle: 'Instant Push 上线 · 发完文本就能锁屏走人，AI 回复自己回来',
+        title: 'May 17, 2026 · Minor Update',
+        subtitle: 'Instant Push launched · Send your text and lock the screen, the AI reply comes back on its own',
         date: '2026-05-17',
         src: 'changelogs/2026-5-17.html',
         accent: 'from-teal-100 to-sky-100 border-teal-200',
     },
     {
         id: CHANGELOG_2026_05_10,
-        title: '2026 年 5 月 10 日 · 小更新',
-        subtitle: '「心象」上线 · 模型思考链可视化 + 约会（见面模式）bug 修复',
+        title: 'May 10, 2026 · Minor Update',
+        subtitle: '"Mindscape" launched · Model thinking-chain visualization + Date mode bug fixes',
         date: '2026-05-10',
         src: 'changelogs/2026-5-10.html',
         accent: 'from-purple-100 to-indigo-100 border-purple-200',
     },
     {
         id: CHANGELOG_2026_05,
-        title: '2026 年 5 月更新',
-        subtitle: 'GitHub 备份 · 音乐 App 网络优化 · 麦当劳 MCP · SULLY 默认皮肤 等',
+        title: 'May 2026 Update',
+        subtitle: "GitHub backup · Music app network optimization · McDonald's MCP · SULLY default skin, and more",
         date: '2026-05',
         src: 'changelogs/2026-5.html',
         accent: 'from-amber-100 to-orange-100 border-amber-200',
     },
     {
         id: CHANGELOG_2026_04,
-        title: '2026 年 4 月更新',
-        subtitle: '向量记忆 · 更新说明与配置指南',
+        title: 'April 2026 Update',
+        subtitle: 'Vector memory · Release notes and setup guide',
         date: '2026-04',
         src: 'changelogs/2026-4.html',
         accent: 'from-indigo-100 to-purple-100 border-indigo-200',
@@ -247,7 +247,7 @@ const FAQApp: React.FC = () => {
 
     const headerTitle = activeChangelog
         ? activeChangelog.title
-        : tab === 'changelog' ? '更新日志' : '常见问题';
+        : tab === 'changelog' ? 'Changelog' : 'FAQ';
 
     return (
         <div className="h-full w-full bg-slate-50 flex flex-col font-light">
@@ -270,24 +270,24 @@ const FAQApp: React.FC = () => {
                 <div className="shrink-0 bg-white/60 backdrop-blur-md border-b border-slate-200/60 px-4 py-2">
                     <div className="inline-flex bg-slate-100 rounded-full p-1 gap-1">
                         <button
-                            onClick={() => { setTab('faq'); trackEvent('切换常见问题标签页', { tab: 'faq' }); }}
+                            onClick={() => { setTab('faq'); trackEvent('Switch FAQ Tab', { tab: 'faq' }); }}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                                 tab === 'faq'
                                     ? 'bg-white text-indigo-600 shadow-sm'
                                     : 'text-slate-500 active:scale-95'
                             }`}
                         >
-                            常见问题
+                            FAQ
                         </button>
                         <button
-                            onClick={() => { setTab('changelog'); trackEvent('切换常见问题标签页', { tab: 'changelog' }); }}
+                            onClick={() => { setTab('changelog'); trackEvent('Switch FAQ Tab', { tab: 'changelog' }); }}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                                 tab === 'changelog'
                                     ? 'bg-white text-indigo-600 shadow-sm'
                                     : 'text-slate-500 active:scale-95'
                             }`}
                         >
-                            更新日志
+                            Changelog
                         </button>
                     </div>
                 </div>
@@ -308,12 +308,12 @@ const FAQApp: React.FC = () => {
                     {/* Intro Banner */}
                     <div className="bg-gradient-to-r from-pink-100 to-indigo-100 p-5 rounded-3xl mb-6 shadow-sm">
                         <h2 className="text-lg font-bold text-slate-700 mb-2 flex items-center gap-2">
-                            <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f338.png" className="w-5 h-5 inline" alt="" /> 新手必读小贴士 <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f338.png" className="w-5 h-5 inline" alt="" />
+                            <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f338.png" className="w-5 h-5 inline" alt="" /> Must-Read Tips for Newcomers <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f338.png" className="w-5 h-5 inline" alt="" />
                         </h2>
                         <p className="text-xs text-slate-600 leading-relaxed opacity-90">
-                            欢迎来到这里！为了让你和角色的互动更顺畅，如果遇到问题，请先看看下面有没有答案哦~
+                            Welcome! To make your interactions with characters go more smoothly, please check below for an answer first if you run into a problem~
                             <br/>
-                            (如果不看公告直接提问，大家可能不知道怎么帮你，也会消耗群友的耐心呢)
+                            (If you ask without reading the announcements first, people may not know how to help you, and it also wears down the community's patience)
                         </p>
                     </div>
 
@@ -330,11 +330,11 @@ const FAQApp: React.FC = () => {
 
                                         <div className="space-y-2">
                                             <div className="flex gap-2 items-start">
-                                                <span className="text-xs font-bold text-slate-400 shrink-0 mt-0.5">原因:</span>
+                                                <span className="text-xs font-bold text-slate-400 shrink-0 mt-0.5">Reason:</span>
                                                 <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{item.reason}</p>
                                             </div>
                                             <div className="flex gap-2 items-start bg-slate-50 p-2 rounded-lg">
-                                                <span className="text-xs font-bold text-green-500 shrink-0 mt-0.5 flex items-center gap-0.5"><Sparkle size={12} weight="fill" /> 解决:</span>
+                                                <span className="text-xs font-bold text-green-500 shrink-0 mt-0.5 flex items-center gap-0.5"><Sparkle size={12} weight="fill" /> Solution:</span>
                                                 <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-medium">{item.solution}</p>
                                             </div>
                                         </div>
@@ -352,10 +352,10 @@ const FAQApp: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-5 pb-20 no-scrollbar">
                     <div className="bg-gradient-to-r from-indigo-100 to-purple-100 p-5 rounded-3xl mb-6 shadow-sm">
                         <h2 className="text-lg font-bold text-slate-700 mb-2 flex items-center gap-2">
-                            <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png" className="w-5 h-5 inline" alt="" /> 版本更新记录
+                            <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png" className="w-5 h-5 inline" alt="" /> Version Update History
                         </h2>
                         <p className="text-xs text-slate-600 leading-relaxed opacity-90">
-                            这里存放每一次重要更新的详细说明。点击卡片查看完整内容。
+                            This is where detailed notes for every major update live. Tap a card to view the full content.
                         </p>
                     </div>
 
@@ -377,7 +377,7 @@ const FAQApp: React.FC = () => {
                                         </div>
                                         <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{entry.subtitle}</p>
                                         <div className="mt-2 text-[11px] font-bold text-indigo-600 flex items-center gap-1">
-                                            查看完整更新说明
+                                            View full release notes
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
                                         </div>
                                     </div>
@@ -387,7 +387,7 @@ const FAQApp: React.FC = () => {
                     </div>
 
                     <div className="mt-8 text-center text-[10px] text-slate-400">
-                        SullyOS Changelog • 更多版本将在这里陆续归档
+                        SullyOS Changelog • More versions will be archived here over time
                     </div>
                 </div>
             )}

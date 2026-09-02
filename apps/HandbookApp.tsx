@@ -66,7 +66,7 @@ const HandbookApp: React.FC = () => {
     const updateLifestreamDepth = (d: LifestreamDepth) => {
         setLifestreamDepth(d);
         try { localStorage.setItem('handbook_lifestream_depth', d); } catch {}
-        trackEvent('切换角色生活流深度', { depth: d });
+        trackEvent('Switch Character Lifestream Depth', { depth: d });
     };
 
     // ─── 数据加载 ───────────────────────────────────────
@@ -117,7 +117,7 @@ const HandbookApp: React.FC = () => {
         setExcludedChatChars(new Set());
         setExcludedLifeChars(new Set());
         setShowCharPicker(true);
-        trackEvent('打开生成今日面板');
+        trackEvent('Open Generate Today Panel');
     };
 
     // ─── 执行生成 ─────────────────────────────────────
@@ -127,12 +127,12 @@ const HandbookApp: React.FC = () => {
     const runGenerate = async () => {
         setShowCharPicker(false);
         if (!apiConfig.apiKey || !apiConfig.baseUrl) {
-            addToast('请先在设置里配置主 API', 'error');
+            addToast('Please configure the primary API in Settings first', 'error');
             return;
         }
         setGenerating(true);
         setGenProgress(null);
-        trackEvent('生成今日手账');
+        trackEvent("Generate Today's Handbook");
         try {
             const selectedChat = chatCharIds.filter(id => !excludedChatChars.has(id));
             const selectedLife = lifestreamCandidates.filter(c => !excludedLifeChars.has(c.id));
@@ -162,7 +162,7 @@ const HandbookApp: React.FC = () => {
 
             if (result.pages.length === 0) {
                 // 所有人都 pass 了 + user 也没素材 → 真的"今天空"
-                addToast('今天大家都没什么想写的 — 留张白纸吧', 'info');
+                addToast('Nobody had much to write today — leave a blank page', 'info');
                 return;
             }
 
@@ -192,7 +192,7 @@ const HandbookApp: React.FC = () => {
             });
 
             setView('day');
-            addToast(`共 ${result.pages.length} 人写了今天`, 'success');
+            addToast(`${result.pages.length} people wrote about today`, 'success');
         } finally {
             setGenerating(false);
             setGenProgress(null);
@@ -235,22 +235,22 @@ const HandbookApp: React.FC = () => {
             generatedBy: p.generatedBy === 'llm' ? 'user' : p.generatedBy,
         }));
         setEditingPageId(null);
-        trackEvent('保存手账页编辑');
+        trackEvent('Save Handbook Page Edit');
     };
 
     const handleDeletePage = async (pageId: string) => {
-        if (!confirm('撕掉这页?')) return;
+        if (!confirm('Tear out this page?')) return;
         await upsertEntry(activeDate, prev => {
             const newPages = prev.pages.filter(p => p.id !== pageId);
             const layouts = recomputeLayouts(prev.layouts, newPages);
             return { ...prev, pages: newPages, layouts };
         });
-        trackEvent('撕掉一页手账');
+        trackEvent('Tear Out a Handbook Page');
     };
 
     const handleToggleExclude = async (pageId: string) => {
         await updatePage(pageId, p => ({ ...p, excluded: !p.excluded }));
-        trackEvent('标记手账页不入册');
+        trackEvent('Mark Handbook Page as Excluded');
     };
 
     const handleRegenerateLifestream = async (page: HandbookPage) => {
@@ -258,7 +258,7 @@ const HandbookApp: React.FC = () => {
         const char = characters.find(c => c.id === page.charId);
         if (!char) return;
         setRegenPageId(page.id);
-        trackEvent('重新生成角色小生活');
+        trackEvent('Regenerate Character Little Life');
         try {
             const entry = activeEntry;
             if (!entry) return;
@@ -271,7 +271,7 @@ const HandbookApp: React.FC = () => {
                 characters, userProfile, apiConfig,
             });
             if (!result.newPage) {
-                addToast('这次没写出来，再试一次吧。', 'error');
+                addToast('Nothing came out this time, try again.', 'error');
                 return;
             }
 
@@ -283,14 +283,14 @@ const HandbookApp: React.FC = () => {
                 const newPages = [...kept, result.newPage!];
                 return { ...prev, pages: newPages, layouts: result.newLayouts };
             });
-            addToast(`${char.name} · 小生活已刷新`, 'success');
+            addToast(`${char.name} · Little Life refreshed`, 'success');
         } finally {
             setRegenPageId(null);
         }
     };
 
     const handleAddNote = async () => {
-        trackEvent('新增手写页');
+        trackEvent('Add Handwritten Page');
         const newPage: HandbookPage = {
             id: `note-${Date.now()}`, type: 'user_note', content: '',
             paperStyle: 'dot', generatedBy: 'user', generatedAt: Date.now(),
@@ -353,7 +353,7 @@ const HandbookApp: React.FC = () => {
                                 HANDBOOK
                             </div>
                             <div className="text-[14px] font-bold" style={{ color: PAPER_TONES.ink }}>
-                                手账
+                                Handbook
                             </div>
                         </>
                     )}
@@ -478,9 +478,9 @@ const HandbookApp: React.FC = () => {
                         <Sparkle weight="fill" className="w-3 h-3" />
                         {generating
                             ? (genProgress
-                                ? `${genProgress.name} 正在写… ${genProgress.i}/${genProgress.n}`
-                                : '正在落笔…')
-                            : (activeEntry ? '再写一份' : '让 AI 替我写')}
+                                ? `${genProgress.name} is writing… ${genProgress.i}/${genProgress.n}`
+                                : 'Putting pen to paper…')
+                            : (activeEntry ? 'Write another' : 'Let AI write for me')}
                     </button>
                     <button
                         onClick={handleAddNote}
@@ -492,7 +492,7 @@ const HandbookApp: React.FC = () => {
                         }}
                     >
                         <Plus className="w-3 h-3" weight="bold" />
-                        手写
+                        Write
                     </button>
                 </div>
             </div>
@@ -514,7 +514,7 @@ const HandbookApp: React.FC = () => {
                     className="flex-1 flex items-center justify-center text-sm"
                     style={{ ...SERIF_STACK, color: PAPER_TONES.inkSoft }}
                 >
-                    翻开中…
+                    Opening…
                 </div>
             ) : activeSection.kind === 'tracker' && activeTracker ? (
                 <TrackerSection
@@ -526,7 +526,7 @@ const HandbookApp: React.FC = () => {
                     today={getLocalDateStr()}
                     todayEntry={todayEntry}
                     entries={entries}
-                    userName={userProfile.name || '我'}
+                    userName={userProfile.name || 'Me'}
                     generating={generating}
                     onGenerateToday={() => {
                         setActiveDate(getLocalDateStr());
@@ -542,7 +542,7 @@ const HandbookApp: React.FC = () => {
                     date={activeDate}
                     entry={activeEntry}
                     characters={characters}
-                    userName={userProfile.name || '我'}
+                    userName={userProfile.name || 'Me'}
                     editingPageId={editingPageId}
                     regenPageId={regenPageId}
                     onStartEdit={setEditingPageId}
@@ -566,11 +566,11 @@ const HandbookApp: React.FC = () => {
                     onSwitch={(section) => {
                         setActiveSection(section);
                         // 只报分区类型（今日 / 打卡），tracker 名字是用户自己起的，不带出去
-                        trackEvent('切换手账分区', { section: section.kind });
+                        trackEvent('Switch Handbook Section', { section: section.kind });
                     }}
                     onAddTracker={() => {
                         setShowTrackerCreate(true);
-                        trackEvent('打开新建打卡面板');
+                        trackEvent('Open New Tracker Panel');
                     }}
                 />
             )}
@@ -582,8 +582,8 @@ const HandbookApp: React.FC = () => {
                     await refreshTrackers();
                     setShowTrackerCreate(false);
                     setActiveSection({ kind: 'tracker', trackerId: tracker.id });
-                    addToast(`「${tracker.name}」已添加 ♡`, 'success');
-                    trackEvent('新建一个打卡项');
+                    addToast(`"${tracker.name}" added ♡`, 'success');
+                    trackEvent('Create a Tracker');
                 }}
             />
             <HandbookCharPicker

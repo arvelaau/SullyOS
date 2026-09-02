@@ -333,7 +333,7 @@ const DesktopSquareImage = React.memo(({ image, contentColor, onClick, acnh = fa
                         </svg>
                     </div>
                     <div className="text-[8.5px] uppercase font-bold tracking-[0.22em] opacity-55">Add Image</div>
-                    <div className="text-[8.5px] opacity-40 leading-tight">从 外观 · 启动器组件<br/>设置一张方图</div>
+                    <div className="text-[8.5px] opacity-40 leading-tight">Set a square image in<br/>Appearance · Launcher Widgets</div>
                 </div>
             )}
         </div>
@@ -628,7 +628,7 @@ const Launcher: React.FC = () => {
                   if (visibleMsgs.length > 0) {
                       const last = visibleMsgs[visibleMsgs.length - 1];
                       const cleanContent = last.content.replace(/\[.*?\]/g, '').trim();
-                      setLastMessage(cleanContent || (last.type === 'image' ? '[图片]' : '[消息]'));
+                      setLastMessage(cleanContent || (last.type === 'image' ? '[Image]' : '[Message]'));
                   } else {
                       setLastMessage(targetChar.description || "System Ready.");
                   }
@@ -852,7 +852,7 @@ const Launcher: React.FC = () => {
           isDragging.current = false;
           suppressLayoutClickUntil.current = Date.now() + 700;
           setLayoutEditing(true);
-          trackEvent('进入桌面整理模式');
+          trackEvent('Enter Desktop Organize Mode');
       }, 520);
   };
 
@@ -985,8 +985,8 @@ const Launcher: React.FC = () => {
       {layoutEditing && (
           <div className="absolute top-[calc(var(--safe-top)+0.65rem)] left-4 right-4 z-50 flex items-center justify-between rounded-full px-3 py-2"
               style={{ background: 'rgba(75,65,54,0.88)', color: '#fffdf8', boxShadow: '0 8px 24px rgba(75,65,54,0.20)' }}>
-              <span className="text-[10px] font-semibold tracking-wide">按住拖动，松手交换位置</span>
-              <button onClick={finishLayoutEditing} className="ml-3 px-3 py-1 rounded-full text-[10px] font-bold bg-white/15 active:scale-95">完成</button>
+              <span className="text-[10px] font-semibold tracking-wide">Press and drag, release to swap positions</span>
+              <button onClick={finishLayoutEditing} className="ml-3 px-3 py-1 rounded-full text-[10px] font-bold bg-white/15 active:scale-95">Done</button>
           </div>
       )}
       
@@ -1052,7 +1052,7 @@ const Launcher: React.FC = () => {
                                   schedule={scheduleData}
                                   character={scheduleChar}
                                   contentColor={contentColor}
-                                  onOpen={() => { setScheduleViewerOpen(true); trackEvent('打开角色日程面板'); }}
+                                  onOpen={() => { setScheduleViewerOpen(true); trackEvent('Open Character Schedule Panel'); }}
                                   acnh={acnh}
                                   paper={paper}
                               />
