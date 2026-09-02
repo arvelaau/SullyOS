@@ -3,15 +3,17 @@ import { DateObservation, DateObserveConfig, DateObserveStyleId } from '../../ty
 import { resolveObserveFields } from '../../utils/datePrompts';
 
 /**
- * 「观测协议 OBSERVE」观测面板。把 char 此刻的 时间 / 地点 / 状态 / 细节 摊开给用户看。
+ * The "Observation Protocol OBSERVE" readout panel. Lays out char's current
+ * time / location / status / detail for the user to see.
  *
- * 五种视觉样式（dateObserve.style，默认 hologram）：
- *   hologram 全息（默认）· ink 水墨宣纸 · neon 赛博霓虹 · crystal 水晶梦境 · terminal 终端读出
- * 字段的展示标签可按 dateObserve.fields[key].label 自定义（不影响解析）。
+ * Five visual styles (dateObserve.style, default hologram):
+ *   hologram (default) · ink - hand-scroll ink wash · neon - cyber neon · crystal - crystal dreamscape · terminal - terminal readout
+ * A field's display label can be customized via dateObserve.fields[key].label (does not affect parsing).
  *
  * variant:
- *   - 'hud'  : 立绘模式下悬浮在左上角，可折叠；右上角"放大"键展开独立全屏查看
- *   - 'card' : 阅读（小说）模式下内嵌在每条回复正文上方
+ *   - 'hud'  : floats in the top-left corner in portrait mode, collapsible; the "expand" button in the
+ *              top-right opens an independent full-screen view
+ *   - 'card' : embedded above each reply's body text in reading (novel) mode
  */
 
 interface ObserveHUDProps {
@@ -21,22 +23,23 @@ interface ObserveHUDProps {
     config?: DateObserveConfig;
 }
 
-// ── 样式主题 ─────────────────────────────────────────────────────────
-// 每个主题给一组类名/内联样式，渲染走同一条路径，新增样式只在这里加一项。
+// ── Style themes ─────────────────────────────────────────────────────────
+// Each theme provides a set of class names/inline styles; rendering follows the same path,
+// so adding a new style only requires a new entry here.
 
 export interface ObserveStyleMeta {
     id: DateObserveStyleId;
-    name: string;   // 设置面板里给用户看的名字
-    desc: string;   // 一句话简介
-    swatch: string; // 设置面板里的预览色块（CSS background）
+    name: string;   // Name shown to the user in the settings panel
+    desc: string;   // One-line description
+    swatch: string; // Preview color swatch in the settings panel (CSS background)
 }
 
 export const OBSERVE_STYLES: ObserveStyleMeta[] = [
-    { id: 'hologram', name: '全息', desc: '默认。暗色玻璃 + 青紫描边 + 扫描线，中二全息感。', swatch: 'linear-gradient(135deg,#7dd3fc,#a78bfa 50%,#f472b6)' },
-    { id: 'ink',      name: '水墨', desc: '宣纸暖底 + 墨线 + 朱印，文艺克制。',               swatch: 'linear-gradient(135deg,#efe6d4,#cdbfa3 60%,#b04a3a)' },
-    { id: 'neon',     name: '霓虹', desc: '近黑底 + 玫红/青霓虹强发光，赛博夜店感。',          swatch: 'linear-gradient(135deg,#ff2bd6,#22d3ee)' },
-    { id: 'crystal',  name: '水晶', desc: '柔和粉紫磨砂玻璃，梦幻轻盈。',                     swatch: 'linear-gradient(135deg,#fbcfe8,#c4b5fd 60%,#a5f3fc)' },
-    { id: 'terminal', name: '终端', desc: '纯黑等宽绿字，复古控制台读出。',                   swatch: 'linear-gradient(135deg,#022c22,#34d399)' },
+    { id: 'hologram', name: 'Hologram', desc: 'Default. Dark glass + cyan-violet trim + scanlines, chuunibyou hologram feel.', swatch: 'linear-gradient(135deg,#7dd3fc,#a78bfa 50%,#f472b6)' },
+    { id: 'ink',      name: 'Ink Wash', desc: 'Warm rice-paper backdrop + ink strokes + a red seal, restrained and literary.', swatch: 'linear-gradient(135deg,#efe6d4,#cdbfa3 60%,#b04a3a)' },
+    { id: 'neon',     name: 'Neon', desc: 'Near-black backdrop + strong magenta/cyan neon glow, cyber nightclub feel.', swatch: 'linear-gradient(135deg,#ff2bd6,#22d3ee)' },
+    { id: 'crystal',  name: 'Crystal', desc: 'Soft pink-violet frosted glass, dreamy and light.', swatch: 'linear-gradient(135deg,#fbcfe8,#c4b5fd 60%,#a5f3fc)' },
+    { id: 'terminal', name: 'Terminal', desc: 'Solid black with monospace green text, retro console readout.', swatch: 'linear-gradient(135deg,#022c22,#34d399)' },
 ];
 
 interface Theme {
@@ -46,7 +49,7 @@ interface Theme {
     topLineClass: string | null;
     corners: boolean;
     scanline: boolean;
-    pulse: boolean;             // header 状态点是否脉冲（否则静态）
+    pulse: boolean;             // whether the header status dot pulses (otherwise static)
     headerLabel: string;
     headerLabelClass: string;
     headerSubClass: string;
@@ -98,7 +101,7 @@ const THEMES: Record<DateObserveStyleId, Theme> = {
         fontClass: 'font-serif',
         topLineClass: null,
         corners: false, scanline: false, pulse: false,
-        headerLabel: '观 · 录',
+        headerLabel: 'OBSERVE · RECORD',
         headerLabelClass: 'text-[#7a2e22] tracking-[0.3em]',
         headerSubClass: 'text-[#9c8a6a]',
         headerBorderClass: 'border-[#d8cab0]',
@@ -182,7 +185,7 @@ const THEMES: Record<DateObserveStyleId, Theme> = {
 
 const getTheme = (id?: DateObserveStyleId): Theme => THEMES[id || 'hologram'] || THEMES.hologram;
 
-/** 合并默认维度 + 自定义维度，按字段顺序产出渲染行（仅保留有值的） */
+/** Merges default dimensions + custom dimensions, producing render rows in field order (keeps only rows with a value) */
 const buildRows = (observation: DateObservation, config?: DateObserveConfig, charName = '') =>
     resolveObserveFields(config, charName)
         .map(f => ({
@@ -226,16 +229,16 @@ const PanelHeader: React.FC<{ theme: Theme; charName?: string; right?: React.Rea
                 <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${theme.dotClass}`} />
             </span>
             <span className={`text-[10px] font-bold tracking-[0.34em] ${theme.headerLabelClass}`}>{theme.headerLabel}</span>
-            <span className={`text-[9px] tracking-[0.2em] truncate ${theme.headerSubClass}`}>观测协议{charName ? ` · ${charName}` : ''}</span>
+            <span className={`text-[9px] tracking-[0.2em] truncate ${theme.headerSubClass}`}>Observation Protocol{charName ? ` · ${charName}` : ''}</span>
         </div>
         {right}
     </div>
 );
 
 const ObserveHUD: React.FC<ObserveHUDProps> = ({ observation, variant = 'hud', charName, config }) => {
-    // Hooks 必须无条件、且在任何 early-return 之前调用（React Rules of Hooks）。
+    // Hooks must be called unconditionally, before any early return (React Rules of Hooks).
     const [collapsed, setCollapsed] = useState(false);
-    const [expanded, setExpanded] = useState(false); // 独立全屏查看
+    const [expanded, setExpanded] = useState(false); // independent full-screen view
 
     const theme = getTheme(config?.style);
     const rows = buildRows(observation, config, charName);
@@ -251,7 +254,7 @@ const ObserveHUD: React.FC<ObserveHUDProps> = ({ observation, variant = 'hud', c
         </div>
     );
 
-    // ── 阅读模式内嵌卡片 ──
+    // ── Inline card for reading mode ──
     if (variant === 'card') {
         return (
             <div onClick={stop} className={`relative overflow-hidden mb-3 animate-fade-in ${theme.containerClass} ${theme.fontClass}`} style={theme.container}>
@@ -263,7 +266,7 @@ const ObserveHUD: React.FC<ObserveHUDProps> = ({ observation, variant = 'hud', c
         );
     }
 
-    // ── 立绘模式悬浮 HUD ──
+    // ── Floating HUD for portrait mode ──
     return (
         <>
             <div
@@ -280,14 +283,14 @@ const ObserveHUD: React.FC<ObserveHUDProps> = ({ observation, variant = 'hud', c
                         <div className="flex items-center gap-1 shrink-0">
                             <button
                                 onClick={() => setExpanded(true)}
-                                aria-label="放大查看"
+                                aria-label="Expand view"
                                 className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors active:scale-90 ${theme.btnClass}`}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9" /></svg>
                             </button>
                             <button
                                 onClick={() => setCollapsed(c => !c)}
-                                aria-label={collapsed ? '展开' : '折叠'}
+                                aria-label={collapsed ? 'Expand' : 'Collapse'}
                                 className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors active:scale-90 ${theme.btnClass}`}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-3 h-3 transition-transform ${collapsed ? '' : 'rotate-180'}`}><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
@@ -303,7 +306,7 @@ const ObserveHUD: React.FC<ObserveHUDProps> = ({ observation, variant = 'hud', c
                 )}
             </div>
 
-            {/* 独立全屏查看空间 */}
+            {/* Independent full-screen viewing space */}
             {expanded && (
                 <div
                     onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
@@ -318,7 +321,7 @@ const ObserveHUD: React.FC<ObserveHUDProps> = ({ observation, variant = 'hud', c
                             right={
                                 <button
                                     onClick={() => setExpanded(false)}
-                                    aria-label="关闭"
+                                    aria-label="Close"
                                     className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors active:scale-90 ${theme.btnClass}`}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>

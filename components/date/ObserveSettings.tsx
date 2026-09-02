@@ -5,26 +5,26 @@ import { OBSERVE_DIMENSIONS } from '../../utils/datePrompts';
 import ObserveHUD, { OBSERVE_STYLES } from './ObserveHUD';
 
 /**
- * 见面设置里的「观测协议 OBSERVE」配置块（默认折叠）：
- *   - 总开关
- *   - HUD 样式选择（全息 / 水墨 / 霓虹 / 水晶 / 终端），带实时预览
- *   - 四个默认维度（时间/地点/状态/细节）：启用开关、HUD 显示标签、生成提示
- *   - 追加自定义维度（最多 6 个）：标签 + 生成提示 + 启用 + 删除
- *   - 一键重置（样式 + 全部字段自定义 + 自定义维度回默认）
+ * The "Observation Protocol OBSERVE" config block in Date settings (collapsed by default):
+ *   - Master toggle
+ *   - HUD style picker (hologram / ink wash / neon / crystal / terminal), with live preview
+ *   - The four default dimensions (time/location/status/detail): enable toggle, HUD display label, generation hint
+ *   - Add custom dimensions (up to 6): label + generation hint + enable + delete
+ *   - One-click reset (style + all field customization + custom dimensions back to default)
  *
- * 所有改动即时写回 char.dateObserve，下一条回复 / 下次渲染生效。
+ * All changes are written back to char.dateObserve immediately, taking effect on the next reply / next render.
  */
 
 interface ObserveSettingsProps {
     char: CharacterProfile;
 }
 
-// 预览用的示例观测（不发请求，纯展示样式）
+// Sample observation for preview only (no request sent, pure style display)
 const SAMPLE: DateObservation = {
-    time: '傍晚六点过，天刚擦黑',
-    place: '便利店门口的塑料凳上',
-    state: '有点疲惫，但见到你眼神亮了一下',
-    detail: '指尖无意识地敲着关东煮的纸杯',
+    time: 'Just past six in the evening, the sky is starting to dim',
+    place: 'On a plastic stool outside the convenience store',
+    state: 'A little tired, but their eyes brighten a bit at the sight of you',
+    detail: 'Fingertips tapping absently on the oden paper cup',
 };
 
 const MAX_CUSTOM = 6;
@@ -51,7 +51,7 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
     const fields = char.dateObserve?.fields || {};
     const customs = char.dateObserve?.custom || [];
 
-    const [open, setOpen] = useState(false); // 默认折叠
+    const [open, setOpen] = useState(false); // collapsed by default
     const [draft, setDraft] = useState<FieldDraft>(() => buildFieldDraft(char));
     const [customDraft, setCustomDraft] = useState<FieldDraft>(() => buildCustomDraft(char));
     useEffect(() => { setDraft(buildFieldDraft(char)); setCustomDraft(buildCustomDraft(char)); }, [char.id]);
@@ -59,7 +59,7 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
     const patchObserve = (patch: Partial<DateObserveConfig>) =>
         updateCharacter(char.id, { dateObserve: { ...char.dateObserve, ...patch } });
 
-    // —— 默认维度 ——
+    // —— Default dimensions ——
     const patchField = (key: keyof DateObservation, partial: Record<string, unknown>) =>
         patchObserve({ fields: { ...fields, [key]: { ...(fields[key] || {}), ...partial } } });
     const commitField = (key: keyof DateObservation, which: 'label' | 'hint') => {
@@ -68,9 +68,9 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
         patchField(key, { [which]: v || undefined });
     };
 
-    // —— 自定义维度 ——
+    // —— Custom dimensions ——
     const addCustom = () => {
-        if (customs.length >= MAX_CUSTOM) { addToast(`最多 ${MAX_CUSTOM} 个自定义维度`, 'info'); return; }
+        if (customs.length >= MAX_CUSTOM) { addToast(`Up to ${MAX_CUSTOM} custom dimensions`, 'info'); return; }
         const id = genId();
         patchObserve({ custom: [...customs, { id, label: '', hint: '', enabled: true }] });
         setCustomDraft(d => ({ ...d, [id]: { label: '', hint: '' } }));
@@ -89,14 +89,15 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
         updateCharacter(char.id, { dateObserve: { enabled: char.dateObserve?.enabled, style: undefined, fields: undefined, custom: undefined } });
         setDraft(buildFieldDraft({ ...char, dateObserve: { enabled } }));
         setCustomDraft({});
-        addToast('观测样式与提示词已重置为默认', 'success');
+        addToast('Observation style and prompts reset to default', 'success');
     };
 
-    // 预览：默认四维用示例文案，自定义维度塞占位内容，让样式预览也能看到追加的格子
+    // Preview: the default four dimensions use sample copy, custom dimensions get placeholder content,
+    // so the style preview also shows the added slots
     const previewObs: DateObservation = {
         ...SAMPLE,
         extra: Object.fromEntries(
-            customs.filter(c => c.enabled !== false && (c.label || '').trim()).map(c => [c.id, '此处显示生成的内容']),
+            customs.filter(c => c.enabled !== false && (c.label || '').trim()).map(c => [c.id, 'Generated content shown here']),
         ),
     };
 
@@ -106,8 +107,8 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                 <button onClick={() => setOpen(o => !o)} className="flex items-center gap-1.5 min-w-0 text-left active:opacity-70">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`w-3.5 h-3.5 text-slate-300 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`}><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" /></svg>
                     <div className="min-w-0">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase">观测协议 · OBSERVE</h3>
-                        <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed truncate">每条回复附上 {char.name} 此刻的状态，渲染成可独立查看的观测面板。{enabled ? '已开启。' : '已关闭。'}</p>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase">Observation Protocol · OBSERVE</h3>
+                        <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed truncate">Attaches {char.name}'s current status to every reply, rendered as an independently viewable observation panel. {enabled ? 'Currently on.' : 'Currently off.'}</p>
                     </div>
                 </button>
                 <button
@@ -120,14 +121,14 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
 
             {open && (
                 !enabled ? (
-                    <p className="px-4 pb-4 -mt-1 text-[11px] text-slate-400">先打开右上角开关，即可选择面板样式、自定义每格生成什么、追加观察维度。</p>
+                    <p className="px-4 pb-4 -mt-1 text-[11px] text-slate-400">Turn on the switch in the top-right first, then you can pick the panel style, customize what each slot generates, and add observation dimensions.</p>
                 ) : (
                 <div className="px-4 pb-4 space-y-4">
-                    {/* ── 样式选择 ── */}
+                    {/* ── Style picker ── */}
                     <div>
                         <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-[11px] font-bold text-slate-500">面板样式</h4>
-                            <button onClick={resetAll} className="text-[10px] font-bold text-primary/80 hover:text-primary px-2 py-0.5 rounded-full bg-primary/5 active:scale-95 transition-transform">一键重置</button>
+                            <h4 className="text-[11px] font-bold text-slate-500">Panel Style</h4>
+                            <button onClick={resetAll} className="text-[10px] font-bold text-primary/80 hover:text-primary px-2 py-0.5 rounded-full bg-primary/5 active:scale-95 transition-transform">Reset</button>
                         </div>
                         <div className="grid grid-cols-5 gap-1.5">
                             {OBSERVE_STYLES.map(s => (
@@ -145,9 +146,9 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                         <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">{OBSERVE_STYLES.find(s => s.id === style)?.desc}</p>
                     </div>
 
-                    {/* ── 实时预览 ── */}
+                    {/* ── Live preview ── */}
                     <div>
-                        <h4 className="text-[11px] font-bold text-slate-500 mb-2">预览</h4>
+                        <h4 className="text-[11px] font-bold text-slate-500 mb-2">Preview</h4>
                         <div className="rounded-xl p-4 flex justify-center" style={{ background: style === 'ink' ? '#e9e0cd' : 'radial-gradient(circle at 30% 20%, #1e2433, #0a0d16)' }}>
                             <div className="w-full max-w-[260px]">
                                 <ObserveHUD observation={previewObs} variant="card" charName={char.name} config={char.dateObserve} />
@@ -155,10 +156,10 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                         </div>
                     </div>
 
-                    {/* ── 每个维度的提示词与标签自定义 ── */}
+                    {/* ── Per-dimension prompt & label customization ── */}
                     <div>
-                        <h4 className="text-[11px] font-bold text-slate-500 mb-1">每个部分生成什么（自定义提示词）</h4>
-                        <p className="text-[10px] text-slate-400 mb-2.5 leading-snug">「显示标签」只改面板上的字样；「生成提示」决定这一格让 AI 写什么。留空即用默认。关掉的维度不会生成、面板上也不显示。</p>
+                        <h4 className="text-[11px] font-bold text-slate-500 mb-1">What Each Slot Generates (Custom Prompts)</h4>
+                        <p className="text-[10px] text-slate-400 mb-2.5 leading-snug">"Display label" only changes the wording on the panel; "generation hint" decides what the AI writes for that slot. Leave blank to use the default. Disabled dimensions won't be generated or shown on the panel.</p>
                         <div className="space-y-2.5">
                             {OBSERVE_DIMENSIONS.map(dim => {
                                 const on = fields[dim.key]?.enabled !== false;
@@ -180,14 +181,14 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                                                     value={draft[dim.key]?.label || ''}
                                                     onChange={e => setDraft(d => ({ ...d, [dim.key]: { ...d[dim.key], label: e.target.value } }))}
                                                     onBlur={() => commitField(dim.key, 'label')}
-                                                    placeholder={`显示标签（默认「${dim.label}」）`}
+                                                    placeholder={`Display label (default "${dim.label}")`}
                                                     className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-primary focus:outline-none bg-white"
                                                 />
                                                 <textarea
                                                     value={draft[dim.key]?.hint || ''}
                                                     onChange={e => setDraft(d => ({ ...d, [dim.key]: { ...d[dim.key], hint: e.target.value } }))}
                                                     onBlur={() => commitField(dim.key, 'hint')}
-                                                    placeholder={`生成提示（默认：${defHint}）`}
+                                                    placeholder={`Generation hint (default: ${defHint})`}
                                                     rows={2}
                                                     className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-primary focus:outline-none bg-white leading-relaxed resize-none"
                                                 />
@@ -199,19 +200,19 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                         </div>
                     </div>
 
-                    {/* ── 追加自定义维度 ── */}
+                    {/* ── Add custom dimensions ── */}
                     <div>
                         <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-[11px] font-bold text-slate-500">追加维度</h4>
+                            <h4 className="text-[11px] font-bold text-slate-500">Additional Dimensions</h4>
                             <button
                                 onClick={addCustom}
                                 disabled={customs.length >= MAX_CUSTOM}
                                 className="text-[10px] font-bold text-primary px-2.5 py-1 rounded-full bg-primary/5 hover:bg-primary/10 disabled:opacity-40 active:scale-95 transition-all"
-                            >+ 添加（{customs.length}/{MAX_CUSTOM}）</button>
+                            >+ Add ({customs.length}/{MAX_CUSTOM})</button>
                         </div>
-                        <p className="text-[10px] text-slate-400 mb-2.5 leading-snug">在四个默认维度之外，自己开观察项（如「穿着」「天气」「和你的距离」）。标签同时用于 AI 输出与面板显示。</p>
+                        <p className="text-[10px] text-slate-400 mb-2.5 leading-snug">Open your own observation slots beyond the four default dimensions (e.g. "Outfit", "Weather", "Distance from you"). The label is used for both AI output and panel display.</p>
                         {customs.length === 0 ? (
-                            <div className="text-[11px] text-slate-300 text-center py-3 border border-dashed border-slate-200 rounded-xl">还没有自定义维度，点「+ 添加」开一格</div>
+                            <div className="text-[11px] text-slate-300 text-center py-3 border border-dashed border-slate-200 rounded-xl">No custom dimensions yet, tap "+ Add" to open one</div>
                         ) : (
                             <div className="space-y-2.5">
                                 {customs.map(c => {
@@ -223,7 +224,7 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                                                     value={customDraft[c.id]?.label || ''}
                                                     onChange={e => setCustomDraft(d => ({ ...d, [c.id]: { ...d[c.id], label: e.target.value } }))}
                                                     onBlur={() => commitCustom(c.id, 'label')}
-                                                    placeholder="维度名（如 穿着 / 天气）"
+                                                    placeholder="Dimension name (e.g. Outfit / Weather)"
                                                     className="flex-1 min-w-0 text-[12px] font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-primary focus:outline-none bg-white"
                                                 />
                                                 <button
@@ -232,7 +233,7 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                                                 >
                                                     <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-4' : 'translate-x-0.5'}`}></div>
                                                 </button>
-                                                <button onClick={() => delCustom(c.id)} title="删除" className="text-slate-300 hover:text-red-400 transition-colors shrink-0 p-0.5">
+                                                <button onClick={() => delCustom(c.id)} title="Delete" className="text-slate-300 hover:text-red-400 transition-colors shrink-0 p-0.5">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                                                 </button>
                                             </div>
@@ -241,7 +242,7 @@ const ObserveSettings: React.FC<ObserveSettingsProps> = ({ char }) => {
                                                     value={customDraft[c.id]?.hint || ''}
                                                     onChange={e => setCustomDraft(d => ({ ...d, [c.id]: { ...d[c.id], hint: e.target.value } }))}
                                                     onBlur={() => commitCustom(c.id, 'hint')}
-                                                    placeholder="生成提示：这一格让 AI 写什么（留空给个通用默认）"
+                                                    placeholder="Generation hint: what the AI writes for this slot (leave blank for a generic default)"
                                                     rows={2}
                                                     className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-primary focus:outline-none bg-white leading-relaxed resize-none"
                                                 />

@@ -26,10 +26,12 @@ import { MEETING_CONTINUE_DISPLAY_TEXT } from '../../utils/meetingContinue';
 import { VOICE_LANGUAGE_OPTIONS, voiceLanguageAnalyticsValue, voiceLanguageLabel, voiceLanguagePromptLabel } from '../../utils/voiceLanguage';
 import { trackEvent } from '../../utils/analytics';
 
-// 语音情绪标记 [v:xxx]：跟立绘情绪 [emotion] 分开的独立通道。立绘的 happy 是
-// 夸张的表情、语音的 happy 是音色情绪，两者强度/语义差异大，不能一概而论。
-// 所以语音情绪由 LLM 用 [v:xxx] 单独标，没标就不传（让 MiniMax 自然朗读）。
-// 从一行里抽出 [v:xxx]，返回 { voiceEmotion, rest（已剥掉该标记的文本）}。
+// Voice emotion tag [v:xxx]: a separate channel from the sprite emotion [emotion].
+// The sprite's "happy" is an exaggerated expression; the voice's "happy" is a vocal-tone
+// emotion — the two differ too much in intensity/meaning to be treated as one. So voice
+// emotion is tagged separately by the LLM with [v:xxx]; if untagged, nothing is passed
+// (letting MiniMax read it naturally).
+// Extracts [v:xxx] from a line, returning { voiceEmotion, rest (text with the tag stripped) }.
 const VOICE_EMOTION_TAG_RE = /\[v:\s*([a-zA-Z]+)\s*\]/i;
 const extractVoiceEmotionTag = (line: string): { voiceEmotion?: string; rest: string } => {
     let voiceEmotion: string | undefined;
@@ -60,7 +62,7 @@ const cleanTextForDisplay = (text: string) => {
 
 // Helper: Check if a line is dialogue (starts with quoted speech "...")
 // A dialogue line must BEGIN with a quote character (after trimming).
-// Lines that merely contain incidental quotes (e.g. 把"项圈草图"塞进...) are narration.
+// Lines that merely contain incidental quotes (e.g. tucked the "collar sketch" into...) are narration.
 const isDialogueLine = (text: string) => {
     const clean = cleanTextForDisplay(text);
     return /^[""\u201C\u300C]/.test(clean);
@@ -85,7 +87,7 @@ const parseDialogue = (fullText: string, initialEmotion: string = 'normal'): Dia
 
     for (const rawLine of lines) {
         if (isContextNoise(rawLine)) continue;
-        // 先把独立的语音情绪标记 [v:xxx] 抽出来（跟立绘情绪互不影响），再解析立绘标签
+        // First strip out the standalone voice emotion tag [v:xxx] (independent of the sprite emotion), then parse the sprite tag
         const { voiceEmotion, rest } = extractVoiceEmotionTag(rawLine);
         const line = rest.trim();
         if (!line) continue;
@@ -122,19 +124,19 @@ interface DateSessionProps {
     onDeleteMessage: (msg: Message) => void;
     onDeleteMessages: (ids: number[]) => Promise<void>;
     onSettings: () => void;
-    /** 阅读模式「加载更早」铺满已加载部分后，回库里取下一批（limit 递增式重取）。 */
+    /** Reading Mode's "Load Earlier" button: once the already-loaded portion is fully filled, fetch the next batch from the DB (re-query with an incrementing limit). */
     onLoadMoreHistory?: (nextLimit: number) => Promise<void>;
-    /** 当前查询用的 limit（配合 onLoadMoreHistory 递增）。 */
+    /** The limit currently used for the query (increments together with onLoadMoreHistory). */
     historyLoadLimit?: number;
-    /** 库里的见面记录是否已经取完。 */
+    /** Whether the Date history in the DB has already been fully fetched. */
     historyReachedEnd?: boolean;
 }
 
 // Long replies can expand into many DOM lines. Keeping a smaller reading window
 // materially reduces iOS WebKit content-process crashes while older entries
-// remain available through the existing "加载更早" button.
+// remain available through the existing "Load Earlier" button.
 const NOVEL_MESSAGE_WINDOW_SIZE = 40;
-/** 铺满已加载部分后，每次回库多取多少条见面消息。 */
+/** How many more Date messages to fetch from the DB each time, once the already-loaded portion is fully filled. */
 const NOVEL_HISTORY_FETCH_STEP = 220;
 const NOVEL_MESSAGE_LOAD_STEP = 40;
 const REQUIRED_EMOTIONS_SET = ['normal', 'happy', 'angry', 'sad', 'shy'];
@@ -151,7 +153,7 @@ const ReadingAvatar: React.FC<{ src?: string; name: string; light: boolean }> = 
     const [imageFailed, setImageFailed] = useState(false);
     useEffect(() => setImageFailed(false), [src]);
 
-    // TokenImg 会把 blobref 令牌解析成可用 url，这里只判「有没有头像」和「加载失败没」
+    // TokenImg resolves the blobref token into a usable url; here we only check "is there an avatar" and "did it fail to load"
     const canShowImage = !!src && !imageFailed;
     return (
         <div
@@ -201,7 +203,7 @@ const DateSession: React.FC<DateSessionProps> = ({
     // Core VN State
     const [isNovelMode, setIsNovelMode] = useState(false);
     const [bgImage, setBgImage] = useState<string>(char.dateBackground || '');
-    // bgImage state 里存的一直是原始字段值（令牌 / data: / 外链），只在渲染这一刻解析成能喂 CSS 的 url
+    // bgImage state always stores the raw field value (token / data: / external link); it's only resolved into a CSS-ready url at the moment of rendering
     const bgImageUrl = useBlobRefUrl(bgImage);
     const [currentSprite, setCurrentSprite] = useState<string>('');
     const [currentSpriteKey, setCurrentSpriteKey] = useState<string>('');
@@ -214,7 +216,7 @@ const DateSession: React.FC<DateSessionProps> = ({
     const [displayedText, setDisplayedText] = useState('');
     const [isTextAnimating, setIsTextAnimating] = useState(false);
 
-    // 观测协议 OBSERVE：当前批次解析出的结构化观测，驱动全息 HUD
+    // OBSERVE protocol: the structured observation parsed from the current batch, drives the holographic HUD
     const observeEnabled = !!char.dateObserve?.enabled;
     const [observation, setObservation] = useState<DateObservation | null>(initialState?.observation ?? null);
     
@@ -224,7 +226,7 @@ const DateSession: React.FC<DateSessionProps> = ({
     const [isTyping, setIsTyping] = useState(false); // Waiting for API
     const [isShowingOpening, setIsShowingOpening] = useState(!initialState); // True until first user interaction
     const [showExitModal, setShowExitModal] = useState(false);
-    // API 失败时本地记住本轮输入，不依赖父组件的 DB 刷新是否已经完成；用户可直接点重试。
+    // On API failure, remember this turn's input locally instead of relying on whether the parent component's DB refresh has completed; the user can directly tap retry.
     const [pendingRetryText, setPendingRetryText] = useState('');
 
     useEffect(() => {
@@ -234,7 +236,7 @@ const DateSession: React.FC<DateSessionProps> = ({
     // Settings Overlay State (Internal)
     const [showSettings, setShowSettings] = useState(false);
 
-    // 顶栏折叠菜单：常驻只留「输入」+「菜单」两钮，低频操作全收进来
+    // Top-bar collapsible menu: only the "Input" + "Menu" buttons stay persistent, all low-frequency actions are tucked away in here
     const [showMenu, setShowMenu] = useState(false);
 
     // Edit Msg Logic
@@ -257,8 +259,8 @@ const DateSession: React.FC<DateSessionProps> = ({
     const dateAudioRef = useRef<HTMLAudioElement | null>(null);
     const voiceEnabled = !!char.dateVoiceEnabled;
     const voiceLang = char.dateVoiceLang || '';
-    // Bridges the current line's VOICE emotion ([v:xxx], 跟立绘情绪分开) to the GAL
-    // voice effect (which keys off currentText only). undefined = 不传情绪，自然朗读。
+    // Bridges the current line's VOICE emotion ([v:xxx], separate from the sprite emotion) to the GAL
+    // voice effect (which keys off currentText only). undefined = no emotion passed, read naturally.
     // A ref so it doesn't churn the effect's deps.
     const currentLineEmotionRef = useRef<string | undefined>(undefined);
     const [voiceFavoriteTarget, setVoiceFavoriteTarget] = useState<DateVoiceFavoriteTarget | null>(null);
@@ -359,7 +361,7 @@ const DateSession: React.FC<DateSessionProps> = ({
             setGalVoiceLoading(true);
             speech = await translateAndSpeak(dialogueText, currentLineEmotionRef.current) || undefined;
             setGalVoiceLoading(false);
-            if (!speech) { addToast('语音合成失败，请稍后重试', 'error'); return; }
+            if (!speech) { addToast('Voice synthesis failed, please try again later', 'error'); return; }
             voiceCacheRef.current[cacheKey] = speech;
         }
         if (!dateAudioRef.current) dateAudioRef.current = new Audio();
@@ -370,9 +372,10 @@ const DateSession: React.FC<DateSessionProps> = ({
     };
 
     // Novel/Reading mode: play a specific dialogue line (shares voiceCacheRef with GAL mode)
-    // voiceEmotion（[v:xxx]）跟立绘模式保持一致地传给 TTS：这样两种模式合成的音频完全相同，
-    // 且命中同一条持久缓存（ttsCache/IndexedDB）——退出见面再进来点旧台词也能从本地缓存秒取，
-    // 不必按不同的 key 重新联网合成。
+    // voiceEmotion ([v:xxx]) is passed to TTS consistently with Visual Mode: this way the audio
+    // synthesized by both modes is identical and hits the same persistent cache (ttsCache/IndexedDB) —
+    // exiting the Date and coming back to tap an old line can still be pulled instantly from the local
+    // cache, without needing to re-synthesize over the network under a different key.
     const handleNovelLinePlay = async (lineKey: string, dialogueText: string, voiceEmotion?: string) => {
         const cached = voiceCacheRef.current[dialogueText];
         if (cached) {
@@ -392,7 +395,7 @@ const DateSession: React.FC<DateSessionProps> = ({
         setNovelVoiceLoading(prev => new Set(prev).add(lineKey));
         const speech = await translateAndSpeak(dialogueText, voiceEmotion);
         setNovelVoiceLoading(prev => { const n = new Set(prev); n.delete(lineKey); return n; });
-        if (!speech) { addToast('语音合成失败，请稍后重试', 'error'); return; }
+        if (!speech) { addToast('Voice synthesis failed, please try again later', 'error'); return; }
         voiceCacheRef.current[dialogueText] = speech;
         if (!dateAudioRef.current) dateAudioRef.current = new Audio();
         dateAudioRef.current.src = speech.url;
@@ -461,7 +464,7 @@ const DateSession: React.FC<DateSessionProps> = ({
             if (voiceFavoriteSaved) {
                 await removeVoiceFavorite('date', target.sourceKey);
                 setVoiceFavoriteSaved(false);
-                addToast('已取消收藏语音', 'info');
+                addToast('Removed from voice favorites', 'info');
                 return;
             }
             let speech: DateSpeechResult | undefined = voiceCacheRef.current[target.originalText];
@@ -469,7 +472,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                 speech = await translateAndSpeak(target.originalText, target.voiceEmotion) || undefined;
                 if (speech) voiceCacheRef.current[target.originalText] = speech;
             }
-            if (!speech) throw new Error('语音合成失败，请稍后重试');
+            if (!speech) throw new Error('Voice synthesis failed, please try again later');
             const blob = await fetchBlobForShare(speech.url, 'audio/mpeg');
             await saveVoiceFavorite({
                 source: 'date',
@@ -483,9 +486,9 @@ const DateSession: React.FC<DateSessionProps> = ({
                 blob,
             });
             setVoiceFavoriteSaved(true);
-            addToast('已收藏见面语音', 'success');
+            addToast('Date voice added to favorites', 'success');
         } catch (error: any) {
-            addToast(error?.message || '收藏失败，请检查浏览器存储空间', 'error');
+            addToast(error?.message || 'Failed to save favorite, please check your browser storage space', 'error');
         } finally {
             setVoiceFavoriteBusy(false);
         }
@@ -537,9 +540,10 @@ const DateSession: React.FC<DateSessionProps> = ({
         return { key: key || stray?.[0] || '', src: (key && sprites[key]) || stray?.[1] || char.avatar || '' };
     };
 
-    // 拿立绘的「字段值」反查它是哪个情绪键，靠的是跟 sprites 表里的值逐字相等。
-    // 所以 currentSprite state 里必须一直是原始字段值（blobref 令牌 / data: / 外链），
-    // 解析成 objectURL 只能发生在渲染那一刻（交给 TokenImg），否则这里永远查不到键。
+    // Look up which emotion key a sprite's "field value" belongs to by an exact character match
+    // against the values in the sprites table. So the currentSprite state must always hold the
+    // raw field value (blobref token / data: / external link) — resolving it into an objectURL can
+    // only happen at the moment of rendering (left to TokenImg), otherwise the key can never be found here.
     const inferSpriteKey = (src?: string, skinId?: string): string => {
         if (!src) return '';
         const sprites = getSpritesForSkin(skinId);
@@ -584,7 +588,7 @@ const DateSession: React.FC<DateSessionProps> = ({
     // Initialization
     useEffect(() => {
         if (initialState) {
-            // Resume: 新快照只保存 sprite key，不再复制 base64；旧快照的 bg/currentSprite 仍兼容读取一次。
+            // Resume: new snapshots only save the sprite key, no longer duplicating base64; old snapshots' bg/currentSprite are still read once for backward compatibility.
             const restoredSprite = resolveSpriteFromState(initialState);
             setBgImage(char.dateBackground || initialState.bgImage || '');
             setCurrentSprite(restoredSprite.src);
@@ -600,7 +604,7 @@ const DateSession: React.FC<DateSessionProps> = ({
             setCurrentSprite(initialSprite.src);
             setCurrentSpriteKey(initialSprite.key);
             
-            // Parse Peek Status as opening — 先剥出观测块（开了 OBSERVE 才有）
+            // Parse Peek Status as opening — first strip out the observation block (only present if OBSERVE is enabled)
             const startText = peekStatus || "Waiting for connection...";
             const { observation: peekObs, rest: peekRest } = extractObservation(startText, { lenient: observeEnabled, custom: char.dateObserve?.custom });
             if (hasObservation(peekObs)) setObservation(peekObs);
@@ -681,11 +685,14 @@ const DateSession: React.FC<DateSessionProps> = ({
         setDialogueQueue(remaining);
     };
 
-    // 立绘引擎（dialogueQueue / currentText / dialogueBatch）默认只在进会话或收到新回复时解析一次。
-    // 若用户在阅读模式里编辑 / 重新生成了「最后一条 AI 回复」，messages 会更新、阅读模式即时反映，
-    // 但立绘引擎不会自动重解析 —— 于是立绘停在旧文字、旧语音，感觉「没同步」。这里监听最后一条
-    // assistant 消息的内容，变了就把当前批次重解析同步过来。首帧跳过（含 initialState 恢复的播放
-    // 位置），isTyping 时也跳过（新回复交给 handleSend / handleRerollClick 处理，避免重复解析）。
+    // The sprite engine (dialogueQueue / currentText / dialogueBatch) by default only parses once,
+    // when entering the session or receiving a new reply. If the user edits / regenerates the "last
+    // AI reply" while in Reading Mode, messages updates and Reading Mode reflects it instantly, but
+    // the sprite engine doesn't automatically re-parse — so the sprite stays stuck on the old text and
+    // old voice, feeling "out of sync." Here we watch the content of the last assistant message, and
+    // when it changes, re-parse and sync the current batch. Skip the first frame (including the
+    // playback position restored from initialState), and also skip while isTyping (a new reply is
+    // handled by handleSend / handleRerollClick, avoiding a duplicate parse).
     const lastAssistantContent = React.useMemo(() => {
         for (let i = messages.length - 1; i >= 0; i--) {
             if (messages[i]?.role === 'assistant') return messages[i].content || '';
@@ -710,7 +717,7 @@ const DateSession: React.FC<DateSessionProps> = ({
             return;
         }
         if ((e.target as HTMLElement).closest('button, input, textarea, .control-panel')) return;
-        // 菜单展开时，点击场景任意处先收起菜单，不推进对话
+        // While the menu is expanded, clicking anywhere in the scene first collapses the menu instead of advancing the dialogue
         if (showMenu) {
             setShowMenu(false);
             setShowVoiceLangPicker(false);
@@ -734,7 +741,7 @@ const DateSession: React.FC<DateSessionProps> = ({
         // Loop
         if (dialogueBatch.length > 0) {
             // Replay
-            addToast('重播对话', 'info');
+            addToast('Replaying dialogue', 'info');
             processNextDialogue(dialogueBatch[0], dialogueBatch.slice(1));
             return;
         }
@@ -743,7 +750,7 @@ const DateSession: React.FC<DateSessionProps> = ({
     const submitTurn = async (kind?: 'continue') => {
         if (isTyping) return;
         const inputText = input.trim();
-        // 本地失败输入优先，DB 时间线兜底。这样即使父组件刷新尚未落到这一帧，重试键也不会失效。
+        // Locally-failed input takes priority, with the DB timeline as a fallback. This way the retry key won't go stale even if the parent component's refresh hasn't landed by this frame.
         const retryText = pendingRetryText || getPendingReplyText(messages);
         if (kind !== 'continue' && !inputText && !retryText) return;
         const text = kind === 'continue' ? MEETING_CONTINUE_DISPLAY_TEXT : (inputText || retryText);
@@ -756,7 +763,7 @@ const DateSession: React.FC<DateSessionProps> = ({
 
         try {
             const aiContent = await onSendMessage(text, kind);
-            // 先剥出观测块更新 HUD，再解析剩余正文
+            // First strip out the observation block to update the HUD, then parse the remaining body text
             const { observation: obs, rest } = extractObservation(aiContent, { lenient: observeEnabled, custom: char.dateObserve?.custom });
             if (hasObservation(obs)) setObservation(obs);
             const items = parseDialogue(rest, 'normal');
@@ -767,9 +774,9 @@ const DateSession: React.FC<DateSessionProps> = ({
             }
             setPendingRetryText('');
         } catch (e: any) {
-            // onSendMessage 内部含 API 调用 + 回复后处理, 抛错不一定是网络。用中性文案, 不误导成"连接中断"。
+            // onSendMessage internally includes the API call + post-reply processing, so a thrown error isn't necessarily a network issue. Use neutral copy instead of misleadingly implying "connection lost".
             setPendingRetryText(text);
-            setCurrentText(`(出错了: ${e?.message || '未知错误'})`);
+            setCurrentText(`(Error: ${e?.message || 'Unknown error'})`);
             setShowInputBox(true);
         } finally {
             setIsTyping(false);
@@ -791,9 +798,10 @@ const DateSession: React.FC<DateSessionProps> = ({
             setDialogueQueue(items);
             if (items.length > 0) processNextDialogue(items[0], items.slice(1));
         } catch(e: any) {
-            // 父级 handleReroll 只抛不提示；这里不给反馈的话，点了「重新生成」
-            // 没动静用户会以为没点上（旧版更糟：消息已被删还毫无提示）
-            addToast(`重新生成失败: ${e?.message || '未知错误'}`, 'error');
+            // The parent's handleReroll only throws, it doesn't show a toast; if we don't give feedback
+            // here, tapping "Regenerate" with no visible change will make the user think the tap didn't
+            // register (the old version was worse: the message had already been deleted with zero feedback)
+            addToast(`Failed to regenerate: ${e?.message || 'Unknown error'}`, 'error');
         } finally {
             setIsTyping(false);
         }
@@ -843,10 +851,12 @@ const DateSession: React.FC<DateSessionProps> = ({
         // Periodic auto-save every 30s
         const interval = setInterval(saveStateToDB, 30000);
 
-        // 见面「继续上次」崩溃自愈：只要会话稳定挂载并渲染了一小段时间没崩，
-        // 就撤销 DateApp 在恢复前武装的哨兵——证明这份快照能安全加载。若 iOS WebKit
-        // 在此之前把内容进程撑崩（进程级崩溃，不会跑下面的卸载 cleanup），哨兵留存，
-        // 下次进见面即被检出并丢弃这份有毒快照。新会话（无 initialState）无哨兵，clear 为空操作。
+        // Date "resume last session" crash self-heal: as long as the session mounts stably and
+        // renders for a short while without crashing, disarm the sentinel that DateApp armed before
+        // resuming — proving this snapshot can be safely loaded. If iOS WebKit crashes the content
+        // process before that point (a process-level crash, which won't run the unmount cleanup below),
+        // the sentinel remains, and the next time the Date is entered, this poisoned snapshot is
+        // detected and discarded. A new session (no initialState) has no sentinel, so clear is a no-op.
         const settleTimer = setTimeout(() => clearDateResumeAttempt(), 2500);
 
         return () => {
@@ -854,13 +864,15 @@ const DateSession: React.FC<DateSessionProps> = ({
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             clearInterval(interval);
             clearTimeout(settleTimer);
-            // 干净卸载（SPA 内导航离开会话）= 非崩溃，撤销哨兵。
+            // A clean unmount (in-SPA navigation away from the session) = not a crash, disarm the sentinel.
             clearDateResumeAttempt();
-            // 卸载时只把进度直接落库，绝不调用 onExit。onExit 会执行「用户主动退出」的
-            // 导航（setMode('select') + 弹「进度已保存」），而卸载在很多非用户意图的场景
-            // 都会发生 —— 尤其 React.StrictMode (dev) 的「挂载→卸载→重挂载」探测：
-            // 一进正式见面就被自己的卸载副作用导航回选择页，并弹两次「进度已保存」。
-            // 直接 DB 持久化与其它自动保存路径（beforeunload / visibilitychange / 定时）一致。
+            // On unmount, only persist progress directly to the DB, never call onExit. onExit performs
+            // the navigation for a "user-initiated exit" (setMode('select') + a "progress saved" toast),
+            // but unmounting happens in many scenarios that aren't user intent — especially React.StrictMode's
+            // (dev) "mount → unmount → remount" probe: entering a real Date would immediately get navigated
+            // back to the selection screen by its own unmount side effect, and the "progress saved" toast
+            // would fire twice. Persisting directly to the DB is consistent with the other auto-save paths
+            // (beforeunload / visibilitychange / periodic timer).
             saveStateToDB();
         };
     }, []);
@@ -941,16 +953,17 @@ const DateSession: React.FC<DateSessionProps> = ({
                 style={{ backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : 'none' }}
             ></div>
 
-            {/* Menu Layer — 继续按钮单独在左；菜单 / 输入上下叠在最右列。
-                这样第二行的输入按钮贴右，不会压住阅读模式批量操作栏的中间区域。 */}
+            {/* Menu Layer — the Continue button sits alone on the left; Menu / Input stack on the far-right column.
+                This way the second row's Input button hugs the right edge and doesn't cover the middle area of
+                Reading Mode's batch-action bar. */}
             <div className="absolute top-0 right-0 p-4 pt-12 z-[100] flex flex-col items-end gap-2 pointer-events-auto">
                 <div className="flex items-start gap-3">
                     <button
                         onClick={(e) => { e.stopPropagation(); setShowMenu(false); setShowVoiceLangPicker(false); handleContinue(); }}
                         disabled={isTyping}
                         className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center border bg-black/30 backdrop-blur-md border-white/20 text-white shadow-lg active:scale-95 transition-all hover:bg-white/20 disabled:opacity-40"
-                        title={`本轮不主动行动，让${char.name}继续陪伴并推进见面`}
-                        aria-label="继续当前见面"
+                        title={`Don't take initiative this turn, let ${char.name} continue accompanying you and move the Date along`}
+                        aria-label="Continue current Date"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>
                     </button>
@@ -965,8 +978,8 @@ const DateSession: React.FC<DateSessionProps> = ({
                         <button
                             onClick={(e) => { e.stopPropagation(); setShowInputBox(!showInputBox); setShowMenu(false); setShowVoiceLangPicker(false); }}
                             className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all shadow-lg active:scale-95 ${showInputBox ? 'bg-primary border-primary text-white' : 'bg-black/30 backdrop-blur-md border-white/20 text-white hover:bg-white/20'}`}
-                            title={showInputBox ? '收起输入框' : '展示输入框'}
-                            aria-label={showInputBox ? '收起输入框' : '展示输入框'}
+                            title={showInputBox ? "Hide input box" : "Show input box"}
+                            aria-label={showInputBox ? "Hide input box" : "Show input box"}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
                         </button>
@@ -978,17 +991,17 @@ const DateSession: React.FC<DateSessionProps> = ({
                         {!isTyping && canReroll && (
                             <button onClick={() => { setShowMenu(false); setShowVoiceLangPicker(false); handleRerollClick(); }} className="h-9 px-3.5 rounded-full flex items-center gap-2 text-xs font-bold border shadow-lg active:scale-95 transition-all bg-black/40 backdrop-blur-md border-white/15 text-white hover:bg-white/20">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-                                重新生成
+                                Regenerate
                             </button>
                         )}
 
-                        {/* 语音：未开启时点击直接开启并展开语种；开启时点击展开/收起语种选择（含关闭项） */}
+                        {/* Voice: tapping while disabled directly enables it and expands the language picker; tapping while enabled expands/collapses the language picker (including a Turn Off option) */}
                         <button onClick={() => {
                                 if (voiceEnabled) {
                                     setShowVoiceLangPicker(prev => !prev);
                                 } else {
                                     updateCharacter(char.id, { dateVoiceEnabled: true });
-                                    addToast('语音已开启', 'info');
+                                    addToast('Voice enabled', 'info');
                                     setShowVoiceLangPicker(true);
                                 }
                             }}
@@ -998,19 +1011,19 @@ const DateSession: React.FC<DateSessionProps> = ({
                                     ? <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
                                     : <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />}
                             </svg>
-                            语音{voiceEnabled ? (voiceLang ? ` · ${voiceLanguageLabel(voiceLang)}` : ' · 开') : ' · 关'}
+                            Voice{voiceEnabled ? (voiceLang ? ` · ${voiceLanguageLabel(voiceLang)}` : ' · On') : ' · Off'}
                         </button>
                         {voiceEnabled && showVoiceLangPicker && (
                             <div className="flex flex-wrap justify-end gap-1 max-w-[200px] animate-fade-in">
                                 {VOICE_LANGUAGE_OPTIONS.map(opt => (
-                                    <button key={opt.value} onClick={() => { updateCharacter(char.id, { dateVoiceLang: opt.value }); trackEvent('设置见面语音语种', { 语种: voiceLanguageAnalyticsValue(opt.value) }); setShowVoiceLangPicker(false); }}
+                                    <button key={opt.value} onClick={() => { updateCharacter(char.id, { dateVoiceLang: opt.value }); trackEvent('Set Date Voice Language', { Language: voiceLanguageAnalyticsValue(opt.value) }); setShowVoiceLangPicker(false); }}
                                         className={`h-7 px-2.5 rounded-full text-[10px] font-bold transition-all active:scale-95 whitespace-nowrap ${voiceLang === opt.value ? 'bg-white/30 text-white shadow-md' : 'bg-black/30 backdrop-blur-md text-white/60 border border-white/10'}`}>
                                         {opt.label}
                                     </button>
                                 ))}
-                                <button onClick={() => { updateCharacter(char.id, { dateVoiceEnabled: false }); setShowVoiceLangPicker(false); addToast('语音已关闭', 'info'); }}
+                                <button onClick={() => { updateCharacter(char.id, { dateVoiceEnabled: false }); setShowVoiceLangPicker(false); addToast('Voice disabled', 'info'); }}
                                     className="h-7 px-2.5 rounded-full text-[10px] font-bold transition-all active:scale-95 whitespace-nowrap bg-red-500/50 text-white border border-red-300/40 shadow-md">
-                                    关闭语音
+                                    Turn Off Voice
                                 </button>
                             </div>
                         )}
@@ -1021,42 +1034,42 @@ const DateSession: React.FC<DateSessionProps> = ({
                             ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
                             )}
-                            {isNovelMode ? '立绘模式' : '阅读模式'}
+                            {isNovelMode ? 'Visual Mode' : 'Reading Mode'}
                         </button>
 
                         {isNovelMode && char.dateLightReading && !isBatchSelectMode && (
                             <button onClick={() => { setIsBatchSelectMode(true); setShowMenu(false); setShowVoiceLangPicker(false); }} className="h-9 px-3.5 rounded-full flex items-center gap-2 text-xs font-bold border shadow-lg active:scale-95 transition-all bg-black/40 backdrop-blur-md border-white/15 text-white hover:bg-white/20">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                                多选删除
+                                Multi-select
                             </button>
                         )}
 
-                        {/* 观测协议 OBSERVE 开关：开启后回复带「时间/地点/状态/细节」全息 HUD */}
+                        {/* OBSERVE protocol toggle: once enabled, replies come with a "time/location/status/detail" holographic HUD */}
                         <button onClick={() => {
                                 const next = !observeEnabled;
                                 updateCharacter(char.id, { dateObserve: { ...char.dateObserve, enabled: next } });
-                                addToast(next ? '观测已开启 · 下条回复生效' : '观测已关闭', 'info');
+                                addToast(next ? 'Observation enabled · effective next reply' : 'Observation disabled', 'info');
                                 setShowMenu(false); setShowVoiceLangPicker(false);
                             }}
                             className={`h-9 px-3.5 rounded-full flex items-center gap-2 text-xs font-bold border shadow-lg active:scale-95 transition-all backdrop-blur-md ${observeEnabled ? 'bg-cyan-400/20 border-cyan-300/40 text-cyan-50' : 'bg-black/40 border-white/15 text-white/60 hover:bg-white/20'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                            观测{observeEnabled ? ' · 开' : ' · 关'}
+                            Observe{observeEnabled ? ' · On' : ' · Off'}
                         </button>
 
                         <button onClick={() => { setShowSettings(true); setShowMenu(false); setShowVoiceLangPicker(false); }} className="h-9 px-3.5 rounded-full flex items-center gap-2 text-xs font-bold border shadow-lg active:scale-95 transition-all bg-black/40 backdrop-blur-md border-white/15 text-white hover:bg-white/20">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 2.555c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.212 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-2.555c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                            布置场景
+                            Scene Settings
                         </button>
 
                         <button onClick={() => { setShowMenu(false); setShowVoiceLangPicker(false); setShowExitModal(true); }} className="h-9 px-3.5 rounded-full flex items-center gap-2 text-xs font-bold border shadow-lg active:scale-95 transition-all bg-red-500/70 backdrop-blur-md border-white/20 text-white hover:bg-red-600">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" /></svg>
-                            离开
+                            Leave
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* 观测协议 OBSERVE — 立绘模式悬浮 HUD（左上角，独立查看可放大） */}
+            {/* OBSERVE protocol — floating HUD in Visual Mode (top-left, can be viewed/enlarged independently) */}
             {observeEnabled && !isNovelMode && hasObservation(observation) && (
                 <div className="absolute top-0 left-0 p-4 pt-12 z-[90] pointer-events-none">
                     <div className="pointer-events-auto">
@@ -1072,17 +1085,17 @@ const DateSession: React.FC<DateSessionProps> = ({
                         <div className="max-w-2xl mx-auto animate-fade-in space-y-6">
                             {isBatchSelectMode && (
                                 <div className="sticky top-0 z-20 flex items-center justify-between bg-white/90 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-700">
-                                    <span>已选 {selectedMsgIds.size} 条</span>
+                                    <span>{selectedMsgIds.size} selected</span>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); exitBatchMode(); }}
                                             className="px-3 py-1 rounded-full bg-stone-200 text-stone-600"
-                                        >完成</button>
+                                        >Done</button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleBatchDelete(); }}
                                             disabled={selectedMsgIds.size === 0}
                                             className="px-3 py-1 rounded-full bg-red-500 text-white disabled:opacity-40"
-                                        >删除</button>
+                                        >Delete</button>
                                     </div>
                                 </div>
                             )}
@@ -1104,8 +1117,9 @@ const DateSession: React.FC<DateSessionProps> = ({
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            // 本地还有没显示的就只开窗；已经铺满则回库里取更早的一批，
-                                            // 否则初始窗口以外的见面记录在阅读模式里永远够不着。
+                                            // If there's more locally that isn't shown yet, just widen the window;
+                                            // once fully filled, fetch an earlier batch from the DB — otherwise
+                                            // Date history beyond the initial window would be unreachable in Reading Mode forever.
                                             const plan = planNovelLoadMore({
                                                 loadedCount: sessionMessages.length,
                                                 visibleCount: novelVisibleCount,
@@ -1123,7 +1137,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                                                 : 'bg-white/10 text-white/60 border-white/10'
                                         }`}
                                     >
-                                        加载更早见面记录{hiddenNovelMessageCount > 0 ? ` (${hiddenNovelMessageCount})` : ''}
+                                        Load Earlier Date History{hiddenNovelMessageCount > 0 ? ` (${hiddenNovelMessageCount})` : ''}
                                     </button>
                                 </div>
                             )}
@@ -1162,7 +1176,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                                             )}
                                         </div>
                                     ) : (() => {
-                                        // 观测协议：从这条回复里剥出观测块，正文上方渲染独立卡片，正文本身不显示块文本
+                                        // OBSERVE protocol: strip the observation block out of this reply, render it as a standalone card above the body text; the body itself doesn't show the block's raw text
                                         const { observation: msgObs, rest: msgBody } = extractObservation(msg.content || '', { lenient: observeEnabled, custom: char.dateObserve?.custom });
                                         return (
                                         <div className="flex min-w-0 items-start gap-3">
@@ -1215,7 +1229,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                                                                 onTouchMove={endDateVoiceLongPress}
                                                                 onTouchEnd={endDateVoiceLongPress}
                                                                 onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); void openDateVoiceFavorite(voiceTarget); }}
-                                                                title="播放；长按可收藏"
+                                                                title="Play; long-press to favorite"
                                                                 className={`shrink-0 mt-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 select-none ${
                                                                     novelPlayingId === lineKey
                                                                         ? (char.dateLightReading ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-500/20 text-emerald-300')
@@ -1273,7 +1287,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                                             onTouchMove={endDateVoiceLongPress}
                                             onTouchEnd={endDateVoiceLongPress}
                                             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); void openDateVoiceFavorite(resolveCurrentDateVoiceTarget()); }}
-                                            title="播放；长按可收藏"
+                                            title="Play; long-press to favorite"
                                             className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${dateVoicePlaying ? 'bg-white/30 text-white/90' : 'bg-white/10 text-white/40 hover:bg-white/20'}`}
                                         >
                                             {galVoiceLoading ? (
@@ -1307,7 +1321,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                 )}
                 {showInputBox && (
                     <div className={`w-[90%] min-w-0 max-w-lg backdrop-blur-xl rounded-2xl p-2 flex gap-2 shadow-2xl animate-fade-in mb-8 pointer-events-auto ${char.dateLightReading ? 'bg-stone-100 border border-stone-300' : 'bg-white/10 border border-white/20'}`} onClick={(e) => e.stopPropagation()}>
-                        <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={isTyping ? "等待回应..." : "输入对话..."} disabled={isTyping} className={`min-w-0 flex-1 bg-transparent px-3 sm:px-4 py-3 outline-none font-light resize-none h-14 no-scrollbar leading-tight ${char.dateLightReading ? 'text-stone-800 placeholder:text-stone-400' : 'text-white placeholder:text-white/30'}`} autoFocus />
+                        <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder={isTyping ? "Waiting for response..." : "Type a message..."} disabled={isTyping} className={`min-w-0 flex-1 bg-transparent px-3 sm:px-4 py-3 outline-none font-light resize-none h-14 no-scrollbar leading-tight ${char.dateLightReading ? 'text-stone-800 placeholder:text-stone-400' : 'text-white placeholder:text-white/30'}`} autoFocus />
                         {(() => {
                             const retryText = pendingRetryText || getPendingReplyText(messages);
                             const canRetry = !input.trim() && !isTyping && !!retryText;
@@ -1317,7 +1331,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                                     disabled={(!input.trim() && !canRetry) || isTyping}
                                     className="shrink-0 px-4 sm:px-6 bg-white text-black rounded-xl font-bold text-sm hover:bg-slate-200 disabled:opacity-50 transition-colors h-14 flex items-center justify-center"
                                 >
-                                    {canRetry ? '重试' : '发送'}
+                                    {canRetry ? 'Retry' : 'Send'}
                                 </button>
                             );
                         })()}
@@ -1336,19 +1350,19 @@ const DateSession: React.FC<DateSessionProps> = ({
                 open={!!voiceFavoriteTarget}
                 favorited={voiceFavoriteSaved}
                 busy={voiceFavoriteBusy}
-                title="见面语音"
+                title="Date Voice"
                 preview={voiceFavoriteTarget?.originalText}
                 onToggle={() => void toggleDateVoiceFavorite()}
                 onClose={() => { if (!voiceFavoriteBusy) setVoiceFavoriteTarget(null); }}
             />
 
             {/* Exit Modal */}
-            <Modal isOpen={showExitModal} title="暂时离开?" onClose={() => setShowExitModal(false)} footer={<div className="flex gap-3 w-full"><button onClick={() => setShowExitModal(false)} className="flex-1 py-3 bg-slate-100 rounded-2xl text-slate-600 font-bold">留在这里</button><button onClick={handleExitClick} className="flex-1 py-3 bg-slate-800 text-white rounded-2xl font-bold">保存并退出</button></div>}>
-                <div className="text-center text-slate-500 text-sm py-2 leading-relaxed">选择“保存并退出”将保留当前对话进度。<br/>下次见面时，你可以选择继续话题。</div>
+            <Modal isOpen={showExitModal} title="Leave for now?" onClose={() => setShowExitModal(false)} footer={<div className="flex gap-3 w-full"><button onClick={() => setShowExitModal(false)} className="flex-1 py-3 bg-slate-100 rounded-2xl text-slate-600 font-bold">Stay here</button><button onClick={handleExitClick} className="flex-1 py-3 bg-slate-800 text-white rounded-2xl font-bold">Save & Exit</button></div>}>
+                <div className="text-center text-slate-500 text-sm py-2 leading-relaxed">Choosing "Save & Exit" will keep your current conversation progress.<br/>Next time you Date, you can choose to continue the topic.</div>
             </Modal>
 
             {/* Message Options Modal */}
-            <Modal isOpen={modalType === 'options'} title="操作" onClose={() => setModalType('none')}>
+            <Modal isOpen={modalType === 'options'} title="Actions" onClose={() => setModalType('none')}>
                 <div className="space-y-3">
                     <button onClick={() => {
                         if (selectedMessage) {
@@ -1356,16 +1370,16 @@ const DateSession: React.FC<DateSessionProps> = ({
                             setSelectedMsgIds(new Set([selectedMessage.id]));
                         }
                         setModalType('none');
-                    }} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl">多选</button>
+                    }} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl">Multi-select</button>
                     <button onClick={() => {
                         if (selectedMessage) {
                             const clean = (selectedMessage.content || '').replace(/\[.*?\]/g, '').trim();
-                            navigator.clipboard.writeText(clean).then(() => addToast('已复制', 'success')).catch(() => addToast('复制失败', 'error'));
+                            navigator.clipboard.writeText(clean).then(() => addToast('Copied', 'success')).catch(() => addToast('Copy failed', 'error'));
                         }
                         setModalType('none');
-                    }} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl">复制文本</button>
-                    <button onClick={() => { onEditMessage(selectedMessage!); setModalType('none'); }} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl">编辑内容</button>
-                    <button onClick={() => { onDeleteMessage(selectedMessage!); setModalType('none'); }} className="w-full py-3 bg-red-50 text-red-500 font-medium rounded-2xl">删除记录</button>
+                    }} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl">Copy Text</button>
+                    <button onClick={() => { onEditMessage(selectedMessage!); setModalType('none'); }} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl">Edit</button>
+                    <button onClick={() => { onDeleteMessage(selectedMessage!); setModalType('none'); }} className="w-full py-3 bg-red-50 text-red-500 font-medium rounded-2xl">Delete</button>
                 </div>
             </Modal>
         </div>
