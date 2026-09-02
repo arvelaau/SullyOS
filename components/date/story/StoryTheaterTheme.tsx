@@ -179,7 +179,7 @@ export const StoryAppearanceButton: React.FC<{ className?: string }> = ({ classN
         setOpen(false);
         try {
             if (window.history.state?.[STORY_APPEARANCE_HISTORY_KEY]) window.history.back();
-        } catch { /* history 不可用时仍正常关闭 */ }
+        } catch { /* still closes normally when history is unavailable */ }
     }, []);
 
     useEffect(() => {
@@ -192,7 +192,7 @@ export const StoryAppearanceButton: React.FC<{ className?: string }> = ({ classN
             if (!previous[STORY_APPEARANCE_HISTORY_KEY]) {
                 window.history.pushState({ ...previous, [STORY_APPEARANCE_HISTORY_KEY]: true }, '');
             }
-        } catch { /* 某些内嵌 WebView 禁用 history，保留其它关闭方式 */ }
+        } catch { /* some embedded WebViews disable history; other close methods still work */ }
 
         const unregister = registerBackHandler(() => {
             closePanel();
@@ -214,7 +214,7 @@ export const StoryAppearanceButton: React.FC<{ className?: string }> = ({ classN
     const { appearance, setColor, setDecor } = context;
 
     return <>
-        <button type='button' onClick={() => setOpen(true)} className={`w-9 h-9 rounded-full grid place-items-center ${className}`} title='剧情外观' aria-label='剧情外观'>
+        <button type='button' onClick={() => setOpen(true)} className={`w-9 h-9 rounded-full grid place-items-center ${className}`} title='Story appearance' aria-label='Story appearance'>
             <Palette size={18} weight={appearance.decor === 'cinema' ? 'fill' : 'regular'} />
         </button>
         {open && createPortal(<div
@@ -231,12 +231,12 @@ export const StoryAppearanceButton: React.FC<{ className?: string }> = ({ classN
                 aria-labelledby='story-appearance-title'
             >
                 <div className='shrink-0 flex items-start gap-4'>
-                    <div className='min-w-0 flex-1'><div className='text-[9px] tracking-[.22em] uppercase font-bold text-violet-500'>Story appearance</div><h2 id='story-appearance-title' className='mt-1 text-lg font-semibold'>剧情放映厅外观</h2><p className='mt-1 text-[10px] leading-5 text-slate-500'>只影响剧情模式，普通聊天与记忆宫殿保持原样。</p></div>
-                    <button type='button' onClick={closePanel} className='w-10 h-10 shrink-0 rounded-full bg-white border border-slate-200 grid place-items-center' aria-label='关闭剧情外观'><X size={17} /></button>
+                    <div className='min-w-0 flex-1'><div className='text-[9px] tracking-[.22em] uppercase font-bold text-violet-500'>Story appearance</div><h2 id='story-appearance-title' className='mt-1 text-lg font-semibold'>Story Theater appearance</h2><p className='mt-1 text-[10px] leading-5 text-slate-500'>Only affects story mode; normal chat and the Memory Palace stay unchanged.</p></div>
+                    <button type='button' onClick={closePanel} className='w-10 h-10 shrink-0 rounded-full bg-white border border-slate-200 grid place-items-center' aria-label='Close story appearance'><X size={17} /></button>
                 </div>
                 <div className='mt-5 min-h-0 overflow-y-auto overscroll-contain border-t border-slate-200'>
-                    <div className='py-4 flex items-center gap-3'><span className='text-xs font-semibold w-16'>明暗</span><div className='min-w-0 flex-1 grid grid-cols-2 p-1 rounded-xl bg-slate-200'><button onClick={() => setColor('light')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.color === 'light' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><Sun size={14} />浅色</button><button onClick={() => setColor('dark')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.color === 'dark' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><Moon size={14} />深色</button></div></div>
-                    <div className='py-4 border-t border-slate-200 flex items-center gap-3'><span className='text-xs font-semibold w-16'>装饰</span><div className='min-w-0 flex-1 grid grid-cols-2 p-1 rounded-xl bg-slate-200'><button onClick={() => setDecor('plain')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.decor === 'plain' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><SquaresFour size={14} />素雅</button><button onClick={() => setDecor('cinema')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.decor === 'cinema' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><Sparkle size={14} />花里胡哨</button></div></div>
+                    <div className='py-4 flex items-center gap-3'><span className='text-xs font-semibold w-16'>Light/Dark</span><div className='min-w-0 flex-1 grid grid-cols-2 p-1 rounded-xl bg-slate-200'><button onClick={() => setColor('light')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.color === 'light' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><Sun size={14} />Light</button><button onClick={() => setColor('dark')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.color === 'dark' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><Moon size={14} />Dark</button></div></div>
+                    <div className='py-4 border-t border-slate-200 flex items-center gap-3'><span className='text-xs font-semibold w-16'>Decor</span><div className='min-w-0 flex-1 grid grid-cols-2 p-1 rounded-xl bg-slate-200'><button onClick={() => setDecor('plain')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.decor === 'plain' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><SquaresFour size={14} />Plain</button><button onClick={() => setDecor('cinema')} className={`py-2 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 ${appearance.decor === 'cinema' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}><Sparkle size={14} />Fancy</button></div></div>
                 </div>
             </div>
         </div>, document.body)}

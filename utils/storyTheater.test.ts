@@ -191,9 +191,9 @@ describe('糯米机原生剧情预设边界', () => {
     });
 
     it('内置小剧场对外只使用“你”和“角色”的称呼', () => {
-        const miniTheaterLabels = STORY_PRESET_SIMPLE_CHOICES.find(choice => choice.label === '小剧场')?.options.map(option => option.label).join(' ') || '';
-        expect(miniTheaterLabels).toContain('角色与你');
-        expect(miniTheaterLabels).toContain('你和角色们');
+        const miniTheaterLabels = STORY_PRESET_SIMPLE_CHOICES.find(choice => choice.label === 'Theater')?.options.map(option => option.label).join(' ') || '';
+        expect(miniTheaterLabels).toContain('Character & you');
+        expect(miniTheaterLabels).toContain('You and the characters');
         expect(miniTheaterLabels).not.toMatch(/\bAI\b|用户|演员/);
         for (const id of ['nmj-v3-theater-ai', 'nmj-v3-theater-user-sim', 'nmj-v3-theater-group']) {
             const prompt = BUILTIN_NIGHT_SCREENING_PRESET.document.prompts.find(item => item.id === id);
@@ -561,8 +561,8 @@ describe('剧场输出展示解析', () => {
 
 describe('手机端预设分层', () => {
     it('默认版包含可关闭的小剧场区间', () => {
-        const theater = STORY_PRESET_SIMPLE_CHOICES.find(choice => choice.label === '小剧场');
-        expect(theater?.options[0]).toEqual({ label: '关闭' });
+        const theater = STORY_PRESET_SIMPLE_CHOICES.find(choice => choice.label === 'Theater');
+        expect(theater?.options[0]).toEqual({ label: 'Off' });
         expect(theater?.ids).toContain('nmj-v3-theater-ai');
         expect(theater?.ids).toContain('nmj-v6-side-channel-wrong-reel');
     });
@@ -585,7 +585,7 @@ describe('手机端预设分层', () => {
     });
 
     it('应用小剧场后会生成临近本轮输入的强制执行提示', () => {
-        const choice = STORY_PRESET_SIMPLE_CHOICES.find(item => item.label === '小剧场')!;
+        const choice = STORY_PRESET_SIMPLE_CHOICES.find(item => item.label === 'Theater')!;
         const document = applyStoryPresetChoice(BUILTIN_NIGHT_SCREENING_PRESET.document, choice.ids, 'nmj-v3-theater-ai');
         expect(getActiveStoryMiniTheaterPrompt(document)?.id).toBe('nmj-v3-theater-ai');
         const reminder = buildStoryMiniTheaterReminder(document, '条条', ['林星']);
@@ -598,7 +598,7 @@ describe('手机端预设分层', () => {
     });
 
     it('默认版暴露的每一种小剧场都能落到同一个可渲染协议', () => {
-        const choice = STORY_PRESET_SIMPLE_CHOICES.find(item => item.label === '小剧场')!;
+        const choice = STORY_PRESET_SIMPLE_CHOICES.find(item => item.label === 'Theater')!;
         for (const id of choice.ids) {
             const document = applyStoryPresetChoice(BUILTIN_NIGHT_SCREENING_PRESET.document, choice.ids, id);
             expect(getActiveStoryMiniTheaterPrompt(document)?.id).toBe(id);
