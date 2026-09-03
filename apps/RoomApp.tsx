@@ -30,7 +30,7 @@ import { shareOrDownloadFile } from '../utils/shareExport';
 const TWEMOJI_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72';
 const twemojiUrl = (codepoint: string) => `${TWEMOJI_BASE}/${codepoint}.png`;
 
-/** 拜访小屋卡片的柔色底（按序循环，营造每个房间各有色调的奇幻感）。 */
+/** Soft-color backdrops for "visit room" cards (cycled in order, giving each room its own fantastical tint). */
 const ROOM_CARD_TINTS = [
     'linear-gradient(180deg,rgba(120,92,170,.42),rgba(34,26,62,.6))',
     'linear-gradient(180deg,rgba(70,80,135,.42),rgba(26,28,56,.62))',
@@ -39,7 +39,7 @@ const ROOM_CARD_TINTS = [
     'linear-gradient(180deg,rgba(132,96,176,.42),rgba(46,30,78,.6))',
     'linear-gradient(180deg,rgba(70,64,92,.46),rgba(24,22,40,.64))',
 ];
-/** 浅色（小小窝/家园分区）卡片柔色底——粉/薰衣草/浅蓝渐变。 */
+/** Light (Dwelling/Homeland section) card soft-color backdrop -- pink/lavender/light-blue gradients. */
 const ROOM_CARD_TINTS_LIGHT = [
     'linear-gradient(180deg,rgba(250,212,228,.85),rgba(242,228,246,.8))',
     'linear-gradient(180deg,rgba(232,228,248,.85),rgba(242,238,250,.8))',
@@ -49,71 +49,71 @@ const ROOM_CARD_TINTS_LIGHT = [
     'linear-gradient(180deg,rgba(234,231,242,.88),rgba(242,240,247,.82))',
 ];
 
-// --- 1. 免版权贴纸素材库 (Sticker Library) ---
-// 使用手绘 SVG 图标替代 Twemoji，更精致的视觉体验
+// --- 1. Royalty-free sticker asset library (Sticker Library) ---
+// Uses hand-drawn SVG icons instead of Twemoji, for a more refined visual experience
 const ASSET_LIBRARY = {
-    // Sully专属家具 (默认大小已根据你的布局调整)
+    // Sully-exclusive furniture (default sizes already tuned to your layout)
     sully_special: [
-        { name: 'Sully床', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/BED.png', defaultScale: 2.4 },
-        { name: 'Sully电脑桌', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DNZ.png', defaultScale: 2.4 },
-        { name: 'Sully书柜', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/SG.png', defaultScale: 2.0 },
-        { name: 'Sully洞洞板', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DDB.png', defaultScale: 2.6 },
-        { name: 'Sully垃圾桶', image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/LJT.png', defaultScale: 0.9 },
+        { name: "Sully's Bed", image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/BED.png', defaultScale: 2.4 },
+        { name: "Sully's Computer Desk", image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DNZ.png', defaultScale: 2.4 },
+        { name: "Sully's Bookcase", image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/SG.png', defaultScale: 2.0 },
+        { name: "Sully's Pegboard", image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DDB.png', defaultScale: 2.6 },
+        { name: "Sully's Trash Can", image: 'https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/LJT.png', defaultScale: 0.9 },
     ],
     furniture: [
-        { name: '床', image: FURNITURE_ICONS.bed, defaultScale: 1.5 },
-        { name: '沙发', image: FURNITURE_ICONS.sofa, defaultScale: 1.4 },
-        { name: '椅子', image: FURNITURE_ICONS.chair, defaultScale: 1.0 },
-        { name: '马桶', image: FURNITURE_ICONS.toilet, defaultScale: 1.0 },
-        { name: '浴缸', image: FURNITURE_ICONS.bathtub, defaultScale: 1.5 },
+        { name: 'Bed', image: FURNITURE_ICONS.bed, defaultScale: 1.5 },
+        { name: 'Sofa', image: FURNITURE_ICONS.sofa, defaultScale: 1.4 },
+        { name: 'Chair', image: FURNITURE_ICONS.chair, defaultScale: 1.0 },
+        { name: 'Toilet', image: FURNITURE_ICONS.toilet, defaultScale: 1.0 },
+        { name: 'Bathtub', image: FURNITURE_ICONS.bathtub, defaultScale: 1.5 },
     ],
     rug: [
-        { name: '条纹地毯', image: FURNITURE_ICONS.rug, defaultScale: 1.6 },
-        { name: '圆形地毯', image: FURNITURE_ICONS.roundRug, defaultScale: 1.6 },
+        { name: 'Striped Rug', image: FURNITURE_ICONS.rug, defaultScale: 1.6 },
+        { name: 'Round Rug', image: FURNITURE_ICONS.roundRug, defaultScale: 1.6 },
     ],
     decor: [
-        { name: '盆栽', image: FURNITURE_ICONS.plant, defaultScale: 0.8 },
-        { name: '电脑', image: FURNITURE_ICONS.computer, defaultScale: 0.8 },
-        { name: '游戏机', image: FURNITURE_ICONS.gamepad, defaultScale: 0.6 },
-        { name: '吉他', image: FURNITURE_ICONS.guitar, defaultScale: 1.0 },
-        { name: '画', image: FURNITURE_ICONS.painting, defaultScale: 1.2 },
-        { name: '书堆', image: FURNITURE_ICONS.books, defaultScale: 0.8 },
-        { name: '台灯', image: FURNITURE_ICONS.lamp, defaultScale: 0.8 },
-        { name: '垃圾桶', image: FURNITURE_ICONS.trash, defaultScale: 0.7 },
+        { name: 'Potted Plant', image: FURNITURE_ICONS.plant, defaultScale: 0.8 },
+        { name: 'Computer', image: FURNITURE_ICONS.computer, defaultScale: 0.8 },
+        { name: 'Game Console', image: FURNITURE_ICONS.gamepad, defaultScale: 0.6 },
+        { name: 'Guitar', image: FURNITURE_ICONS.guitar, defaultScale: 1.0 },
+        { name: 'Painting', image: FURNITURE_ICONS.painting, defaultScale: 1.2 },
+        { name: 'Book Stack', image: FURNITURE_ICONS.books, defaultScale: 0.8 },
+        { name: 'Table Lamp', image: FURNITURE_ICONS.lamp, defaultScale: 0.8 },
+        { name: 'Trash Can', image: FURNITURE_ICONS.trash, defaultScale: 0.7 },
     ],
     food: [
-        { name: '咖啡', image: FURNITURE_ICONS.coffee, defaultScale: 0.5 },
-        { name: '蛋糕', image: FURNITURE_ICONS.cake, defaultScale: 0.6 },
-        { name: '披萨', image: FURNITURE_ICONS.pizza, defaultScale: 0.8 },
+        { name: 'Coffee', image: FURNITURE_ICONS.coffee, defaultScale: 0.5 },
+        { name: 'Cake', image: FURNITURE_ICONS.cake, defaultScale: 0.6 },
+        { name: 'Pizza', image: FURNITURE_ICONS.pizza, defaultScale: 0.8 },
     ]
 };
 
-// 预设背景图
+// Preset background images
 const WALLPAPER_PRESETS = [
-    { name: '温馨暖白', value: 'radial-gradient(circle at 50% 50%, #fdfbf7 0%, #e2e8f0 100%)' },
-    { name: '深夜蓝调', value: 'linear-gradient(to bottom, #1e293b 0%, #0f172a 100%)' },
-    { name: '少女粉', value: 'radial-gradient(circle at 50% 50%, #fff1f2 0%, #ffe4e6 100%)' },
-    { name: '极简灰', value: 'linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%)' },
-    { name: '木质感', value: 'repeating-linear-gradient(45deg, #f7fee7 0px, #f7fee7 10px, #ecfccb 10px, #ecfccb 20px)' },
+    { name: 'Warm White', value: 'radial-gradient(circle at 50% 50%, #fdfbf7 0%, #e2e8f0 100%)' },
+    { name: 'Midnight Blue', value: 'linear-gradient(to bottom, #1e293b 0%, #0f172a 100%)' },
+    { name: 'Girlish Pink', value: 'radial-gradient(circle at 50% 50%, #fff1f2 0%, #ffe4e6 100%)' },
+    { name: 'Minimal Gray', value: 'linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%)' },
+    { name: 'Wood Grain', value: 'repeating-linear-gradient(45deg, #f7fee7 0px, #f7fee7 10px, #ecfccb 10px, #ecfccb 20px)' },
 ];
 
 const FLOOR_PRESETS = [
-    { name: '浅色木板', value: 'repeating-linear-gradient(90deg, #e7e5e4 0px, #e7e5e4 20px, #d6d3d1 21px)' },
-    { name: '深色木板', value: 'repeating-linear-gradient(90deg, #78350f 0px, #78350f 20px, #451a03 21px)' },
-    { name: '格纹地砖', value: 'conic-gradient(from 90deg at 2px 2px, #0000 90deg, #cbd5e1 0) 0 0/30px 30px' },
-    { name: '素色地毯', value: '#d1d5db' },
+    { name: 'Light Wood Boards', value: 'repeating-linear-gradient(90deg, #e7e5e4 0px, #e7e5e4 20px, #d6d3d1 21px)' },
+    { name: 'Dark Wood Boards', value: 'repeating-linear-gradient(90deg, #78350f 0px, #78350f 20px, #451a03 21px)' },
+    { name: 'Checkered Tile', value: 'conic-gradient(from 90deg at 2px 2px, #0000 90deg, #cbd5e1 0) 0 0/30px 30px' },
+    { name: 'Plain Carpet', value: '#d1d5db' },
 ];
 
 const DEFAULT_FURNITURE: RoomItem[] = [
-    { id: 'desk', name: '书桌', type: 'furniture', image: ASSET_LIBRARY.furniture[1].image, x: 20, y: 55, scale: 1.2, rotation: 0, isInteractive: true, descriptionPrompt: '这里是书桌，可能乱糟糟的，也可能整整齐齐。' },
-    { id: 'plant', name: '盆栽', type: 'decor', image: ASSET_LIBRARY.decor[0].image, x: 85, y: 40, scale: 0.8, rotation: 0, isInteractive: true, descriptionPrompt: '角落里的植物。' },
+    { id: 'desk', name: 'Desk', type: 'furniture', image: ASSET_LIBRARY.furniture[1].image, x: 20, y: 55, scale: 1.2, rotation: 0, isInteractive: true, descriptionPrompt: 'This is a desk, which may be messy or may be perfectly tidy.' },
+    { id: 'plant', name: 'Potted Plant', type: 'decor', image: ASSET_LIBRARY.decor[0].image, x: 85, y: 40, scale: 0.8, rotation: 0, isInteractive: true, descriptionPrompt: 'A plant in the corner.' },
 ];
 
 // User-provided layout (Perfectly aligned!)
 const SULLY_FURNITURE: RoomItem[] = [
   {
     id: "item-1768927221380",
-    name: "Sully床",
+    name: "Sully's Bed",
     type: "furniture",
     image: "https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/BED.png",
     x: 78.45852578067732,
@@ -121,11 +121,11 @@ const SULLY_FURNITURE: RoomItem[] = [
     scale: 2.4,
     rotation: 0,
     isInteractive: true,
-    descriptionPrompt: "看起来很好睡的猫窝（确信）。"
+    descriptionPrompt: "A cat bed that looks (allegedly) very comfy to sleep in."
   },
   {
     id: "item-1768927255102",
-    name: "Sully电脑桌",
+    name: "Sully's Computer Desk",
     type: "furniture",
     image: "https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DNZ.png",
     x: 28.853756791175588,
@@ -133,11 +133,11 @@ const SULLY_FURNITURE: RoomItem[] = [
     scale: 2.4,
     rotation: 0,
     isInteractive: true,
-    descriptionPrompt: "硬核的电脑桌，上面大概运行着什么毁灭世界的程序。"
+    descriptionPrompt: "A hardcore computer desk, probably running some world-ending program."
   },
   {
     id: "item-1768927271632",
-    name: "Sully垃圾桶",
+    name: "Sully's Trash Can",
     type: "furniture",
     image: "https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/LJT.png",
     x: 10.276680026943646,
@@ -145,11 +145,11 @@ const SULLY_FURNITURE: RoomItem[] = [
     scale: 0.9,
     rotation: 0,
     isInteractive: true,
-    descriptionPrompt: "不要乱翻垃圾桶！"
+    descriptionPrompt: "Don't go rummaging through the trash!"
   },
   {
     id: "item-1768927286526",
-    name: "Sully洞洞板",
+    name: "Sully's Pegboard",
     type: "furniture",
     image: "https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/DDB.png",
     x: 32.608697687684455,
@@ -157,11 +157,11 @@ const SULLY_FURNITURE: RoomItem[] = [
     scale: 2.6,
     rotation: 0,
     isInteractive: true,
-    descriptionPrompt: "收纳着各种奇奇怪怪的黑客工具和猫咪周边的洞洞板。"
+    descriptionPrompt: "A pegboard holding all sorts of strange hacking tools and cat-themed knickknacks."
   },
   {
     id: "item-1768927303472",
-    name: "Sully书柜",
+    name: "Sully's Bookcase",
     type: "furniture",
     image: "https://cdn.jsdelivr.net/gh/qegj567-cloud/SullyOS-assets@main/bgm/SULLY/SG.png",
     x: 79.84189945375853,
@@ -169,7 +169,7 @@ const SULLY_FURNITURE: RoomItem[] = [
     scale: 2,
     rotation: 0,
     isInteractive: true,
-    descriptionPrompt: "塞满了技术书籍和漫画书的柜子。"
+    descriptionPrompt: "A shelf crammed with technical books and comics."
   }
 ];
 
@@ -184,8 +184,9 @@ type BuiltInRoomTemplate = {
     thumbnail: string;
 };
 
-// public 资源必须带 BASE_URL 前缀，兼容 GitHub Pages 的仓库子路径部署（见 vite.config.ts base 配置）。
-// 写死根绝对路径（/room-templates/...）会打到域名根目录导致 404。
+// public assets must carry the BASE_URL prefix, to stay compatible with GitHub Pages'
+// repo sub-path deployment (see vite.config.ts's base config).
+// Hardcoding a root-absolute path (/room-templates/...) would hit the domain root and 404.
 const PUBLIC_BASE = (import.meta as any).env?.BASE_URL ?? '/';
 const publicAsset = (p: string) => `${PUBLIC_BASE}${p}`.replace(/\/+/g, '/');
 
@@ -193,16 +194,16 @@ const BUILTIN_ROOM_TEMPLATES: BuiltInRoomTemplate[] = [
     {
         id: 'forest-cottage',
         label: 'A',
-        name: '森系小屋',
-        description: '绿意、木纹和柔软生活感。',
+        name: 'Forest Cottage',
+        description: 'Greenery, wood grain, and a soft, homey feel.',
         templateUrl: publicAsset('room-templates/forest-cottage/template.json'),
         thumbnail: publicAsset('room-templates/forest-cottage/preview.png'),
     },
     {
         id: 'blue-minimal',
         label: 'B',
-        name: '蓝色系简约风',
-        description: '清爽蓝调和干净利落的布置。',
+        name: 'Blue Minimalist',
+        description: 'Crisp blue tones with a clean, tidy layout.',
         templateUrl: publicAsset('room-templates/blue-minimal/template.json'),
         thumbnail: publicAsset('room-templates/blue-minimal/preview.png'),
     },
@@ -311,25 +312,30 @@ const renderNotebookContent = (text: string) => {
 const RoomApp: React.FC = () => {
     const { closeApp, openApp, characters, characterGroups, activeCharacterId, setActiveCharacterId, updateCharacter, apiConfig, addToast, userProfile } = useOS();
 
-    // 桌面主题的「进小屋意图」：惰性读取（不清空，consume 在下方 effect），首帧就落到
-    // 目标视图，避免闪一下 select 页。真正的应用（进房间/开梦境/切角色）在 effect 里做。
+    // The desktop theme's "enter room intent": read lazily (not cleared, consumed in the
+    // effect below), so the first frame already lands on the target view, avoiding a flash
+    // of the select page. The actual application (enter room / open dream / switch character)
+    // happens in the effect.
     const launchIntent = roomLaunch.peek();
-    // 从桌面主题带意图进来的标记：退出时直接回桌面（closeApp），而不是退回 select 页。
+    // Flag for arriving with intent from the desktop theme: on exit, go straight back to the
+    // desktop (closeApp) instead of back to the select page.
     const launchedFromDesktopRef = useRef(!!launchIntent);
 
     // Core State
     const [viewState, setViewState] = useState<'select' | 'room' | 'pixelHome'>(() => {
         if (launchIntent?.tab === 'pixelHome' && launchIntent.charId) return 'pixelHome';
-        if (launchIntent?.charId) return 'room'; // 房间 / 梦境
+        if (launchIntent?.charId) return 'room'; // Room / Dream
         return 'select';
     });
-    // 小小窝里的三个独立分区：房间 / 像素家园 / 家园（家园是另一套体系，单独成区）
+    // Three independent sections within Dwelling: Room / Pixel Home / Homeland (Homeland is a
+    // separate system, its own section)
     const [homeTab, setHomeTab] = useState<'room' | 'pixelHome' | 'worldHome'>(() => launchIntent?.tab || 'room');
-    // 家园「正式开始玩」（进世界/编辑）时全屏，隐去顶部三栏
+    // Homeland goes fullscreen when "actually starting to play" (entering the world / editing), hiding the top three-tab bar
     const [worldHomeFull, setWorldHomeFull] = useState(false);
-    // 选人页（拜访谁的房间）的分组筛选
+    // Group filter for the character-select page (whose room to visit)
     const [visitGroupId, setVisitGroupId] = useState<string>(GROUP_FILTER_ALL);
-    // 编辑家具弹窗里「指定角色」多选的分组筛选（只影响显示哪些可选项，不动已勾选）
+    // Group filter for the multi-select "assign character" control in the edit-furniture modal
+    // (only affects which options are shown, doesn't touch what's already checked)
     const [assignGroupId, setAssignGroupId] = useState<string>(GROUP_FILTER_ALL);
     const [mode, setMode] = useState<'view' | 'edit'>('view');
     const [items, setItems] = useState<RoomItem[]>([]);
@@ -344,12 +350,12 @@ const RoomApp: React.FC = () => {
 
     // UI State
     const [isInitializing, setIsInitializing] = useState(false);
-    const [initStatusText, setInitStatusText] = useState('正在推开房门...');
+    const [initStatusText, setInitStatusText] = useState('Pushing the door open...');
     const [showLibrary, setShowLibrary] = useState(false);
     const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
     const [showDevModal, setShowDevModal] = useState(false); // Developer Mode
     const [showSettingsModal, setShowSettingsModal] = useState(false); // New: Room Settings
-    const [showDream, setShowDream] = useState(false); // 查看梦境 · Dream Theater overlay
+    const [showDream, setShowDream] = useState(false); // View Dream · Dream Theater overlay
     const [lastPrompt, setLastPrompt] = useState<string>(''); // Debug: Store last sent prompt
     const [showSampleRoomOffer, setShowSampleRoomOffer] = useState(false);
     const [sampleRoomLoadingId, setSampleRoomLoadingId] = useState<string | null>(null);
@@ -375,13 +381,16 @@ const RoomApp: React.FC = () => {
     const [hideActorInEdit, setHideActorInEdit] = useState(false);
     const roomRef = useRef<HTMLDivElement>(null);
 
-    // 装修手感升级：撤销/重做栈（items 全程不可变更新，直接存数组引用即可）
+    // Renovation-feel upgrade: undo/redo stack (items are always updated immutably, so we can
+    // just store array references directly)
     const [history, setHistory] = useState<RoomItem[][]>([]);
     const [future, setFuture] = useState<RoomItem[][]>([]);
-    // 连续手势（滑杆/微调/滚轮）在 1.2s 内合并成一条历史，避免拖一次滑杆塞满撤销栈
+    // Continuous gestures (slider drag / nudge / wheel) within 1.2s get merged into one history
+    // entry, so dragging a slider once doesn't flood the undo stack
     const lastHistoryKeyRef = useRef<{ key: string; t: number }>({ key: '', t: 0 });
 
-    // 双指捏合（缩放+旋转+跟随中点移动）：第一指走原拖拽通道，第二指落下时升级为捏合
+    // Two-finger pinch (scale + rotate + move with midpoint): the first finger uses the normal
+    // drag path, and pinch mode kicks in once a second finger touches down
     const dragPointerIdRef = useRef<number | null>(null);
     const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
     const pinchRef = useRef<{
@@ -393,10 +402,11 @@ const RoomApp: React.FC = () => {
         width: number; height: number;
     } | null>(null);
     const pendingPinchRef = useRef<{ scale: number; rotation: number } | null>(null);
-    // 捏合刚结束时浏览器还会补发一次 click（落在舞台上会误触「取消选中」），记时间戳挡掉
+    // Right after a pinch ends, the browser still fires one extra click (landing on the stage
+    // would falsely trigger "deselect") -- record a timestamp to block it
     const lastPinchEndRef = useRef(0);
 
-    // 批量导入素材 / 导入小屋样板房
+    // Batch-import assets / import a room template
     const [isBatchImporting, setIsBatchImporting] = useState(false);
     const [isImportingRoom, setIsImportingRoom] = useState(false);
     const [pendingImport, setPendingImport] = useState<any | null>(null);
@@ -411,11 +421,13 @@ const RoomApp: React.FC = () => {
 
     const char = characters.find(c => c.id === activeCharacterId);
 
-    // chibi 立绘 / 墙 / 地板都可能是 blobref 令牌，先解析成可直接渲染的 url（objectURL / http / data）。
-    // ⚠️ 这三个是 hook，必须放在 select/pixelHome 的 early-return **之前**无条件调用——
-    // 放在 early-return 之后会在「选择页 → 进小屋」的切换瞬间改变 hook 数量，
-    // 触发 "Rendered more hooks than during the previous render" 崩溃。
-    // char 为空时传 undefined，hook 原样返回 undefined，安全。
+    // The chibi portrait / wall / floor could each be a blobref token -- resolve them into
+    // directly renderable urls (objectURL / http / data) first.
+    // Warning: these three are hooks, and must be called unconditionally **before** the
+    // select/pixelHome early-return -- calling them after the early-return would change the
+    // hook count during the "select page -> enter room" transition instant, triggering a
+    // "Rendered more hooks than during the previous render" crash.
+    // When char is empty, undefined is passed in, and the hook returns undefined as-is -- safe.
     const actorImage = useBlobRefUrl(char?.sprites?.['chibi'] || char?.avatar);
     const wallImg = useBlobRefUrl(char?.roomConfig?.wallImage);
     const floorImg = useBlobRefUrl(char?.roomConfig?.floorImage);
@@ -434,7 +446,7 @@ const RoomApp: React.FC = () => {
     const [customItemDescription, setCustomItemDescription] = useState('');
     const [customItemType, setCustomItemType] = useState<'furniture' | 'rug'>('furniture');
 
-    // Export Room Template State（装修模式导出「当前小屋」为样板房 JSON）
+    // Export Room Template State (in edit mode, exports the "current room" as a room-template JSON)
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportName, setExportName] = useState('');
     const [exportDescription, setExportDescription] = useState('');
@@ -458,7 +470,7 @@ const RoomApp: React.FC = () => {
         };
     }, []);
 
-    // 换了房间就清空撤销/重做栈（历史属于上一间屋子）
+    // Clear the undo/redo stack whenever the room changes (history belongs to the previous room)
     useEffect(() => {
         setHistory([]);
         setFuture([]);
@@ -476,7 +488,7 @@ const RoomApp: React.FC = () => {
             } else if (lsData) {
                 try { assets = JSON.parse(lsData); localStorage.removeItem('room_custom_assets'); } catch {}
             }
-            // 迁移旧格式：没有 id/visibility 的旧资产标记为公共
+            // Migrate old format: old assets without an id/visibility get marked as public
             let needsSave = false;
             const migrated = assets.map((a: any) => {
                 if (!a.id || !a.visibility) {
@@ -485,8 +497,10 @@ const RoomApp: React.FC = () => {
                 }
                 return a;
             });
-            // 惰性迁移：把旧的 base64 图片存量转成 Blob，字段换成 blobref 令牌（省空间、脱离 JS 堆）。
-            // 单个 JSON 记录、无并发写者，安全。转换失败原样保留，不丢图。
+            // Lazy migration: convert the existing stock of old base64 images into Blobs, and
+            // swap the field for a blobref token (saves space, gets it off the JS heap).
+            // Single JSON record, no concurrent writers -- safe. If conversion fails, keep the
+            // original as-is so no image is lost.
             for (const a of migrated) {
                 if (typeof a.image === 'string' && a.image.startsWith('data:')) {
                     const ref = await migrateDataUrlToRef(a.image);
@@ -502,24 +516,25 @@ const RoomApp: React.FC = () => {
     }, []);
 
     // Helper: Get Virtual "Day" (Reset at 6 AM)
-    // 角色开了「自定义时区」就按 ta 自己的时间算这一天——房间是 ta 的房间，
-    // 一天的分界（以及今天的日程/todo/待办属于哪天）要跟着 ta 的作息，不是跟着我的手机。
+    // If the character has "custom timezone" turned on, figure out "today" using their own
+    // time -- it's their room, so the day boundary (and which day today's schedule/todo/tasks
+    // belong to) should follow their routine, not my phone's.
     const getVirtualDay = (c?: CharacterProfile | null): string =>
         getVirtualDayKey(nowInTimeZone(resolveCharTimeZone(c)));
 
     // Calculate Time Gap - Duplicated logic from other apps for self-containment
     const getTimeGapHint = (lastMsgTimestamp: number | undefined): string => {
-        if (!lastMsgTimestamp) return '这是初次见面。';
+        if (!lastMsgTimestamp) return "This is your first meeting.";
         const now = Date.now();
         const diffMs = now - lastMsgTimestamp;
         const diffMins = Math.floor(diffMs / (1000 * 60));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffHours / 24);
 
-        if (diffMins < 5) return '你们刚刚还在聊天。';
-        if (diffMins < 60) return `距离上次互动只有 ${diffMins} 分钟。`;
-        if (diffHours < 24) return `距离上次互动已经过了 ${diffHours} 小时。`;
-        return `距离上次互动已经过了 ${diffDays} 天。`;
+        if (diffMins < 5) return "You two were just chatting.";
+        if (diffMins < 60) return `It's only been ${diffMins} minutes since your last interaction.`;
+        if (diffHours < 24) return `It's been ${diffHours} hours since your last interaction.`;
+        return `It's been ${diffDays} days since your last interaction.`;
     };
 
     // --- 1. Selection & Initialization ---
@@ -555,20 +570,23 @@ const RoomApp: React.FC = () => {
         if (hasCache && c.savedRoomState) {
             setRoomDescriptions(c.savedRoomState.items || {});
             setAiBubble({ text: c.savedRoomState.welcomeMessage || "...", visible: true });
-            
+
             const existingTodo = await DB.getRoomTodo(c.id, today);
             const existingNotes = await DB.getRoomNotes(c.id);
-            // 日程与房间里的“今天”统一跟随角色时区；旧手机日期 key 会由读取层安全迁移。
+            // The schedule and the room's "today" both follow the character's timezone; old
+            // phone-local date keys get safely migrated by the read layer.
             const existingSchedule = await getDailyScheduleForChar(c);
             setTodaysTodo(existingTodo);
             setNotebookEntries(existingNotes.sort((a, b) => b.timestamp - a.timestamp));
             setRoomSchedule(existingSchedule);
 
-            addToast('已恢复今日房间状态', 'info');
+            addToast("Today's room state has been restored", 'info');
         } else {
-            // 不在进门时阻塞生成——直接进屋（否则用户要干等很久才进得来）。
-            // 今天的房间内容交给用户进屋后点「更新这一天」再生成；
-            // 这里只把聊天期间可能已生成的 todo / 随笔 / 日程读出来填上。
+            // Don't block on generation when entering the room -- go straight in (otherwise the
+            // user would have to wait a long time just to get in).
+            // Today's room content is left for the user to generate by tapping "Update Today"
+            // after entering; here we only load the todo / notes / schedule that may have
+            // already been generated during chat.
             const existingTodo = await DB.getRoomTodo(c.id, today);
             const existingNotes = await DB.getRoomNotes(c.id);
             const existingSchedule = await getDailyScheduleForChar(c);
@@ -587,13 +605,15 @@ const RoomApp: React.FC = () => {
         }
     };
 
-    // 「更新这一天」：进屋后由用户主动触发今日房间生成（首次生成无需二次确认）
+    // "Update Today": after entering the room, the user manually triggers today's room
+    // generation (no confirmation needed for the first generation)
     const handleGenerateToday = () => {
         if (char) initializeRoomState(char, items, true);
-        trackEvent('生成今天的房间');
+        trackEvent("Generate Today's Room");
     };
 
-    // 梦境全局指示条深链：点一下 → 直接进入对应角色的房间并打开梦境演出
+    // Dream global indicator bar deep link: tap it -> go straight into the corresponding
+    // character's room and open the dream playback
     const dreamSim = useDreamSim();
     const dreamSimCharId = dreamSim.status === 'idle' ? undefined : dreamSim.charId;
     useEffect(() => {
@@ -601,24 +621,26 @@ const RoomApp: React.FC = () => {
         const c = characters.find(x => x.id === dreamSimCharId);
         if (c) {
             setHomeTab('room');
-            handleEnterRoom(c);   // 设激活角色 + 进房间 + 载入家具（不阻塞生成）
+            handleEnterRoom(c);   // Set active character + enter room + load furniture (non-blocking generation)
             setShowDream(true);
         }
         dreamSimStore.clearDeepLink();
     }, [dreamSim.deepLink, dreamSimCharId, characters]);
 
-    // 桌面主题（TamagotchiHome）的世界化入口：挂载时消费一次「进小屋意图」，
-    // 落到指定 tab / 指定角色 / 直接开梦境。viewState/homeTab 已由惰性初始化到位，
-    // 这里只补做需要副作用的部分（设激活角色、载家具、开梦境），并清空意图。
-    // 用 useLayoutEffect 在浏览器绘制前跑完，避免任何中间态闪现。
+    // World-ified entry point for the desktop theme (TamagotchiHome): on mount, consume the
+    // "enter room intent" once, landing on the specified tab / specified character / opening
+    // the dream directly. viewState/homeTab have already been set via lazy initialization;
+    // this only handles the part that needs a side effect (setting the active character,
+    // loading furniture, opening the dream), and clears the intent.
+    // Uses useLayoutEffect to finish before the browser paints, avoiding any intermediate flash.
     useLayoutEffect(() => {
         const intent = roomLaunch.consume();
         if (!intent) return;
         const c = intent.charId ? characters.find(x => x.id === intent.charId) : null;
         if (!c) return;
         setActiveCharacterId(c.id);
-        if (intent.tab === 'pixelHome') return; // viewState 已是 pixelHome，PixelHomeView 自渲染
-        // 房间 / 梦境：载入家具（handleEnterRoom 会把 viewState 设成 room，已一致）
+        if (intent.tab === 'pixelHome') return; // viewState is already pixelHome, PixelHomeView renders itself
+        // Room / Dream: load furniture (handleEnterRoom sets viewState to room, already consistent)
         handleEnterRoom(c);
         if (intent.openDream) setShowDream(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -646,9 +668,11 @@ const RoomApp: React.FC = () => {
                 const data = await safeResponseJson(response);
                 const rawContent = data.choices?.[0]?.message?.content || '';
 
-                // 简化版只要一句欢迎语。先鲁棒地抽 JSON；抽不出就直接把纯文本当欢迎语
-                // ——模型常常直接回一句「你好呀～」而不裹 JSON，这本身就是完美的欢迎语，
-                // 没必要因为「不是合法 JSON」就整个失败降级成 (...)。
+                // The simplified version only needs one welcome line. Robustly extract JSON
+                // first; if that fails, just treat the plain text as the welcome message --
+                // the model often replies with something like "Hey there~" without wrapping it
+                // in JSON, which is itself a perfectly good welcome message, so there's no need
+                // to fail the whole thing down to "(...)" just because it "isn't valid JSON".
                 const parsed = extractJson(rawContent);
                 const cleanText = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
                 const welcomeMessage =
@@ -672,29 +696,31 @@ const RoomApp: React.FC = () => {
                         actorAction: 'idle'
                     }
                 });
-                addToast("这次房间没完全生成好，先用了简化版，可稍后重试。", "info");
+                addToast("The room didn't fully generate this time, so a simplified version was used -- try again later.", "info");
             } else {
                 throw new Error(`Fallback API Error ${response.status}`);
             }
         } catch (e) {
             console.error("Fallback Failed", e);
-            // 连简化版都彻底失败（网络/接口错误）：给个柔和的兜底气泡，别只显示冷冰冰的 (...)
-            setAiBubble({ text: "（似乎有点走神……过会儿再来看看吧）", visible: true });
+            // Even the simplified version failed completely (network/API error): show a gentle
+            // fallback bubble instead of just a cold "(...)"
+            setAiBubble({ text: "(Seems a bit distracted... check back in a little while)", visible: true });
         } finally {
             setIsInitializing(false);
         }
     };
 
     const initializeRoomState = async (c: CharacterProfile, currentItems: RoomItem[], force: boolean = false) => {
-        // 不能静默 return：API 配置缺失时「更新这一天」会变成点了毫无反应的死按钮
-        // （用户现场：localStorage 被清 → os_api_config 丢失 → 此处静默退出）。
+        // Can't silently return: if the API config is missing, "Update Today" would become a
+        // dead button that does nothing when tapped (real user report: localStorage got
+        // cleared -> os_api_config was lost -> this used to silently bail out here).
         if (!apiConfig?.baseUrl || !apiConfig?.apiKey) {
-            addToast('请先在设置里配置 API（生成今日房间需要调用模型）', 'error');
+            addToast('Please configure the API in Settings first (generating the room for today needs to call the model)', 'error');
             return;
         }
 
         setIsInitializing(true);
-        const loadingTexts = [`正在打扫${c.name}的房间...`, "正在整理思绪...", "正在擦拭家具...", "正在生成全部物品记忆..."];
+        const loadingTexts = [`Tidying up ${c.name}'s room...`, "Sorting out thoughts...", "Dusting the furniture...", "Generating memories for every item..."];
         let textIdx = 0;
         const textInterval = setInterval(() => {
             setInitStatusText(loadingTexts[textIdx % loadingTexts.length]);
@@ -703,14 +729,16 @@ const RoomApp: React.FC = () => {
 
         try {
             const todayStr = getVirtualDay(c);
-            // 时间一律按角色自己的时区读（没开自定义时区就是本机）。
-            // 必须和 buildCoreContext 注入的「当前时间」同源：那边早就按角色时区折算了，
-            // 这里再塞一份本机时间就等于在同一个 prompt 里给了模型两个互相矛盾的钟。
+            // Time is always read in the character's own timezone (or the local machine's, if
+            // custom timezone isn't turned on). This must share the same source as the "current
+            // time" injected by buildCoreContext -- that side already converts to the
+            // character's timezone, so stuffing in another local-machine time here would just
+            // hand the model two contradictory clocks within the same prompt.
             const charTz = resolveCharTimeZone(c);
             const now = nowInTimeZone(charTz);
             const nowTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const nowDateStr = now.toLocaleDateString();
-            const tzSuffix = charTz ? `（你所在时区：${tzLabel(charTz)}，这是你那边的当地时间）` : '';
+            const tzSuffix = charTz ? ` (Your timezone: ${tzLabel(charTz)}, this is your local time)` : '';
             
             let existingTodo = await DB.getRoomTodo(c.id, todayStr);
             const existingNotes = await DB.getRoomNotes(c.id);
@@ -726,8 +754,8 @@ const RoomApp: React.FC = () => {
             const recentMsgs = await DB.getMessagesByCharId(c.id);
             // Increased context from 20 to 50
             const chatContext = recentMsgs.slice(-50).map(m => {
-                const role = m.role === 'user' ? '用户' : c.name;
-                return `${role}: ${m.content.substring(0, 50)}`; 
+                const role = m.role === 'user' ? 'User' : c.name;
+                return `${role}: ${m.content.substring(0, 50)}`;
             }).join('\n');
 
             // Time Gap Calculation
@@ -747,38 +775,38 @@ const RoomApp: React.FC = () => {
             let prompt = `${baseContext}
 
 ### [Environment Context - Critical]
-**当前现实时间**: ${nowDateStr} ${nowTimeStr}${tzSuffix}
-**与用户上次互动距离现在**: ${timeGapHint}
-**最近互动记录 (Latest 50)**:
+**Current real-world time**: ${nowDateStr} ${nowTimeStr}${tzSuffix}
+**Time since your last interaction with the user**: ${timeGapHint}
+**Recent interaction log (Latest 50)**:
 ${chatContext}
 
 ### [Room Initialization - Batch Generation]
-用户进入了**你的**房间。请一次性生成房间的状态、物品交互文本，以及（如果需要）你今天的计划和随笔。
+The user has entered **your** room. Please generate, in one pass, the room's state, item-interaction text, and (if needed) your plan and journal entry for today.
 
-### 1. 房间状态 (Status)
-- **ActorStatus**: 你现在在房间里做什么？(请严格基于当前时间${nowTimeStr}和时间差${timeGapHint}来推断。如果是深夜可能在睡觉，如果很久没见可能在发呆。)
-- **Welcome**: 看到用户进来，你第一句话说什么？(请结合时间差：如果很久没见，是惊讶、想念还是生气？)
+### 1. Room Status (Status)
+- **ActorStatus**: What are you doing in the room right now? (Base this strictly on the current time ${nowTimeStr} and the time gap ${timeGapHint} -- late at night you might be sleeping, or if it's been a long time you might be zoning out.)
+- **Welcome**: Seeing the user come in, what's the first thing you say? (Factor in the time gap: if it's been a long while, are you surprised, wistful, or annoyed?)
 
-### 2. 物品交互 (Items)
-房间里有以下物品：
+### 2. Item Interactions (Items)
+The room contains the following items:
 ${JSON.stringify(interactables)}
 
-请为**每一个**物品生成：
-- **Description**: 旁白视角的物品外观/状态描写。
-- **Reaction**: 当用户查看这个物品时，你(角色)的吐槽或反应。
+For **every single** item, please generate:
+- **Description**: A narrator's-eye description of the item's appearance/state.
+- **Reaction**: Your (the character's) remark or reaction when the user looks at this item.
 
-### 3. [OPTIONAL] 今日待办清单 (Daily To-Do)
-${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽略此项)` : `(系统: 请生成 3-5 条你今天打算做的事。)`}
+### 3. [OPTIONAL] Today's To-Do List (Daily To-Do)
+${!shouldGenerateTodo ? `(System: today's to-do list already exists, no need to generate one, please ignore this section)` : `(System: please generate 3-5 things you plan to do today.)`}
 
-### 4. 记事簿随笔 (Notebook Entry)
-请在你的私密记事簿上写点什么。
-**要求**：
-1. **风格多变**：可以是刚写的歌词、随笔感悟、心情记录、或者是一首短诗、一份购物清单。
-2. **严禁代码**：**严禁**生成代码块(Code Blocks)或伪代码，除非你的核心设定明确是程序员。请像正常人写日记一样自然。
-3. **格式丰富**：请积极使用 **Markdown** 格式让排版更有趣。
-4. **内容新颖**：必须是新的内容，展示你作为独立个体的思考。
+### 4. Notebook Entry
+Please write something in your private notebook.
+**Requirements**:
+1. **Vary the style**: it could be lyrics you just wrote, a personal reflection, a mood log, a short poem, or a shopping list.
+2. **No code, ever**: **Do not** generate code blocks or pseudocode, unless your core persona is explicitly a programmer. Write it as naturally as a normal person keeping a diary.
+3. **Rich formatting**: actively use **Markdown** formatting to make the layout more interesting.
+4. **Fresh content**: it must be new content, showing your thinking as an independent individual.
 
-### 输出格式 (Strict JSON)
+### Output Format (Strict JSON)
 {
   "actorStatus": "...",
   "welcomeMessage": "...",
@@ -821,8 +849,10 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                     throw new Error("AI returned empty response (Safety Block suspected).");
                 }
 
-                // 用鲁棒的 extractJson 兜底：会处理 markdown 围栏、前后多余文字、尾随逗号、
-                // 单引号、未转义的内层引号、被截断的 JSON、{"result":{...}} 包裹等常见掉格式情况。
+                // Fall back to the robust extractJson: it handles markdown fences, extraneous
+                // leading/trailing text, trailing commas, single quotes, unescaped inner
+                // quotes, truncated JSON, {"result":{...}} wrapping, and other common
+                // formatting slip-ups.
                 const result = extractJson(content);
                 if (!result) throw new Error("JSON Parse Failed");
                 
@@ -855,14 +885,14 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                         charId: c.id,
                         role: 'system',
                         type: 'text',
-                        content: `[系统: ${c.name} 制定了今日计划: ${result.todoList.join(', ')}]`
+                        content: `[System: ${c.name} made today's plan: ${result.todoList.join(', ')}]`
                     });
                 }
 
                 // 3. Handle Notebook
                 if (result.notebookEntry) {
                     // Create message first to get ID
-                    const msgContent = `[系统: ${c.name} 在记事本上写道: \n"${result.notebookEntry.content}"]`;
+                    const msgContent = `[System: ${c.name} wrote in their notebook: \n"${result.notebookEntry.content}"]`;
                     
                     const msgId = await DB.saveMessage({
                         charId: c.id,
@@ -902,29 +932,29 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         
         // Character Movement Constraint: Keep feet below horizon line
         // FIX: Place actor visually "In Front" of furniture (lower Y = closer to camera in 2.5D top-down)
-        const targetY = Math.max(FLOOR_HORIZON, item.y + 5); 
-        
+        const targetY = Math.max(FLOOR_HORIZON, item.y + 5);
+
         setActorState({ x: item.x, y: targetY, action: 'walk' });
         setTimeout(() => setActorState(prev => ({ ...prev, action: 'interact' })), 600);
-        trackEvent('观察房间里的家具');
+        trackEvent('Observe Furniture in Room');
 
         const cached = roomDescriptions[item.id] || roomDescriptions[item.name];
         if (cached) {
             setObservationText(cached.description);
             setAiBubble({ text: cached.reaction, visible: true });
-            
-            const contentToCheck = `[${userProfile.name}]在[${char.name}]的${item.name}上看到了：${cached.description}。[${char.name}]表示：${cached.reaction}`;
+
+            const contentToCheck = `[${userProfile.name}] saw on [${char.name}]'s ${item.name}: ${cached.description}. [${char.name}] said: ${cached.reaction}`;
             const recentMsgs = await DB.getMessagesByCharId(char.id);
             const isDuplicate = recentMsgs.slice(-50).some(m => m.role === 'system' && m.content === contentToCheck);
 
             if (!isDuplicate) {
-                try { 
-                    await DB.saveMessage({ charId: char.id, role: 'system', type: 'text', content: contentToCheck }); 
+                try {
+                    await DB.saveMessage({ charId: char.id, role: 'system', type: 'text', content: contentToCheck });
                 } catch (err) {}
             }
         } else {
-            setObservationText(`${item.name}静静地摆放在那里。`);
-            setAiBubble({ text: "(盯...)", visible: true });
+            setObservationText(`The ${item.name} sits quietly in place.`);
+            setAiBubble({ text: "(staring...)", visible: true });
         }
     };
 
@@ -932,9 +962,9 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         if (mode === 'edit') { setShowActorArtModal(true); return; }
         setActorState(prev => ({ ...prev, action: 'bounce' }));
         setTimeout(() => setActorState(prev => ({ ...prev, action: 'idle' })), 500);
-        const thoughts = ["嗯？", "别闹...", "我在呢。", "盯着我看干嘛...", "(发呆)"];
+        const thoughts = ["Hm?", "Cut it out...", "I'm here.", "Why are you staring at me...", "(spacing out)"];
         setAiBubble({ text: thoughts[Math.floor(Math.random() * thoughts.length)], visible: true });
-        trackEvent('戳一戳角色');
+        trackEvent('Poke Character');
     };
 
     const handleToggleTodo = async (index: number) => {
@@ -953,7 +983,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         const newTodo = { ...todaysTodo, items: newItems };
         setTodaysTodo(newTodo);
         await DB.saveRoomTodo(newTodo);
-        addToast('条目已删除', 'success');
+        addToast('Entry deleted', 'success');
     };
 
     const handleDeleteNote = async (id: string) => {
@@ -963,12 +993,13 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         }
         await DB.deleteRoomNote(id);
         setNotebookEntries(prev => prev.filter(n => n.id !== id));
-        addToast('笔记已彻底粉碎 (相关记录已清除)', 'success');
+        addToast('Note shredded for good (related record cleared)', 'success');
     };
 
     const handleStageClick = (e: React.MouseEvent) => {
         if (mode === 'edit') {
-            // 捏合刚松手时浏览器补发的 click 不算「点空白取消选中」
+            // A click the browser re-fires right after a pinch ends doesn't count as
+            // "tapped blank space to deselect"
             if (Date.now() - lastPinchEndRef.current < 400) return;
             setSelectedItemId(null);
             return;
@@ -995,15 +1026,17 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
     };
 
     // --- Edit Logic ---
-    // 提交一份新 items：立即上屏 + 落库（并作废还没触发的滑杆防抖写，避免旧值覆盖新值）
+    // Commit a new set of items: update the screen immediately + persist to DB (and cancel any
+    // pending debounced slider write, so an old value doesn't overwrite the new one)
     const commitItems = (newItems: RoomItem[]) => {
         if (saveDebounceRef.current) { clearTimeout(saveDebounceRef.current); saveDebounceRef.current = null; }
         setItems(newItems);
         if (char) { updateCharacter(char.id, { roomConfig: { ...char.roomConfig, items: newItems } }); }
     };
 
-    // 把「当前 items」推入撤销栈。key 以 cont: 开头的连续手势（滑杆/滚轮/微调）
-    // 在 1.2s 内只记一条；离散操作（增删/拖拽落点/导入）每次都记。栈深 40。
+    // Push the "current items" onto the undo stack. Continuous gestures whose key starts with
+    // cont: (slider/wheel/nudge) only record one entry within 1.2s; discrete operations
+    // (add/delete/drop position/import) always record. Stack depth is 40.
     const recordHistory = (key: string = 'op') => {
         const now = Date.now();
         const last = lastHistoryKeyRef.current;
@@ -1035,10 +1068,11 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
     };
 
     // Updated addItem to accept description
-    // 不再关闭家具库弹窗：可以连点批量摆放；落点带一点随机抖动，避免完全叠死在同一处
+    // No longer closes the furniture-library modal: lets you tap repeatedly to place items in
+    // batch; each drop point gets a bit of random jitter so items don't stack exactly on top of each other
     const addItem = (asset: {name: string, image: string, defaultScale: number, description?: string}, type: 'furniture' | 'decor' | 'rug') => {
         const newItem: RoomItem = {
-            // 连点批量添加可能落在同一毫秒，加随机后缀防止 id 撞车
+            // Rapid batch-adding could land in the same millisecond, so add a random suffix to prevent id collisions
             id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
             name: asset.name,
             type: type,
@@ -1051,9 +1085,10 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             descriptionPrompt: asset.description // New Field
         };
         saveRoom([...items, newItem]);
-        addToast(`已添加: ${asset.name}`, 'success');
-        // 只上报这三个写死的分类，其它一律归到 furniture，别把素材分类名原样透出去
-        trackEvent('摆放一件家具', { type: type === 'rug' ? 'rug' : (type === 'decor' ? 'decor' : 'furniture') });
+        addToast(`Added: ${asset.name}`, 'success');
+        // Only report these three fixed categories -- everything else is lumped into
+        // "furniture"; don't leak the raw asset category name
+        trackEvent('Place a Furniture Item', { type: type === 'rug' ? 'rug' : (type === 'decor' ? 'decor' : 'furniture') });
     };
 
     // PERF: Update items in state immediately (visual), but debounce DB persistence
@@ -1078,11 +1113,11 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         const copy: RoomItem = { ...src, id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, x: Math.min(96, src.x + 4), y: Math.min(100, src.y + 4) };
         saveRoom([...items, copy]);
         setSelectedItemId(copy.id);
-        addToast(`已复制: ${src.name}`, 'success');
-        trackEvent('复制选中的家具');
+        addToast(`Duplicated: ${src.name}`, 'success');
+        trackEvent('Duplicate Selected Furniture');
     };
 
-    // 十字键微调：拖不准时一格一格挪（每格 1%）
+    // D-pad nudge: when dragging isn't precise enough, move one grid cell at a time (1% per step)
     const nudgeSelectedItem = (dx: number, dy: number) => {
         const sel = items.find(i => i.id === selectedItemId);
         if (!sel) return;
@@ -1106,7 +1141,8 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             try {
                 // Force high quality for custom item uploads
                 const processOptions = target === 'custom_item' ? { quality: 1.0, maxWidth: 2048 } : undefined;
-                // 改存 Blob：压缩后二进制进 blob_assets，字段只存 blobref 令牌（省 ~33% 空间、不占 JS 堆）。
+                // Switched to storing as Blob: the compressed binary goes into blob_assets, and
+                // the field only stores a blobref token (saves ~33% space, keeps it off the JS heap).
                 const blob = await processImageToBlob(file, processOptions);
                 const ref = await putImageBlob(blob);
 
@@ -1116,7 +1152,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                     if (char) {
                         const newSprites = { ...(char.sprites || {}), 'chibi': ref };
                         updateCharacter(char.id, { sprites: newSprites });
-                        addToast('角色房间立绘已更新', 'success');
+                        addToast('Character room portrait updated', 'success');
                     }
                 }
                 if (target === 'custom_item') {
@@ -1137,7 +1173,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
 
     const saveCustomItem = async () => {
         const imageToUse = customItemUrl || customItemImage;
-        if(!customItemName.trim() || !imageToUse) { addToast('请填写完整信息', 'error'); return; }
+        if(!customItemName.trim() || !imageToUse) { addToast('Please fill in all the fields', 'error'); return; }
 
         addItem({
             name: customItemName,
@@ -1198,7 +1234,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         } : a);
         await persistAssets(updated);
         setEditingAsset(null);
-        addToast('素材已更新', 'success');
+        addToast('Asset updated', 'success');
     };
 
     const deleteEditingAsset = async () => {
@@ -1206,7 +1242,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         const filtered = allCustomAssets.filter(a => a.id !== editingAsset.id);
         await persistAssets(filtered);
         setEditingAsset(null);
-        addToast('素材已删除', 'success');
+        addToast('Asset deleted', 'success');
     };
 
     // New: Handle Background Config Update
@@ -1222,17 +1258,19 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         if (!char) return;
         saveRoom(SULLY_FURNITURE);
         setShowSettingsModal(false);
-        addToast('Sully 的房间已还原', 'success');
+        addToast("Sully's room has been restored", 'success');
     };
 
-    // --- Export Room Template（装修模式导出「当前小屋」为样板房） ---
-    // 位置 x/y 是相对房间的百分比（0-100），任何屏幕尺寸都能按原样复原。
-    // 图像：图床/http 链接原样保留；上传图（blobref/base64）统一解析成 data URL 内嵌，
-    // 导出文件自包含，不依赖本机 IndexedDB。
+    // --- Export Room Template (in edit mode, exports the "current room" as a room template) ---
+    // Position x/y are percentages relative to the room (0-100), so they can be restored
+    // identically on any screen size.
+    // Images: image-host/http links are kept as-is; uploaded images (blobref/base64) are all
+    // resolved and embedded as data URLs -- the exported file is self-contained and doesn't
+    // depend on local IndexedDB.
     const buildRoomTemplate = async () => {
         const template = {
             schema: 'sullyos.room-template.v1',
-            name: exportName.trim() || `${char?.name || '未命名'}的小屋`,
+            name: exportName.trim() || `${char?.name || 'Unnamed'}'s Room`,
             description: exportDescription.trim(),
             exportedAt: new Date().toISOString(),
             room: {
@@ -1273,25 +1311,25 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             const json = JSON.stringify(template, null, 2);
             if (action === 'copy') {
                 await navigator.clipboard.writeText(json);
-                addToast('小屋 JSON 已复制到剪贴板', 'success');
+                addToast('Room JSON copied to clipboard', 'success');
             } else {
                 const result = await shareOrDownloadFile({
                     content: json,
                     fileName: `${template.name.replace(/[\\/:*?"<>|]/g, '_')}.room.json`,
                     mimeType: 'application/json;charset=utf-8',
-                    shareTitle: `小屋样板房：${template.name}`,
+                    shareTitle: `Room Template: ${template.name}`,
                 });
-                addToast(result === 'shared' ? '已打开小屋样板房分享面板' : '小屋样板房已导出', 'success');
+                addToast(result === 'shared' ? 'Room template share panel opened' : 'Room template exported', 'success');
             }
-            trackEvent('导出小屋样板房', { action });
+            trackEvent('Export Room Template', { action });
         } catch (e: any) {
-            addToast(`导出失败: ${e?.message || e}`, 'error');
+            addToast(`Export failed: ${e?.message || e}`, 'error');
         } finally {
             setIsExporting(false);
         }
     };
 
-    // --- 批量导入自定义素材（一次选多张图，全部入库为公共素材，名字取文件名） ---
+    // --- Batch-import custom assets (select multiple images at once, all stored as public assets, named from the filename) ---
     const handleBatchAssetImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         e.target.value = '';
@@ -1305,7 +1343,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                 const ref = await putImageBlob(blob);
                 imported.push({
                     id: `asset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-                    name: file.name.replace(/\.[^.]+$/, '').slice(0, 24) || '未命名',
+                    name: file.name.replace(/\.[^.]+$/, '').slice(0, 24) || 'Unnamed',
                     image: ref,
                     defaultScale: 1.0,
                     visibility: 'public',
@@ -1316,34 +1354,34 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         if (imported.length) await persistAssets([...allCustomAssets, ...imported]);
         addToast(
             failed
-                ? `已导入 ${imported.length} 件素材，${failed} 件失败`
-                : `已批量导入 ${imported.length} 件素材，在「家具超市 · 自定义」里摆放`,
+                ? `Imported ${imported.length} assets, ${failed} failed`
+                : `Batch-imported ${imported.length} assets -- place them from "Furniture Store · Custom"`,
             failed ? 'info' : 'success'
         );
-        trackEvent('批量导入家具素材');
+        trackEvent('Batch Import Furniture Assets');
         setIsBatchImporting(false);
         if (imported.length) setShowLibrary(true);
     };
 
-    // --- 导入小屋样板房（导出的另一半）：读 .room.json，确认后替换或合并 ---
+    // --- Import Room Template (the other half of export): read a .room.json file, then replace or merge after confirming ---
     const handleImportRoomFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         e.target.value = '';
         if (!file) return;
         try {
             const data = JSON.parse(await file.text());
-            if (!data || !Array.isArray(data.items)) throw new Error('缺少 items，不是有效的小屋样板房文件');
+            if (!data || !Array.isArray(data.items)) throw new Error('Missing items -- not a valid room template file');
             setPendingImport(data);
         } catch (err: any) {
-            addToast(`无法读取小屋文件: ${err?.message || err}`, 'error');
+            addToast(`Could not read room file: ${err?.message || err}`, 'error');
         }
     };
 
     const loadBuiltInRoomTemplate = async (template: BuiltInRoomTemplate) => {
         const res = await fetch(template.templateUrl);
-        if (!res.ok) throw new Error(`无法读取样板房 ${template.name}`);
+        if (!res.ok) throw new Error(`Could not read room template ${template.name}`);
         const data = await res.json();
-        if (!data || !Array.isArray(data.items)) throw new Error('样板房数据无效');
+        if (!data || !Array.isArray(data.items)) throw new Error('Invalid room template data');
         // Store built-in assets as deployment-independent references. TokenImg/useBlobRefUrl
         // resolves them against the *current* BASE_URL when rendering, so full backups can
         // move between web origins, GitHub Pages sub-paths, and the desktop shell.
@@ -1357,7 +1395,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             setPendingImport(await loadBuiltInRoomTemplate(template));
             setShowLibrary(false);
         } catch (err: any) {
-            addToast(`无法打开样板房: ${err?.message || err}`, 'error');
+            addToast(`Could not open room template: ${err?.message || err}`, 'error');
         } finally {
             setSampleRoomLoadingId(null);
         }
@@ -1367,7 +1405,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         if (!templateData || !char) return;
         setIsImportingRoom(true);
         try {
-            // 内嵌的 base64 图统一转回 blobref 落库；图床/http 链接原样保留
+            // Embedded base64 images are all converted back to blobref and persisted; image-host/http links are kept as-is
             const toRef = async (img: any): Promise<string> => {
                 if (typeof img !== 'string' || !img) return '';
                 return img.startsWith('data:') ? await migrateDataUrlToRef(img) : img;
@@ -1387,7 +1425,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                     : (typeof it.descriptionPrompt === 'string' && it.descriptionPrompt ? it.descriptionPrompt : undefined);
                 importedItems.push({
                     id: `item-${stamp}-${i}`,
-                    name: typeof it.name === 'string' && it.name ? it.name : `物品${i + 1}`,
+                    name: typeof it.name === 'string' && it.name ? it.name : `Item ${i + 1}`,
                     type: it.type === 'rug' ? 'rug' : (it.type === 'decor' ? 'decor' : 'furniture'),
                     image,
                     x: clampNum(it.x, 50, 0, 100),
@@ -1403,7 +1441,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             if (saveDebounceRef.current) { clearTimeout(saveDebounceRef.current); saveDebounceRef.current = null; }
             setItems(newItems);
             if (importMode === 'replace' && templateData.room) {
-                // 替换模式连墙面/地板一起应用（合并模式只追加物品，不动背景）
+                // Replace mode applies the wall/floor too (merge mode only appends items, leaving the background untouched)
                 const r = templateData.room;
                 const wallImage = await toRef(toPortableBuiltinRoomAsset(r.wallImage));
                 const floorImage = await toRef(toPortableBuiltinRoomAsset(r.floorImage));
@@ -1418,10 +1456,10 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             } else {
                 updateCharacter(char.id, { roomConfig: { ...char.roomConfig, items: newItems } });
             }
-            addToast(`已导入 ${importedItems.length} 件物品${importMode === 'replace' ? '（替换原布局）' : ''}`, 'success');
+            addToast(`Imported ${importedItems.length} items${importMode === 'replace' ? ' (replaced the previous layout)' : ''}`, 'success');
             return true;
         } catch (err: any) {
-            addToast(`导入失败: ${err?.message || err}`, 'error');
+            addToast(`Import failed: ${err?.message || err}`, 'error');
             return false;
         } finally {
             setIsImportingRoom(false);
@@ -1433,13 +1471,13 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         const ok = await applyRoomTemplateData(pendingImport, importMode);
         if (ok) {
             setPendingImport(null);
-            trackEvent('导入小屋样板房', { mode: importMode });
+            trackEvent('Import Room Template', { mode: importMode });
         }
     };
 
     const chooseSampleRoom = async (template: BuiltInRoomTemplate) => {
         if (!char) return;
-        trackEvent('套用内置样板房', { template: template.id });
+        trackEvent('Apply Built-in Room Template', { template: template.id });
         setSampleRoomLoadingId(template.id);
         try {
             const data = await loadBuiltInRoomTemplate(template);
@@ -1449,7 +1487,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                 setShowSampleRoomOffer(false);
             }
         } catch (err: any) {
-            addToast(`样板房导入失败: ${err?.message || err}`, 'error');
+            addToast(`Room template import failed: ${err?.message || err}`, 'error');
         } finally {
             setSampleRoomLoadingId(null);
         }
@@ -1463,8 +1501,9 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
     // --- PERF FIX: Direct DOM Dragging (bypasses React re-renders) ---
     // During drag: manipulate DOM directly via element.style
     // On drop: sync final position to React state once
-    // 双指捏合：第一指已在拖某件家具时，第二指落下（无论落在哪）即升级为捏合。
-    // 需要两指坐标齐全 + 拖拽上下文（房间尺寸）才真正开始。
+    // Two-finger pinch: if a first finger is already dragging a piece of furniture, a second
+    // finger touching down anywhere upgrades it to pinch mode.
+    // Both fingers' coordinates plus the drag context (room dimensions) must be available before it actually starts.
     const tryStartPinch = () => {
         if (pinchRef.current || !draggingIdRef.current || !dragStartRef.current) return;
         if (activePointersRef.current.size !== 2) return;
@@ -1480,7 +1519,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             startMidY: (p1.y + p2.y) / 2,
             baseScale: item.scale,
             baseRotation: item.rotation,
-            // 位置基准取拖拽中的实时位置（捏合前可能已经拖了一段）
+            // The position baseline uses the live position during the drag (it may already have moved some before the pinch started)
             baseX: pendingDragPos.current?.x ?? item.x,
             baseY: pendingDragPos.current?.y ?? item.y,
             width: dragStartRef.current.width,
@@ -1488,13 +1527,13 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         };
     };
 
-    // 旋转角规整到 [-180, 180]
+    // Normalize rotation angle to [-180, 180]
     const normRot = (r: number) => {
         let v = ((r + 180) % 360 + 360) % 360 - 180;
         return Math.round(v);
     };
 
-    // 舞台层 pointerdown：只负责捕捉「拖拽中落下的第二指」（第二指落在空白处时）
+    // Stage-layer pointerdown: only responsible for capturing "a second finger touching down mid-drag" (when the second finger lands on blank space)
     const handleStagePointerDown = (e: React.PointerEvent) => {
         if (mode !== 'edit' || !draggingIdRef.current) return;
         activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -1507,7 +1546,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
         e.stopPropagation();
         activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-        // 已经有一根手指在拖：这根新手指升级为捏合，不开新的拖拽
+        // A finger is already dragging: this new finger upgrades to a pinch instead of starting a new drag
         if (draggingIdRef.current && dragPointerIdRef.current !== null && e.pointerId !== dragPointerIdRef.current) {
             tryStartPinch();
             return;
@@ -1552,7 +1591,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
         }
 
-        // 捏合中：双指距离→缩放、双指连线转角→旋转（0°/±90°/180° 附近吸附）、中点位移→移动
+        // While pinching: two-finger distance -> scale, angle of the line between fingers -> rotate (snaps near 0deg/+-90deg/180deg), midpoint movement -> move
         const pinch = pinchRef.current;
         if (pinch) {
             const p1 = activePointersRef.current.get(pinch.id1);
@@ -1585,7 +1624,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             return;
         }
 
-        // 单指拖拽只认主手指，忽略途中扫过的其它触点
+        // Single-finger dragging only tracks the primary finger, ignoring other touch points that sweep by along the way
         if (dragPointerIdRef.current !== null && e.pointerId !== dragPointerIdRef.current) return;
 
         const { startX, startY, initialItemX, initialItemY, width, height } = dragStartRef.current;
@@ -1645,7 +1684,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             commitItems(newItems);
         }
 
-        // Cleanup all refs（任意一指抬起都结束整次手势，剩下那根手指不再拖动）
+        // Cleanup all refs (lifting either finger ends the whole gesture -- the remaining finger no longer drags)
         draggingIdRef.current = null;
         dragElementRef.current = null;
         dragPointerIdRef.current = null;
@@ -1668,7 +1707,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                 charId={char.id}
                 charName={char.name}
                 charAvatar={char.avatar}
-                userName={userProfile?.name || '用户'}
+                userName={userProfile?.name || 'User'}
                 onBack={() => { if (launchedFromDesktopRef.current) closeApp(); else setViewState('select'); }}
             />
         );
@@ -1676,7 +1715,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
 
     // SELECT SCREEN
     if (viewState === 'select') {
-        // 像素家园=深色，小小窝/家园=浅色（参考稿）
+        // Pixel Home = dark, Dwelling/Homeland = light (per reference design)
         const dark = homeTab === 'pixelHome';
         const th = dark ? {
             pageBg: 'linear-gradient(180deg,#0c1024 0%,#141031 45%,#1a1330 100%)',
@@ -1709,20 +1748,20 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             badgeBg: '#ffffff', badgeIcon: 'text-purple-500', badgeShadow: '0 1px 5px rgba(120,90,170,.3)',
             name: 'text-purple-900', cardSub: 'text-purple-400/70', footer: 'text-purple-300/70', dot: 'text-purple-300/40',
         };
-        // 按分组筛出要展示的角色（「全部」时就是原列表）
+        // Filter which characters to show by group (the original list when the filter is "All")
         const visitChars = filterCharactersByGroup(characters, characterGroups, visitGroupId);
         return (
             <div className="h-full w-full flex flex-col font-light relative overflow-hidden" style={{ background: th.pageBg }}>
-                {/* 星点氛围 */}
+                {/* Starlit ambience */}
                 <div className="absolute inset-0 pointer-events-none opacity-70" style={{ backgroundImage: th.stars }} />
 
-                {/* 顶部：标题 + Tab（家园正式开始玩——进世界/编辑——时整块隐去，全屏沉浸） */}
+                {/* Top: title + tabs (hidden entirely for a fullscreen immersive view once Homeland "actually starts playing" -- entering the world/editing) */}
                 <div className={`relative z-10 px-6 shrink-0 ${homeTab === 'worldHome' && worldHomeFull ? 'hidden' : ''}`} style={{ paddingTop: 'max(3rem, var(--safe-top, 0px))' }}>
                     <button onClick={closeApp} className={`absolute left-4 p-2 rounded-full active:scale-90 transition-all ${th.back}`} style={{ top: 'max(3rem, var(--safe-top, 0px))' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                     </button>
                     <div className="text-center">
-                        <h1 className="text-[26px] tracking-[0.15em]" style={{ fontFamily: `'Noto Serif SC',serif`, color: th.title, textShadow: `0 2px 18px ${th.titleShadow}` }}>拜访谁的房间？</h1>
+                        <h1 className="text-[26px] tracking-[0.15em]" style={{ fontFamily: `'Noto Serif SC',serif`, color: th.title, textShadow: `0 2px 18px ${th.titleShadow}` }}>Whose room to visit?</h1>
                         <div className="flex items-center justify-center gap-2 mt-1.5">
                             <span className="h-px w-10" style={{ background: `linear-gradient(90deg,transparent,${th.line})` }} />
                             <span className={`text-[9px] tracking-[0.45em] font-bold ${th.sub}`}>✦ VISIT ROOM ✦</span>
@@ -1730,17 +1769,17 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                         </div>
                     </div>
 
-                    {/* Tab 栏：三个分区都在这一页内切换，不跳走 */}
+                    {/* Tab bar: all three sections switch within this one page, no navigation away */}
                     <div className="mt-5 rounded-2xl p-1.5 flex gap-1" style={{ background: th.tabWrapBg, border: `1px solid ${th.tabWrapBorder}`, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06)' }}>
                         {([
-                            { id: 'room', label: '🏠 小小窝' },
-                            { id: 'worldHome', label: '🌍 家园' },
-                            { id: 'pixelHome', label: '🎮 像素家园' },
+                            { id: 'room', label: '🏠 Dwelling' },
+                            { id: 'worldHome', label: '🌍 Homeland' },
+                            { id: 'pixelHome', label: '🎮 Pixel Home' },
                         ] as const).map(tab => {
                             const active = homeTab === tab.id;
                             return (
                                 <button key={tab.id}
-                                    onClick={() => { setHomeTab(tab.id); trackEvent('切换小小窝分区', { tab: tab.id }); }}
+                                    onClick={() => { setHomeTab(tab.id); trackEvent('Switch Dwelling Section', { tab: tab.id }); }}
                                     className="relative flex-1 py-2.5 rounded-xl text-[12px] font-bold tracking-wide transition-all"
                                     style={active ? th.tabActive : { color: th.tabIdle }}>
                                     {tab.label}
@@ -1752,27 +1791,27 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                 </div>
 
                 {homeTab === 'worldHome' ? (
-                    /* 家园分区：直接内嵌大世界本体，保持顶部三栏（不再跳走/不再多一层封面） */
+                    /* Homeland section: embeds the big-world feature directly, keeping the top three-tab bar (no navigation away, no extra cover layer) */
                     <div className={`relative z-10 flex-1 min-h-0 overflow-hidden ${worldHomeFull ? '' : 'mt-3'}`}>
                         <WorldHomeApp embedded onFullscreen={setWorldHomeFull} />
                     </div>
                 ) : (
                     <>
-                        {/* 描述 */}
+                        {/* Description */}
                         <p className={`relative z-10 text-center text-[11px] mt-4 px-8 leading-relaxed ${th.desc}`}>
-                            {homeTab === 'pixelHome' ? '像素风的家——自由装修、布置房间、潜入记忆。' : '走进谁的房间，看看 ta 此刻在做什么、翻翻屋里的小物件。'}
+                            {homeTab === 'pixelHome' ? 'A pixel-art home -- freely renovate, decorate the room, and dive into memories.' : "Step into someone's room, see what they're up to right now, and poke around their little belongings."}
                         </p>
 
-                        {/* 分组筛选（没建分组时不渲染）：像素家园=深色底，其余浅色 */}
+                        {/* Group filter (not rendered if no groups exist): Pixel Home = dark background, otherwise light */}
                         <CharacterGroupFilterBar characters={characters} groups={characterGroups} dark={dark}
                             value={visitGroupId} onChange={setVisitGroupId} className="relative z-10 px-5 mt-3 shrink-0" />
 
-                        {/* 角色网格 */}
+                        {/* Character grid */}
                         <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar px-5 pt-4 pb-4">
                             {characters.length === 0 ? (
-                                <div className={`text-center text-[12px] py-16 ${th.empty}`}>还没有角色，先去「神经链接」创建一个吧。</div>
+                                <div className={`text-center text-[12px] py-16 ${th.empty}`}>No characters yet -- go create one in "Neural Link" first.</div>
                             ) : visitChars.length === 0 ? (
-                                <div className={`text-center text-[12px] py-16 ${th.empty}`}>该分组下没有角色</div>
+                                <div className={`text-center text-[12px] py-16 ${th.empty}`}>No characters in this group</div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-4">
                                     {visitChars.map((c, i) => {
@@ -1782,13 +1821,13 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                             <button key={c.id} onClick={() => { if (pixel) { setActiveCharacterId(c.id); setViewState('pixelHome'); } else handleEnterRoom(c); }}
                                                 className="group relative rounded-2xl px-3 pt-8 pb-5 flex flex-col items-center active:scale-95 transition-all overflow-hidden"
                                                 style={{ background: tint, border: `1px solid ${th.cardBorder}`, boxShadow: th.cardShadow }}>
-                                                {/* 内描金细框 + 四角宝石 */}
+                                                {/* Inner gilded border + gems on all four corners */}
                                                 <div className="absolute inset-[7px] rounded-xl pointer-events-none" style={{ border: `1px solid ${th.inner}` }} />
                                                 <span className="absolute top-[10px] left-[10px] w-1.5 h-1.5 rotate-45" style={{ background: th.gem }} />
                                                 <span className="absolute top-[10px] right-[10px] w-1.5 h-1.5 rotate-45" style={{ background: th.gem }} />
                                                 <span className="absolute bottom-[10px] left-[10px] w-1.5 h-1.5 rotate-45" style={{ background: th.gem }} />
                                                 <span className="absolute bottom-[10px] right-[10px] w-1.5 h-1.5 rotate-45" style={{ background: th.gem }} />
-                                                {/* 头像 + 罗盘纹 + 双层环 */}
+                                                {/* Avatar + compass-rose pattern + double ring */}
                                                 <div className="relative w-[92px] h-[92px] flex items-center justify-center">
                                                     <div className="absolute w-[124px] h-[124px] rounded-full" style={{ background: `repeating-conic-gradient(from 0deg, ${th.tick} 0deg 2.4deg, transparent 2.4deg 9deg)`, WebkitMaskImage: 'radial-gradient(circle, transparent 40%, #000 44%, #000 50%, transparent 55%)', maskImage: 'radial-gradient(circle, transparent 40%, #000 44%, #000 50%, transparent 55%)' }} />
                                                     <div className="absolute w-[110px] h-[110px] rounded-full" style={{ background: `radial-gradient(circle, ${th.halo}, transparent 62%)` }} />
@@ -1804,7 +1843,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                                     </div>
                                                 </div>
                                                 <span className={`mt-3 text-[14px] font-semibold tracking-wide ${th.name}`} style={{ fontFamily: `'Noto Serif SC',serif` }}>{c.name}</span>
-                                                <span className={`mt-0.5 text-[10px] ${th.cardSub}`}>{pixel ? '进 ta 的像素家园' : '拜访 ta 的房间'}</span>
+                                                <span className={`mt-0.5 text-[10px] ${th.cardSub}`}>{pixel ? "Enter their Pixel Home" : "Visit their room"}</span>
                                             </button>
                                         );
                                     })}
@@ -1812,7 +1851,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                             )}
                         </div>
 
-                        {/* 底部装饰 */}
+                        {/* Bottom decoration */}
                         <div
                             className={`relative z-10 shrink-0 flex items-center justify-center gap-2.5 text-[8.5px] tracking-[0.35em] font-bold ${th.footer}`}
                             style={{ paddingBottom: 'calc(1rem + var(--safe-bottom, 0px))' }}
@@ -1832,7 +1871,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
     // Background Style Construction (Logic 1: Legacy String vs New Config)
     const getBgStyle = (img: string | undefined, scale: number | undefined, repeat: boolean | undefined) => {
         if (!img) return '';
-        // blob: 是令牌解析出的 objectURL，也要按图片(url())处理，否则会被当成 CSS 渐变。
+        // blob: is an objectURL resolved from a token -- it also needs to be treated as an image (url()), or it'll be mistaken for a CSS gradient.
         const isUrl = img.startsWith('http') || img.startsWith('data') || img.startsWith('blob:') || img.startsWith('/');
         const url = isUrl ? `url(${img})` : img; // If it's a CSS gradient, use it directly
         
@@ -1860,7 +1899,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
     // Sully Check
     const isSully = char?.id === 'preset-sully-v2' || char?.name === 'Sully';
 
-    // 今天的房间是否已生成（lastRoomDate 命中今日即视为已生成）——决定是否提示「更新这一天」
+    // Whether today's room has already been generated (a lastRoomDate match for today counts as generated) -- determines whether to show the "Update Today" prompt
     const todayGenerated = !!char && char.lastRoomDate === getVirtualDay(char);
 
     const renderTemplateButton = (template: BuiltInRoomTemplate, onSelect: (template: BuiltInRoomTemplate) => void, actionLabel: string) => (
@@ -1890,43 +1929,45 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
     return (
         <div className="h-full w-full bg-[#f8fafc] flex flex-col relative overflow-hidden font-sans select-none">
 
-            {/* 「更新这一天」时一趟把整个房间生成出来（按次计费，所以一趟读完，之后逛屋不再等待）。
-                慢是必然的，这里用小字向用户解释清楚为什么。进门本身不再触发它。 */}
+            {/* "Update Today" generates the whole room in one pass (billed per call, so it reads
+                everything in one go and doesn't make you wait again while browsing the room
+                afterward). It's inherently slow, so small print here explains why to the user.
+                Entering the room itself no longer triggers it. */}
             {isInitializing && (
                 <div className="absolute inset-0 z-[500] bg-white flex flex-col items-center justify-center animate-fade-in px-10 text-center">
                     <div className="text-4xl mb-4 animate-bounce"><Door size={48} className="text-slate-400" /></div>
                     <p className="text-sm font-bold text-slate-500">{initStatusText}</p>
                     <p className="text-[11px] text-slate-400/90 leading-[1.7] mt-3 max-w-[268px]">
-                        正在一趟把整个房间「读」出来——ta 此刻的状态、屋里<b className="text-slate-500">每一件物品</b>的样子和 ta 的反应、今天的计划与随笔，都在这一次里生成。
-                        <br />物件越多越久，但只生成这一次，生成后就能一口气全看完，之后点哪件都不再等待。
+                        "Reading" the entire room in one pass -- their current state, the look and reaction for <b className="text-slate-500">every single item</b> in the room, and today's plan and journal entry, all generated in this one call.
+                        <br />More items take longer, but it only generates once -- after that you can browse everything right away, and tapping any item won't make you wait again.
                     </p>
                 </div>
             )}
 
             <Modal
                 isOpen={showSampleRoomOffer && !!char}
-                title="Sully 的样板房推销"
+                title="Sully's Room Template Pitch"
                 onClose={dismissSampleRoomOffer}
                 footer={
                     <button onClick={dismissSampleRoomOffer} className="w-full py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl text-xs">
-                        谢谢，我不需要
+                        No thanks, I'm good
                     </button>
                 }
             >
                 <div className="space-y-4">
                     <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5">
-                        <p className="text-sm font-bold text-slate-700">这里看起来空空的，Sully 来给你推销两款样板房：</p>
-                        <p className="text-[10px] text-slate-400 leading-relaxed mt-1">样板房收纳在「家具超市 · 样板房」里，可以再次选择并二次调整。</p>
+                        <p className="text-sm font-bold text-slate-700">This place looks pretty empty -- Sully's here to pitch you two room templates:</p>
+                        <p className="text-[10px] text-slate-400 leading-relaxed mt-1">Room templates are kept in "Furniture Store · Room Templates" -- you can pick one again later and adjust it further.</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                        {BUILTIN_ROOM_TEMPLATES.map(template => renderTemplateButton(template, chooseSampleRoom, sampleRoomLoadingId === template.id ? '导入中...' : '点我套用'))}
+                        {BUILTIN_ROOM_TEMPLATES.map(template => renderTemplateButton(template, chooseSampleRoom, sampleRoomLoadingId === template.id ? 'Importing...' : 'Tap to Apply'))}
                     </div>
                 </div>
             </Modal>
 
             <Modal
                 isOpen={showActorArtModal && !!char}
-                title="更改角色立绘"
+                title="Change Character Portrait"
                 onClose={() => setShowActorArtModal(false)}
             >
                 <div className="grid grid-cols-2 gap-3">
@@ -1935,16 +1976,16 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                         className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left active:scale-[0.98] transition-transform"
                     >
                         <Image size={26} className="text-blue-500 mb-3" />
-                        <p className="text-sm font-bold text-slate-700">上传自定义图片</p>
-                        <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">从设备选择一张新的小屋立绘。</p>
+                        <p className="text-sm font-bold text-slate-700">Upload a custom image</p>
+                        <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">Choose a new room portrait from your device.</p>
                     </button>
                     <button
                         onClick={openActorStudio}
                         className="min-w-0 rounded-lg border border-purple-200 bg-purple-50 p-4 text-left active:scale-[0.98] transition-transform"
                     >
                         <Sparkle size={26} className="text-purple-500 mb-3" />
-                        <p className="text-sm font-bold text-slate-700">进入捏人</p>
-                        <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">前往神经链接里的手办展示。</p>
+                        <p className="text-sm font-bold text-slate-700">Open Character Creator</p>
+                        <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">Go to the figure showcase inside Neural Link.</p>
                     </button>
                 </div>
             </Modal>
@@ -1962,7 +2003,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                             onPointerDown={(e) => handlePointerDown(e, item.id)}
                             onClick={(e) => handleLookAt(item, e)}
                             onWheel={(e) => {
-                                // 桌面端：选中后滚轮直接缩放（移动端走双指捏合）
+                                // Desktop: once selected, the wheel scales directly (mobile uses two-finger pinch)
                                 if (mode !== 'edit' || selectedItemId !== item.id) return;
                                 const next = Math.min(6, Math.max(0.2, item.scale + (e.deltaY < 0 ? 0.08 : -0.08)));
                                 updateSelectedItem({ scale: Math.round(next * 100) / 100 }, 'cont:wheel');
@@ -1973,15 +2014,16 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                 top: `${item.y}%`,
                                 width: `${80 * item.scale}px`,
                                 transform: `translate(-50%, -100%) rotate(${item.rotation}deg)`,
-                                // 地毯压缩到 [1,11] 的底层区间：角色 zIndex ≥ 80（y 钳制在地平线以下再 +20），
-                                // 普通家具按 y 排 z，两者都必然盖在地毯上。
+                                // Rugs are compressed into the bottom [1,11] z-index range: the character's zIndex is >= 80
+                                // (y is clamped below the horizon, then +20), and regular furniture is ordered by y --
+                                // both always end up layered above rugs.
                                 zIndex: isDragging ? 100 : (item.type === 'rug' ? 1 + Math.floor(item.y / 10) : Math.floor(item.y)),
                                 transition: isDragging ? 'none' : 'transform 0.2s ease-out',
                                 willChange: isDragging ? 'left, top' : 'auto' // GPU layer only when needed
                             }}
                         >
                             <TokenImg value={item.image} className="w-full h-auto object-contain pointer-events-none select-none" draggable={false} loading="lazy" />
-                            {mode === 'edit' && selectedItemId === item.id && <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap">选中</div>}
+                            {mode === 'edit' && selectedItemId === item.id && <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap">Selected</div>}
                         </div>
                     );
                 })}
@@ -1989,23 +2031,23 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                 {/* Character Actor - Z Index Boosted to simulate standing in front */}
                 {!(mode === 'edit' && hideActorInEdit) && <div onClick={(e) => { e.stopPropagation(); handlePokeActor(); }} className={`absolute transition-[left,top] duration-[1000ms] ease-in-out origin-bottom-center ${stickerClass} cursor-pointer active:scale-95 group`} style={{ left: `${actorState.x}%`, top: `${actorState.y}%`, width: '120px', transform: `translate(-50%, -100%) scale(${actorState.action === 'walk' ? 1.05 : (actorState.action === 'bounce' ? 1.1 : 1)})`, zIndex: Math.floor(actorState.y) + 20 }}>
                     <img src={actorImage} className={`w-full h-full object-contain ${actorState.action === 'walk' ? 'animate-bounce' : ''}`} alt="" />
-                    {mode === 'edit' && <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[9px] px-2 py-1 rounded backdrop-blur-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"><Camera size={12} /> 换装</div>}
+                    {mode === 'edit' && <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[9px] px-2 py-1 rounded backdrop-blur-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"><Camera size={12} /> Change Outfit</div>}
                     {/* Fixed: Wider bubble width */}
                     {aiBubble.visible && <div className="absolute bottom-[105%] left-1/2 -translate-x-1/2 bg-white px-4 py-3 rounded-[20px] rounded-bl-none shadow-lg border-2 border-black/5 min-w-[120px] max-w-[300px] animate-pop-in z-50"><p className="text-xs font-bold text-slate-700 leading-tight text-center break-words">{aiBubble.text}</p><button onClick={(e) => { e.stopPropagation(); setAiBubble({ ...aiBubble, visible: false }); }} className="absolute -top-2 -right-2 bg-slate-200 text-slate-500 rounded-full w-4 h-4 flex items-center justify-center text-[8px]">×</button></div>}
                 </div>}
             </div>
 
-            {/* 查看梦境入口 · 左中边缘的「月亮」按钮（只在浏览模式露出，与右侧「生活碎片」对称） */}
+            {/* View Dream entry · the "moon" button on the left-center edge (only shown in view mode, symmetric with "Life Fragments" on the right) */}
             {mode === 'view' && (
-                <button onClick={() => { setShowDream(true); trackEvent('打开梦境剧场'); }} title="查看梦境"
+                <button onClick={() => { setShowDream(true); trackEvent('Open Dream Theater'); }} title="View Dream"
                     className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 px-2.5 py-3 rounded-r-2xl shadow-lg border border-l-0 z-[300] active:scale-95 transition-transform"
                     style={{ background: 'linear-gradient(135deg, #2a2440, #1a1730)', borderColor: 'rgba(205,214,255,0.25)' }}>
                     <MoonStars size={20} weight="fill" style={{ color: '#cdd6ff' }} />
-                    <span className="text-[8px] font-bold tracking-wider text-[#cdd6ff]/80 [writing-mode:vertical-rl]">梦境</span>
+                    <span className="text-[8px] font-bold tracking-wider text-[#cdd6ff]/80 [writing-mode:vertical-rl]">Dream</span>
                 </button>
             )}
 
-            {/* 梦境演出 · 全屏覆盖（角色不记得梦，但用户偷看到了） */}
+            {/* Dream playback · fullscreen overlay (the character doesn't remember the dream, but the user got a peek) */}
             {showDream && char && <DreamTheater char={char} onExit={() => { setShowDream(false); if (launchedFromDesktopRef.current) closeApp(); }} />}
 
             {/* Sidebar Toggle Button */}
@@ -2015,20 +2057,20 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             {showSidebar && <div className="absolute inset-0 z-[290] bg-black/20" onClick={() => setShowSidebar(false)}></div>}
             <div className={`absolute right-0 top-0 bottom-0 w-3/4 max-w-sm bg-white shadow-2xl z-[300] transition-transform duration-300 ease-out flex flex-col ${showSidebar ? 'translate-x-0' : 'translate-x-full'}`}>
                 <div className="p-6 pb-2 border-b border-slate-100 flex justify-between items-center bg-slate-50" style={{ paddingTop: 'max(1.5rem, var(--safe-top, 0px))' }}>
-                    <h3 className="text-lg font-bold text-slate-700 tracking-tight">生活碎片</h3>
+                    <h3 className="text-lg font-bold text-slate-700 tracking-tight">Life Fragments</h3>
                     <button onClick={() => setShowSidebar(false)} className="p-2 -mr-2 text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg></button>
                 </div>
                 <div className="flex p-2 bg-slate-50 border-b border-slate-100">
-                    <button onClick={() => { setActivePanel('todo'); trackEvent('切换生活碎片面板', { panel: 'todo' }); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${activePanel === 'todo' ? 'bg-white shadow text-primary' : 'text-slate-400 hover:bg-white/50'}`}>今日计划</button>
-                    <button onClick={() => { setActivePanel('schedule'); trackEvent('切换生活碎片面板', { panel: 'schedule' }); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${activePanel === 'schedule' ? 'bg-white shadow text-primary' : 'text-slate-400 hover:bg-white/50'}`}>日程</button>
-                    <button onClick={() => { setActivePanel('notebook'); trackEvent('切换生活碎片面板', { panel: 'notebook' }); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${activePanel === 'notebook' ? 'bg-white shadow text-primary' : 'text-slate-400 hover:bg-white/50'}`}>私密记事</button>
+                    <button onClick={() => { setActivePanel('todo'); trackEvent('Switch Life Fragments Panel', { panel: 'todo' }); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${activePanel === 'todo' ? 'bg-white shadow text-primary' : 'text-slate-400 hover:bg-white/50'}`}>Today's Plan</button>
+                    <button onClick={() => { setActivePanel('schedule'); trackEvent('Switch Life Fragments Panel', { panel: 'schedule' }); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${activePanel === 'schedule' ? 'bg-white shadow text-primary' : 'text-slate-400 hover:bg-white/50'}`}>Schedule</button>
+                    <button onClick={() => { setActivePanel('notebook'); trackEvent('Switch Life Fragments Panel', { panel: 'notebook' }); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${activePanel === 'notebook' ? 'bg-white shadow text-primary' : 'text-slate-400 hover:bg-white/50'}`}>Private Notes</button>
                 </div>
-                
+
                 {/* Fixed: Add no-scrollbar class to hide scrollbar */}
                 <div className="flex-1 overflow-y-auto p-6 bg-[#fcfcfc] no-scrollbar" style={{ paddingBottom: 'calc(1.5rem + var(--safe-bottom, 0px))' }}>
                     {activePanel === 'todo' && (
                         <div className="space-y-6">
-                            <div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{todaysTodo?.date || 'Today'}</span><span className="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">完成度: {todaysTodo ? Math.round((todaysTodo.items.filter(i=>i.done).length / todaysTodo.items.length)*100) : 0}%</span></div>
+                            <div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{todaysTodo?.date || 'Today'}</span><span className="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">Completion: {todaysTodo ? Math.round((todaysTodo.items.filter(i=>i.done).length / todaysTodo.items.length)*100) : 0}%</span></div>
                             {todaysTodo ? <ul className="space-y-3">{todaysTodo.items.map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-3 group">
                                     <div onClick={() => handleToggleTodo(idx)} className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${item.done ? 'bg-green-400 border-green-400' : 'border-slate-300 group-hover:border-primary'}`}>
@@ -2037,8 +2079,8 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                     <span onClick={() => handleToggleTodo(idx)} className={`text-sm leading-relaxed transition-all flex-1 cursor-pointer ${item.done ? 'text-slate-300 line-through decoration-slate-300' : 'text-slate-700 font-medium'}`}>{item.text}</span>
                                     <button onClick={() => handleDeleteTodo(idx)} className="text-slate-300 hover:text-red-400 px-1 opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                                 </li>
-                            ))}</ul> : <div className="text-center py-10 text-slate-400 text-xs">生成中...</div>}
-                            <div className="mt-8 p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-xs text-yellow-800 leading-relaxed italic relative"><span className="absolute -top-3 left-4"><img src={twemojiUrl('1f4cc')} alt="pin" className="w-6 h-6" /></span>这是 {char?.name} 今天的自动行程表。虽然你不能帮TA做，但可以监督TA哦。</div>
+                            ))}</ul> : <div className="text-center py-10 text-slate-400 text-xs">Generating...</div>}
+                            <div className="mt-8 p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-xs text-yellow-800 leading-relaxed italic relative"><span className="absolute -top-3 left-4"><img src={twemojiUrl('1f4cc')} alt="pin" className="w-6 h-6" /></span>This is {char?.name}'s automatic schedule for today. You can't do it for them, but you can keep an eye on them.</div>
                         </div>
                     )}
                     {activePanel === 'schedule' && (
@@ -2049,15 +2091,15 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                 compact={true}
                             />
                             {!roomSchedule && (
-                                <p className="text-center text-xs text-slate-400 py-4">日程将在首次聊天时自动生成</p>
+                                <p className="text-center text-xs text-slate-400 py-4">The schedule will be generated automatically the first time you chat</p>
                             )}
                         </div>
                     )}
                     {activePanel === 'notebook' && (
                         <div className="flex flex-col pb-4">
                             {notebookEntries.length > 0 ? (
-                                <div 
-                                    className="relative bg-white shadow-md border border-slate-200 p-6 min-h-[400px] flex flex-col rounded-xl" 
+                                <div
+                                    className="relative bg-white shadow-md border border-slate-200 p-6 min-h-[400px] flex flex-col rounded-xl"
                                     style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '20px 20px' }}
                                 >
                                     {/* Spiral Binding Visual - Adaptive Height */}
@@ -2066,14 +2108,14 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                     <div className="mb-4 ml-6 flex justify-between items-center text-[10px] text-slate-400 font-mono border-b border-slate-100 pb-2">
                                         <span>#{notebookEntries.length - notebookPage}</span>
                                         <div className="flex gap-2 items-center">
-                                            <span>{new Date(notebookEntries[notebookPage].timestamp).toLocaleString()}</span>
-                                            <button onClick={() => handleDeleteNote(notebookEntries[notebookPage].id)} className="text-red-300 hover:text-red-500 font-bold px-1" title="删除此页">×</button>
+                                            <span>{new Date(notebookEntries[notebookPage].timestamp).toLocaleString('en-US')}</span>
+                                            <button onClick={() => handleDeleteNote(notebookEntries[notebookPage].id)} className="text-red-300 hover:text-red-500 font-bold px-1" title="Delete this page">×</button>
                                         </div>
                                     </div>
                                     <div className="flex-1 ml-6 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">{renderNotebookContent(notebookEntries[notebookPage].content)}</div>
-                                    <div className="mt-6 ml-6 flex justify-between items-center pt-4 border-t border-slate-100"><button disabled={notebookPage >= notebookEntries.length - 1} onClick={() => setNotebookPage(p => p + 1)} className="text-slate-400 hover:text-primary disabled:opacity-30">← 旧的</button><span className="text-[10px] text-slate-300">{notebookPage + 1} / {notebookEntries.length}</span><button disabled={notebookPage <= 0} onClick={() => setNotebookPage(p => p - 1)} className="text-slate-400 hover:text-primary disabled:opacity-30">新的 →</button></div>
+                                    <div className="mt-6 ml-6 flex justify-between items-center pt-4 border-t border-slate-100"><button disabled={notebookPage >= notebookEntries.length - 1} onClick={() => setNotebookPage(p => p + 1)} className="text-slate-400 hover:text-primary disabled:opacity-30">&larr; Older</button><span className="text-[10px] text-slate-300">{notebookPage + 1} / {notebookEntries.length}</span><button disabled={notebookPage <= 0} onClick={() => setNotebookPage(p => p - 1)} className="text-slate-400 hover:text-primary disabled:opacity-30">Newer &rarr;</button></div>
                                 </div>
-                            ) : <div className="text-center py-10 text-slate-400 text-xs">记事本是空的...</div>}
+                            ) : <div className="text-center py-10 text-slate-400 text-xs">The notebook is empty...</div>}
                         </div>
                     )}
                 </div>
@@ -2083,45 +2125,45 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             <div className="absolute top-0 w-full px-4 pb-2 flex justify-between z-30 pointer-events-none" style={{ paddingTop: 'max(3rem, var(--safe-top, 0px))' }}>
                 <button onClick={() => { if (launchedFromDesktopRef.current) closeApp(); else setViewState('select'); }} className="bg-white/90 p-2 rounded-full shadow-md pointer-events-auto active:scale-90 transition-transform text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg></button>
                 <div className="flex gap-2 pointer-events-auto">
-                    {/* 装修模式：撤销 / 重做 */}
+                    {/* Edit mode: Undo / Redo */}
                     {mode === 'edit' && (
                         <>
-                            <button onClick={() => setHideActorInEdit(v => !v)} className={`p-2 rounded-full shadow-md active:scale-90 transition-all ${hideActorInEdit ? 'bg-blue-500 text-white' : 'bg-white/90 text-slate-500'}`} title={hideActorInEdit ? '显示角色' : '隐藏角色'} aria-label={hideActorInEdit ? '显示角色' : '隐藏角色'}>
+                            <button onClick={() => setHideActorInEdit(v => !v)} className={`p-2 rounded-full shadow-md active:scale-90 transition-all ${hideActorInEdit ? 'bg-blue-500 text-white' : 'bg-white/90 text-slate-500'}`} title={hideActorInEdit ? 'Show Character' : 'Hide Character'} aria-label={hideActorInEdit ? 'Show Character' : 'Hide Character'}>
                                 {hideActorInEdit ? <EyeSlash size={22} weight="bold" /> : <Eye size={22} weight="bold" />}
                             </button>
-                            <button onClick={undo} disabled={!history.length} className="p-2 bg-white/90 rounded-full shadow-md text-slate-500 disabled:opacity-40 active:scale-90 transition-transform" title="撤销">
+                            <button onClick={undo} disabled={!history.length} className="p-2 bg-white/90 rounded-full shadow-md text-slate-500 disabled:opacity-40 active:scale-90 transition-transform" title="Undo">
                                 <ArrowUUpLeft size={22} weight="bold" />
                             </button>
-                            <button onClick={redo} disabled={!future.length} className="p-2 bg-white/90 rounded-full shadow-md text-slate-500 disabled:opacity-40 active:scale-90 transition-transform" title="重做">
+                            <button onClick={redo} disabled={!future.length} className="p-2 bg-white/90 rounded-full shadow-md text-slate-500 disabled:opacity-40 active:scale-90 transition-transform" title="Redo">
                                 <ArrowUUpRight size={22} weight="bold" />
                             </button>
                         </>
                     )}
-                    {/* REFRESH BUTTON — 仅在今天已生成时露出（未生成时走下方「更新这一天」横幅） */}
+                    {/* REFRESH BUTTON — only shown once today has been generated (before that, the "Update Today" banner below handles it) */}
                     {mode === 'view' && todayGenerated && (
-                        <button onClick={() => setShowRefreshConfirm(true)} className="p-2 bg-white/90 rounded-full shadow-md text-slate-500 hover:text-primary active:scale-90 transition-transform" title="强制刷新今日">
+                        <button onClick={() => setShowRefreshConfirm(true)} className="p-2 bg-white/90 rounded-full shadow-md text-slate-500 hover:text-primary active:scale-90 transition-transform" title="Force refresh today">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
                         </button>
                     )}
-                    <button onClick={() => { setMode(mode === 'view' ? 'edit' : 'view'); setSelectedItemId(null); trackEvent('进入房间装修模式', { mode: mode === 'view' ? 'edit' : 'view' }); }} className={`px-4 py-2 rounded-full font-bold text-xs shadow-md transition-all ${mode === 'edit' ? 'bg-blue-500 text-white' : 'bg-white text-slate-600'}`}>{mode === 'edit' ? '完成' : '装修'}</button>
+                    <button onClick={() => { setMode(mode === 'view' ? 'edit' : 'view'); setSelectedItemId(null); trackEvent('Toggle Room Edit Mode', { mode: mode === 'view' ? 'edit' : 'view' }); }} className={`px-4 py-2 rounded-full font-bold text-xs shadow-md transition-all ${mode === 'edit' ? 'bg-blue-500 text-white' : 'bg-white text-slate-600'}`}>{mode === 'edit' ? 'Done' : 'Edit'}</button>
                 </div>
             </div>
 
             {/* Observation Card (Bottom) */}
             {observationText && mode === 'view' && <div className="absolute left-4 right-4 bg-white p-5 rounded-2xl shadow-2xl border border-slate-100 z-[150] animate-slide-up" style={{ bottom: 'calc(1.5rem + var(--safe-bottom, 0px))' }}><div className="flex justify-between items-start mb-2"><span className="text-xs font-bold text-blue-500 uppercase tracking-widest">OBSERVATION</span><button onClick={() => setObservationText('')} className="text-slate-400 hover:text-slate-600">×</button></div><p className="text-sm text-slate-700 leading-relaxed font-medium text-justify">{observationText}</p></div>}
 
-            {/* 「更新这一天」横幅 —— 今天尚未生成时露出（进门不再阻塞，由用户主动触发） */}
+            {/* "Update Today" banner -- shown while today hasn't been generated yet (entering the room no longer blocks on it; the user triggers it manually) */}
             {mode === 'view' && !todayGenerated && !isInitializing && !observationText && (
                 <div className="absolute left-4 right-4 bg-white p-4 rounded-2xl shadow-2xl border border-slate-100 z-[150] animate-slide-up flex items-center gap-3" style={{ bottom: 'calc(1.5rem + var(--safe-bottom, 0px))' }}>
                     <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center shrink-0">
                         <Door size={22} className="text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-700 leading-tight">今天还没走进 {char?.name} 的一天</p>
-                        <p className="text-[11px] text-slate-400 leading-snug mt-0.5">物品反应、今日计划与随笔会在这一次里生成，需要一点时间。</p>
+                        <p className="text-sm font-bold text-slate-700 leading-tight">You haven't stepped into {char?.name}'s day yet today</p>
+                        <p className="text-[11px] text-slate-400 leading-snug mt-0.5">Item reactions, today's plan, and the journal entry will all be generated in this one call, which takes a bit of time.</p>
                     </div>
                     <button onClick={handleGenerateToday} className="shrink-0 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-md active:scale-95 transition-transform">
-                        更新这一天
+                        Update Today
                     </button>
                 </div>
             )}
@@ -2155,27 +2197,27 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                             return (
                             <div className="flex flex-col gap-3">
                                 <div className="flex justify-between items-center gap-2">
-                                    <span className="text-xs font-bold text-slate-500 truncate">调整 · {sel.name}</span>
+                                    <span className="text-xs font-bold text-slate-500 truncate">Adjust · {sel.name}</span>
                                     <div className="flex gap-2 shrink-0">
-                                        <button onClick={duplicateSelectedItem} className="text-xs text-blue-500 font-bold bg-blue-50 px-3 py-1 rounded-full flex items-center gap-1"><CopySimple size={13} weight="bold" /> 复制</button>
-                                        <button onClick={deleteSelectedItem} className="text-xs text-red-500 font-bold bg-red-50 px-3 py-1 rounded-full">删除</button>
+                                        <button onClick={duplicateSelectedItem} className="text-xs text-blue-500 font-bold bg-blue-50 px-3 py-1 rounded-full flex items-center gap-1"><CopySimple size={13} weight="bold" /> Duplicate</button>
+                                        <button onClick={deleteSelectedItem} className="text-xs text-red-500 font-bold bg-red-50 px-3 py-1 rounded-full">Delete</button>
                                     </div>
                                 </div>
                                 <div className="flex gap-4 items-stretch">
                                     <div className="flex-1 flex flex-col justify-center gap-3 min-w-0">
                                         <div>
-                                            <label className="text-[10px] text-slate-400 block mb-1">缩放 <span className="text-slate-600 font-bold">{Math.round(sel.scale * 100)}%</span></label>
+                                            <label className="text-[10px] text-slate-400 block mb-1">Scale <span className="text-slate-600 font-bold">{Math.round(sel.scale * 100)}%</span></label>
                                             <input type="range" min="0.2" max="6" step="0.05" value={sel.scale} onChange={(e) => updateSelectedItem({ scale: parseFloat(e.target.value) }, 'cont:scale')} className="w-full h-1 bg-slate-200 rounded-full accent-blue-500" />
                                         </div>
                                         <div>
                                             <label className="text-[10px] text-slate-400 block mb-1">
-                                                旋转 <span className="text-slate-600 font-bold">{Math.round(sel.rotation)}°</span>
-                                                {sel.rotation !== 0 && <button onClick={() => updateSelectedItem({ rotation: 0 }, 'op')} className="ml-2 text-[9px] text-blue-500 font-bold bg-blue-50 px-1.5 py-0.5 rounded-full">归零</button>}
+                                                Rotation <span className="text-slate-600 font-bold">{Math.round(sel.rotation)}°</span>
+                                                {sel.rotation !== 0 && <button onClick={() => updateSelectedItem({ rotation: 0 }, 'op')} className="ml-2 text-[9px] text-blue-500 font-bold bg-blue-50 px-1.5 py-0.5 rounded-full">Reset</button>}
                                             </label>
                                             <input type="range" min="-180" max="180" step="1" value={sel.rotation} onChange={(e) => updateSelectedItem({ rotation: parseInt(e.target.value) }, 'cont:rotate')} className="w-full h-1 bg-slate-200 rounded-full accent-blue-500" />
                                         </div>
                                     </div>
-                                    {/* 微调十字键：拖不准时一格一格挪 */}
+                                    {/* D-pad nudge: move one grid cell at a time when dragging isn't precise enough */}
                                     <div className="grid grid-cols-3 gap-1 shrink-0 self-center">
                                         <span />
                                         <button onClick={() => nudgeSelectedItem(0, -1)} className={nudgeBtn}>↑</button>
@@ -2188,82 +2230,82 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                         <span />
                                     </div>
                                 </div>
-                                {/* 类型切换：把已摆好的物品就地改成地毯（沉到底层）或改回家具 */}
+                                {/* Type toggle: turn an already-placed item into a rug (sinks to the bottom layer) or back into furniture */}
                                 <div className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
-                                    <span className="text-[10px] text-slate-400">图层类型{isRug ? '：地毯（垫底，角色踩在上面）' : ''}</span>
+                                    <span className="text-[10px] text-slate-400">Layer type{isRug ? ': Rug (bottom layer, character stands on top)' : ''}</span>
                                     <button onClick={() => updateSelectedItem({ type: isRug ? 'furniture' : 'rug' }, 'op')} className={`text-xs font-bold px-3 py-1 rounded-full transition-colors ${isRug ? 'bg-purple-100 text-purple-600' : 'bg-slate-200 text-slate-500'}`}>
-                                        {isRug ? '改回普通家具' : '设为地毯'}
+                                        {isRug ? 'Change back to furniture' : 'Set as rug'}
                                     </button>
                                 </div>
-                                {/* 可互动开关：关掉后角色不再为它生成描写/反应 */}
+                                {/* Interactive toggle: when off, the character no longer generates a description/reaction for it */}
                                 <div className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
-                                    <span className="text-[10px] text-slate-400">可互动（角色会为它生成描写与反应）</span>
+                                    <span className="text-[10px] text-slate-400">Interactive (the character will generate a description and reaction for it)</span>
                                     <button onClick={() => updateSelectedItem({ isInteractive: !sel.isInteractive }, 'op')} className={`text-xs font-bold px-3 py-1 rounded-full transition-colors ${sel.isInteractive ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}`}>
-                                        {sel.isInteractive ? '开' : '关'}
+                                        {sel.isInteractive ? 'On' : 'Off'}
                                     </button>
                                 </div>
-                                <p className="text-[9px] text-slate-300 text-center">小技巧：单指拖动时再落下第二根手指，可直接捏合缩放 / 旋转；桌面端选中后滚轮也能缩放</p>
+                                <p className="text-[9px] text-slate-300 text-center">Tip: while dragging with one finger, touch down a second finger to pinch-scale / rotate directly; on desktop, the wheel can also scale once an item is selected</p>
                             </div>
                             );
                         })() : (
                             <div className="space-y-4">
                                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                                    <button onClick={() => { setShowLibrary(true); trackEvent('打开家具超市'); }} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-md text-xl">+</div><span className="text-[10px] font-bold text-slate-500">家具库</span></button>
-                                    <button onClick={() => setShowCustomModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white shadow-md"><Sparkle size={24} /></div><span className="text-[10px] font-bold text-slate-500">自定义</span></button>
-                                    <button onClick={() => setShowActorArtModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center text-white shadow-md"><Camera size={24} /></div><span className="text-[10px] font-bold text-slate-500">角色立绘</span></button>
-                                    {/* 批量导入：一次选多张图，全部入库为自定义素材 */}
-                                    <button onClick={() => batchAssetInputRef.current?.click()} disabled={isBatchImporting} className="flex flex-col items-center gap-1 shrink-0 disabled:opacity-50"><div className="w-12 h-12 bg-fuchsia-500 rounded-xl flex items-center justify-center text-white shadow-md"><Images size={24} /></div><span className="text-[10px] font-bold text-slate-500">{isBatchImporting ? '导入中…' : '批量导入'}</span></button>
-                                    <button onClick={() => wallInputRef.current?.click()} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-500 shadow-sm border border-slate-300"><Image size={24} /></div><span className="text-[10px] font-bold text-slate-500">换墙纸</span></button>
-                                    <button onClick={() => floorInputRef.current?.click()} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center shadow-sm border border-slate-300"><img src={twemojiUrl('1f9f1')} alt="brick" className="w-6 h-6" /></div><span className="text-[10px] font-bold text-slate-500">换地板</span></button>
+                                    <button onClick={() => { setShowLibrary(true); trackEvent('Open Furniture Store'); }} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-md text-xl">+</div><span className="text-[10px] font-bold text-slate-500">Furniture Library</span></button>
+                                    <button onClick={() => setShowCustomModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white shadow-md"><Sparkle size={24} /></div><span className="text-[10px] font-bold text-slate-500">Custom</span></button>
+                                    <button onClick={() => setShowActorArtModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center text-white shadow-md"><Camera size={24} /></div><span className="text-[10px] font-bold text-slate-500">Character Portrait</span></button>
+                                    {/* Batch import: select multiple images at once, all stored as custom assets */}
+                                    <button onClick={() => batchAssetInputRef.current?.click()} disabled={isBatchImporting} className="flex flex-col items-center gap-1 shrink-0 disabled:opacity-50"><div className="w-12 h-12 bg-fuchsia-500 rounded-xl flex items-center justify-center text-white shadow-md"><Images size={24} /></div><span className="text-[10px] font-bold text-slate-500">{isBatchImporting ? 'Importing…' : 'Batch Import'}</span></button>
+                                    <button onClick={() => wallInputRef.current?.click()} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-500 shadow-sm border border-slate-300"><Image size={24} /></div><span className="text-[10px] font-bold text-slate-500">Change Wallpaper</span></button>
+                                    <button onClick={() => floorInputRef.current?.click()} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center shadow-sm border border-slate-300"><img src={twemojiUrl('1f9f1')} alt="brick" className="w-6 h-6" /></div><span className="text-[10px] font-bold text-slate-500">Change Floor</span></button>
                                     {/* Export Room Template Button */}
-                                    <button onClick={() => { setExportName(prev => prev || `${char?.name || ''}的小屋`); setShowExportModal(true); }} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-md"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M7.5 7.5 12 3m0 0 4.5 4.5M12 3v13.5" /></svg></div><span className="text-[10px] font-bold text-slate-500">导出小屋</span></button>
-                                    {/* Import Room Template Button（导出的另一半：读 .room.json 样板房） */}
-                                    <button onClick={() => importRoomInputRef.current?.click()} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-md"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></div><span className="text-[10px] font-bold text-slate-500">导入小屋</span></button>
+                                    <button onClick={() => { setExportName(prev => prev || `${char?.name || ''}'s Room`); setShowExportModal(true); }} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-md"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M7.5 7.5 12 3m0 0 4.5 4.5M12 3v13.5" /></svg></div><span className="text-[10px] font-bold text-slate-500">Export Room</span></button>
+                                    {/* Import Room Template Button (the other half of export: reads a .room.json room template) */}
+                                    <button onClick={() => importRoomInputRef.current?.click()} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center text-white shadow-md"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></div><span className="text-[10px] font-bold text-slate-500">Import Room</span></button>
                                     {/* Settings Button */}
-                                    <button onClick={() => setShowSettingsModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm border border-slate-300"><GearSix size={24} /></div><span className="text-[10px] font-bold text-slate-500">设置</span></button>
+                                    <button onClick={() => setShowSettingsModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-600 shadow-sm border border-slate-300"><GearSix size={24} /></div><span className="text-[10px] font-bold text-slate-500">Settings</span></button>
                                     {/* Developer Export Button */}
                                     <button onClick={() => setShowDevModal(true)} className="flex flex-col items-center gap-1 shrink-0"><div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-white shadow-sm border border-slate-600">{'{}'}</div><span className="text-[10px] font-bold text-slate-500">Dev</span></button>
-                                    
+
                                     <input type="file" ref={wallInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'wall')} />
                                     <input type="file" ref={floorInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'floor')} />
                                     <input type="file" ref={actorInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'actor')} />
                                 </div>
-                                <div><h4 className="text-[10px] font-bold text-slate-400 mb-2 uppercase">墙面预设</h4><div className="flex gap-2 overflow-x-auto no-scrollbar">{WALLPAPER_PRESETS.map((wp, i) => <button key={i} onClick={() => handleWallChange(wp.value)} className="w-10 h-10 rounded-lg shadow-sm border border-slate-200 shrink-0" style={{ background: wp.value }}></button>)}</div></div>
-                                <div><h4 className="text-[10px] font-bold text-slate-400 mb-2 uppercase">地板预设</h4><div className="flex gap-2 overflow-x-auto no-scrollbar">{FLOOR_PRESETS.map((fp, i) => <button key={i} onClick={() => handleFloorChange(fp.value)} className="w-10 h-10 rounded-lg shadow-sm border border-slate-200 shrink-0" style={{ background: fp.value }}></button>)}</div></div>
+                                <div><h4 className="text-[10px] font-bold text-slate-400 mb-2 uppercase">Wallpaper Presets</h4><div className="flex gap-2 overflow-x-auto no-scrollbar">{WALLPAPER_PRESETS.map((wp, i) => <button key={i} onClick={() => handleWallChange(wp.value)} className="w-10 h-10 rounded-lg shadow-sm border border-slate-200 shrink-0" style={{ background: wp.value }}></button>)}</div></div>
+                                <div><h4 className="text-[10px] font-bold text-slate-400 mb-2 uppercase">Floor Presets</h4><div className="flex gap-2 overflow-x-auto no-scrollbar">{FLOOR_PRESETS.map((fp, i) => <button key={i} onClick={() => handleFloorChange(fp.value)} className="w-10 h-10 rounded-lg shadow-sm border border-slate-200 shrink-0" style={{ background: fp.value }}></button>)}</div></div>
                             </div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* 批量导入素材 / 导入小屋样板房 的隐藏文件选择器（放顶层：工具栏和家具超市弹窗都会用到） */}
+            {/* Hidden file pickers for batch asset import / room template import (kept at the top level: used by both the toolbar and the Furniture Store modal) */}
             <input type="file" ref={batchAssetInputRef} className="hidden" accept="image/*" multiple onChange={handleBatchAssetImport} />
             <input type="file" ref={importRoomInputRef} className="hidden" accept=".json,application/json" onChange={handleImportRoomFile} />
 
-            {/* Asset Library Modal（点选不再自动关闭，可连点批量摆放） */}
-            <Modal isOpen={showLibrary} title="家具超市" onClose={() => setShowLibrary(false)}
-                footer={<button onClick={() => setShowLibrary(false)} className="w-full py-3 bg-blue-500 text-white font-bold rounded-2xl text-xs">摆完了，关闭</button>}
+            {/* Asset Library Modal (tapping no longer auto-closes it, so you can tap repeatedly to place items in batch) */}
+            <Modal isOpen={showLibrary} title="Furniture Store" onClose={() => setShowLibrary(false)}
+                footer={<button onClick={() => setShowLibrary(false)} className="w-full py-3 bg-blue-500 text-white font-bold rounded-2xl text-xs">All set, close</button>}
             >
                 <div className="h-96 overflow-y-auto no-scrollbar">
                     <div className="flex items-center justify-between gap-3 mb-4 bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5">
-                        <p className="text-[10px] text-purple-500 leading-relaxed flex-1">点一下就摆进房间，可以连点批量摆放；自己的图可一次选多张批量入库。</p>
-                        <button onClick={() => batchAssetInputRef.current?.click()} disabled={isBatchImporting} className="shrink-0 px-3 py-2 bg-purple-500 text-white text-[10px] font-bold rounded-xl disabled:opacity-50 active:scale-95 transition-transform">{isBatchImporting ? '导入中…' : '＋批量导入'}</button>
+                        <p className="text-[10px] text-purple-500 leading-relaxed flex-1">Tap to place it in the room -- tap repeatedly to place items in batch; your own images can be selected multiple at once and imported in bulk.</p>
+                        <button onClick={() => batchAssetInputRef.current?.click()} disabled={isBatchImporting} className="shrink-0 px-3 py-2 bg-purple-500 text-white text-[10px] font-bold rounded-xl disabled:opacity-50 active:scale-95 transition-transform">{isBatchImporting ? 'Importing…' : '+ Batch Import'}</button>
                     </div>
                     <div className="mb-6">
                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sticky top-0 bg-white py-2 z-10 flex justify-between">
-                            样板房
+                            Room Templates
                             <span className="text-[9px] bg-slate-100 px-2 rounded-full">{BUILTIN_ROOM_TEMPLATES.length}</span>
                         </h4>
                         <div className="grid grid-cols-2 gap-3">
-                            {BUILTIN_ROOM_TEMPLATES.map(template => renderTemplateButton(template, openBuiltInRoomTemplate, sampleRoomLoadingId === template.id ? '读取中...' : '打开导入'))}
+                            {BUILTIN_ROOM_TEMPLATES.map(template => renderTemplateButton(template, openBuiltInRoomTemplate, sampleRoomLoadingId === template.id ? 'Loading...' : 'Open & Import'))}
                         </div>
-                        <p className="text-[9px] text-slate-400 leading-relaxed mt-2">打开后可选择替换当前小屋，或只把样板房物品合并进来。</p>
+                        <p className="text-[9px] text-slate-400 leading-relaxed mt-2">After opening, choose to replace your current room, or just merge in the room template's items.</p>
                     </div>
                     {Object.entries(displayLibrary).map(([category, assets]) => (
                         assets && assets.length > 0 && (
                             <div key={category} className="mb-6">
                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sticky top-0 bg-white py-2 z-10 flex justify-between">
-                                    {category === 'sully_special' ? 'Sully 专属 (Special)' : (category === 'custom' ? '自定义 (Custom)' : (category === 'rug' ? '地毯 (Rug)' : category))}
+                                    {category === 'sully_special' ? 'Sully Exclusive (Special)' : (category === 'custom' ? 'Custom' : (category === 'rug' ? 'Rug' : category))}
                                     <span className="text-[9px] bg-slate-100 px-2 rounded-full">{assets.length}</span>
                                 </h4>
                                 <div className="grid grid-cols-4 gap-4">
@@ -2287,7 +2329,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                             >
                                                 <div className="w-14 h-14 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 group-hover:border-blue-300 transition-colors overflow-hidden relative">
                                                     <TokenImg value={asset.image} className="w-full h-full object-contain" />
-                                                    {isCustom && asset.visibility === 'character' && <div className="absolute top-0 right-0 w-3 h-3 bg-blue-400 rounded-bl-lg" title="角色专属"></div>}
+                                                    {isCustom && asset.visibility === 'character' && <div className="absolute top-0 right-0 w-3 h-3 bg-blue-400 rounded-bl-lg" title="Character exclusive"></div>}
                                                 </div>
                                                 <span className="text-[10px] text-slate-500 truncate w-full text-center">{asset.name}</span>
                                             </button>
@@ -2301,8 +2343,8 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             </Modal>
 
             {/* Custom Asset Edit Modal */}
-            <Modal isOpen={!!editingAsset} title="编辑家具" onClose={() => setEditingAsset(null)}
-                footer={<div className="flex gap-2 w-full"><button onClick={deleteEditingAsset} className="px-4 py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-xs">删除</button><button onClick={saveEditingAsset} className="flex-1 py-3 bg-blue-500 text-white rounded-2xl font-bold text-xs">保存</button></div>}
+            <Modal isOpen={!!editingAsset} title="Edit Furniture" onClose={() => setEditingAsset(null)}
+                footer={<div className="flex gap-2 w-full"><button onClick={deleteEditingAsset} className="px-4 py-3 bg-red-50 text-red-500 rounded-2xl font-bold text-xs">Delete</button><button onClick={saveEditingAsset} className="flex-1 py-3 bg-blue-500 text-white rounded-2xl font-bold text-xs">Save</button></div>}
             >
                 {editingAsset && (
                     <div className="space-y-3">
@@ -2310,40 +2352,41 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                             <TokenImg value={editImage} className="w-14 h-14 object-contain rounded-lg bg-slate-100 border shrink-0" />
                             <div className="flex-1 space-y-2">
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 block mb-1">名称</label>
+                                    <label className="text-[10px] font-bold text-slate-400 block mb-1">Name</label>
                                     <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold focus:outline-blue-500" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 block mb-1">图片 URL</label>
-                                    {/* 上传的图片以 blobref 令牌 / data: 存，URL 框里不显示这坨（避免误当成坏链接）；
-                                        留空即保留原图，填入新 URL 才覆盖。 */}
-                                    <input value={(isBlobRef(editImage) || editImage.startsWith('data:')) ? '' : editImage} onChange={e => setEditImage(e.target.value)} placeholder={(isBlobRef(editImage) || editImage.startsWith('data:')) ? '已上传图片（留空保留）' : 'https://...'} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-blue-500" />
+                                    <label className="text-[10px] font-bold text-slate-400 block mb-1">Image URL</label>
+                                    {/* Uploaded images are stored as a blobref token / data: URI, and this blob isn't
+                                        shown in the URL field (to avoid it looking like a broken link);
+                                        leaving it blank keeps the original image, and only a new URL overrides it. */}
+                                    <input value={(isBlobRef(editImage) || editImage.startsWith('data:')) ? '' : editImage} onChange={e => setEditImage(e.target.value)} placeholder={(isBlobRef(editImage) || editImage.startsWith('data:')) ? 'Image uploaded (leave blank to keep)' : 'https://...'} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-blue-500" />
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 block mb-1">描述</label>
-                            <input value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="物品描述..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-blue-500" />
+                            <label className="text-[10px] font-bold text-slate-400 block mb-1">Description</label>
+                            <input value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Item description..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-blue-500" />
                         </div>
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 block mb-1">物品类型</label>
+                            <label className="text-[10px] font-bold text-slate-400 block mb-1">Item Type</label>
                             <div className="flex gap-2">
-                                <button onClick={() => setEditItemType('furniture')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editItemType === 'furniture' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>家具</button>
-                                <button onClick={() => setEditItemType('rug')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editItemType === 'rug' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>地毯</button>
+                                <button onClick={() => setEditItemType('furniture')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editItemType === 'furniture' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>Furniture</button>
+                                <button onClick={() => setEditItemType('rug')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editItemType === 'rug' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>Rug</button>
                             </div>
-                            <p className="text-[9px] text-slate-400 mt-1">类型改动只影响之后新摆放的物品，已摆好的不受影响。</p>
+                            <p className="text-[9px] text-slate-400 mt-1">Changing the type only affects items placed after this -- items already placed are unaffected.</p>
                         </div>
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 block mb-1">分类</label>
+                            <label className="text-[10px] font-bold text-slate-400 block mb-1">Category</label>
                             <div className="flex gap-2">
-                                <button onClick={() => setEditVisibility('public')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editVisibility === 'public' ? 'bg-green-50 border-green-300 text-green-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>公共</button>
-                                <button onClick={() => setEditVisibility('character')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editVisibility === 'character' ? 'bg-blue-50 border-blue-300 text-blue-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>角色专属</button>
+                                <button onClick={() => setEditVisibility('public')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editVisibility === 'public' ? 'bg-green-50 border-green-300 text-green-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>Public</button>
+                                <button onClick={() => setEditVisibility('character')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${editVisibility === 'character' ? 'bg-blue-50 border-blue-300 text-blue-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>Character exclusive</button>
                             </div>
                         </div>
                         {editVisibility === 'character' && (
                             <div>
-                                <label className="text-[10px] font-bold text-slate-400 block mb-1">指定角色（可多选）</label>
-                                {/* 分组筛选只影响下方显示哪些可选项，已勾选的角色不会因为切组被移除 */}
+                                <label className="text-[10px] font-bold text-slate-400 block mb-1">Assign characters (multi-select)</label>
+                                {/* The group filter only affects which options are shown below -- already-checked characters aren't removed by switching groups */}
                                 <CharacterGroupFilterBar characters={characters} groups={characterGroups}
                                     value={assignGroupId} onChange={setAssignGroupId} className="mb-2" />
                                 <div className="flex flex-wrap gap-2">
@@ -2355,7 +2398,7 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
                                         </button>
                                     ))}
                                 </div>
-                                {editAssignedCharIds.length === 0 && <p className="text-[9px] text-amber-500 mt-1">请至少选择一个角色</p>}
+                                {editAssignedCharIds.length === 0 && <p className="text-[9px] text-amber-500 mt-1">Please select at least one character</p>}
                             </div>
                         )}
                     </div>
@@ -2363,169 +2406,169 @@ ${!shouldGenerateTodo ? `(系统: 今日待办已存在，无需生成，请忽�
             </Modal>
 
             {/* Custom Item Modal */}
-            <Modal isOpen={showCustomModal} title="自定义家具" onClose={() => setShowCustomModal(false)} footer={<button onClick={saveCustomItem} className="w-full py-3 bg-purple-500 text-white font-bold rounded-2xl">添加到房间</button>}>
+            <Modal isOpen={showCustomModal} title="Custom Furniture" onClose={() => setShowCustomModal(false)} footer={<button onClick={saveCustomItem} className="w-full py-3 bg-purple-500 text-white font-bold rounded-2xl">Add to Room</button>}>
                 <div className="space-y-4">
                     <div className="flex gap-4">
                         <div onClick={() => customItemInputRef.current?.click()} className="aspect-square w-24 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-purple-400 relative overflow-hidden shrink-0">
-                            {customItemImage ? <TokenImg value={customItemImage} className="w-full h-full object-contain" /> : <span className="text-slate-400 text-xs">+ 上传</span>}
+                            {customItemImage ? <TokenImg value={customItemImage} className="w-full h-full object-contain" /> : <span className="text-slate-400 text-xs">+ Upload</span>}
                             <input type="file" ref={customItemInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'custom_item')} />
                         </div>
                         <div className="flex-1 space-y-2">
                             <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">图片 URL (推荐图床)</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image URL (image host recommended)</label>
                                 <input value={customItemUrl} onChange={e => setCustomItemUrl(e.target.value)} placeholder="https://..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-purple-500" />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">物品名称</label>
-                                <input value={customItemName} onChange={e => setCustomItemName(e.target.value)} placeholder="例如: 懒人沙发" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-purple-500 font-bold" />
+                                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Item Name</label>
+                                <input value={customItemName} onChange={e => setCustomItemName(e.target.value)} placeholder="e.g. Bean Bag Chair" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-purple-500 font-bold" />
                             </div>
                         </div>
                     </div>
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">物品类型</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Item Type</label>
                         <div className="flex gap-2">
-                            <button onClick={() => setCustomItemType('furniture')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${customItemType === 'furniture' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>家具</button>
-                            <button onClick={() => setCustomItemType('rug')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${customItemType === 'rug' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>地毯</button>
+                            <button onClick={() => setCustomItemType('furniture')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${customItemType === 'furniture' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>Furniture</button>
+                            <button onClick={() => setCustomItemType('rug')} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${customItemType === 'rug' ? 'bg-purple-50 border-purple-300 text-purple-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>Rug</button>
                         </div>
-                        <p className="text-[9px] text-slate-400 mt-1">地毯永远铺在最底层，角色和其它家具都会压在它上面。</p>
+                        <p className="text-[9px] text-slate-400 mt-1">Rugs always stay on the bottom layer -- the character and other furniture will sit on top of it.</p>
                     </div>
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">物品描述</label>
-                        <input value={customItemDescription} onChange={e => setCustomItemDescription(e.target.value)} placeholder="例如: 一个很软的沙发，坐上去就陷进去了。" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-purple-500" />
-                        <p className="text-[9px] text-slate-400 mt-1">这段描述会告诉 AI 这是什么，以及如何互动。</p>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Item Description</label>
+                        <input value={customItemDescription} onChange={e => setCustomItemDescription(e.target.value)} placeholder="e.g. A very soft sofa -- you sink right into it." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-purple-500" />
+                        <p className="text-[9px] text-slate-400 mt-1">This description tells the AI what it is and how to interact with it.</p>
                     </div>
                 </div>
             </Modal>
 
             {/* Room Settings Modal */}
-            <Modal isOpen={showSettingsModal} title="装修设置" onClose={() => setShowSettingsModal(false)}>
+            <Modal isOpen={showSettingsModal} title="Room Settings" onClose={() => setShowSettingsModal(false)}>
                 <div className="space-y-6">
                     <div className="space-y-4">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">背景调整</h4>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Background Adjustment</h4>
                         <div>
-                            <div className="flex justify-between mb-1"><label className="text-xs font-bold text-slate-600">墙纸缩放 ({char?.roomConfig?.wallScale || 0}%)</label><span className="text-[10px] text-slate-400">{char?.roomConfig?.wallScale ? `${char.roomConfig.wallScale}%` : 'Cover (Default)'}</span></div>
+                            <div className="flex justify-between mb-1"><label className="text-xs font-bold text-slate-600">Wallpaper Scale ({char?.roomConfig?.wallScale || 0}%)</label><span className="text-[10px] text-slate-400">{char?.roomConfig?.wallScale ? `${char.roomConfig.wallScale}%` : 'Cover (Default)'}</span></div>
                             <input type="range" min="0" max="200" step="10" value={char?.roomConfig?.wallScale || 0} onChange={e => updateBgConfig({ wallScale: parseInt(e.target.value) })} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500" />
                             <div className="flex items-center gap-2 mt-2">
                                 <input type="checkbox" id="wallRepeat" checked={char?.roomConfig?.wallRepeat || false} onChange={e => updateBgConfig({ wallRepeat: e.target.checked })} className="accent-blue-500" />
-                                <label htmlFor="wallRepeat" className="text-xs text-slate-600">平铺模式 (Tile)</label>
+                                <label htmlFor="wallRepeat" className="text-xs text-slate-600">Tile Mode (Tile)</label>
                             </div>
                         </div>
                         <div>
-                            <div className="flex justify-between mb-1"><label className="text-xs font-bold text-slate-600">地板缩放 ({char?.roomConfig?.floorScale || 0}%)</label><span className="text-[10px] text-slate-400">{char?.roomConfig?.floorScale ? `${char.roomConfig.floorScale}%` : 'Cover (Default)'}</span></div>
+                            <div className="flex justify-between mb-1"><label className="text-xs font-bold text-slate-600">Floor Scale ({char?.roomConfig?.floorScale || 0}%)</label><span className="text-[10px] text-slate-400">{char?.roomConfig?.floorScale ? `${char.roomConfig.floorScale}%` : 'Cover (Default)'}</span></div>
                             <input type="range" min="0" max="200" step="10" value={char?.roomConfig?.floorScale || 0} onChange={e => updateBgConfig({ floorScale: parseInt(e.target.value) })} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500" />
                             <div className="flex items-center gap-2 mt-2">
                                 <input type="checkbox" id="floorRepeat" checked={char?.roomConfig?.floorRepeat || false} onChange={e => updateBgConfig({ floorRepeat: e.target.checked })} className="accent-blue-500" />
-                                <label htmlFor="floorRepeat" className="text-xs text-slate-600">平铺模式 (Tile)</label>
+                                <label htmlFor="floorRepeat" className="text-xs text-slate-600">Tile Mode (Tile)</label>
                             </div>
                         </div>
                     </div>
 
                     {isSully && (
                         <div className="pt-4 border-t border-slate-100">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Sully 专属维护</h4>
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Sully-exclusive Maintenance</h4>
                             <button onClick={resetSullyRoom} className="w-full py-3 bg-red-50 text-red-500 font-bold rounded-2xl border border-red-100 flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                                <img src={twemojiUrl('1f9f9')} alt="broom" className="w-5 h-5" /> 还原初始样板房
+                                <img src={twemojiUrl('1f9f9')} alt="broom" className="w-5 h-5" /> Restore Original Room Template
                             </button>
-                            <p className="text-[9px] text-slate-400 mt-2 text-center">如果不小心弄乱了房间，点此可一键恢复默认布局。</p>
+                            <p className="text-[9px] text-slate-400 mt-2 text-center">If you accidentally messed up the room, tap here to restore the default layout in one tap.</p>
                         </div>
                     )}
                 </div>
             </Modal>
 
             {/* Refresh Confirmation Modal */}
-            <Modal isOpen={showRefreshConfirm} title="强制刷新?" onClose={() => setShowRefreshConfirm(false)} footer={<div className="flex gap-2 w-full"><button onClick={() => setShowRefreshConfirm(false)} className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-2xl font-bold">取消</button><button onClick={handleForceRefresh} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl">少管我!</button></div>}>
+            <Modal isOpen={showRefreshConfirm} title="Force Refresh?" onClose={() => setShowRefreshConfirm(false)} footer={<div className="flex gap-2 w-full"><button onClick={() => setShowRefreshConfirm(false)} className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-2xl font-bold">Cancel</button><button onClick={handleForceRefresh} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl">Leave Me Alone!</button></div>}>
                 <div className="text-center py-4 space-y-2">
                     <div><img src={twemojiUrl('1f570-fe0f')} alt="clock" className="w-10 h-10 mx-auto" /></div>
-                    <p className="text-sm text-slate-600 font-bold">每天早上 6:00 自动刷新</p>
-                    <p className="text-xs text-slate-400">还没到时间哦，确定要消耗算力强制重新生成今天的房间状态吗？</p>
+                    <p className="text-sm text-slate-600 font-bold">Refreshes automatically every day at 6:00 AM</p>
+                    <p className="text-xs text-slate-400">It's not time yet -- are you sure you want to spend compute to force-regenerate today's room state?</p>
                 </div>
             </Modal>
 
-            {/* Export Room Template Modal（导出当前小屋为样板房） */}
+            {/* Export Room Template Modal (exports the current room as a room template) */}
             <Modal
                 isOpen={showExportModal}
-                title="导出当前小屋"
+                title="Export Current Room"
                 onClose={() => !isExporting && setShowExportModal(false)}
                 footer={
                     <div className="flex gap-2 w-full">
-                        <button onClick={() => handleExportRoom('copy')} disabled={isExporting} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl text-xs disabled:opacity-50">复制 JSON</button>
-                        <button onClick={() => handleExportRoom('download')} disabled={isExporting} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-2xl text-xs disabled:opacity-50">{isExporting ? '打包中...' : '下载文件'}</button>
+                        <button onClick={() => handleExportRoom('copy')} disabled={isExporting} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl text-xs disabled:opacity-50">Copy JSON</button>
+                        <button onClick={() => handleExportRoom('download')} disabled={isExporting} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-2xl text-xs disabled:opacity-50">{isExporting ? 'Packaging...' : 'Download File'}</button>
                     </div>
                 }
             >
                 <div className="space-y-4">
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">小屋名称</label>
-                        <input value={exportName} onChange={e => setExportName(e.target.value)} placeholder={`${char?.name || ''}的小屋`} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold focus:outline-emerald-500" />
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Room Name</label>
+                        <input value={exportName} onChange={e => setExportName(e.target.value)} placeholder={`${char?.name || ''}'s Room`} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold focus:outline-emerald-500" />
                     </div>
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">小屋描述</label>
-                        <textarea value={exportDescription} onChange={e => setExportDescription(e.target.value)} rows={3} placeholder="介绍一下这套样板房：风格、亮点、适合谁住…" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-emerald-500 resize-none" />
+                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Room Description</label>
+                        <textarea value={exportDescription} onChange={e => setExportDescription(e.target.value)} rows={3} placeholder="Describe this room template: style, highlights, who it suits…" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-emerald-500 resize-none" />
                     </div>
                     <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 text-[10px] text-emerald-700 leading-relaxed">
-                        导出内容：名称、描述、墙面/地板配置，以及 {items.length} 件物品各自的图像与相对摆放位置（x/y 为房间百分比坐标，任何屏幕都能原样复原）。
-                        <br />图床链接原样保留；本机上传的图会转成 base64 内嵌进 JSON，文件自包含、可直接分享。
+                        Export includes: name, description, wall/floor configuration, and the image plus relative position for each of {items.length} items (x/y are room-relative percentage coordinates, so any screen size can restore it identically).
+                        <br />Image-host links are kept as-is; locally uploaded images are converted to base64 and embedded in the JSON, so the file is self-contained and can be shared directly.
                     </div>
                 </div>
             </Modal>
 
-            {/* Import Room Template Modal（导入样板房：替换 or 合并） */}
+            {/* Import Room Template Modal (import a room template: replace or merge) */}
             <Modal
                 isOpen={!!pendingImport}
-                title="导入小屋样板房"
+                title="Import Room Template"
                 onClose={() => !isImportingRoom && setPendingImport(null)}
                 footer={
                     <div className="flex gap-2 w-full">
-                        <button onClick={() => applyRoomImport('merge')} disabled={isImportingRoom} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl text-xs disabled:opacity-50">合并进当前小屋</button>
-                        <button onClick={() => applyRoomImport('replace')} disabled={isImportingRoom} className="flex-1 py-3 bg-sky-500 text-white font-bold rounded-2xl text-xs disabled:opacity-50">{isImportingRoom ? '导入中...' : '替换当前小屋'}</button>
+                        <button onClick={() => applyRoomImport('merge')} disabled={isImportingRoom} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl text-xs disabled:opacity-50">Merge into current room</button>
+                        <button onClick={() => applyRoomImport('replace')} disabled={isImportingRoom} className="flex-1 py-3 bg-sky-500 text-white font-bold rounded-2xl text-xs disabled:opacity-50">{isImportingRoom ? 'Importing...' : 'Replace current room'}</button>
                     </div>
                 }
             >
                 {pendingImport && (
                     <div className="space-y-3">
                         <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5">
-                            <p className="text-sm font-bold text-slate-700">{typeof pendingImport.name === 'string' && pendingImport.name ? pendingImport.name : '未命名小屋'}</p>
+                            <p className="text-sm font-bold text-slate-700">{typeof pendingImport.name === 'string' && pendingImport.name ? pendingImport.name : 'Unnamed Room'}</p>
                             {typeof pendingImport.description === 'string' && pendingImport.description && (
                                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{pendingImport.description}</p>
                             )}
-                            <p className="text-[10px] text-slate-400 mt-1.5">共 {pendingImport.items.length} 件物品{pendingImport.room?.wallImage || pendingImport.room?.floorImage ? ' · 含墙面/地板' : ''}</p>
+                            <p className="text-[10px] text-slate-400 mt-1.5">{pendingImport.items.length} items in total{pendingImport.room?.wallImage || pendingImport.room?.floorImage ? ' · includes wall/floor' : ''}</p>
                         </div>
                         <div className="bg-sky-50 border border-sky-100 rounded-xl px-3 py-2.5 text-[10px] text-sky-700 leading-relaxed">
-                            <b>替换</b>：清掉现有家具，按样板房原样复原（含墙面/地板）。
-                            <br /><b>合并</b>：保留现有布局，把样板房的物品追加进来（不动背景）。
-                            <br />物品改动可用装修模式左上角的「撤销」恢复。
+                            <b>Replace</b>: clears the existing furniture and restores it exactly as the room template (including wall/floor).
+                            <br /><b>Merge</b>: keeps the existing layout and appends the room template's items (leaves the background untouched).
+                            <br />Item changes can be undone with "Undo" in the top-left corner of edit mode.
                         </div>
                     </div>
                 )}
             </Modal>
 
             {/* Dev Export Modal */}
-            <Modal 
-                isOpen={showDevModal} 
-                title="开发者工具 (Dev Tools)" 
-                onClose={() => setShowDevModal(false)} 
-                footer={<button onClick={() => setShowDevModal(false)} className="w-full py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl">关闭</button>}
+            <Modal
+                isOpen={showDevModal}
+                title="Dev Tools"
+                onClose={() => setShowDevModal(false)}
+                footer={<button onClick={() => setShowDevModal(false)} className="w-full py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl">Close</button>}
             >
                 <div className="space-y-4">
                     <div>
-                        <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">布局数据 (Layout JSON)</h4>
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">Layout Data (Layout JSON)</h4>
                         <div className="bg-slate-100 rounded-xl p-3 border border-slate-200 mb-2">
                             <pre className="text-[10px] text-slate-600 font-mono h-20 overflow-y-auto whitespace-pre-wrap select-all">
                                 {JSON.stringify(items, null, 2)}
                             </pre>
                         </div>
-                        <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(items, null, 2)); addToast('Layout Copied', 'success'); }} className="w-full py-2 bg-slate-800 text-white text-xs font-bold rounded-xl">复制布局 JSON</button>
+                        <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(items, null, 2)); addToast('Layout Copied', 'success'); }} className="w-full py-2 bg-slate-800 text-white text-xs font-bold rounded-xl">Copy Layout JSON</button>
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-bold text-red-400 uppercase mb-2">Prompt 调试 (Debugger)</h4>
+                        <h4 className="text-[10px] font-bold text-red-400 uppercase mb-2">Prompt Debugger</h4>
                         <div className="bg-slate-100 rounded-xl p-3 border border-slate-200 mb-2">
                             <pre className="text-[10px] text-slate-600 font-mono h-20 overflow-y-auto whitespace-pre-wrap select-all">
-                                {lastPrompt || "(暂无数据，请先尝试进入房间)"}
+                                {lastPrompt || "(No data yet -- try entering the room first)"}
                             </pre>
                         </div>
-                        <button onClick={() => { if(lastPrompt) { navigator.clipboard.writeText(lastPrompt); addToast('Prompt Copied', 'success'); } else addToast('No prompt yet', 'error'); }} className="w-full py-2 bg-red-500 text-white text-xs font-bold rounded-xl">复制 Prompt 到剪贴板</button>
-                        <p className="text-[9px] text-slate-400 mt-2 text-center">如果 AI 回复为空，请复制此 Prompt 检查是否有乱码/Base64 混入。</p>
+                        <button onClick={() => { if(lastPrompt) { navigator.clipboard.writeText(lastPrompt); addToast('Prompt Copied', 'success'); } else addToast('No prompt yet', 'error'); }} className="w-full py-2 bg-red-500 text-white text-xs font-bold rounded-xl">Copy Prompt to Clipboard</button>
+                        <p className="text-[9px] text-slate-400 mt-2 text-center">If the AI's reply comes back empty, copy this prompt and check for garbled text/Base64 leaking into it.</p>
                     </div>
                 </div>
             </Modal>
