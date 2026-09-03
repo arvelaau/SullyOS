@@ -30,99 +30,122 @@ import {
 import { isAmsgServerVersionAtLeast } from '../../utils/amsgWorkerVersion';
 import { trackEvent } from '../../utils/analytics';
 
-// 满血链路吃满这些 worker 特性（amsg-server 2.6.0-next.4+）。探测不到端点（老部署
-// 404 → null）或缺任何一项，就亮「重新部署」提示——worker 跑在用户自己的账号里，
-// 站点这边发新版不会自动同步过去。
+// Full-strength link-up requires all of these worker features (amsg-server 2.6.0-next.4+).
+// If the endpoint can't be detected (old deployment 404 → null) or any feature is missing,
+// show the "redeploy" prompt — the worker runs on the user's own account, so a new release
+// on our side doesn't auto-sync over there.
 const REQUIRED_WORKER_FEATURES = [
   'client-state',
   'client-state-chunking',
   'agentic-hooks',
   'agentic-scratch',
-  // 后台 fire 每轮把 tools 参数带给 LLM（角色在主动消息里用得上用户自配的 MCP 工具）。
+  // Background fire passes the tools parameter to the LLM every round (so the character can use the user's own configured MCP tools in proactive messages).
   'agentic-fire-tools',
-  // hook 载荷自带 readState / writeState，配置级 hook 不用再自己攒一份写口。
+  // The hook payload carries its own readState / writeState, so a config-level hook no longer has to assemble its own write port.
   'hook-state-accessors',
-  // onAfterSend 拿到本次 fire 的 scratch：自述回写按真正送出去的段数落账。
+  // onAfterSend receives this fire's scratch: the self-log write-back is settled against the segments actually sent.
   'after-send-scratch',
-  // 任务身份直接挂在 ctx 和 push 顶层，两条排程路径不用各抄一份 metadata。
+  // Task identity hangs directly off ctx and the push top level, so the two scheduling paths don't each need their own copy of metadata.
   'fire-task-identity',
   'push-task-identity',
-  // 库导出信封余量常量，push 体积按「库补完字段之后」的尺寸算。
+  // Library-exported envelope reserved-bytes constant — push size is calculated against the size "after the library fills in its fields."
   'push-envelope-reserved-bytes',
-  // 角色自排撞车时回已存在那行的投影，重跑那轮也记得下账。
+  // When a character's self-scheduling collides, fall back to the projection of the already-existing row, and the rerun of that round is still accounted for.
   'schedule-task-duplicate-row',
-  // 循环任务的过期快进也回调，攒下的那几次跳过在面板上看得见。
+  // Fast-forwarding an expired recurring task also fires the callback, so the accumulated skips are visible on the panel.
   'recurring-stale-skip-hook',
-  // 任务行带时区，daily / weekly 按角色所在时区的墙钟推进。
+  // Task rows carry a timezone, so daily / weekly advance by the character's own local wall-clock time.
   'task-timezone',
-  // 推送订阅按用户存一份，排程不再携带；换订阅后已排的任务自动跟上。
+  // Push subscription is stored once per user rather than carried by the schedule; after switching subscriptions, already-scheduled tasks pick it up automatically.
   'user-push-subscription',
-  // 凭据存成表里的一行、任务只带引用（credRefs）。换 Key 只要覆盖那一行，已排的任务
-  // ——包括角色在触发时给自己排的那些——下次触发就用新凭据。缺了它就退回「凭据冻结
-  // 进每条任务」的老路：换 Key 要逐条补刷，漏一条到点就是 401。
+  // Credentials are stored as a row in a table, and tasks only carry a reference (credRefs). Rotating a key only requires overwriting that one row, and
+  // scheduled tasks — including ones the character scheduled for itself when triggered — use the new credential on their next trigger. Without this it falls
+  // back to the old approach of freezing credentials into every task: rotating a key means patching every task individually, and missing one means a 401 when it comes due.
   'llm-credentials',
 ];
-// features 之外还必须比版本：这波依赖的能力大多没发独立 flag，光查 features 分不出新旧。
-//   next.5 — GET /messages 投影（charId/clientTaskId）、onBeforeFire 的 { skip } 出口
-//   next.6 — 任务占位租约（带工具的 AI 任务常跑过一分钟，没有占位会被相邻 cron tick 重复推）
-//   next.7 — hook 的 writeState（大内容旁路存 client_state）、Web Push payload 大小护栏
-//   next.8 — fire 循环透传 tools 请求参数（后台调用户自配 MCP 的前置）
-//   next.9 — 这一档还兼做「bundle 里有没有自述回写」的判据：角色发完把正文记回
-//            client_state、下次到点接着说（fire_pack 的 self_log 槽位），是随本波
-//            bundle 一起上去的。旧 bundle 收到带槽位的 fire_pack 只会把
-//            `{{AMSG_SELF_LOG}}` 原样发给 LLM，而 SERVER_VERSION 是打包时那份
-//            amsg-server 的版本号，正好能把这类旧粘贴认出来。
-//   next.11 — 推送订阅改成按用户存一份：这一档起排程不再携带订阅，前端走
-//            /push-subscription 端点登记，旧 worker 上这个端点不存在。
-//   next.12 — 「角色说过什么」的落盘改挂在 onFireSettled 上（不论这次是发出去了、
-//            跳过了还是抛错了都调一次）。旧 worker 认不得这个 hook，会把它当成
-//            无关配置直接忽略——而 bundle 这边已经不再用 onAfterSend，表现就是
-//            self_log 永远不写：角色到点不知道自己上次说过什么，天天重复同一句。
-//            同一档还带 run-tick 的同角色任务串行（serializeBy）。
-//   next.15 — 这一档能力密集，而且 bundle 里的 wrapper 已经按新上游行为改写：
-//            即时对话 immediate 落库即到期 + supersedesUuid 原子顶替；llmExtraBody
-//            （思考链三件套上云）；租约心跳续租（wrapper 不再配 claimLeaseMs，旧
-//            上游没有心跳 → 退回 10 分钟死租约，isolate 死后任务干等）；fire ctx
-//            的 cancelTask / renewTask（角色取消 / 改期自己的排程）；client_state
-//            条件写（旧包不盖新包）；任务行 last_error（失败原因可查）。
-//   next.16 — 即时对话改由 Durable Object 起跳，靠的就是这一档的 runTask（按 uuid
-//            跑单条）；错误响应带 error.cause（真因不再只进 worker 日志）；
-//            getSchemaVersion（表结构对不对得上，由上游按自己的建表语句比对）。
-//   next.17 — 用户级 LLM 凭据表（PUT/GET/DELETE /llm-credentials）、任务的 credRefs、
-//            fire hook 的 resolveLlmCredential。这一档有独立 flag（上面那条
-//            'llm-credentials'），版本号列在这里只是备个案。
-//   next.20 — 推送被推送服务判死（410 / 404）时当终态，不再空转重试——投递是先生成
-//            后推送，每重试一跳就白跑一整轮 LLM；同时把状态码结构化写进 last_error
-//            的 pushStatus，体检的「这台设备」靠它拆穿「登记全绿但一条都不来」。
-//            另外 client_state 的前缀清理改走字典序范围：D1 把 LIKE pattern 压到
-//            50 字节（官方文档没写），key 一长就整条语句报 pattern too complex，
-//            同批的状态写入跟着一起回滚。
-//   next.21 — 带 body 的端点认 `Content-Encoding: gzip`：即时对话那条路上的正文
-//            （整轮聊天）在客户端压过再发，旧 worker 不认这个头，会把压缩字节当
-//            明文读，报出来是一句「请求体不是合法的 JSON」——大消息一条都发不出去。
-//            同一档还有失败记录里的 errorCode（`LLM_CALL_FAILED` 之类）和上游拒绝
-//            请求时的原话：卡片上那句「生成失败」从此说得出到底是模型名写错了、
-//            余额不够，还是订阅失效该去重新登记。
-//   next.23 — 跟着 amsg-shared 0.4.0-next.8 一起升：shared 的通知字段校验放行了
-//            `silent: 'when-visible'`（静音改由 Service Worker 按窗口可见性算）。
-//            server 侧没有行为变化，单升这一档不解决任何问题；这批真正要用户去点
-//            一次「更新 Worker」的是通知策略本身，见 utils/amsgBundleVersion.ts。
-// 不比版本的话，旧粘贴部署会被误判为最新，问题全在 worker 侧静默发生。
+// Beyond features, the version also has to be compared: most of the capabilities this batch
+// depends on never shipped an independent flag, so checking features alone can't tell old from new.
+//   next.5 — GET /messages projection (charId/clientTaskId), onBeforeFire's { skip } exit
+//   next.6 — task placeholder lease (tool-using AI tasks often run past a minute; without a
+//            placeholder, an adjacent cron tick would re-push the same task)
+//   next.7 — hook's writeState (large content bypasses to client_state storage), Web Push
+//            payload size guard rail
+//   next.8 — fire loop passes through the tools request parameter (prerequisite for background
+//            calls into the user's own configured MCP)
+//   next.9 — this tier also doubles as the criterion for "does the bundle have a self-log
+//            write-back": after the character sends, it records the body back to client_state
+//            so it can continue on schedule next time (fire_pack's self_log slot), shipped up
+//            together with this wave's bundle. An old bundle receiving a fire_pack with the slot
+//            will just forward `{{AMSG_SELF_LOG}}` to the LLM verbatim as-is, and SERVER_VERSION
+//            is the amsg-server version at the time of packaging — exactly what's needed to
+//            recognize this kind of stale paste.
+//   next.11 — push subscription switched to one stored per user: from this tier on, the schedule
+//            no longer carries the subscription; the frontend registers via the /push-subscription
+//            endpoint instead, which doesn't exist on old workers.
+//   next.12 — "what the character has already said" persistence moved onto onFireSettled (called
+//            once regardless of whether this round was sent, skipped, or threw). An old worker
+//            doesn't recognize this hook and will just ignore it as unrelated config — and since
+//            the bundle side no longer uses onAfterSend, the result is self_log never gets written:
+//            the character has no idea what it said last time when its schedule comes due, and
+//            repeats the same line every day. The same tier also adds same-character task
+//            serialization for a run-tick (serializeBy).
+//   next.15 — this tier is capability-dense, and the wrapper inside the bundle has been rewritten
+//            to match new upstream behavior: Instant Chat's immediate expires the moment it's
+//            persisted + atomic supersedesUuid replacement; llmExtraBody (the thinking-chain
+//            three-piece set goes to the cloud); lease heartbeat renewal (the wrapper no longer
+//            configures claimLeaseMs; without a heartbeat, old upstream falls back to a 10-minute
+//            dead lease, and tasks just wait after the isolate dies); fire ctx's cancelTask /
+//            renewTask (the character canceling / rescheduling its own schedule); client_state
+//            conditional writes (an old packet won't overwrite a new one); task row last_error
+//            (failure reason becomes inspectable).
+//   next.16 — Instant Chat moved to being kicked off by a Durable Object, relying on this tier's
+//            runTask (runs a single task by uuid); error responses carry error.cause (the real
+//            cause no longer only goes into the worker log); getSchemaVersion (whether the table
+//            structure matches, compared by upstream against its own table-creation statements).
+//   next.17 — user-level LLM credentials table (PUT/GET/DELETE /llm-credentials), task credRefs,
+//            fire hook's resolveLlmCredential. This tier has its own independent flag (the
+//            'llm-credentials' one above); the version number is listed here just as a backup check.
+//   next.20 — when a push is declared dead by the push service (410 / 404), treat it as terminal
+//            and stop idly retrying — delivery generates first and pushes second, so every retry
+//            hop wastes a full round of LLM generation for nothing; at the same time, write the
+//            status code into last_error's pushStatus in structured form, which the health check's
+//            "this device" row uses to expose "registered all-green but nothing ever arrives."
+//            Also, client_state prefix cleanup switched to a lexicographic range scan: D1 caps the
+//            LIKE pattern at 50 bytes (undocumented officially), and once a key gets long enough the
+//            whole statement reports pattern too complex, rolling back the state write from the
+//            same batch along with it.
+//   next.21 — endpoints with a body now recognize `Content-Encoding: gzip`: on the Instant Chat
+//            path, the body (the whole chat turn) is compressed client-side before sending, and an
+//            old worker that doesn't recognize this header reads the compressed bytes as plain
+//            text, surfacing as "request body is not valid JSON" — large messages can't be sent at
+//            all. The same tier also adds errorCode in failure records (things like
+//            `LLM_CALL_FAILED`) and the verbatim text of upstream's rejection: the "generation
+//            failed" line on the card can now say whether it was a wrong model name, insufficient
+//            balance, or an expired subscription that needs re-registering.
+//   next.23 — upgraded alongside amsg-shared 0.4.0-next.8: shared's notification field validation
+//            now allows `silent: 'when-visible'` (muting is now computed by the Service Worker based
+//            on window visibility). No behavior change on the server side — upgrading this tier alone
+//            solves nothing; what actually needs the user to tap "Update Worker" once for this batch
+//            is the notification policy itself, see utils/amsgBundleVersion.ts.
+// Without comparing versions, an old paste-deployment would be misjudged as up to date, and the
+// problem would happen entirely silently on the worker side.
 const REQUIRED_WORKER_VERSION = '2.6.0-next.23';
 
-/** 装着打包好的 worker 代码的部署仓库：fork 它 → 在 Cloudflare 连上 → 以后点 Sync fork 更新。 */
+/** The deployment repo holding the packaged worker code: fork it → connect it on Cloudflare → tap Sync fork to update later. */
 const WORKERS_REPO_URL = 'https://github.com/Tosd0/sullyos-workers';
 const SETUP_WALKTHROUGH_URL = 'https://github.com/qegj567-cloud/SullyOS/blob/master/docs/amsg2-setup-walkthrough.md';
-/** 一键部署要的那枚 API Token 在这里建。 */
+/** Where the API Token needed for one-click deploy gets created. */
 const CF_TOKEN_URL = 'https://dash.cloudflare.com/profile/api-tokens';
 
-// 探测结果每次会话只报一次。refresh() 在开面板、连接成功、订阅成功后都会跑一遍，
-// 一个连不上、反复点「连接」的人否则能一个人刷出十几条同样的结果，把分布带歪。
+// The probe result is only reported once per session. refresh() runs on opening the panel, on
+// successful connect, and on successful subscription — otherwise someone whose connection keeps
+// failing and who repeatedly taps "Connect" could single-handedly flood a dozen identical results
+// and skew the distribution.
 let workerCapsReported = false;
-// 「即时对话开不了卡在哪」同样每次会话只报一次，理由同上。
+// "Where Instant Chat is stuck when it can't be enabled" is likewise only reported once per session, for the same reason.
 let instantChatGateReported = false;
 
-/** 体检每一行的配色与那一列小字。unknown 用灰：查不出结论时别拿颜色暗示好坏。 */
+/** Colors and the small-print word for each health-check row. unknown uses gray: don't imply good or bad with color when there's no conclusion to reach. */
 const DIAGNOSTIC_STYLES: Record<AmsgDiagnosticLevel, { dot: string; text: string; word: string }> = {
   ok: { dot: 'bg-emerald-500', text: 'text-emerald-600', word: 'OK' },
   warn: { dot: 'bg-amber-500', text: 'text-amber-600', word: 'Note' },
@@ -130,7 +153,7 @@ const DIAGNOSTIC_STYLES: Record<AmsgDiagnosticLevel, { dot: string; text: string
   unknown: { dot: 'bg-slate-300', text: 'text-slate-400', word: 'Unknown' },
 };
 
-/** 刚生成的密钥明文：输入框是 password 型，只能在这一处让用户看见并手动复制。 */
+/** The plaintext of a freshly generated secret: the input field is password-type, so this is the only place the user can see it and copy it by hand. */
 const SecretReveal: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => (
   <p className={`font-mono text-[10px] leading-relaxed text-slate-500 break-all bg-white border border-slate-200 rounded-xl px-2 py-1.5 ${className}`}>
     {value}
@@ -141,9 +164,9 @@ interface ActiveMsgGlobalSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
-  /** 「清空云端数据」清完要立刻把工具凭据补传回去，所以这里需要当前这份配置。 */
+  /** "Clear Cloud Data" needs to immediately re-upload tool credentials right after clearing, so the current config is needed here. */
   realtimeConfig: RealtimeConfig;
-  /** 由 Settings 注入：点「去推送凭据面板」时打开顶层 PushVapidSettingsModal */
+  /** Injected by Settings: opens the top-level PushVapidSettingsModal when "Go to push credentials panel" is tapped */
   onOpenVapid?: () => void;
 }
 
@@ -158,30 +181,33 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const [loading, setLoading] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
-  // 手动粘贴部署：给没有 GitHub 账号的人留的退路，默认收着不干扰主流程。
+  // Manual paste deployment: a fallback for people without a GitHub account, collapsed by default so it doesn't get in the way of the main flow.
   const [pasteFallbackOpen, setPasteFallbackOpen] = useState(false);
-  // Deno 门面：workers.dev 在国内连不上时才需要，默认收着。
+  // Deno facade: only needed when workers.dev is unreachable from mainland China, collapsed by default.
   const [denoProxyOpen, setDenoProxyOpen] = useState(false);
   const [pushStatus, setPushStatus] = useState<ActiveMsg2PushStatus | null>(null);
-  // 「生成 Master Key」只在本次打开期间展示，前端不落盘——它是 worker 侧密钥，粘进 CF env 即可。
+  // "Generate Master Key" is only shown while the panel is open this time and is never persisted client-side — it's a worker-side secret, just paste it into the CF env.
   const [generatedMasterKey, setGeneratedMasterKey] = useState('');
   const [generatedServerToken, setGeneratedServerToken] = useState('');
 
-  // 一键部署：填一枚 CF Token，剩下的（建库、传 worker、写密钥、加定时）都自动做完。
-  // Token 只在这次部署期间留在内存里，成功与否都不落盘——它是能改整个账号 Workers 的
-  // 权限，真正需要长期留着的那一份已经作为 secret 写进用户自己的 worker 了（自更新用）。
+  // One-click deploy: fill in one CF Token, and everything else (creating the database,
+  // uploading the worker, writing secrets, adding the schedule) happens automatically.
+  // The token only stays in memory for the duration of this deployment and is never persisted
+  // either way — it has permission to modify Workers across the whole account, and the one that
+  // actually needs to be kept long-term has already been written as a secret into the user's own
+  // worker (used for self-updates).
   const [cfToken, setCfToken] = useState('');
   const [provisioning, setProvisioning] = useState(false);
   const [provisionStep, setProvisionStep] = useState('');
-  /** token 能用在多个账号上时让用户挑一个。 */
+  /** Lets the user pick one when the token can be used on multiple accounts. */
   const [provisionAccounts, setProvisionAccounts] = useState<CfAccount[] | null>(null);
-  /** 全新的 CF 账号还没有 workers.dev 子域，得先起一个。 */
+  /** A brand-new CF account doesn't have a workers.dev subdomain yet, so one needs to be created first. */
   const [needsSubdomain, setNeedsSubdomain] = useState(false);
   const [desiredSubdomain, setDesiredSubdomain] = useState('');
   const [provisionError, setProvisionError] = useState('');
 
-  // 补装更新能力：老办法装的后端里没有 CF_API_TOKEN，点更新会被顶回来。
-  // 粘一枚 token 就能就地补上，不用去 Cloudflare 面板。只在真的缺钥匙时才露出来。
+  // Attach update capability: a backend installed the old way doesn't have CF_API_TOKEN, so tapping update gets rejected.
+  // Pasting in a token attaches it in place, no need to go to the Cloudflare dashboard. Only shown when the key is actually missing.
   const [attachOpen, setAttachOpen] = useState(false);
   const [attachToken, setAttachToken] = useState('');
   const [attachScriptName, setAttachScriptName] = useState('');
@@ -190,36 +216,46 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState('');
 
-  // 体检：worker 的 GET /debug 结果。它早就把「缺哪个变量、缺哪张表、缺哪几列、cron
-  // 有没有停」都算好了，但入口一直只有手拼 URL——而这几样恰恰是「界面上一切正常、
-  // 就是一条都不发」的全部原因。存原始探测结果，红绿灯在渲染时算（推送状态一变就跟着走）。
+  // Health check: the worker's GET /debug result. It already computes "which variable is
+  // missing, which table is missing, which columns are missing, whether cron has stopped" —
+  // but the only way to reach it has always been hand-typing the URL, and these are exactly the
+  // whole reason for "everything looks fine on screen, yet nothing is ever sent." Store the raw
+  // probe result; the traffic-light indicator is computed at render time (and follows along
+  // whenever push status changes).
   const [diagnosticsProbe, setDiagnosticsProbe] = useState<AmsgDiagnosticsProbe | null>(null);
   const [diagnosing, setDiagnosing] = useState(false);
-  // 体检摆在最上面，但默认收着：装好之后它天天是「都正常」，摊开占掉半屏。
-  // 标题那一行已经把结论说了，要看是哪一项才需要点开。
+  // The health check sits at the top, but is collapsed by default: once things are set up it
+  // reads "all good" every single day, and expanding it would eat up half the screen.
+  // The title row already states the conclusion; only expand it to see which item needs attention.
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
 
   const [workerOutdated, setWorkerOutdated] = useState(false);
   /**
-   * 用户那台 Worker 上的后端代码是不是最新的（见 ActiveMsgClient.probeWorkerVersion）。
-   * null = 还没探到（没填地址 / 正在探）。界面拿它决定更新按钮是高亮催更新还是弱化。
+   * Whether the backend code on the user's Worker is up to date (see ActiveMsgClient.probeWorkerVersion).
+   * null = not probed yet (no address filled in / currently probing). The UI uses this to decide
+   * whether the update button is highlighted to push for an update, or de-emphasized.
    */
   const [workerVersion, setWorkerVersion] = useState<
     { state: 'current' | 'outdated' | 'unknown'; deployed: string | null; expected: string } | null
   >(null);
-  /** 自更新成功后 worker 报回来的代码指纹，显示出来好让人确认这次真换了。 */
+  /** The code fingerprint the worker reports back after a successful self-update, shown so the user can confirm it really did change. */
   const [selfUpdateHash, setSelfUpdateHash] = useState('');
-  // Instant Push 也开着：聊天会走它，2.0 挂在本地那条路上的几样东西全静默失效——设置页
-  // 两道双向门通常已经拦住这种组合，这里读一次是给漏网脏配置兜底，关掉后立刻更新。
+  // Instant Push is also on: chat would go through it, and everything 2.0 hangs on the local
+  // path would silently stop working — the two mutual-exclusion gates on the settings page
+  // normally already block this combination, so reading it once here is a safety net against
+  // leftover dirty config; it updates immediately once turned off.
   const [instantOn, setInstantOn] = useState(false);
-  // 这台 worker 认不认 /instant-chat。即时对话的**唯一**版本门槛就在这儿，
-  // 别处不做逐调用预检——每发一条消息多探一次网络，探失败还分不清是旧版还是网抖。
+  // Whether this worker recognizes /instant-chat. This is the **only** version gate for Instant
+  // Chat — no per-call preflight check is done elsewhere, since probing the network an extra
+  // time on every message sent, and not even being able to tell an old version from a network
+  // hiccup on failure, isn't worth it.
   const [instantChatSupported, setInstantChatSupported] = useState(false);
 
-  // 特性探测：确认「过老」（端点 404 → null，或缺关键特性）才亮牌；
-  // 探测本身失败（断网 / 密钥不对 / 没填地址）不亮，避免误报。
+  // Feature probing: only show the flag once confirmed "too old" (endpoint 404 → null, or a key
+  // feature missing); don't show it if the probe itself fails (offline / wrong secret / no
+  // address filled in), to avoid false positives.
   const probeWorkerCaps = async (workerConfigured: boolean) => {
-    // 只有配了地址才报：没填地址时这次探测必然失败，那不是版本问题。
+    // Only report when an address is configured: without one, this probe is guaranteed to fail, and that's not a version problem.
     const shouldReport = workerConfigured && !workerCapsReported;
     if (shouldReport) workerCapsReported = true;
     try {
@@ -227,8 +263,10 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       const missingFeature = !caps || REQUIRED_WORKER_FEATURES.some((f) => !caps.features.includes(f));
       const versionTooOld = !caps || !isAmsgServerVersionAtLeast(caps.serverVersion, REQUIRED_WORKER_VERSION);
       setWorkerOutdated(missingFeature || versionTooOld);
-      // 跑着旧 worker 的表现是**静默错**（自述回写不落盘、任务重复推），用户不会来报，
-      // 面板这一句提示是唯一的出口。这里数的就是「有多少人正跑着一个不该跑的版本」。
+      // Running an old worker manifests as a **silent** failure (self-log write-back never
+      // persists, tasks get pushed twice) — the user won't come report it, so this panel's
+      // prompt is the only channel. What's being counted here is "how many people are currently
+      // running a version they shouldn't be."
       if (shouldReport) {
         trackEvent('Probe 2.0 Worker Capabilities', {
           result: !caps ? 'Endpoint not found' : missingFeature ? 'Missing feature' : versionTooOld ? 'Version too old' : 'ok',
@@ -236,19 +274,20 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       }
     } catch {
       setWorkerOutdated(false);
-      // 探测本身炸了（断网 / 地址不通）不亮牌，免得误报；但它跟「版本旧」是两回事，
-      // 单独占一格，看分布时能一眼把这批人排除掉。
+      // Don't show the flag if the probe itself blows up (offline / address unreachable), to
+      // avoid false positives; but that's a different situation from "version is old" — give it
+      // its own bucket, so this group can be excluded at a glance when looking at the distribution.
       if (shouldReport) trackEvent('Probe 2.0 Worker Capabilities', { result: 'Probe failed' });
     }
   };
 
-  // 已经存过盘的那个 Worker 地址。清空确认要用它：确认之前不能换地址，
-  // 取消远端任务的那几个请求还得发到旧那台上去。
+  // The Worker address that's already been persisted. Needed for the clear-confirmation flow:
+  // the address can't be changed before confirming, since the requests to cancel remote tasks still need to go to the old one.
   const savedWorkerUrlRef = useRef('');
 
   /**
-   * 拉一次体检。没填地址时不拉——那时候唯一该做的事是把地址填上，
-   * 摆一排红灯只会让人以为哪儿坏了。
+   * Run one health check. Don't run it when no address is filled in — the only thing to do at
+   * that point is fill in the address, and a row of red lights would just make it look broken.
    */
   const runDiagnostics = async () => {
     setDiagnosing(true);
@@ -260,19 +299,22 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   /**
-   * 报一次「即时对话此刻能不能开、开不了卡在哪」。
+   * Report once whether Instant Chat can be enabled right now, and where it's stuck if not.
    *
-   * 这一格只能在这儿收：开关灰着的时候用户什么都点不动，也就不会产生任何别的事件——
-   * 光看配置快照里那个开/关，被挡在门外的人和「不想要这功能的人」长得一模一样。
-   * 判定跟界面上那行黄字共用 resolveInstantChatBlocker，两处不会各说各话。
+   * This event can only be captured here: while the toggle is grayed out the user can't tap
+   * anything, so no other event would ever be generated — looking only at the on/off snapshot in
+   * the config, someone who's blocked from the door and someone who "just doesn't want this
+   * feature" would look identical. The determination reuses resolveInstantChatBlocker, the same
+   * function as the yellow-text line in the UI, so the two never disagree with each other.
    */
   const reportInstantChatGate = (gate: InstantChatGateInput, enabled: boolean) => {
     if (instantChatGateReported) return;
     instantChatGateReported = true;
     trackEvent('Can Instant Chat Be Enabled', {
       result: resolveInstantChatBlocker(gate) ?? 'Can enable',
-      // 已经开着的人也报：他们卡住意味着「开的时候好好的，后来 Worker 退回旧版了」，
-      // 那是一种发一条挂一条、但设置页还写着「已开启」的坏法。
+      // Also report for people who already have it on: them being blocked means "it worked fine
+      // when they turned it on, but the Worker later fell back to an old version" — the kind of
+      // failure where every message fails to send while the settings page still says "Enabled."
       state: enabled ? 'Already on' : 'Not on yet',
     });
   };
@@ -304,7 +346,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
     }
   };
 
-  /** 关掉 Instant Push 的开关，worker 地址等配置留着——以后想切回去不用重填。 */
+  /** Turns off the Instant Push toggle; the worker address and other config are kept — no need to re-enter anything if switching back later. */
   const disableInstantPush = () => {
     saveInstantConfig({ ...loadInstantConfig(), enabled: false });
     setInstantOn(false);
@@ -317,10 +359,10 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
     setDiagnosticsOpen(false);
     setDeployOpen(false);
     setPasteFallbackOpen(false);
-    // 两个明文密钥都要清：留到下次打开面板还挂在页面上，就是白白多摊一次。
+    // Clear both plaintext secrets: leaving them displayed until the panel is reopened is a needless extra exposure.
     setGeneratedMasterKey('');
     setGeneratedServerToken('');
-    // CF Token 更要清：它比上面两个都重，绝不留到下次打开。
+    // Clear the CF Token even more so — it's more sensitive than the two above, and must never be left over for the next time the panel opens.
     setCfToken('');
     setProvisionAccounts(null);
     setNeedsSubdomain(false);
@@ -336,11 +378,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   }, [isOpen]);
 
   /**
-   * 地址被清空时的收尾：先问一句，再拿**旧地址**把远端任务取消干净，最后才存空值。
+   * Cleanup when the address is cleared: confirm first, then use the **old address** to cancel
+   * remote tasks cleanly, and only then save the empty value.
    *
-   * 光存空值的话，前端这边所有同步立刻停摆，D1 里的任务却一条没少：cron 每分钟照常
-   * 消费、照烧 LLM、照推送（推送订阅也还在），只是内容永远停在最后一次同步的样子。
-   * 用户以为自己关掉了一切，实际只是把自己变成了看不见的那一方。
+   * Just saving the empty value alone would stop all frontend-side syncing immediately, while
+   * not a single task in D1 would actually go away: cron would still consume them every minute
+   * as usual, still burn LLM calls, still push (the push subscription is also still there) — the
+   * content would just be permanently stuck at whatever it was at the last sync. The user thinks
+   * they've turned everything off, but has really just made themself the one who can no longer see it.
    */
   const confirmAndClearRemote = async (): Promise<boolean> => {
     const ok = confirm("Clearing the Worker address will also cancel any proactive message tasks still pending remotely. Are you sure?\n\nIf you don't cancel them, those tasks will still trigger and push to you on schedule, and you will no longer be able to manage them from here.");
@@ -360,7 +405,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
     if (!config) return;
     if (isWorkerUrlCleared(savedWorkerUrlRef.current, config.workerUrl)) {
       if (!await confirmAndClearRemote()) {
-        // 用户反悔：把地址填回输入框，别留一个「界面空着、库里还存着」的错位。
+        // The user changed their mind: put the address back in the input field, rather than leaving a mismatch of "field shown empty, but the store still has it."
         patchConfig({ workerUrl: savedWorkerUrlRef.current });
         return;
       }
@@ -369,7 +414,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       workerUrl: config.workerUrl,
       serverToken: config.serverToken,
       instantChatEnabled: config.instantChatEnabled,
-      // 一键部署生成的 Master Key 也要跟着存：这是本地唯一的一份，Worker 那边读不回来。
+      // The Master Key generated by one-click deploy must also be persisted along with the rest — this is the only local copy, it can't be read back from the Worker side.
       masterKey: config.masterKey,
     });
     savedWorkerUrlRef.current = config.workerUrl || '';
@@ -391,17 +436,19 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   const handleCreateSubscription = async () => {
     setLoading(true);
     try {
-      // 建完浏览器订阅还要登记到 worker 上那一份用户级订阅——worker 到点读的是它，
-      // 只在浏览器建订阅的话云端仍是空的，到点会抛 PUSH_SUBSCRIPTION_MISSING，
-      // 而这句 toast 已经报了「准备完成」。
+      // Creating the browser subscription alone isn't enough — it also needs to be registered as
+      // the user-level subscription on the worker, since that's what the worker reads when a
+      // task comes due. If the subscription is only created in the browser, the cloud copy is
+      // still empty, and it'll throw PUSH_SUBSCRIPTION_MISSING when a task comes due — even
+      // though this toast has already said "ready."
       await ActiveMsgClient.registerPushSubscription();
       await refresh();
       addToast('Notification permission and push subscription are ready.', 'success');
       trackEvent('Enable Notifications & Push Subscription', { result: 'ok' });
     } catch (error: any) {
       addToast(error?.message || 'Failed to create push subscription.', 'error');
-      // 只报抛错那一刻挂上的代号（源码里写死的枚举）。错误原文可能带 push endpoint，
-      // 留在 toast 和 console 里，不进上报。
+      // Only report the code attached at the moment it was thrown (a fixed enum in the source).
+      // The raw error text may include the push endpoint — keep it in the toast and console only, never in analytics.
       trackEvent('Enable Notifications & Push Subscription', { result: readAmsgFailKind(error) });
     } finally {
       setLoading(false);
@@ -409,13 +456,16 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   /**
-   * 一键部署：只要一枚 Cloudflare API Token，把后端从零装好，装完顺手连上。
+   * One-click deploy: with nothing but a Cloudflare API Token, set up the backend from scratch,
+   * and connect it right after.
    *
-   * 密钥全部在本地生成，用户不用复制粘贴任何东西。已经有的一律沿用——Master Key 换了
-   * 之前排的任务全解不开，VAPID 换了浏览器现有的推送订阅会全部 403。
+   * All secrets are generated locally, so the user never has to copy or paste anything. Anything
+   * that already exists is always reused — rotating the Master Key would make every previously
+   * scheduled task undecryptable, and rotating VAPID would 403 every existing browser push subscription.
    *
-   * Token 只在这次操作期间留在内存里，成功与否都不落盘。需要长期留着的那一份已经作为
-   * secret 写进用户自己的 Worker 了（以后「更新后端」用的就是它）。
+   * The token only stays in memory for the duration of this operation and is never persisted
+   * either way. The copy that needs to be kept long-term has already been written as a secret
+   * into the user's own Worker (that's what "update backend" uses later).
    */
   const handleOneClickDeploy = async (accountId?: string) => {
     const token = cfToken.trim();
@@ -445,7 +495,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
       if (!result.ok) {
         setProvisionStep('');
-        // 这两种不是失败，是「还差一个信息」，界面上补个输入再点一次就能接着走。
+        // These two aren't failures, they're "one more piece of information needed" — fill in the extra input on screen and tap again to continue.
         if (result.code === 'ACCOUNT_AMBIGUOUS') {
           setProvisionAccounts(result.accounts || []);
           trackEvent('One-Click Deploy 2.0 Backend', { result: 'Needs account selection' });
@@ -462,15 +512,17 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         return;
       }
 
-      // 先把密钥落盘再连接：连接要用 serverToken，而 Master Key 一旦丢了就再也读不回来。
+      // Persist secrets before connecting: connecting needs serverToken, and once the Master Key is lost it can never be read back.
       const { secrets } = result;
       savePushVapid({
         vapidPublicKey: secrets.VAPID_PUBLIC_KEY,
         vapidPrivateKey: secrets.VAPID_PRIVATE_KEY,
         vapidEmail: secrets.VAPID_EMAIL || undefined,
       });
-      // instantChatEnabled 跟着一起写：面板渲染时 config 一定不是 null（文件末尾有空值
-      // 早退），读到的就是界面上当前的值，不显式带上会被这次保存冲掉。
+      // Write instantChatEnabled along with it: by the time the panel renders, config is
+      // guaranteed not to be null (there's an early-return on the empty value at the end of the
+      // file), so what's read is the current on-screen value — not passing it along explicitly
+      // would get overwritten by this save.
       await ActiveMsgStore.saveGlobalConfig({
         workerUrl: result.workerUrl,
         serverToken: secrets.AMSG_SERVER_TOKEN,
@@ -488,13 +540,15 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       setNeedsSubdomain(false);
       setCfToken('');
       result.warnings.forEach((warning) => addToast(warning, 'info'));
-      // 别在这儿说「装好了」就完事：地址还要几十秒才在各个边缘节点上生效，而上面那句
-      // patchConfig 一落地，一键部署那张卡片就因为「地址已填」收起来了——进度条跟着消失，
-      // 看上去像是全部办妥。用户于是去点「连接并启用」，撞上还没生效的地址。
+      // Don't just call it "done" here and stop: the address still takes several dozen seconds
+      // to become active across edge nodes, and the moment the patchConfig call above lands, the
+      // one-click deploy card collapses because "the address is now filled in" — the progress
+      // bar disappears along with it, making it look like everything's wrapped up. The user
+      // would then go tap "Connect & Enable" and run straight into an address that isn't live yet.
       addToast(`Backend deployed: ${result.workerUrl}. The address takes a few dozen seconds to become active — just wait for it to connect on its own.`, 'success');
       trackEvent('One-Click Deploy 2.0 Backend', { result: 'Success' });
 
-      // 刚建好的 workers.dev 地址要等一会儿才解析得到，等它活过来再建表。
+      // A freshly created workers.dev address takes a moment to resolve — wait for it to come alive before creating the tables.
       setProvisionStep('Waiting for Worker to start…');
       const ready = await waitForWorkerReady(result.workerUrl);
       if (!ready) {
@@ -507,7 +561,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       warnings.forEach((warning) => addToast(warning.message, 'info'));
       addToast('Connected successfully. Proactive Message 2.0 is ready to use.', 'success');
     } catch (error: any) {
-      // 报错原文只进界面，不进上报（可能带地址、账号 id）。
+      // The raw error text goes into the UI only, never into analytics (it may include addresses or account IDs).
       setProvisionError(error?.message || 'Something went wrong during deployment.');
       trackEvent('One-Click Deploy 2.0 Backend', { result: 'Failed' });
     } finally {
@@ -532,13 +586,18 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       const { warnings } = await ActiveMsgClient.connect();
       await refresh();
       addToast('Connected successfully. Proactive Message 2.0 is ready to use.', 'success');
-      // 连上了但有一块是哑的（最典型是 VAPID 没配齐：任务建得成、到点一条都推不出去，
-      // 而界面上没有任何异常）。这类问题用户自己发现不了，连接这一刻不说就没人说了。
+      // Connected, but with one part silently broken (most typically: VAPID not fully
+      // configured — tasks can be created, but nothing ever gets pushed out when they come due,
+      // with no visible anomaly on screen). The user has no way to discover this kind of problem
+      // themself, so if it's not surfaced at the moment of connecting, no one ever will.
       warnings.forEach((warning) => addToast(warning.message, 'info'));
-      // 只报「这次连接成没成 / 卡在哪一类」。连接串 / tenantToken / 错误原文一概不带，
-      // 也不报「之前配没配过 tenant」——那等于把两项凭据的配置状态压成一位发出去。
-      // 失败代号是抛错时按 HTTP 状态挂上的字面量（见 activeMsgClient 的 AmsgFailKind），
-      // 分开是因为「密钥对不上」和「D1 没绑」要用户去改的地方完全不同。
+      // Only report "did this connection succeed or not / which category it's stuck on." The
+      // connection string / tenantToken / raw error text are never included, and neither is
+      // "whether a tenant was previously configured" — that would compress the configuration
+      // state of two separate credentials down into a single bit and ship it out. The failure
+      // code is the literal attached by HTTP status at the moment of the throw (see
+      // activeMsgClient's AmsgFailKind); it's kept separate because "credentials don't match"
+      // and "D1 isn't bound" require the user to go fix completely different things.
       trackEvent('Connect & Enable Proactive Message 2.0', { result: 'ok' });
     } catch (error: any) {
       addToast(error?.message || 'Connection failed.', 'error');
@@ -549,19 +608,26 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   /**
-   * 让后端自己更新到最新版本。
+   * Lets the backend update itself to the latest version.
    *
-   * 三种装法（fork 后连 Git / Deploy 按钮 / 找人代配）此前更新方式各不相同，最麻烦的一种
-   * 要在两个网站之间倒腾一个几百 KB 的文件。有了这个按钮都变成点一下。
+   * The three installation methods (fork-and-connect-Git / Deploy button / someone else set it
+   * up) previously each had a different update process, and the most troublesome one involved
+   * shuttling a several-hundred-KB file back and forth between two websites. With this button,
+   * all of them become a single tap.
    *
-   * 更新成功后接着跑一次「连接并验证」（POST /init-tenant，幂等）。
+   * After a successful update, follows up with a "connect and verify" run (POST /init-tenant, idempotent).
    *
-   * 这一步不是可有可无的收尾：新版后端可能带了新的表结构，而 D1 的建表只在这个端点里做。
-   * 少了它，Worker 代码是新的、库还是旧的，cron 每分钟静默失败，主动消息整个停摆——
-   * 而界面上一切正常，用户完全看不出来（这个坑踩过）。让「更新」自己把它带上，
-   * 就不必指望每个人都记得再手动点一次。
+   * This step isn't an optional nicety tacked on at the end: a new backend version may carry a
+   * new table structure, and D1 table creation only happens through this endpoint. Without it,
+   * the Worker code would be new while the database stayed old, cron would silently fail every
+   * minute, and proactive messages would grind to a complete halt — while everything on screen
+   * looked totally normal and the user had no way to tell (this exact pitfall has actually
+   * happened). Having "update" carry this along on its own means we don't have to count on
+   * everyone remembering to tap something else manually afterward.
    *
-   * 失败不改判这次更新：代码确实已经换上了，只是库没跟上。分开报，用户才知道该点哪个。
+   * A failure here doesn't retroactively count as an update failure: the code really has been
+   * swapped in, it's just that the database didn't keep up. Reporting them separately lets the
+   * user know which one they actually need to act on.
    */
   const handleSelfUpdateWorker = async () => {
     setLoading(true);
@@ -582,8 +648,8 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         }
       } else {
         addToast(result.message, result.supported ? 'error' : 'info');
-        // 「缺 CF_API_TOKEN」是这里唯一能就地解决的一种：露出补装那一块，
-        // 用户粘一枚 token 就好，不用去 Cloudflare 面板加变量。
+        // "Missing CF_API_TOKEN" is the only case that can be resolved right here in place:
+        // reveal the attach-key section so the user can just paste in a token, without having to go add a variable in the Cloudflare dashboard.
         if (result.code === 'CF_TOKEN_MISSING') setAttachOpen(true);
       }
       trackEvent('Update Backend Worker', {
@@ -598,10 +664,11 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   /**
-   * 给已经装好的后端补上「自己更新自己」的钥匙。
+   * Attaches the "self-update" key to a backend that's already installed.
    *
-   * 只写 CF_API_TOKEN / CF_SCRIPT_NAME 两条密钥，不碰脚本也不碰别的绑定——手动部署的
-   * 用户，前端手里根本没有他们的 Master Key，走重传那条路会把密钥抹掉。
+   * Only writes the two secrets CF_API_TOKEN / CF_SCRIPT_NAME — doesn't touch the script or any
+   * other bindings, since for a manually deployed backend the frontend never has the user's
+   * Master Key in the first place, and going through the re-upload path would wipe out the secrets.
    */
   const handleAttachUpdateKey = async (accountId?: string) => {
     const token = attachToken.trim();
@@ -654,8 +721,9 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
     }
   };
 
-  // 手动粘贴部署用。主流程是 fork sullyos-workers + 在 CF 连 Git，这条是给没有 GitHub
-  // 账号的人留的退路，所以在面板里收在折叠区里。
+  // For manual-paste deployment. The main flow is fork sullyos-workers + connect Git on CF; this
+  // is the fallback for people without a GitHub account, so it's tucked away in a collapsed
+  // section of the panel.
   const handleCopyWorkerBundle = async () => {
     try {
       await ActiveMsgClient.copyWorkerBundleToClipboard();
@@ -663,13 +731,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       trackEvent('Copy 2.0 Worker Code', { result: 'ok' });
     } catch (error: any) {
       addToast(`Copy failed (${error?.message || error}). You can also get it from worker/amsg/worker.bundle.js in the repo.`, 'error');
-      // 剪贴板 API 在非 HTTPS / 部分 WebView 里会直接抛，这条就是那批人的规模。
+      // The Clipboard API throws outright on non-HTTPS / some WebViews — this event measures the size of that group.
       trackEvent('Copy 2.0 Worker Code', { result: 'failed' });
     }
   };
 
-  // workers.dev 在国内连不上时的门面脚本。跟上面那份不一样：这份不打包、原样发布，
-  // 用户要照着里面的注释改 UPSTREAM 那一行，所以注释必须留着。
+  // The facade script for when workers.dev is unreachable from mainland China. Different from
+  // the bundle above: this one isn't packaged, it's published as-is, and the user has to edit
+  // the UPSTREAM line by following the comment inside it — so that comment has to stay in the source.
   const handleCopyDenoProxy = async () => {
     try {
       await ActiveMsgClient.copyDenoProxyToClipboard();
@@ -682,19 +751,23 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   /**
-   * 复制密钥时带不带 `变量名=` 前缀，看 Worker 地址填了没：
-   * 空着 = 还没装后端，用户要去 Cloudflare 的 Variables and secrets 里新建变量，
-   * 给整行最省事（粘一行进去会自动拆成名字和值两栏，不用对着抄名字）；
-   * 填了 = 后端早装好了，这会儿是回来改某一项的值，光标就停在值那一栏，
-   * 整行粘进去会把变量名一起写成值。
+   * Whether copying a secret includes a `VARIABLE_NAME=` prefix depends on whether the Worker
+   * address has been filled in: empty = the backend isn't installed yet, and the user needs to
+   * go create a new variable in Cloudflare's Variables and secrets, so giving them the whole line
+   * is most convenient (pasting a whole line in automatically splits into the name and value
+   * columns, no need to type the name by hand); filled in = the backend is already installed and
+   * this is a return visit to change the value of one item, with the cursor sitting right in the
+   * value column, so pasting the whole line in would write the variable name into the value too.
    */
   const copyWholeEnvLine = !config?.workerUrl?.trim();
 
   /**
-   * 把刚生成的密钥交给用户：存进 state 供展示 + 尽量复制到剪贴板。
-   * 输入框是 password 型看不见内容，所以生成时必须把值显示出来，
-   * 否则「把同样的值填进 Worker 环境变量」这一步没法做。
-   * 剪贴板不可用时用户是从下方手抄的，所以展示的那份要和复制的一模一样。
+   * Hands a freshly generated secret to the user: stores it in state for display + tries to copy
+   * it to the clipboard. The input field is password-type and hides its content, so the value
+   * has to be shown separately when it's generated — otherwise "put this same value into the
+   * Worker's environment variables" would be impossible to do. When the clipboard isn't
+   * available the user copies it by hand from what's shown below, so the displayed copy has to
+   * match the copied one exactly.
    */
   const revealAndCopy = async (value: string, reveal: (v: string) => void, envName: string) => {
     const text = copyWholeEnvLine ? `${envName}=${value}` : value;
@@ -713,8 +786,8 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   const handleGenerateMasterKey = () => {
-    // 只报「生成了哪一个」。密钥本体只在这次面板打开期间存在于 state，前端不落盘，
-    // 更不会进上报。
+    // Only report "which one was generated." The secret itself only exists in state for the
+    // duration of this panel being open — it's never persisted client-side, let alone sent to analytics.
     trackEvent('Generate 2.0 Worker Key', { which: 'master_key' });
     return revealAndCopy(ActiveMsgClient.generateMasterKey(), setGeneratedMasterKey, 'AMSG_MASTER_KEY');
   };
@@ -736,8 +809,9 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         pushRegistered: Boolean(pushStatus?.hasSubscription),
       });
 
-      // 没清干净的地方逐条说明白：这个按钮多半是在「云端数据已经出问题」时点的，
-      // 含糊一句「部分失败」会让人不知道下一步该干嘛。
+      // Spell out every spot that didn't clear cleanly, item by item: this button is mostly
+      // tapped when "the cloud data has already gone wrong," and a vague "partial failure" would
+      // leave the user with no idea what to do next.
       const problems: string[] = [];
       if (!result.tasks.listed) {
         problems.push("Couldn't read the task list (this happens if AMSG_MASTER_KEY was changed and old tasks can no longer be decrypted) — these tasks will fail when they come due, and the Worker will auto-clean them after 7 days");
@@ -750,8 +824,9 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
         problems.push('Failed to re-upload tool credentials — please save your configuration again in "Real-time Perception," otherwise scheduled AI tasks will keep failing');
       }
       if (result.llmCredentialsDeleted === null) {
-        // 老 Worker 上压根没有这张表，这一句同样成立：那边确实没清成，而下次排程会
-        // 走回「凭据冻结进任务」的老路，也就无所谓残留。
+        // An old Worker doesn't have this table at all, and this line holds true either way: it
+        // genuinely wasn't cleared, but the next scheduling run falls back to the old
+        // "credentials frozen into the task" approach anyway, so there's nothing left over to worry about.
         problems.push("Couldn't delete registered API credentials (if the Worker version is older, this table doesn't exist anyway)");
       }
       if (result.push === 'failed') {
@@ -778,12 +853,15 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
   };
 
   /**
-   * 开关即时对话。直接落盘而不是走那条 1 秒去抖的自动保存：开关是一次明确的动作，
-   * 点完立刻生效（下一条消息就按新路走），而不是「点完还得等一下」。
+   * Toggles Instant Chat. Persists directly rather than going through the 1-second debounced
+   * autosave: the toggle is a single deliberate action, and it should take effect the instant
+   * it's tapped (the very next message follows the new path) rather than "tap it and then still
+   * have to wait a bit."
    */
   const handleToggleInstantChat = async () => {
     const next = !config?.instantChatEnabled;
-    // 开了又关是这条路上最值钱的信号：能开、开过、然后放弃了，跟「压根没开」不是一回事。
+    // Turning it on and then off again is the single most valuable signal on this path: being
+    // able to enable it, having enabled it, and then giving up on it is not the same thing as "never enabled it at all."
     trackEvent('Toggle Instant Chat', { action: next ? 'on' : 'off' });
     patchConfig({ instantChatEnabled: next });
     await ActiveMsgStore.saveGlobalConfig({ instantChatEnabled: next });
@@ -801,8 +879,9 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
 
   const isConnected = Boolean(config.initializedAt);
 
-  // 体检：探测结果 + 「这台设备订阅了没」这个只有前端知道的事实，红绿灯判定全在
-  // amsgDiagnostics 那份纯函数里（那边有回归测试钉着）。
+  // Health check: the probe result + "whether this device is subscribed," a fact only the
+  // frontend knows — the traffic-light determination lives entirely in the amsgDiagnostics pure
+  // function (pinned down by regression tests over there).
   const diagnosticRows = diagnosticsProbe
     ? buildAmsgDiagnosticRows({
       probe: diagnosticsProbe,
@@ -834,12 +913,14 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
       )}
     >
       <div className="space-y-4 text-sm text-slate-600">
-        {/* 体检。主动消息坏掉的那几种方式在界面上全是隐形的：D1 没绑、表结构是旧的、
-            VAPID 没配、云端没登记收件设备——任务照建、面板照常，就是一条都不发。
-            Worker 的 /debug 一直算得出这些，这里只是把它摆到看得见的地方。 */}
+        {/* Health check. Every way proactive messages can break is invisible on screen: D1 not
+            bound, table structure out of date, VAPID not configured, no receiving device
+            registered in the cloud — tasks still get created, the panel still looks normal, and
+            simply nothing ever gets sent. The Worker's /debug has always been able to compute
+            all of this; this section just puts it somewhere visible. */}
         {config.workerUrl?.trim() ? (
           <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-            {/* 收着时那句「都正常 / 有问题」就是全部结论，逐项细节点开再看。 */}
+            {/* While collapsed, "all good / there's an issue" is the entire conclusion — expand for the item-by-item detail. */}
             <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -879,7 +960,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
                         <span className="flex-1 text-xs font-bold text-slate-600">{row.label}</span>
                         <span className={`shrink-0 text-[11px] font-bold ${style.text}`}>{style.word}</span>
                       </div>
-                      {/* 正常的行不展开说明：全绿时这一列要短到能一眼扫完。 */}
+                      {/* A normal row doesn't expand its explanation: when everything's green, this column needs to stay short enough to scan at a glance. */}
                       {row.level === 'ok' ? null : (
                         <p className="mt-1 pl-3.5 text-[11px] leading-relaxed text-slate-500 whitespace-pre-line">
                           {row.detail}
@@ -897,9 +978,11 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           </div>
         ) : null}
 
-        {/* 正常情况下两道双向门会拦住「两个都开」，能走到这儿全是脏配置遗留。
-            脏配置照样会让聊天悄悄走 Instant，2.0 挂在本地那条路上的东西全静默失效——
-            没有报错也没有提示，只会表现成「这功能怎么不响」，这张卡就是收拾它的入口。 */}
+        {/* Under normal circumstances, the two mutual-exclusion gates block "both enabled at
+            once" — anyone who ends up here is entirely leftover dirty config. Dirty config
+            still quietly routes chat through Instant, and everything 2.0 hangs on the local path
+            silently stops working — no error, no warning, it just shows up as "why isn't this
+            feature responding." This card is the entry point for cleaning that up. */}
         {instantOn ? (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
             <div className="font-bold text-amber-900 text-sm">Instant Push is also on</div>
@@ -916,7 +999,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           </div>
         ) : null}
 
-        {/* 已经填了 Worker 地址就说明后端装好了，这张卡收起来；重装走「清掉地址再回来」这条路。 */}
+        {/* A Worker address already being filled in means the backend is installed, so this card is collapsed; reinstalling goes through the "clear the address and come back" path. */}
         {config.workerUrl?.trim() ? null : (
         <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
@@ -1020,7 +1103,7 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           <button
             type="button"
             onClick={() => setDeployOpen((prev) => {
-              // 只在展开时记一笔：收起也记的话同一个人会被数两次，漏斗第一格直接虚高一倍。
+              // Only record when expanding: recording on collapse too would count the same person twice, inflating the first stage of the funnel by double.
               if (!prev) trackEvent('Expand 2.0 Deploy Guide', { mode: 'main flow' });
               return !prev;
             })}
@@ -1071,8 +1154,10 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
               </p>
 
               <div className="grid grid-cols-3 gap-2">
-                {/* 三个出口合成一个事件带 target 枚举：它们是部署流程同一步的三条岔路，
-                    拆成三个事件名只是多占清单行数，看漏斗时还得自己加回去。 */}
+                {/* All three exits are combined into one event with a target enum: they're three
+                    branches of the same deployment step, and splitting them into three separate
+                    event names would just clutter the event list while requiring them to be
+                    manually recombined when looking at the funnel. */}
                 <a
                   href={WORKERS_REPO_URL}
                   target="_blank"
@@ -1329,10 +1414,12 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           </div>
 
           {/*
-            部署还没收尾时这个按钮必须是点不动的：刚建好的 workers.dev 地址要过几十秒才在
-            各个边缘节点上都解析得到，这期间点连接必然报「连不上 Worker」。一键部署那条路
-            自己会等（waitForWorkerReady），等到了还会顺手把表建好——用户抢在前面点，
-            收获的只有一次莫名其妙的失败。
+            This button must stay untappable while deployment hasn't wrapped up yet: a freshly
+            created workers.dev address takes several dozen seconds to resolve across every edge
+            node, and tapping connect during that window is guaranteed to report "can't reach the
+            Worker." The one-click deploy path already waits for this on its own
+            (waitForWorkerReady), and creates the tables as soon as it's ready too — a user
+            jumping the gun and tapping first only gets a baffling failure for their trouble.
           */}
           <button
             onClick={handleConnect}
@@ -1351,9 +1438,11 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           {isConnected ? (
             <div className="pt-1 space-y-2 border-t border-slate-200">
               {/*
-                按钮常驻，但有更新时才抢眼：有新版就实心高亮并写明更新到哪一版，
-                没新版时弱化成一行浅色的「重新检查并更新」——想手动重跑一次的人照样点得到，
-                不用为了这个去别处找入口。
+                The button is always present, but only stands out when there's an update: when a
+                new version exists it's a solid highlight spelling out which version it updates
+                to; when there isn't one it fades into a light-colored "Recheck & Update" line —
+                someone who wants to manually rerun the check can still tap it just fine, without
+                needing to hunt for a separate entry point elsewhere for that.
               */}
               <button
                 onClick={handleSelfUpdateWorker}
@@ -1518,13 +1607,16 @@ const ActiveMsgGlobalSettingsModal: React.FC<ActiveMsgGlobalSettingsModalProps> 
           </button>
         </div>
 
-        {/* 即时对话：聊天本身也交给云端跑。四道门缺一不可，缺哪道就把哪道写出来——
-            置灰而不说原因的话，用户只会反复点它。 */}
+        {/* Instant Chat: chat generation itself is also handed off to the cloud. All four gates
+            are required, and whichever one is missing gets spelled out — graying it out without
+            saying why would just make the user tap it over and over. */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <span className="font-bold text-slate-700">Instant Chat</span>
-            {/* 开着但有门没过时不能只写「已开启」——那几道门是真的会让这一轮走本地生成的，
-                标成绿色的「已开启」就是在骗人：用户以为聊天在云端跑，实际一直在本地。 */}
+            {/* Can't just say "Enabled" when it's on but a gate hasn't been passed — those gates
+                really do mean this round falls back to local generation, and labeling it a green
+                "Enabled" would be lying: the user thinks chat is running in the cloud, when it's
+                actually been running locally the whole time. */}
             <span className={`text-xs font-bold ${
               !config.instantChatEnabled ? 'text-slate-400'
                 : instantChatBlockedReason ? 'text-amber-600' : 'text-emerald-600'
