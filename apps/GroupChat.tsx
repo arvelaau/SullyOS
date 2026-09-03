@@ -25,8 +25,8 @@ import { buildEmojiContextStr, buildGroupHistoryBlock, buildDirectorInstruction,
 import { dispatchMemberActions } from '../utils/groupChat/dispatch';
 import { completeGroupChatWithMcp } from '../utils/groupChat/mcp';
 import { CharacterGroupFilterBar, filterCharactersByGroup, GROUP_FILTER_ALL } from '../components/character/CharacterGroupFilter';
-// 群聊输入区/表情面板已改用共享 ChatInputArea（其表情网格自带 useIncrementalReveal 增量渲染），
-// master 上给旧内联表情抽屉加的增量渲染随旧抽屉一并退役。
+// Group chat's input area/emoji panel now uses the shared ChatInputArea (its emoji grid has its own
+// useIncrementalReveal incremental rendering) — the incremental rendering added for the old inline emoji drawer on master retired along with that old drawer.
 import { UsersThree, Money, GearSix, Image as ImageIcon, ArrowsClockwise, PaintBrush, BellSimpleRinging, Code, Question } from '@phosphor-icons/react';
 import ChatHeaderShell from '../components/chat/ChatHeaderShell';
 import ChatInputArea from '../components/chat/ChatInputArea';
@@ -52,14 +52,14 @@ import {
 const TWEMOJI_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72';
 const twemojiUrl = (codepoint: string) => `${TWEMOJI_BASE}/${codepoint}.png`;
 
-// 复用 Chat.tsx 的高颜值样式逻辑，但针对群聊微调
+// Reuses Chat.tsx's polished styling logic, tweaked for group chat
 const PRESET_THEME_GROUP: ChatTheme = {
     id: 'group_default', name: 'Group', type: 'preset',
     user: { textColor: '#ffffff', backgroundColor: '#8b5cf6', borderRadius: 18, opacity: 1 }, // Violet for User
     ai: { textColor: '#1e293b', backgroundColor: '#ffffff', borderRadius: 18, opacity: 1 }  // White for Others
 };
 
-// --- Sub-Component: 红包卡片（2.0：拼手气/专属 + 状态角标 + 回执结算条；旧数据 legacy 简卡） ---
+// --- Sub-Component: Red Packet Card (2.0: lucky/exclusive + status badge + receipt settlement bar; legacy simple card for old data) ---
 const GroupPacketCard = ({ msg, nameOf, onOpen }: {
     msg: Message;
     nameOf: (id: string) => string;
@@ -67,24 +67,24 @@ const GroupPacketCard = ({ msg, nameOf, onOpen }: {
 }) => {
     const meta = msg.metadata as (Partial<GroupPacketMeta> & Partial<PacketReceiptMeta>) | undefined;
 
-    // 回执：mini 结算条（对齐私聊 TransferCard 的回执视觉）
+    // Receipt: mini settlement bar (matches private chat TransferCard's receipt visuals)
     if (meta?.packetReceipt) {
         const claimed = meta.packetReceipt === 'claimed';
         return (
             <div className={`px-3 py-2 rounded-xl border text-[11px] flex items-center gap-2 ${claimed ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                 <span>🧧</span>
-                <span>{meta.claimantName} {claimed ? '领取了' : '退回了'} {meta.senderName} 的红包{claimed && meta.amount != null ? ` ¥${meta.amount}` : ''}</span>
+                <span>{meta.claimantName} {claimed ? 'claimed' : 'returned'} {meta.senderName}'s red packet{claimed && meta.amount != null ? ` ¥${meta.amount}` : ''}</span>
             </div>
         );
     }
 
-    // 旧数据（无 packet 判别字段）：legacy 简卡，渲染不变语义
+    // Old data (no packet discriminator field): legacy simple card, rendering semantics unchanged
     if (!meta?.packet) {
         return (
             <div className="w-60 bg-[#fb923c] text-white p-3 rounded-xl flex items-center gap-3 shadow-md relative overflow-hidden">
                 <div className="text-2xl">🧧</div>
                 <div className="z-10">
-                    <div className="font-bold text-sm tracking-wide">红包 / 转账</div>
+                    <div className="font-bold text-sm tracking-wide">Red Packet / Transfer</div>
                     <div className="text-[10px] opacity-90">Sully Pay</div>
                 </div>
             </div>
@@ -95,8 +95,8 @@ const GroupPacketCard = ({ msg, nameOf, onOpen }: {
     const status = effectivePacketStatus(m, Date.now());
     const opened = status !== 'pending';
     const statusText = m.packetType === 'lucky'
-        ? (status === 'pending' ? `剩 ${m.shares - m.claims.length} 份可抢` : status === 'done' ? '已领完' : '已过期')
-        : (status === 'pending' ? `待 ${nameOf(m.targetId || '')} 领取` : status === 'done' ? '已收下' : status === 'returned' ? '已退回' : '已过期');
+        ? (status === 'pending' ? `${m.shares - m.claims.length} left to grab` : status === 'done' ? 'All claimed' : 'Expired')
+        : (status === 'pending' ? `Waiting for ${nameOf(m.targetId || '')} to claim` : status === 'done' ? 'Received' : status === 'returned' ? 'Returned' : 'Expired');
 
     return (
         <div
@@ -106,7 +106,7 @@ const GroupPacketCard = ({ msg, nameOf, onOpen }: {
             <div className="text-3xl drop-shadow-sm">🧧</div>
             <div className="z-10 min-w-0 flex-1 pb-3">
                 <div className="font-bold text-sm tracking-wide truncate">{m.note}</div>
-                <div className="text-[10px] opacity-90">{m.packetType === 'lucky' ? `拼手气红包 · ${m.shares} 份` : `专属红包 · 给 ${nameOf(m.targetId || '')}`}</div>
+                <div className="text-[10px] opacity-90">{m.packetType === 'lucky' ? `Lucky Red Packet · ${m.shares} shares` : `Exclusive Red Packet · to ${nameOf(m.targetId || '')}`}</div>
             </div>
             <div className="absolute right-2 bottom-1.5 text-[9px] bg-black/20 px-1.5 py-0.5 rounded-full whitespace-nowrap">{statusText}</div>
         </div>
@@ -150,9 +150,9 @@ const GroupMessageItem = React.memo(({
     onReply: (msg: Message) => void,
     nameOf: (id: string) => string,
     onPacketClick: (msg: Message) => void,
-    /** 气泡样式（用户=群设置选的主题 user 侧；成员=统一或各自私聊主题 ai 侧）。引用需稳定（memo） */
+    /** Bubble style (user = the theme selected in group settings, user side; member = shared or each member's own private-chat theme, ai side). Reference must be stable (memo). */
     styleConfig: BubbleStyle,
-    /** 将当前成员的气泡工坊 CSS 限定在自己的消息上，防止群成员主题互串。 */
+    /** Scopes the current member's Bubble Workshop CSS to only their own messages, preventing themes from bleeding across group members. */
     themeScopeClass: string,
     isFirstInGroup: boolean,
     isLastInGroup: boolean,
@@ -164,7 +164,7 @@ const GroupMessageItem = React.memo(({
     showTimestamp?: 'always' | 'hover' | 'never',
 }) => {
     const avatar = isUser ? userAvatar : char?.avatar;
-    const name = isUser ? '我' : char?.name || '未知成员';
+    const name = isUser ? 'Me' : char?.name || 'Unknown member';
 
     const spacingClass = messageSpacing === 'compact'
         ? (isLastInGroup ? 'mb-3' : 'mb-0.5')
@@ -195,12 +195,13 @@ const GroupMessageItem = React.memo(({
         ...(bubbleVariant === 'wechat' ? { boxShadow: 'none', border: '1px solid rgba(15,23,42,0.05)' } : {}),
         ...(bubbleVariant === 'ios' ? { boxShadow: '0 10px 24px rgba(148,163,184,0.16)', border: '1px solid rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)' } : {}),
     };
-    // 气泡底纹画在 CSS background-image 上，拿不到 <img> 那层的自动解析，只能在顶层
-    // 无条件解析一次（hook 不能进条件分支）。挂件/头像挂件走 TokenImg，各自组件内解析。
+    // Bubble background texture is painted via CSS background-image, so it doesn't get the automatic
+    // resolution from the <img> layer — it has to be resolved unconditionally once at the top level
+    // (hooks can't go inside conditional branches). Decorations/avatar decorations go through TokenImg, resolved within their own components.
     const bubbleBgUrl = useBlobRefUrl(styleConfig.backgroundImage);
 
-    // pointer-event 手势（对齐私聊 MessageItem 的方案）：600ms 长按 → 操作菜单；
-    // 触屏左滑 ≤-52px → 引用回复（带位移动画）；鼠标右键 → 操作菜单
+    // pointer-event gestures (matches private chat MessageItem's approach): 600ms long-press → options menu;
+    // touch swipe-left ≤-52px → quote reply (with translation animation); right-click → options menu
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const startPos = useRef({ x: 0, y: 0 });
     const activePointerId = useRef<number | null>(null);
@@ -343,7 +344,7 @@ const GroupMessageItem = React.memo(({
                     </div>
                 );
             case 'emoji':
-                // 尺寸跟随外观 → 表情包大小（--sully-emoji-size 三挡，默认 96px = 原 w-24）
+                // Size follows Appearance → Sticker Size (--sully-emoji-size, 3 tiers, default 96px = original w-24)
                 return <TokenImg value={msg.content} className="sully-emoji-msg max-w-[var(--sully-emoji-size,96px)] max-h-[var(--sully-emoji-size,96px)] object-contain drop-shadow-sm hover:scale-110 transition-transform" />;
             case 'transfer':
                 return (
@@ -356,7 +357,7 @@ const GroupMessageItem = React.memo(({
                 if (!html) {
                     return (
                         <div className="px-4 py-3 rounded-2xl bg-fuchsia-50 text-fuchsia-500 text-xs italic border border-fuchsia-100">
-                            [HTML 卡片数据缺失]
+                            [HTML Card Data Missing]
                         </div>
                     );
                 }
@@ -393,8 +394,9 @@ const GroupMessageItem = React.memo(({
                         {msg.replyTo && (
                             <div className="relative z-10 mb-1 text-[10px] bg-black/5 p-1.5 rounded-md border-l-2 border-current opacity-60 flex flex-col gap-0.5 max-w-full overflow-hidden">
                                 <span className="font-bold opacity-90 truncate">{msg.replyTo.name}</span>
-                                {/* 历史快照里可能原样存着令牌 / data: / 图床 URL，直接截 10 个字
-                                    就成了气泡里一串 `blobref:b_`；交给写入端同一个快照函数换占位符 */}
+                                {/* Historical snapshots may still store a raw token / data: / image-host URL as-is —
+                                    truncating to 10 characters would just leave a `blobref:b_` string in the bubble;
+                                    hand off to the same write-side snapshot function to swap in a placeholder */}
                                 <span className="truncate italic">"{buildReplySnapshotContent({ content: msg.replyTo.content })}"</span>
                             </div>
                         )}
@@ -490,22 +492,26 @@ const GroupChat: React.FC = () => {
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [mcpStatus, setMcpStatus] = useState('');
-    /** 群公共话题盒整理状态——非空时显示顶部胶囊状态条 */
+    /** Public topic box organizing status — shows the top status pill when non-empty */
     const [groupPalaceStatus, setGroupPalaceStatus] = useState<string>('');
 
-    // 公共成盒异步完成时使用最新角色名与成员资料，避免长回复期间闭包数据过期。
+    // Use the latest character names and member profiles when the public box archive finishes asynchronously, to avoid stale closure data during a long reply.
     const charactersRef = useRef(characters);
     charactersRef.current = characters;
 
-    // 同理 ref 出最新 messages：派发循环里逐条落库时要按"当前窗口大小"刷新，
-    // 闭包里的 messages 是触发那一刻的旧值，长度会越算越小
+    // Similarly keep a ref of the latest messages: the dispatch loop refreshes by "current window size" as it
+    // saves each message to the DB one at a time — the messages in the closure are the stale value from the
+    // moment it was triggered, so its length only ever shrinks
     const messagesRef = useRef<Message[]>([]);
     messagesRef.current = messages;
 
-    // 群里的动静会进每个成员私聊 prompt 的【群聊背景】块，话题盒成盒时还直接往成员私聊
-    // 历史里写卡片 —— 两者都是主动消息 2.0 云端快照（fire_pack）的素材。群里有事就给成员
-    // 逐个打脏，不然角色到点还活在上一次私聊那会儿的群里。同一轮里的多次调用会在微任务内
-    // 合并成一次上传，没开主动消息的成员被 markAmsgStateDirty 内部的门筛掉。
+    // Group activity feeds into the [Group Chat Background] block of every member's private-chat prompt, and
+    // when a topic box gets sealed it also writes a card straight into members' private chat history — both
+    // are material for Proactive Message 2.0's cloud snapshot (fire_pack). Whenever something happens in the
+    // group, mark each member dirty individually, or the character will still be living in a stale group state
+    // by the time their private chat comes around. Multiple calls in the same round get merged into a single
+    // upload within the microtask; members without Proactive Message enabled get filtered out by the gate
+    // inside markAmsgStateDirty.
     const markGroupMembersDirty = useCallback((memberIds: string[]) => {
         for (const memberId of memberIds) {
             const member = charactersRef.current.find(c => c.id === memberId);
@@ -513,11 +519,11 @@ const GroupChat: React.FC = () => {
         }
     }, [userProfile, groups, realtimeConfig]);
 
-    // Token 统计 — 对齐私聊 ChatHeader 的 token badge
+    // Token stats — matches private chat ChatHeader's token badge
     const [lastTokenUsage, setLastTokenUsage] = useState<number | null>(null);
     const [tokenBreakdown, setTokenBreakdown] = useState<{ prompt: number; completion: number; total: number; msgCount: number; pass: string } | null>(null);
     
-    // UI State — 面板状态对齐私聊 ChatInputArea 的 showPanel 约定
+    // UI State — panel state matches private chat ChatInputArea's showPanel convention
     const [showPanel, setShowPanel] = useState<'none' | 'actions' | 'emojis' | 'chars'>('none');
     const [activeEmojiCategory, setActiveEmojiCategory] = useState('default');
     const [modalType, setModalType] = useState<'none' | 'create' | 'settings' | 'transfer' | 'member_select' | 'message-options' | 'edit-message' | 'packet-detail' | 'chrome-css' | 'chrome-sound' | 'html-prompt' | 'help'>('none');
@@ -535,7 +541,7 @@ const GroupChat: React.FC = () => {
 
     // Context limit (like Chat app's settingsContextLimit)
     const [contextLimit, setContextLimit] = useState<number>(() => {
-        // localStorage 值损坏时 parseInt 得 NaN，slice(-NaN) 会把整段历史塞进 prompt
+        // If the localStorage value is corrupted, parseInt yields NaN, and slice(-NaN) would stuff the entire history into the prompt
         try {
             const v = parseInt(localStorage.getItem('groupchat_context_limit') || '30', 10);
             return Number.isFinite(v) && v > 0 ? v : 30;
@@ -558,9 +564,9 @@ const GroupChat: React.FC = () => {
     const [tempMemberBubbleIndependent, setTempMemberBubbleIndependent] = useState(false);
     const [tempUserBubbleThemeId, setTempUserBubbleThemeId] = useState<string>('');
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
-    const [memberGroupId, setMemberGroupId] = useState(GROUP_FILTER_ALL); // 建群选成员的分组筛选
+    const [memberGroupId, setMemberGroupId] = useState(GROUP_FILTER_ALL); // Group filter for member selection when creating a group
     const [transferAmount, setTransferAmount] = useState('');
-    // 红包 2.0：发送弹窗的 tab / 份数 / 专属目标 / 祝福语；明细弹层锁定的红包消息 id
+    // Red Packet 2.0: send-dialog tab / share count / exclusive target / greeting message; the red packet message id locked into the detail popup
     const [packetTab, setPacketTab] = useState<'lucky' | 'direct'>('lucky');
     const [packetShares, setPacketShares] = useState('5');
     const [packetTargetId, setPacketTargetId] = useState<string>('');
@@ -571,10 +577,10 @@ const GroupChat: React.FC = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const groupAvatarInputRef = useRef<HTMLInputElement>(null);
-    // 生成中的取消句柄：非空 = 正在生成，再点触发按钮 = 停止
+    // Cancel handle while generating: non-null = currently generating, clicking the trigger button again = stop
     const abortRef = useRef<AbortController | null>(null);
     const topicArchiveLockRef = useRef(false);
-    // 白框提示音回合计时（对齐私聊 Chat.tsx 的 soundSyncRef 方案）
+    // Whitebox notification-sound round timing (matches private chat Chat.tsx's soundSyncRef approach)
     const SOUND_ROUND_GAP_MS = 3000;
     const soundSyncRef = useRef<{ groupId: string | null; maxId: number | null; lastAt: number | null }>({ groupId: null, maxId: null, lastAt: null });
 
@@ -601,8 +607,10 @@ const GroupChat: React.FC = () => {
         }
     }, [messages.length, activeGroup, showPanel, isTyping, selectionMode]);
 
-    // 白框提示音：成员新发的消息成为群里最后一条时响一次（用户自己/翻旧消息不响）。
-    // 逻辑对齐私聊 Chat.tsx——切群只记基线不播、回合内多气泡只响首条、基线只增不减。
+    // Whitebox notification sound: plays once when a member's new message becomes the last one in the group
+    // (doesn't play for the user's own messages or when scrolling old messages). Logic matches private chat
+    // Chat.tsx — switching groups only records the baseline without playing, multiple bubbles in one round only
+    // play on the first one, and the baseline only ever increases.
     useEffect(() => {
         const sync = soundSyncRef.current;
         const last = messages.length > 0 ? messages[messages.length - 1] : null;
@@ -669,9 +677,9 @@ const GroupChat: React.FC = () => {
         return `${diffDays}天前私聊过`;
     };
 
-    // 发消息/派发气泡后刷新消息窗口：只取"当前窗口 + 新增"这么多条并同步总数。
-    // 之前每条气泡都 getGroupMessages 全表读，且 totalMsgCount 不更新，
-    // 导致发送后"加载历史消息"按钮的计数失真（甚至消失）
+    // Refresh the message window after sending/dispatching a bubble: only fetch "current window + new" messages
+    // and sync the total count. It used to do a full-table getGroupMessages read for every bubble, and
+    // totalMsgCount never updated, so the "load history" button's count went stale (or even disappeared) after sending
     const refreshMessages = async (groupId: string) => {
         const { messages: msgs, totalCount } = await DB.getRecentGroupMessagesWithCount(groupId, visibleCount);
         setMessages(msgs);
@@ -695,8 +703,8 @@ const GroupChat: React.FC = () => {
         navigator.clipboard.writeText(selectedMessage.content);
         setModalType('none');
         setSelectedMessage(null);
-        addToast('已复制到剪贴板', 'success');
-        trackEvent('复制一条群消息文字');
+        addToast('Copied to clipboard', 'success');
+        trackEvent('Copy Group Message Text');
     };
 
     const handleEnterSelectionMode = () => {
@@ -714,8 +722,8 @@ const GroupChat: React.FC = () => {
         setMessages(prev => prev.filter(m => m.id !== selectedMessage.id));
         setModalType('none');
         setSelectedMessage(null);
-        addToast('消息已删除', 'success');
-        trackEvent('删除一条群消息');
+        addToast('Message deleted', 'success');
+        trackEvent('Delete Group Message');
     };
 
     const handleStartEditMessage = () => {
@@ -730,8 +738,8 @@ const GroupChat: React.FC = () => {
         setMessages(prev => prev.map(m => m.id === selectedMessage.id ? { ...m, content: editContent } : m));
         setModalType('none');
         setSelectedMessage(null);
-        addToast('消息已修改', 'success');
-        trackEvent('编辑一条群消息');
+        addToast('Message updated', 'success');
+        trackEvent('Edit Group Message');
     };
 
     const toggleMessageSelection = useCallback((id: number) => {
@@ -749,7 +757,7 @@ const GroupChat: React.FC = () => {
         setMessages(prev => prev.filter(m => !selectedMsgIds.has(m.id)));
         setSelectionMode(false);
         setSelectedMsgIds(new Set());
-        addToast(`已删除 ${selectedMsgIds.size} 条消息`, 'success');
+        addToast(`${selectedMsgIds.size} messages deleted`, 'success');
     };
 
     const handleReroll = async () => {
@@ -771,8 +779,8 @@ const GroupChat: React.FC = () => {
         await DB.deleteMessages(toDeleteIds);
         const newHistory = messages.slice(0, index + 1);
         setMessages(newHistory);
-        addToast('回溯对话中...', 'info');
-        trackEvent('重新生成群聊回复');
+        addToast('Rewinding conversation...', 'info');
+        trackEvent('Regenerate Group Chat Reply');
 
         triggerGroupAI(newHistory);
     };
@@ -781,14 +789,14 @@ const GroupChat: React.FC = () => {
 
     const handleCreateGroup = () => {
         if (!tempGroupName.trim() || selectedMembers.size < 2) {
-            addToast('请输入群名并至少选择2名成员', 'error');
+            addToast('Enter a group name and select at least 2 members', 'error');
             return;
         }
         createGroup(tempGroupName, Array.from(selectedMembers));
         setModalType('none');
         setTempGroupName('');
         setSelectedMembers(new Set());
-        addToast('群聊已创建', 'success');
+        addToast('Group chat created', 'success');
     };
 
     const handleUpdateGroupInfo = async () => {
@@ -799,14 +807,14 @@ const GroupChat: React.FC = () => {
             memberTimelineCap: tempMemberTimelineCap,
             replyMode: tempReplyMode,
             memberBubbleIndependent: tempMemberBubbleIndependent,
-            // 空串 = 默认紫，存 undefined 保持向后兼容语义
+            // Empty string = default violet, stored as undefined to preserve backward-compat semantics
             userBubbleThemeId: tempUserBubbleThemeId || undefined,
         };
-        // 走 context 的 updateGroup：同步内存 groups + DB，避免退出后读回旧值
+        // Goes through context's updateGroup: syncs in-memory groups + DB, avoiding stale values being read back after exiting
         await updateGroup(activeGroup.id, updates);
         setActiveGroup({ ...activeGroup, ...updates });
         setModalType('none');
-        addToast('群信息已更新', 'success');
+        addToast('Group info updated', 'success');
     };
 
     const handleGroupAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -814,15 +822,15 @@ const GroupChat: React.FC = () => {
         if (!file || !activeGroup) return;
         try {
             const base64 = await processImage(file);
-            // 群头像存令牌，二进制单独躺在 blob_assets 里；转不动时原样还回 data URL，图不会丢
+            // Group avatar stores a token, with the binary sitting separately in blob_assets; if conversion fails, this data URL is returned as-is so the image isn't lost
             const avatar = await migrateDataUrlToRef(base64);
-            // 走 context 的 updateGroup：同步内存 groups + DB，
-            // 否则只改了本地 activeGroup，退出回列表/再次进群会读回旧头像（恢复默认）
+            // Goes through context's updateGroup: syncs in-memory groups + DB,
+            // otherwise only the local activeGroup changes, and exiting to the list/re-entering the group would read back the old avatar (reverting to default)
             await updateGroup(activeGroup.id, { avatar });
             setActiveGroup({ ...activeGroup, avatar });
-            addToast('群头像已修改', 'success');
+            addToast('Group avatar updated', 'success');
         } catch (err: any) {
-            addToast('图片处理失败', 'error');
+            addToast('Image processing failed', 'error');
         }
     };
 
@@ -834,18 +842,18 @@ const GroupChat: React.FC = () => {
     };
 
     const handleDeleteGroup = async (id: string) => {
-        // 清理旧版本可能留下的群记忆副本，以及公共话题盒投递到成员私聊的卡片。
+        // Clean up any group memory copies left over from older versions, and any public topic box cards delivered to members' private chats.
         try {
             const result = await deleteGroupMemoriesByGroupId(id);
             if (result.deleted > 0) {
-                console.log(`🗑️ [GroupChat] 解散群同时清理群记忆 ${result.deleted} 条`);
+                console.log(`🗑️ [GroupChat] Cleaned up ${result.deleted} group memories while disbanding group`);
             }
         } catch (err) {
-            console.warn('🗑️ [GroupChat] 清理群记忆失败（不影响解散）:', err);
+            console.warn('🗑️ [GroupChat] Failed to clean up group memories (does not affect disbanding):', err);
         }
         const targetGroup = groups.find(g => g.id === id);
         if (targetGroup) {
-            // 扫全部角色而非只扫当前成员：已经退群的人也可能留有早期成盒卡片。
+            // Scan all characters rather than just current members: people who already left the group may still have early topic-box cards.
             await Promise.all(characters.map(async ({ id: memberId }) => {
                 const msgs = await DB.getMessagesByCharId(memberId, true);
                 const ids = msgs.filter(m => m.type === 'group_topic_card' && m.metadata?.groupTopicBox?.groupId === id).map(m => m.id);
@@ -854,7 +862,7 @@ const GroupChat: React.FC = () => {
         }
         await deleteGroup(id);
         if (activeGroup?.id === id) setView('list');
-        addToast('群聊已解散', 'success');
+        addToast('Group chat disbanded', 'success');
     };
 
     const handleClearHistory = async () => {
@@ -872,7 +880,7 @@ const GroupChat: React.FC = () => {
         }
 
         if (msgsToDelete.length === 0) {
-            addToast('消息太少，无需清理', 'info');
+            addToast('Too few messages to clean up', 'info');
             return;
         }
 
@@ -883,8 +891,8 @@ const GroupChat: React.FC = () => {
         setMessages(remaining);
         setTotalMsgCount(remaining.length);
 
-        addToast(`已清理 ${msgsToDelete.length} 条记录${preserveContext ? ' (保留最近10条)' : ''}`, 'success');
-        trackEvent('清空群聊记录', { preserve: preserveContext ? 'on' : 'off' });
+        addToast(`${msgsToDelete.length} records cleared${preserveContext ? ' (kept the most recent 10)' : ''}`, 'success');
+        trackEvent('Clear Group Chat History', { preserve: preserveContext ? 'on' : 'off' });
         setModalType('none');
     };
 
@@ -895,7 +903,7 @@ const GroupChat: React.FC = () => {
     const handleSendMessage = async (content: string, type: MessageType = 'text', metadata?: any) => {
         if (!activeGroup) return;
         if (type === 'text' && !content.trim()) return;
-        // 借用户"发送"手势解锁音频上下文（移动端自动播放策略），稍后 AI 回复时提示音才响得了
+        // Piggyback on the user's "send" gesture to unlock the audio context (mobile autoplay policy), so the notification sound can actually play when the AI replies later
         unlockWhiteboxAudio();
         
         const newMessage: any = {
@@ -907,15 +915,15 @@ const GroupChat: React.FC = () => {
             metadata
         };
 
-        // 引用回复：落快照（对齐私聊 Chat.tsx 的做法），发完清空。
-        // 图片 / 表情走占位符，不把 blobref 令牌原样存进快照。
+        // Quote reply: save a snapshot (matches private chat Chat.tsx's approach), clear it after sending.
+        // Images/stickers use a placeholder — don't store the raw blobref token in the snapshot.
         if (replyTarget) {
             newMessage.replyTo = {
                 id: replyTarget.id,
                 content: buildReplySnapshotContent(replyTarget),
                 name: replyTarget.role === 'user'
-                    ? '我'
-                    : (characters.find(c => c.id === replyTarget.charId)?.name || '成员'),
+                    ? 'Me'
+                    : (characters.find(c => c.id === replyTarget.charId)?.name || 'Member'),
             };
             setReplyTarget(null);
         }
@@ -936,11 +944,11 @@ const GroupChat: React.FC = () => {
     const handleImageFile = async (file: File) => {
         try {
             const base64 = await processImage(file, { maxWidth: 600, quality: 0.7, forceJpeg: true });
-            // 群聊图消息存令牌，二进制单独躺在 blob_assets 里（省掉 base64 那 ~33% 的膨胀）。
-            // 同一张图之前存过就复用它的令牌；转不动时原样还回这条 data URL，图不会丢。
+            // Group chat image messages store a token, with the binary sitting separately in blob_assets (avoids base64's ~33% bloat).
+            // If the same image was stored before, its token gets reused; if conversion fails, this data URL is returned as-is so the image isn't lost.
             handleSendMessage(await migrateDataUrlToRef(base64), 'image');
         } catch (err) {
-            addToast('图片发送失败', 'error');
+            addToast('Failed to send image', 'error');
         }
     };
 
@@ -951,28 +959,28 @@ const GroupChat: React.FC = () => {
         if (e.target) e.target.value = '';
     };
 
-    // --- Logic: 红包 2.0 ---
+    // --- Logic: Red Packet 2.0 ---
 
     const nameOf = useCallback(
-        (id: string) => (id === 'user' ? userProfile.name : (characters.find(c => c.id === id)?.name || '成员')),
+        (id: string) => (id === 'user' ? userProfile.name : (characters.find(c => c.id === id)?.name || 'Member')),
         [characters, userProfile.name],
     );
 
     const handleSendPacket = () => {
         if (!activeGroup) return;
         const total = parseFloat(transferAmount);
-        if (!Number.isFinite(total) || total <= 0) { addToast('请输入有效金额', 'error'); return; }
+        if (!Number.isFinite(total) || total <= 0) { addToast('Enter a valid amount', 'error'); return; }
         let meta: GroupPacketMeta;
         if (packetTab === 'lucky') {
             const shares = parseInt(packetShares, 10);
-            if (!Number.isFinite(shares) || shares < 1) { addToast('份数至少 1 份', 'error'); return; }
-            if (total / shares < 0.01) { addToast('每份至少 0.01，份数太多啦', 'error'); return; }
+            if (!Number.isFinite(shares) || shares < 1) { addToast('At least 1 share required', 'error'); return; }
+            if (total / shares < 0.01) { addToast('Each share must be at least 0.01, too many shares', 'error'); return; }
             meta = makePacketMeta({ packetType: 'lucky', totalAmount: total, shares, note: packetNote, now: Date.now() });
         } else {
-            if (!packetTargetId) { addToast('选一位成员作为专属红包对象', 'error'); return; }
+            if (!packetTargetId) { addToast('Choose a member as the exclusive red packet recipient', 'error'); return; }
             meta = makePacketMeta({ packetType: 'direct', totalAmount: total, targetId: packetTargetId, note: packetNote, now: Date.now() });
         }
-        handleSendMessage('[红包]', 'transfer', meta);
+        handleSendMessage('[Red Packet]', 'transfer', meta);
         setModalType('none');
         setTransferAmount('');
         setPacketNote('');
@@ -983,20 +991,21 @@ const GroupChat: React.FC = () => {
         setModalType('packet-detail');
     }, []);
 
-    // 点图看大图：新标签页只认得真正的 URL，blobref 令牌得先换成 objectURL 再开
-    // （data: 顶层导航被浏览器挡，只能走 objectURL）。开完不立刻回收——新标签页还在
-    // 用它加载；留一分钟再 revoke，图早读完了，也不至于把整张图一直挂在内存里。
+    // Tap an image to view it full-size: new tabs only understand real URLs, so a blobref token has to be
+    // converted to an objectURL first (top-level data: navigation is blocked by browsers, only objectURL works).
+    // Don't reclaim it immediately after opening — the new tab is still loading it; revoke after a minute,
+    // by which point the image has long finished loading, without keeping the whole image pinned in memory forever.
     const handleGroupImageClick = useCallback(async (url: string) => {
         if (!isBlobRef(url)) { window.open(url, '_blank'); return; }
         const blob = await getBlobForRef(url);
-        if (!blob) { addToast('图片数据已丢失', 'error'); return; }
+        if (!blob) { addToast('Image data lost', 'error'); return; }
         const objectUrl = URL.createObjectURL(blob);
         window.open(objectUrl, '_blank');
         setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     }, [addToast]);
-    const handleGroupReply = useCallback((target: Message) => { setReplyTarget(target); trackEvent('引用回复一条群消息'); }, []);
+    const handleGroupReply = useCallback((target: Message) => { setReplyTarget(target); trackEvent('Quote Reply to Group Message'); }, []);
 
-    // 用户抢/收/退：updater 内重跑状态机（以库内最新 claims 判重，防与 AI 派发并发双写）
+    // User grab/receive/return: reruns the state machine inside the updater (dedupes against the latest claims in the DB, to guard against concurrent double-writes with AI dispatch)
     const handleUserPacketAction = async (msg: Message, action: 'claim' | 'return') => {
         if (!activeGroup) return;
         const now = Date.now();
@@ -1006,16 +1015,16 @@ const GroupChat: React.FC = () => {
                 outcome = claimPacket(prev as GroupPacketMeta, 'user', now, action);
                 return outcome.ok ? outcome.meta : prev;
             });
-        } catch { /* 消息被删——按失败处理 */ }
+        } catch { /* Message was deleted — treat as failure */ }
         if (!outcome.ok) {
             const reasonText: Record<string, string> = {
-                expired: '红包已过期',
-                already_claimed: '你已经抢过这个红包了',
-                sold_out: '手慢了，红包已被领完',
-                not_target: '这个红包不是发给你的',
-                not_pending: '红包已经被处理过了',
+                expired: 'This red packet has expired',
+                already_claimed: 'You already claimed this red packet',
+                sold_out: 'Too slow, the red packet is all claimed',
+                not_target: 'This red packet was not sent to you',
+                not_pending: 'This red packet has already been processed',
             };
-            addToast(reasonText[outcome.reason] || '操作失败', 'info');
+            addToast(reasonText[outcome.reason] || 'Action failed', 'info');
         } else {
             const senderName = msg.role === 'user' ? userProfile.name : nameOf(msg.charId);
             const receipt: PacketReceiptMeta = {
@@ -1030,18 +1039,18 @@ const GroupChat: React.FC = () => {
                 groupId: activeGroup.id,
                 role: 'user',
                 type: 'transfer',
-                content: outcome.action === 'claimed' ? '[领取红包]' : '[退回红包]',
+                content: outcome.action === 'claimed' ? '[Claimed Red Packet]' : '[Returned Red Packet]',
                 metadata: receipt,
             });
-            addToast(outcome.action === 'claimed' ? `你抢到了 ¥${outcome.amount}` : '已退回红包', 'success');
-            trackEvent('领取或退回群红包', { action });
+            addToast(outcome.action === 'claimed' ? `You grabbed ¥${outcome.amount}` : 'Red packet returned', 'success');
+            trackEvent('Claim or Return Group Red Packet', { action });
         }
         await refreshMessages(activeGroup.id);
         markGroupMembersDirty(activeGroup.members);
     };
 
-    // --- Logic: 气泡体系 ---
-    // 保留完整 ChatTheme：群聊不再只摘基础色值，气泡工坊 customCss 也一起复用。
+    // --- Logic: Bubble System ---
+    // Keep the full ChatTheme: group chat no longer just picks out the base color values, it also reuses the Bubble Workshop customCss.
     const userBubbleTheme = useMemo<ChatTheme>(() => (
         activeGroup?.userBubbleThemeId
             ? resolveChatTheme(activeGroup.userBubbleThemeId, customThemes, PRESET_THEMES)
@@ -1079,7 +1088,7 @@ const GroupChat: React.FC = () => {
         return chunks.filter(Boolean).join('\n');
     }, [userBubbleTheme.customCss, memberBubbleThemes, memberThemeScopeClasses]);
 
-    // 表情面板按分类过滤（对齐私聊 ChatInputArea 的行为）
+    // Emoji panel filtered by category (matches private chat ChatInputArea's behavior)
     const filteredEmojis = useMemo(() => emojis.filter(e => {
         if (activeEmojiCategory === 'default') return !e.categoryId || e.categoryId === 'default';
         return e.categoryId === activeEmojiCategory;
@@ -1104,11 +1113,11 @@ const GroupChat: React.FC = () => {
         if (activeGroup) void loadTopicBoxStats(activeGroup);
         setModalType('settings');
         setShowPanel('none');
-        trackEvent('打开群设置面板');
+        trackEvent('Open Group Settings Panel');
     };
 
-    // ChatInputArea 的面板动作：群聊只处理表情发送/分类切换，
-    // 表情包管理（导入/改名/删除/建分类）引导去私聊做——那套 Modal 全在 ChatModals 里
+    // ChatInputArea's panel actions: group chat only handles emoji sending/category switching —
+    // sticker management (import/rename/delete/create category) directs users to do it from a private chat, that whole Modal lives in ChatModals
     const handlePanelAction = (type: string, payload?: any) => {
         switch (type) {
             case 'send-emoji':
@@ -1122,7 +1131,7 @@ const GroupChat: React.FC = () => {
             case 'category-options':
             case 'add-category':
             case 'delete-emoji-req':
-                addToast('请在私聊的表情面板里管理表情包', 'info');
+                addToast('Manage stickers from the emoji panel in a private chat', 'info');
                 break;
             default:
                 break;
@@ -1131,9 +1140,10 @@ const GroupChat: React.FC = () => {
 
     // --- Logic: Group AI Generation (Director / Round-Robin) ---
 
-    // 两种模式共用：系统头（群名/时间/共享场景）。
-    // 共享场景块（用户档案 + 共有世界书 + 共有 worldview）——每个角色都"看见"的
-    // 舞台只描述一次，避免按成员数 N 倍复制；角色的人设/印象/记忆仍保持完整。
+    // Shared by both modes: the system header (group name/time/shared scene).
+    // The shared-scene block (user profile + shared worldbook + shared worldview) — the stage that every
+    // character "sees" is only described once, avoiding an N-times duplication per member; each character's
+    // persona/impressions/memories still stay complete.
     const buildGroupSystemHeader = (currentMsgs: Message[], groupMembers: CharacterProfile[]) => {
         const lastMsg = currentMsgs[currentMsgs.length - 1];
         const timeGapInfo = lastMsg ? getTimeGapHint(lastMsg.timestamp) : "这是群聊的第一条消息。";
@@ -1154,31 +1164,31 @@ ${sharedScene.text}${activeGroup ? buildGroupTopicContext(activeGroup) : ''}`;
         return { header, sharedScene };
     };
 
-    // 两种模式共用：单个成员的角色档案块（记忆宫殿注入 + 私聊/群聊合并时间线）
+    // Shared by both modes: a single member's character-profile block (memory palace injection + merged private/group timeline)
     const buildMemberBlock = async (
         member: CharacterProfile,
         currentMsgs: Message[],
         sharedScene: ReturnType<typeof ContextBuilder.buildGroupSharedScene>,
     ): Promise<string> => {
         const timelineCap = activeGroup?.memberTimelineCap ?? DEFAULT_MEMBER_TIMELINE_CAP;
-        // 记忆宫殿检索源用当前群线程（滤掉媒体消息，base64 不能进 embedding query）：
-        // 角色应召回与"群里正聊的话题"相关的记忆，而不是私聊近况（旧行为，召回跑偏）
+        // Memory palace retrieval source uses the current group thread (media messages filtered out — base64 can't go into the embedding query):
+        // the character should recall memories related to "what's being talked about in the group right now," not private-chat recent events (old behavior, recall went off track)
         const liveGroupMsgs = currentMsgs.filter(m => m.id > (activeGroup?.archivedThroughMessageId || 0));
         const palaceQueryMsgs = liveGroupMsgs.slice(-30).filter(m => !m.type || m.type === 'text');
         await injectMemoryPalace(member, palaceQueryMsgs, undefined, userProfile.name);
-        // 角色块：跳过共享场景已包含的部分（用户档案 / 共有 worldview / 共有世界书）
+        // Character block: skip the parts already covered by the shared scene (user profile / shared worldview / shared worldbook)
         const coreContext = ContextBuilder.buildCoreContext(member, userProfile, true, undefined, {
             skipUserProfile: true,
             skipWorldview: sharedScene.worldviewIsShared,
             skipWorldbookIds: sharedScene.sharedWorldbookIds,
             headerOverride: `[Group Member Profile: ${member.name}]`,
-        // conversational：群聊同样是用户正在说话的场合（见 buildTimeAwarenessBlock）
+        // conversational: group chat is likewise an occasion where the user is actively speaking (see buildTimeAwarenessBlock)
         }, { worldbookMessages: liveGroupMsgs, conversational: true });
         // Get private gap string
         const privateGapInfo = await getPrivateTimeGap(member.id);
 
-        // 私聊+群聊合并时间线：让角色看清两条线的先后关系，感情才能衔接。
-        // includeProcessed=true——被宫殿归档的私聊也是"底色"，不能漏
+        // Merged private+group timeline: lets the character see how the two threads relate in sequence, so the emotional continuity holds together.
+        // includeProcessed=true — private chats already archived by the memory palace are still part of the "backdrop," they can't be left out
         const privateMsgs = await DB.getRecentMessagesByCharId(member.id, timelineCap, true);
         const memberTimeline = buildMemberTimeline({
             privateMsgs,
@@ -1210,8 +1220,8 @@ ${memberTimeline || '(暂无互动记录)'}
 `;
     };
 
-    // [[QUOTE: 片段]] 解析：从新到旧找 content 包含片段的文本消息，
-    // 找不到返回 undefined（dispatch 会静默剥除标记，不丢正文）
+    // [[QUOTE: fragment]] resolution: searches from newest to oldest for a text message whose content contains the fragment,
+    // returns undefined if not found (dispatch silently strips the marker, without losing the message body)
     const resolveQuote = (snippet: string) => {
         if (!snippet) return undefined;
         const msgs = messagesRef.current;
@@ -1225,15 +1235,15 @@ ${memberTimeline || '(暂无互动记录)'}
                     content: c,
                     name: m.role === 'user'
                         ? userProfile.name
-                        : (characters.find(ch => ch.id === m.charId)?.name || '成员'),
+                        : (characters.find(ch => ch.id === m.charId)?.name || 'Member'),
                 };
             }
         }
         return undefined;
     };
 
-    // 附图时 user 消息走结构化 content（text + image_url），否则纯文本，
-    // 避免对不支持多模态字段的端点产生兼容问题
+    // When an image is attached, the user message uses structured content (text + image_url), otherwise plain text —
+    // avoids compatibility issues with endpoints that don't support the multimodal field
     const buildUserMessageContent = (prompt: string, history: GroupHistoryBlock): any =>
         history.attachedImages.length > 0
             ? [
@@ -1242,7 +1252,7 @@ ${memberTimeline || '(暂无互动记录)'}
               ]
             : prompt;
 
-    /** 群公共话题盒：每群只调用一次总结 API，不再按开启记忆宫殿的成员分别复制。 */
+    /** Group public topic box: calls the summary API only once per group, no longer duplicated per member who has the memory palace enabled. */
     const createNextGroupTopicBox = async (force: boolean = false): Promise<boolean> => {
         if (!activeGroup || topicArchiveLockRef.current || !apiConfig.apiKey) return false;
         const groupForArchive = activeGroup;
@@ -1253,21 +1263,21 @@ ${memberTimeline || '(暂无互动记录)'}
             const batchPlan = planGroupTopicBatch(allMsgs, groupForArchive.archivedThroughMessageId || 0, force);
             setTopicPendingCount(groupTopicPendingCount(allMsgs, groupForArchive.archivedThroughMessageId || 0));
             if (!batchPlan) {
-                if (force) addToast(`最近 ${GROUP_TOPIC_HOT_ZONE} 条会保留原文；热区以前暂无可整理记录`, 'info');
+                if (force) addToast(`The most recent ${GROUP_TOPIC_HOT_ZONE} messages are kept as-is; there is nothing to archive before the hot zone yet`, 'info');
                 return false;
             }
-            setGroupPalaceStatus(`正在把 ${batchPlan.messages.length} 条旧群聊整理成公共话题盒…`);
-            setSummaryProgress(`正在整理 ${batchPlan.messages.length} 条旧群聊…`);
+            setGroupPalaceStatus(`Organizing ${batchPlan.messages.length} old group messages into a public topic box…`);
+            setSummaryProgress(`Organizing ${batchPlan.messages.length} old group messages…`);
             const prompt = buildGroupTopicPrompt(groupForArchive, batchPlan.messages, charactersRef.current, userProfile.name);
             const response = await fetch(`${apiConfig.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.apiKey}` },
                 body: JSON.stringify({ model: apiConfig.model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 2000 }),
             });
-            if (!response.ok) throw new Error(`API 返回 ${response.status}`);
+            if (!response.ok) throw new Error(`API returned ${response.status}`);
             const data = await safeResponseJson(response);
             const parsed = parseGroupTopicBox(data.choices?.[0]?.message?.content || '');
-            if (!parsed) throw new Error('总结格式无法解析');
+            if (!parsed) throw new Error('Could not parse summary format');
 
             const box = makeGroupTopicBox(groupForArchive, batchPlan.messages, parsed.title, parsed.summary);
             const updatedGroup: GroupProfile = {
@@ -1281,24 +1291,24 @@ ${memberTimeline || '(暂无互动记录)'}
             });
             setActiveGroup(updatedGroup);
 
-            // 成盒时给所有当前成员一张私聊卡。正文可被私聊上下文/归档正常解析；
-            // metadata 保留引用，后续编辑/删除公共盒时同步这些卡片。
+            // When a box is sealed, give every current member a private-chat card. The message body can be parsed normally
+            // by private-chat context/archiving; the metadata keeps a reference so these cards stay in sync when the public box is later edited/deleted.
             await Promise.all(groupForArchive.members.map(memberId => DB.saveMessage({
                 charId: memberId,
                 role: 'system',
                 type: 'group_topic_card',
-                content: `[群聊公共话题盒：${groupForArchive.name}｜${box.title}]\n${box.summary}`,
+                content: `[Group Chat Public Topic Box: ${groupForArchive.name} | ${box.title}]\n${box.summary}`,
                 metadata: { groupTopicBox: { ...box, groupName: groupForArchive.name } },
             })));
-            // 话题盒卡片是直接写进成员私聊历史的，也就是 fire_pack 转写的直接来源
+            // Topic box cards are written directly into members' private chat history, making them a direct source material for fire_pack transcription
             markGroupMembersDirty(groupForArchive.members);
             const remaining = groupTopicPendingCount(allMsgs, box.sourceEndMessageId);
             setTopicPendingCount(remaining);
-            addToast(`「${box.title}」已成盒，并送达 ${groupForArchive.members.length} 位成员私聊`, 'success');
+            addToast(`"${box.title}" boxed and delivered to ${groupForArchive.members.length} members' private chats`, 'success');
             return true;
         } catch (err: any) {
-            console.warn('[GroupChat] 公共话题盒整理失败:', err);
-            if (force) addToast(`话题盒整理失败：${err.message || err}`, 'error');
+            console.warn('[GroupChat] Failed to organize public topic box:', err);
+            if (force) addToast(`Failed to organize topic box: ${err.message || err}`, 'error');
             return false;
         } finally {
             topicArchiveLockRef.current = false;
@@ -1328,12 +1338,12 @@ ${memberTimeline || '(暂无互动记录)'}
             const msgs = await DB.getMessagesByCharId(memberId, true);
             const cards = msgs.filter(m => m.type === 'group_topic_card' && m.metadata?.groupTopicBox?.id === boxId);
             await Promise.all(cards.map(async card => {
-                await DB.updateMessage(card.id, `[群聊公共话题盒：${activeGroup.name}｜${edited.title}]\n${edited.summary}`);
+                await DB.updateMessage(card.id, `[Group Chat Public Topic Box: ${activeGroup.name} | ${edited.title}]\n${edited.summary}`);
                 await DB.updateMessageMetadata(card.id, prev => ({ ...(prev || {}), groupTopicBox: { ...edited, groupName: activeGroup.name } }));
             }));
         }));
         setEditingTopicBoxId(null);
-        addToast('话题盒已更新，成员私聊卡片同步完成', 'success');
+        addToast('Topic box updated, member private chat cards synced', 'success');
     };
 
     const deleteTopicBox = async (boxId: string) => {
@@ -1347,13 +1357,13 @@ ${memberTimeline || '(暂无互动记录)'}
             const ids = msgs.filter(m => m.type === 'group_topic_card' && m.metadata?.groupTopicBox?.id === boxId).map(m => m.id);
             if (ids.length) await DB.deleteMessages(ids);
         }));
-        addToast('话题盒和成员私聊卡片已删除', 'success');
+        addToast('Topic box and member private chat cards deleted', 'success');
     };
 
     const triggerDirector = async (currentMsgs: Message[]) => {
         if (!activeGroup) return;
         if (!apiConfig.apiKey) {
-            addToast('请先在设置里填好 API', 'error');
+            addToast('Please fill in your API settings first', 'error');
             return;
         }
         setIsTyping(true);
@@ -1372,7 +1382,7 @@ ${memberTimeline || '(暂无互动记录)'}
                 context += await buildMemberBlock(member, currentMsgs, sharedScene);
             }
 
-            // 3. Group History + 导演任务指令（模板原文照搬进 utils/groupChat/prompts.ts）
+            // 3. Group history + director task instruction (template text copied verbatim into utils/groupChat/prompts.ts)
             const liveHistoryMsgs = currentMsgs.filter(m => m.id > (activeGroup.archivedThroughMessageId || 0));
             const historyWindow = liveHistoryMsgs.slice(-contextLimit);
             const preparedHistory = await materializeVisionDescriptions(historyWindow, apiConfig.visionApi);
@@ -1385,8 +1395,8 @@ ${memberTimeline || '(暂无互动记录)'}
                 { useVisionDescriptions: apiConfig.visionApi?.enabled === true },
             );
             const emojiContextStr = buildEmojiContextStr(emojis, categories, activeGroup.members);
-            // HTML 模块模式：群开关开启时追加提示词。导演模式输出的是 JSON 数组，
-            // 额外强调 [html] 块写在角色 content 字符串内部且 HTML 属性用单引号，避免破坏外层 JSON
+            // HTML module mode: appends a prompt when the group toggle is on. Director mode outputs a JSON array,
+            // so this additionally emphasizes that [html] blocks must be written inside a character's own content string, with HTML attributes using single quotes, to avoid breaking the outer JSON
             const htmlPromptExt = activeGroup.htmlModeEnabled
                 ? `\n\n【群聊 HTML 适配】[html]...[/html] 块要写在某个角色自己的 content 字符串内部；HTML 属性一律用单引号（如 <div style='...'>），避免双引号破坏外层 JSON。\n${buildHtmlPrompt(activeGroup.htmlModeCustomPrompt)}`
                 : '';
@@ -1407,7 +1417,7 @@ ${memberTimeline || '(暂无互动记录)'}
                 onStatus: setMcpStatus,
             });
 
-            // Token 统计：从导演响应里读 usage（兼容 OpenAI 兼容接口的标准字段）
+            // Token stats: read usage from the director response (compatible with the standard field of OpenAI-compatible endpoints)
             if (data.usage?.total_tokens) {
                 setLastTokenUsage(data.usage.total_tokens);
                 setTokenBreakdown({
@@ -1419,16 +1429,17 @@ ${memberTimeline || '(暂无互动记录)'}
                 });
             }
 
-            // 两层容错解析（严格 JSON → 逐对象抢救），两层皆空且模型确实吐了内容
-            // 时明确提示用户，不再"正在输入…"消失后什么都不发生
+            // Two-tier fault-tolerant parsing (strict JSON → per-object rescue); when both tiers come up empty but
+            // the model genuinely output content, explicitly tell the user instead of having "typing…" just
+            // vanish with nothing happening
             const rawContent = data.choices?.[0]?.message?.content ?? '';
             const actions = parseDirectorActions(rawContent);
             if (actions.length === 0 && String(rawContent).trim()) {
                 console.error('Director Parse Error', rawContent);
-                addToast('AI 输出格式无法解析，请重试', 'error');
+                addToast('Could not parse the AI output, please retry', 'error');
             }
 
-            // Execute Actions（PRIVATE 侧信道/表情/气泡分段/打字延迟在 utils/groupChat/dispatch.ts）
+            // Execute Actions (PRIVATE side-channel/emoji/bubble segmentation/typing delay live in utils/groupChat/dispatch.ts)
             await dispatchMemberActions(actions, {
                 groupId: activeGroup.id,
                 memberIds: activeGroup.members,
@@ -1445,28 +1456,29 @@ ${memberTimeline || '(暂无互动记录)'}
 
         } catch (e: any) {
             if (e?.name === 'AbortError') {
-                addToast('已停止生成', 'info');
+                addToast('Generation stopped', 'info');
             } else {
                 console.error(e);
-                addToast(`群聊生成失败: ${e.message || e}`, 'error');
+                addToast(`Group chat generation failed: ${e.message || e}`, 'error');
             }
         } finally {
             setIsTyping(false);
             setMcpStatus('');
             abortRef.current = null;
-            // 中途报错 / 用户点停也照打：已经落库的那几条同样进了成员的私聊背景
+            // Mark dirty even on a mid-run error / when the user clicks stop: the messages already saved to the DB are also part of the members' private-chat background
             markGroupMembersDirty(activeGroup.members);
             runGroupTopicArchive();
         }
     };
 
-    // 轮询模式：按成员固定顺序逐个调用，后发言者能看到前面成员本轮刚说的话
-    // （串号天然无解可能 → 天然解决），角色可输出 [[SKIP]] 本轮沉默。
-    // 单成员失败只跳过该成员，不杀整轮。
+    // Round-robin mode: calls each member one by one in a fixed order, so a later speaker can see what earlier
+    // members just said this round (naturally solves what cross-talk between characters would otherwise be
+    // unsolvable), and characters can output [[SKIP]] to stay silent this round.
+    // If one member fails, only that member is skipped — the whole round isn't killed.
     const triggerRoundRobin = async (currentMsgs: Message[]) => {
         if (!activeGroup) return;
         if (!apiConfig.apiKey) {
-            addToast('请先在设置里填好 API', 'error');
+            addToast('Please fill in your API settings first', 'error');
             return;
         }
         setIsTyping(true);
@@ -1484,14 +1496,14 @@ ${memberTimeline || '(暂无互动记录)'}
             for (const member of groupMembers) {
                 if (abort.signal.aborted) break;
                 try {
-                    // 每位成员基于"此刻"的群历史构建上下文——包含本轮先发言成员的新消息
+                    // Each member's context is built from the group history as of "right now" — including the new messages from members who spoke earlier this round
                     const { header, sharedScene } = buildGroupSystemHeader(roundMsgs, groupMembers);
                     const memberBlock = await buildMemberBlock(member, roundMsgs, sharedScene);
                     const liveRoundMsgs = roundMsgs.filter(m => m.id > (activeGroup.archivedThroughMessageId || 0));
                     const historyWindow = liveRoundMsgs.slice(-contextLimit);
                     const preparedHistory = await materializeVisionDescriptions(historyWindow, apiConfig.visionApi);
                     const preparedById = new Map(preparedHistory.map(message => [message.id, message]));
-                    // 轮询模式后续成员继续复用本轮刚写回的描述，不能每位成员各识图一次。
+                    // Subsequent members in round-robin mode reuse the descriptions just written back this round — no need to re-run image recognition for every single member.
                     roundMsgs = roundMsgs.map(message => preparedById.get(message.id) || message);
                     const history = buildGroupHistoryBlock(
                         preparedHistory,
@@ -1519,10 +1531,10 @@ ${memberTimeline || '(暂无互动记录)'}
                         groupId: activeGroup.id,
                         userName: userProfile.name,
                         signal: abort.signal,
-                        onStatus: status => setMcpStatus(status ? `${member.name}：${status}` : ''),
+                        onStatus: status => setMcpStatus(status ? `${member.name}: ${status}` : ''),
                     });
 
-                    // Token 统计：整轮累加显示
+                    // Token stats: accumulated and shown for the whole round
                     if (data.usage?.total_tokens) {
                         tokenPrompt += data.usage.prompt_tokens || 0;
                         tokenCompletion += data.usage.completion_tokens || 0;
@@ -1537,12 +1549,12 @@ ${memberTimeline || '(暂无互动记录)'}
                     }
 
                     let text = String(data.choices?.[0]?.message?.content ?? '').trim();
-                    // 剥模型自作主张加的名字前缀（提示词禁止了，但仍要兜底）
+                    // Strip a name prefix the model added on its own initiative (the prompt forbids it, but still guard against it)
                     if (text.startsWith(`${member.name}:`) || text.startsWith(`${member.name}：`)) {
                         text = text.slice(member.name.length + 1).trim();
                     }
                     const { skipped, content } = stripSkipMarker(text);
-                    if (skipped) continue; // 本轮潜水
+                    if (skipped) continue; // Stays silent this round
 
                     await dispatchMemberActions([{ charId: member.id, content }], {
                         groupId: activeGroup.id,
@@ -1558,36 +1570,36 @@ ${memberTimeline || '(暂无互动记录)'}
                         htmlMode: !!activeGroup.htmlModeEnabled,
                     });
 
-                    // 刷新滚动历史给下一位成员
+                    // Refresh the scroll history for the next member
                     roundMsgs = await DB.getGroupMessages(activeGroup.id);
 
-                    // 成员间随机间隔，增强真实感
+                    // Randomized interval between members, for a more authentic feel
                     if (!abort.signal.aborted) {
                         await new Promise(r => setTimeout(r, 300 + Math.random() * 300));
                     }
                 } catch (e: any) {
                     if (e?.name === 'AbortError') break;
-                    console.error(`[GroupChat] 轮询模式 ${member.name} 回复失败:`, e);
+                    console.error(`[GroupChat] Round-robin mode ${member.name} reply failed:`, e);
                     failed.push(member.name);
                 }
             }
 
             if (abort.signal.aborted) {
-                addToast('已停止生成', 'info');
+                addToast('Generation stopped', 'info');
             } else if (failed.length > 0) {
-                addToast(`${failed.join('、')} 本轮回复失败（已跳过）`, 'error');
+                addToast(`${failed.join(', ')} failed to reply this round (skipped)`, 'error');
             }
         } finally {
             setIsTyping(false);
             setMcpStatus('');
             abortRef.current = null;
-            // 同导演模式：跑到一半被打断也要打脏，已发言成员的话已经落库了
+            // Same as director mode: even if interrupted mid-run, mark dirty — the members who already spoke are already saved to the DB
             markGroupMembersDirty(activeGroup.members);
             runGroupTopicArchive();
         }
     };
 
-    // 触发入口：按群设置分发到导演/轮询；生成中再点 = 停止
+    // Trigger entry point: dispatches to director/round-robin based on group settings; clicking the trigger button again while generating = stop
     const triggerGroupAI = async (_msgs?: Message[]) => {
         unlockWhiteboxAudio();
         if (isTyping) {
@@ -1595,8 +1607,8 @@ ${memberTimeline || '(暂无互动记录)'}
             return;
         }
         if (!activeGroup) return;
-        // UI 固定只渲染 50 条，但模型仍应拿到完整近期热区；生成前独立读取，
-        // 避免“用户没点加载历史 → AI 也只能看见 50 条”的耦合。
+        // The UI always renders only 50 messages, but the model should still get the full recent hot zone; read it
+        // independently before generating, to avoid coupling "the user didn't click load history → the AI can only see 50 messages" either.
         const promptCap = Math.max(contextLimit, activeGroup.memberTimelineCap ?? DEFAULT_MEMBER_TIMELINE_CAP, GROUP_TOPIC_HOT_ZONE);
         const { messages: freshMsgs } = await DB.getRecentGroupMessagesWithCount(activeGroup.id, promptCap);
         if (activeGroup?.replyMode === 'roundRobin') {
@@ -1611,16 +1623,16 @@ ${memberTimeline || '(暂无互动记录)'}
     if (view === 'list') {
         return (
             <div className="h-full w-full bg-slate-50 flex flex-col font-light">
-                {/* safe-top spacer 透明 + backdrop-blur，下方容器/list bubbles 透出+模糊（跟 iOS 系统 status bar 一致），避免 header 白 bg 在刘海下铺一条突兀白带 */}
+                {/* safe-top spacer is transparent + backdrop-blur, so the container/list bubbles below show through with blur (matches the iOS system status bar), avoiding an abrupt white strip from the header's white bg under the notch */}
                 <div className="shrink-0 z-10 sticky top-0">
                     <div className="bg-transparent backdrop-blur-xl" style={{ height: 'var(--safe-top)' }} />
                     <div className="bg-white/70 backdrop-blur-md flex items-end pb-3 px-4 border-b border-white/40 h-20">
                         <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                     </button>
-                    <span className="font-medium text-slate-700 text-lg tracking-wide pl-2">群聊列表</span>
+                    <span className="font-medium text-slate-700 text-lg tracking-wide pl-2">Group Chats</span>
                     <div className="flex-1"></div>
-                    <button onClick={() => { setModalType('create'); setSelectedMembers(new Set()); setTempGroupName(''); setMemberGroupId(GROUP_FILTER_ALL); trackEvent('打开创建群聊弹窗'); }} className="p-2 -mr-2 text-violet-500 bg-violet-50 hover:bg-violet-100 rounded-full transition-colors">
+                    <button onClick={() => { setModalType('create'); setSelectedMembers(new Set()); setTempGroupName(''); setMemberGroupId(GROUP_FILTER_ALL); trackEvent('Open Create Group Chat Dialog'); }} className="p-2 -mr-2 text-violet-500 bg-violet-50 hover:bg-violet-100 rounded-full transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     </button>
                     </div>
@@ -1646,7 +1658,7 @@ ${memberTimeline || '(暂无互动记录)'}
                                 <div className="font-bold text-slate-700 truncate text-base">{g.name}</div>
                                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3"><path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 18a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z" /></svg>
-                                    {g.members.length} 成员
+                                    {g.members.length} members
                                 </div>
                             </div>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-slate-300"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
@@ -1655,17 +1667,17 @@ ${memberTimeline || '(暂无互动记录)'}
                     {groups.length === 0 && (
                         <div className="text-center text-slate-400 text-xs py-10 flex flex-col items-center gap-2">
                             <UsersThree size={36} className="opacity-50" />
-                            暂无群聊，点击右上角创建
+                            No group chats yet — tap the top-right button to create one
                         </div>
                     )}
                 </div>
 
-                <Modal isOpen={modalType === 'create'} title="创建群聊" onClose={() => setModalType('none')} footer={<button onClick={handleCreateGroup} className="w-full py-3 bg-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-violet-200">创建</button>}>
+                <Modal isOpen={modalType === 'create'} title="Create Group Chat" onClose={() => setModalType('none')} footer={<button onClick={handleCreateGroup} className="w-full py-3 bg-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-violet-200">Create</button>}>
                     <div className="space-y-4">
-                        <input value={tempGroupName} onChange={e => setTempGroupName(e.target.value)} placeholder="群聊名称" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500/20 transition-all" />
+                        <input value={tempGroupName} onChange={e => setTempGroupName(e.target.value)} placeholder="Group chat name" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-violet-500/20 transition-all" />
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">选择成员</label>
-                            {/* 分组筛选（没建分组时不渲染）：只影响可选项的显示，不影响已勾选成员 */}
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Select Members</label>
+                            {/* Group filter (not rendered if no groups have been created): only affects which options are shown, not which members are already checked */}
                             <CharacterGroupFilterBar characters={characters} groups={characterGroups} value={memberGroupId} onChange={setMemberGroupId} className="mb-2" />
                             <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
                                 {filterCharactersByGroup(characters, characterGroups, memberGroupId).map(c => (
@@ -1683,7 +1695,7 @@ ${memberTimeline || '(暂无互动记录)'}
     }
 
     // CHAT VIEW
-    // 动森彩蛋模式（与私聊同一开关联动）
+    // Animal Crossing easter-egg mode (tied to the same toggle as private chat)
     const acnh = osTheme.skin === 'animalcrossing' && osTheme.acnhChatSync !== false;
     const chatChromeStyle = osTheme.chatChromeStyle || 'soft';
     const chatBackgroundStyle = osTheme.chatBackgroundStyle || 'plain';
@@ -1721,18 +1733,18 @@ ${memberTimeline || '(暂无互动记录)'}
         : groupChatRootStyle;
     return (
         <div className={`sully-chat-root ${finalGroupRootClass}`} style={finalGroupRootStyle}>
-            {/* 外观 App 的全局聊天细节与私聊共用同一份生成 CSS。 */}
+            {/* The Appearance App's global chat-detail CSS is shared with private chat, generated from the same source. */}
             {groupFineTuneCss && <style>{groupFineTuneCss}</style>}
-            {/* 白框自定义 CSS：全局默认在前、群专属在后（后者叠加覆盖）。作用于 .sully-chat-* 各零件。 */}
+            {/* Whitebox custom CSS: global default first, group-specific after (the latter overrides via cascade). Applies to each .sully-chat-* part. */}
             {osTheme.chatChromeCustomCss && <style>{osTheme.chatChromeCustomCss}</style>}
             {activeGroup?.chromeCustomCss && <style>{activeGroup.chromeCustomCss}</style>}
-            {/* 气泡工坊 CSS 排在白框之后，与私聊优先级一致；每套成员主题都限定在自己的消息上。 */}
+            {/* Bubble Workshop CSS comes after Whitebox, same priority as private chat; each member's theme is scoped to only their own messages. */}
             {groupBubbleCustomCss && <style>{groupBubbleCustomCss}</style>}
             <style>{`
                 .sully-bubble-tail-hidden::before,
                 .sully-bubble-tail-hidden::after { content: none !important; display: none !important; }
             `}</style>
-            {/* 守护样式（注在用户 CSS 之后）：保证返回键与输入区永远可见可点。 */}
+            {/* Guard styles (injected after user CSS): ensures the back button and input area are always visible and clickable. */}
             {(osTheme.chatChromeCustomCss || activeGroup?.chromeCustomCss || groupBubbleCustomCss) && (
                 <style>{`
                     .sully-chat-back{visibility:visible!important;opacity:1!important;pointer-events:auto!important;}
@@ -1740,7 +1752,7 @@ ${memberTimeline || '(暂无互动记录)'}
                     .sully-chat-inputbar textarea,.sully-chat-inputbar button{pointer-events:auto!important;visibility:visible!important;}
                 `}</style>
             )}
-            {/* 公共话题盒整理状态 — 不阻塞交互 */}
+            {/* Public topic box organizing status — doesn't block interaction */}
             {groupPalaceStatus && (
                 <div
                     className="absolute top-[100px] left-1/2 z-[150] animate-fade-in"
@@ -1764,21 +1776,21 @@ ${memberTimeline || '(暂无互动记录)'}
                             style={{ borderTopColor: '#8b5cf6', animationDuration: '0.9s' }}
                         />
                         <span className="text-[11px] font-semibold text-slate-700 whitespace-nowrap">
-                            公共话题成盒中
+                            Boxing up public topics
                         </span>
                         <span className="text-[10px] text-slate-400 truncate">{groupPalaceStatus}</span>
                     </div>
                 </div>
             )}
 
-            {/* Header — 复用私聊 ChatHeaderShell（7 种头部风格随 OS 外观设置） */}
+            {/* Header — reuses private chat's ChatHeaderShell (7 header styles follow the OS appearance settings) */}
             <ChatHeaderShell
                 selectionMode={selectionMode}
                 selectedCount={selectedMsgIds.size}
                 onCancelSelection={() => { setSelectionMode(false); setSelectedMsgIds(new Set()); }}
                 activeCharacter={{
                     id: activeGroup?.id || 'group',
-                    name: activeGroup?.name || '群聊',
+                    name: activeGroup?.name || 'Group Chat',
                     avatar: activeGroup?.avatar || characters.find(c => c.id === activeGroup?.members[0])?.avatar || '',
                     activeBuffs: [],
                 }}
@@ -1788,9 +1800,9 @@ ${memberTimeline || '(暂无互动记录)'}
                 memoryPalaceStatusText={groupPalaceStatus}
                 lastTokenUsage={lastTokenUsage}
                 tokenBreakdown={tokenBreakdown}
-                statusText={`${activeGroup?.members.length ?? 0} 成员`}
+                statusText={`${activeGroup?.members.length ?? 0} members`}
                 extraAction={{
-                    label: '群聊记忆规则',
+                    label: 'Group Chat Memory Rules',
                     icon: <Question className="w-5 h-5" weight="bold" />,
                     onClick: () => setModalType('help'),
                 }}
@@ -1819,7 +1831,7 @@ ${memberTimeline || '(暂无互动记录)'}
                             setMessages(moreMsgs);
                             setTotalMsgCount(totalCount);
                         }} className="px-4 py-2 bg-white/50 backdrop-blur-sm rounded-full text-xs text-slate-500 shadow-sm border border-white hover:bg-white transition-colors">
-                            加载历史消息 ({collapsedCount})
+                            Load History ({collapsedCount})
                         </button>
                     </div>
                 )}
@@ -1872,23 +1884,23 @@ ${memberTimeline || '(暂无互动记录)'}
                             <div className="w-6 h-6 rounded-full bg-slate-300 border-2 border-white"></div>
                             <div className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white"></div>
                         </div>
-                        <span className="text-xs text-slate-400 font-medium">{mcpStatus || '成员正在输入...'}</span>
+                        <span className="text-xs text-slate-400 font-medium">{mcpStatus || 'Member is typing...'}</span>
                     </div>
                 )}
             </div>
 
             {/* Redesigned Input Area (WeChat/iOS Style) */}
-            {/* 回复预览条（对齐私聊 Chat.tsx 的样式与位置） */}
+            {/* Reply preview bar (matches private chat Chat.tsx's style and position) */}
             {replyTarget && !selectionMode && (
                 <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 shrink-0 z-40">
-                    {/* 引用的是图片 / 表情时这里显示占位符，跟落库的快照同一口径 */}
-                    <div className="flex items-center gap-2 truncate"><span className="font-bold text-slate-700">正在回复:</span><span className="truncate max-w-[200px]">{buildReplySnapshotContent(replyTarget)}</span></div>
+                    {/* When quoting an image/sticker, a placeholder is shown here, matching the saved snapshot's convention */}
+                    <div className="flex items-center gap-2 truncate"><span className="font-bold text-slate-700">Replying to:</span><span className="truncate max-w-[200px]">{buildReplySnapshotContent(replyTarget)}</span></div>
                     <button onClick={() => setReplyTarget(null)} className="p-1 text-slate-400 hover:text-slate-600">×</button>
                 </div>
             )}
 
-            {/* 输入区 — 复用私聊 ChatInputArea（输入/表情面板/多选删除随 OS 外观设置），
-                actions 面板整体替换为群聊自己的 4 格 */}
+            {/* Input area — reuses private chat's ChatInputArea (input/emoji panel/multi-select delete follow the OS appearance settings),
+                the actions panel is entirely replaced with group chat's own 4-tile grid */}
             <ChatInputArea
                 input={input}
                 setInput={setInput}
@@ -1917,22 +1929,22 @@ ${memberTimeline || '(暂无互动记录)'}
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border bg-pink-50 text-pink-400 border-pink-100">
                                 <ImageIcon className="w-6 h-6" weight="bold" />
                             </div>
-                            <span className="text-xs font-bold">相册</span>
+                            <span className="text-xs font-bold">Album</span>
                         </button>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
 
-                        <button onClick={() => { setModalType('transfer'); setShowPanel('none'); trackEvent('打开发红包面板'); }} className="flex flex-col items-center gap-2 active:scale-95 transition-transform text-slate-600">
+                        <button onClick={() => { setModalType('transfer'); setShowPanel('none'); trackEvent('Open Send Red Packet Panel'); }} className="flex flex-col items-center gap-2 active:scale-95 transition-transform text-slate-600">
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border bg-orange-50 text-orange-400 border-orange-100">
                                 <Money className="w-6 h-6" weight="bold" />
                             </div>
-                            <span className="text-xs font-bold">红包</span>
+                            <span className="text-xs font-bold">Red Packet</span>
                         </button>
 
                         <button onClick={openGroupSettings} className="flex flex-col items-center gap-2 active:scale-95 transition-transform text-slate-600">
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border bg-violet-50 text-violet-500 border-violet-100">
                                 <GearSix className="w-6 h-6" weight="bold" />
                             </div>
-                            <span className="text-xs font-bold">群设置</span>
+                            <span className="text-xs font-bold">Group Settings</span>
                         </button>
 
                         <button
@@ -1943,32 +1955,32 @@ ${memberTimeline || '(暂无互动记录)'}
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${canReroll ? 'bg-emerald-50 text-emerald-400 border-emerald-100' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>
                                 <ArrowsClockwise className="w-6 h-6" weight="bold" />
                             </div>
-                            <span className="text-xs font-bold">重新生成</span>
+                            <span className="text-xs font-bold">Regenerate</span>
                         </button>
 
                         <button onClick={() => { setModalType('chrome-css'); setShowPanel('none'); }} className="flex flex-col items-center gap-2 active:scale-95 transition-transform text-slate-600">
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border bg-sky-50 text-sky-500 border-sky-100">
                                 <PaintBrush className="w-6 h-6" weight="bold" />
                             </div>
-                            <span className="text-xs font-bold">白框</span>
+                            <span className="text-xs font-bold">Whitebox</span>
                         </button>
 
                         <button onClick={() => { setModalType('chrome-sound'); setShowPanel('none'); }} className="flex flex-col items-center gap-2 active:scale-95 transition-transform text-slate-600">
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border bg-amber-50 text-amber-500 border-amber-100">
                                 <BellSimpleRinging className="w-6 h-6" weight="bold" />
                             </div>
-                            <span className="text-xs font-bold">提示音</span>
+                            <span className="text-xs font-bold">Notification Sound</span>
                         </button>
 
-                        {/* HTML 模式：tap 切换开关；右键/长按打开自定义提示词（交互对齐私聊） */}
+                        {/* HTML mode: tap to toggle; right-click/long-press to open custom prompt (interaction matches private chat) */}
                         <button
                             onClick={() => {
                                 if (!activeGroup) return;
                                 const next = !activeGroup.htmlModeEnabled;
                                 updateGroup(activeGroup.id, { htmlModeEnabled: next });
                                 setActiveGroup({ ...activeGroup, htmlModeEnabled: next });
-                                addToast(next ? 'HTML 模式已开启' : 'HTML 模式已关闭', 'info');
-                                trackEvent('开启群聊 HTML 模式', { state: next ? 'on' : 'off' });
+                                addToast(next ? 'HTML mode enabled' : 'HTML mode disabled', 'info');
+                                trackEvent('Toggle Group Chat HTML Mode', { state: next ? 'on' : 'off' });
                             }}
                             onContextMenu={(e) => { e.preventDefault(); setTempHtmlPrompt(activeGroup?.htmlModeCustomPrompt || ''); setModalType('html-prompt'); setShowPanel('none'); }}
                             className="flex flex-col items-center gap-2 active:scale-95 transition-transform text-slate-600 relative"
@@ -1977,7 +1989,7 @@ ${memberTimeline || '(暂无互动记录)'}
                                 <Code className="w-6 h-6" weight="bold" />
                                 {activeGroup?.htmlModeEnabled && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-fuchsia-500 border-2 border-white" />}
                             </div>
-                            <span className="text-xs font-bold">{activeGroup?.htmlModeEnabled ? 'HTML已开' : 'HTML模式'}</span>
+                            <span className="text-xs font-bold">{activeGroup?.htmlModeEnabled ? 'HTML On' : 'HTML Mode'}</span>
                         </button>
                     </div>
 
@@ -1987,49 +1999,49 @@ ${memberTimeline || '(暂无互动记录)'}
             {/* --- Modals --- */}
 
             {/* Group Settings Modal */}
-            <Modal isOpen={modalType === 'settings'} title="群组设置" onClose={() => setModalType('none')} footer={<button onClick={handleUpdateGroupInfo} className="w-full py-3 bg-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-violet-200">保存修改</button>}>
+            <Modal isOpen={modalType === 'settings'} title="Group Settings" onClose={() => setModalType('none')} footer={<button onClick={handleUpdateGroupInfo} className="w-full py-3 bg-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-violet-200">Save Changes</button>}>
                 <div className="space-y-6">
                     {/* Header Info */}
                     <div className="flex justify-center">
                         <div onClick={() => groupAvatarInputRef.current?.click()} className="w-24 h-24 rounded-3xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer overflow-hidden relative group hover:border-violet-400">
-                            {activeGroup?.avatar ? <TokenImg value={activeGroup.avatar} className="w-full h-full object-cover opacity-90 group-hover:opacity-100" /> : <span className="text-xs text-slate-400 font-bold">更换头像</span>}
+                            {activeGroup?.avatar ? <TokenImg value={activeGroup.avatar} className="w-full h-full object-cover opacity-90 group-hover:opacity-100" /> : <span className="text-xs text-slate-400 font-bold">Change avatar</span>}
                             <div className="absolute inset-0 bg-black/20 hidden group-hover:flex items-center justify-center text-white"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg></div>
                         </div>
                         <input type="file" ref={groupAvatarInputRef} className="hidden" accept="image/*" onChange={handleGroupAvatarUpload} />
                     </div>
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">群名称</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Group Name</label>
                         <input value={tempGroupName} onChange={e => setTempGroupName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:border-violet-300 transition-all" />
                     </div>
 
                     {/* Reply Mode */}
                     <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">回复生成模式</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Reply Generation Mode</label>
                         <div className="flex flex-col gap-2">
                             <div
-                                onClick={() => { setTempReplyMode('director'); trackEvent('切换群聊回复生成模式', { mode: 'director' }); }}
+                                onClick={() => { setTempReplyMode('director'); trackEvent('Switch Group Chat Reply Generation Mode', { mode: 'director' }); }}
                                 className={`p-3 rounded-xl border cursor-pointer transition-all ${tempReplyMode === 'director' ? 'border-violet-400 bg-violet-50 ring-1 ring-violet-400' : 'border-slate-200 bg-white hover:border-slate-300'}`}
                             >
-                                <div className="text-xs font-bold text-slate-700">导演模式（默认）</div>
-                                <p className="text-[9px] text-slate-400 mt-1 leading-tight">一次 API 调用生成整轮群聊。快、省 token，但角色偶尔可能串号。</p>
+                                <div className="text-xs font-bold text-slate-700">Director Mode (Default)</div>
+                                <p className="text-[9px] text-slate-400 mt-1 leading-tight">One API call generates the entire round of group chat. Fast and token-efficient, but characters may occasionally cross-talk.</p>
                             </div>
                             <div
-                                onClick={() => { setTempReplyMode('roundRobin'); trackEvent('切换群聊回复生成模式', { mode: 'roundRobin' }); }}
+                                onClick={() => { setTempReplyMode('roundRobin'); trackEvent('Switch Group Chat Reply Generation Mode', { mode: 'roundRobin' }); }}
                                 className={`p-3 rounded-xl border cursor-pointer transition-all ${tempReplyMode === 'roundRobin' ? 'border-violet-400 bg-violet-50 ring-1 ring-violet-400' : 'border-slate-200 bg-white hover:border-slate-300'}`}
                             >
-                                <div className="text-xs font-bold text-slate-700">轮询模式</div>
-                                <p className="text-[9px] text-slate-400 mt-1 leading-tight">每位成员单独调用一次 API，按顺序逐个发言（每人必发言）。更真实、彻底防串号，但更慢，token 消耗约为导演模式 × 成员数。</p>
+                                <div className="text-xs font-bold text-slate-700">Round-Robin Mode</div>
+                                <p className="text-[9px] text-slate-400 mt-1 leading-tight">Calls the API once per member, each speaking in turn (everyone speaks). More authentic and fully avoids cross-talk, but slower — token usage is roughly Director Mode times the member count.</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Bubble Appearance */}
                     <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">气泡外观</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Bubble Appearance</label>
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex-1 pr-3">
-                                <div className="text-xs font-bold text-slate-700">成员独立气泡</div>
-                                <p className="text-[9px] text-slate-400 mt-0.5 leading-tight">开启后每位成员完整沿用其私聊气泡主题（AI 侧，包含自定义 CSS 与装饰）；关闭则全员统一。</p>
+                                <div className="text-xs font-bold text-slate-700">Independent Member Bubbles</div>
+                                <p className="text-[9px] text-slate-400 mt-0.5 leading-tight">When enabled, each member fully follows their own private-chat bubble theme (AI side, including custom CSS and decorations); when disabled, everyone shares one unified theme.</p>
                             </div>
                             <div
                                 onClick={() => setTempMemberBubbleIndependent(v => !v)}
@@ -2038,9 +2050,9 @@ ${memberTimeline || '(暂无互动记录)'}
                                 <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${tempMemberBubbleIndependent ? 'left-[22px]' : 'left-0.5'}`} />
                             </div>
                         </div>
-                        <div className="text-xs font-bold text-slate-700 mb-2">我的气泡</div>
+                        <div className="text-xs font-bold text-slate-700 mb-2">My Bubble</div>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                            {[{ id: '', name: '默认·紫', color: PRESET_THEME_GROUP.user.backgroundColor },
+                            {[{ id: '', name: 'Default · Violet', color: PRESET_THEME_GROUP.user.backgroundColor },
                               ...Object.values(PRESET_THEMES).map(t => ({ id: t.id, name: t.name, color: t.user.backgroundColor })),
                               ...customThemes.map(t => ({ id: t.id, name: `${t.name} (DIY)`, color: t.user.backgroundColor }))].map(opt => (
                                 <button
@@ -2057,38 +2069,38 @@ ${memberTimeline || '(暂无互动记录)'}
 
                     {/* Context Limit */}
                     <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">AI 上下文条数 ({contextLimit})</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">AI Context Message Count ({contextLimit})</label>
                         <input type="range" min="20" max="5000" step="10" value={contextLimit} onChange={e => { const v = parseInt(e.target.value); setContextLimit(v); localStorage.setItem('groupchat_context_limit', String(v)); }} className="w-full h-2 bg-slate-200 rounded-full appearance-none accent-violet-500" />
-                        <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 (省流)</span><span>5000 (超长记忆)</span></div>
-                        <p className="text-[9px] text-slate-400 mt-1 leading-tight">角色每次发言时参考多少条群聊历史。越多越连贯，但越慢、越费 token。</p>
+                        <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 (light)</span><span>5000 (extra-long memory)</span></div>
+                        <p className="text-[9px] text-slate-400 mt-1 leading-tight">How many messages of group history each character references when speaking. More is more coherent, but slower and costs more tokens.</p>
                     </div>
 
                     {/* Private Chat Group Context Cap */}
                     <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">私聊里"近期群活动"取条数 ({tempPrivateContextCap})</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">"Recent Group Activity" Count in Private Chat ({tempPrivateContextCap})</label>
                         <input type="range" min="20" max="500" step="10" value={tempPrivateContextCap} onChange={e => setTempPrivateContextCap(parseInt(e.target.value))} className="w-full h-2 bg-slate-200 rounded-full appearance-none accent-violet-500" />
-                        <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 (省流)</span><span>500 (完整)</span></div>
-                        <p className="text-[9px] text-slate-400 mt-1 leading-tight">本群成员在自己的私聊里，最多看到本群最近多少条消息作为"近期群活动"上下文。</p>
+                        <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 (light)</span><span>500 (full)</span></div>
+                        <p className="text-[9px] text-slate-400 mt-1 leading-tight">In their own private chat, how many of this group's most recent messages a member can see at most as "recent group activity" context.</p>
                     </div>
 
                     {/* Member Timeline Cap */}
                     <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">成员互动时间线条数 ({tempMemberTimelineCap})</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Member Interaction Timeline Count ({tempMemberTimelineCap})</label>
                         <input type="range" min="20" max="200" step="10" value={tempMemberTimelineCap} onChange={e => setTempMemberTimelineCap(parseInt(e.target.value))} className="w-full h-2 bg-slate-200 rounded-full appearance-none accent-violet-500" />
-                        <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 (省流)</span><span>200 (完整)</span></div>
-                        <p className="text-[9px] text-slate-400 mt-1 leading-tight">群里发言时，每位成员参考的"私聊+群聊合并时间线"条数。这条时间线让角色在群里的感情与私聊衔接。</p>
+                        <div className="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 (light)</span><span>200 (full)</span></div>
+                        <p className="text-[9px] text-slate-400 mt-1 leading-tight">When speaking in the group, the number of entries each member references from the "merged private + group timeline." This timeline lets a character's feelings connect between the group and private chat.</p>
                     </div>
 
-                    {/* 公共话题盒：一次总结，全群共享，并在成盒时送达所有成员私聊。 */}
+                    {/* Public topic box: summarized once, shared by the whole group, and delivered to every member's private chat when a box is sealed. */}
                     <div className="pt-2 border-t border-slate-100 space-y-3">
                         <div className="flex items-center justify-between">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">群聊总结 · 公共话题盒</label>
-                            <span className="text-[10px] text-violet-500 font-bold">{activeGroup?.topicBoxes?.length || 0} 个盒子</span>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Group Chat Summary · Public Topic Box</label>
+                            <span className="text-[10px] text-violet-500 font-bold">{activeGroup?.topicBoxes?.length || 0} boxes</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1.5">
                             {([
-                                { id: 'auto' as const, title: '自动整理', desc: '满100条自动成盒' },
-                                { id: 'manual' as const, title: '手动整理', desc: '只在点击时成盒' },
+                                { id: 'auto' as const, title: 'Auto-organize', desc: 'Boxes automatically every 100 messages' },
+                                { id: 'manual' as const, title: 'Manual organize', desc: 'Only boxes when you click' },
                             ]).map(option => {
                                 const active = (activeGroup?.topicArchiveMode || 'auto') === option.id;
                                 return (
@@ -2096,7 +2108,7 @@ ${memberTimeline || '(暂无互动记录)'}
                                         if (!activeGroup) return;
                                         await updateGroup(activeGroup.id, { topicArchiveMode: option.id });
                                         setActiveGroup({ ...activeGroup, topicArchiveMode: option.id });
-                                        trackEvent('切换群聊总结整理方式', { mode: option.id });
+                                        trackEvent('Switch Group Chat Summary Organizing Mode', { mode: option.id });
                                     }} className={`rounded-xl px-3 py-2.5 text-left transition-all ${active ? 'bg-white shadow-sm ring-1 ring-violet-100' : 'text-slate-400'}`}>
                                         <div className={`text-[11px] font-bold ${active ? 'text-violet-600' : 'text-slate-500'}`}>{option.title}</div>
                                         <div className="text-[9px] mt-0.5">{option.desc}</div>
@@ -2105,27 +2117,27 @@ ${memberTimeline || '(暂无互动记录)'}
                             })}
                         </div>
                         <div className="rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-indigo-50 p-3.5 space-y-2">
-                            <p className="text-[11px] font-bold text-violet-700">一份总结，全群共同记住</p>
+                            <p className="text-[11px] font-bold text-violet-700">One summary, remembered by the whole group</p>
                             <p className="text-[10px] leading-5 text-violet-600/80">
-                                最近 {GROUP_TOPIC_HOT_ZONE} 条始终保留原文；更早的记录累计 {GROUP_TOPIC_BUFFER_THRESHOLD} 条后{(activeGroup?.topicArchiveMode || 'auto') === 'auto' ? '自动整理' : '等待你手动整理'}成公共话题盒。
-                                盒子只属于本群，同时会作为卡片送到每位成员私聊，之后可被各自的私聊上下文与归档正常理解。
+                                The most recent {GROUP_TOPIC_HOT_ZONE} messages are always kept as-is; once older records accumulate past {GROUP_TOPIC_BUFFER_THRESHOLD}, they get {(activeGroup?.topicArchiveMode || 'auto') === 'auto' ? 'automatically organized' : 'organized whenever you do it manually'} into a public topic box.
+                                Boxes belong only to this group, and are also delivered as cards to every member's private chat, where they can be understood normally by each member's private-chat context and archiving.
                             </p>
                             <div className="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2 text-[10px]">
-                                <span className="text-slate-500">热区以前待整理</span>
-                                <span className={`font-bold ${topicPendingCount >= GROUP_TOPIC_BUFFER_THRESHOLD ? 'text-amber-500' : 'text-slate-500'}`}>{topicPendingCount} / {GROUP_TOPIC_BUFFER_THRESHOLD} 条</span>
+                                <span className="text-slate-500">Pending before hot zone</span>
+                                <span className={`font-bold ${topicPendingCount >= GROUP_TOPIC_BUFFER_THRESHOLD ? 'text-amber-500' : 'text-slate-500'}`}>{topicPendingCount} / {GROUP_TOPIC_BUFFER_THRESHOLD} messages</span>
                             </div>
                         </div>
 
                         <div className="bg-white border border-slate-100 rounded-2xl p-3 flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">✦</div>
                             <div>
-                                <div className="text-[10px] font-bold text-slate-600">内置 · 群聊共同记忆总结</div>
-                                <p className="text-[9px] text-slate-400 mt-0.5 leading-4">总结机会读取全体成员的简介、核心设定、世界观、写作人格与核心记忆，不再复用私聊归档风格。</p>
+                                <div className="text-[10px] font-bold text-slate-600">Built-in · Group Chat Shared Memory Summary</div>
+                                <p className="text-[9px] text-slate-400 mt-0.5 leading-4">The summarization pass reads every member's profile, core traits, worldview, writing persona, and core memories — it no longer reuses the private-chat archiving style.</p>
                             </div>
                         </div>
 
-                        <button onClick={() => { void createNextGroupTopicBox(true); trackEvent('手动整理群话题盒'); }} disabled={isSummarizing || topicPendingCount === 0} className={`w-full py-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 ${topicPendingCount === 0 ? 'bg-slate-50 border-slate-100 text-slate-300' : 'bg-violet-500 border-violet-500 text-white shadow-lg shadow-violet-200'}`}>
-                            {isSummarizing ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{summaryProgress || '正在成盒…'}</> : '立即整理当前可归档内容'}
+                        <button onClick={() => { void createNextGroupTopicBox(true); trackEvent('Manually Organize Group Topic Box'); }} disabled={isSummarizing || topicPendingCount === 0} className={`w-full py-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 ${topicPendingCount === 0 ? 'bg-slate-50 border-slate-100 text-slate-300' : 'bg-violet-500 border-violet-500 text-white shadow-lg shadow-violet-200'}`}>
+                            {isSummarizing ? <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />{summaryProgress || 'Boxing up…'}</> : 'Organize what can be archived right now'}
                         </button>
 
                         <div className="space-y-2">
@@ -2135,11 +2147,11 @@ ${memberTimeline || '(暂无互动记录)'}
                                     <div key={box.id} className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm">
                                         {editing ? (
                                             <div className="space-y-2">
-                                                <input value={topicTitleDraft} onChange={e => setTopicTitleDraft(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold" placeholder="话题盒标题" />
-                                                <textarea value={topicSummaryDraft} onChange={e => setTopicSummaryDraft(e.target.value)} className="w-full min-h-28 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-5 resize-y" placeholder="共同回忆总结" />
+                                                <input value={topicTitleDraft} onChange={e => setTopicTitleDraft(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold" placeholder="Topic box title" />
+                                                <textarea value={topicSummaryDraft} onChange={e => setTopicSummaryDraft(e.target.value)} className="w-full min-h-28 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-5 resize-y" placeholder="Shared memory summary" />
                                                 <div className="flex gap-2">
-                                                    <button onClick={() => setEditingTopicBoxId(null)} className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-500 text-[11px] font-bold">取消</button>
-                                                    <button onClick={() => void saveTopicBoxEdit(box.id)} className="flex-1 py-2 rounded-xl bg-violet-500 text-white text-[11px] font-bold">保存并同步卡片</button>
+                                                    <button onClick={() => setEditingTopicBoxId(null)} className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-500 text-[11px] font-bold">Cancel</button>
+                                                    <button onClick={() => void saveTopicBoxEdit(box.id)} className="flex-1 py-2 rounded-xl bg-violet-500 text-white text-[11px] font-bold">Save & Sync Cards</button>
                                                 </div>
                                             </div>
                                         ) : (
@@ -2148,13 +2160,13 @@ ${memberTimeline || '(暂无互动记录)'}
                                                     <div className="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center shrink-0">💬</div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-xs font-bold text-slate-700">{box.title}</div>
-                                                        <div className="text-[9px] text-slate-400 mt-0.5">归档 {box.messageCount} 条 · {new Date(box.createdAt).toLocaleDateString('zh-CN')}</div>
+                                                        <div className="text-[9px] text-slate-400 mt-0.5">Archived {box.messageCount} messages · {new Date(box.createdAt).toLocaleDateString('en-US')}</div>
                                                     </div>
                                                 </div>
                                                 <p className="mt-2.5 text-[11px] leading-5 text-slate-600 whitespace-pre-wrap">{box.summary}</p>
                                                 <div className="mt-3 flex gap-2 justify-end">
-                                                    <button onClick={() => { setEditingTopicBoxId(box.id); setTopicTitleDraft(box.title); setTopicSummaryDraft(box.summary); }} className="px-3 py-1.5 rounded-lg bg-violet-50 text-violet-600 text-[10px] font-bold">修改</button>
-                                                    <button onClick={() => void deleteTopicBox(box.id)} className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-500 text-[10px] font-bold">删除</button>
+                                                    <button onClick={() => { setEditingTopicBoxId(box.id); setTopicTitleDraft(box.title); setTopicSummaryDraft(box.summary); }} className="px-3 py-1.5 rounded-lg bg-violet-50 text-violet-600 text-[10px] font-bold">Edit</button>
+                                                    <button onClick={() => void deleteTopicBox(box.id)} className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-500 text-[10px] font-bold">Delete</button>
                                                 </div>
                                             </>
                                         )}
@@ -2162,35 +2174,35 @@ ${memberTimeline || '(暂无互动记录)'}
                                 );
                             })}
                             {(activeGroup?.topicBoxes?.length || 0) === 0 && (
-                                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-5 text-center text-[10px] text-slate-400">聊天还在近期热区里。内容足够多后，会自动出现第一只公共话题盒。</div>
+                                <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-5 text-center text-[10px] text-slate-400">The chat is still within the recent hot zone. Once there's enough content, the first public topic box will appear automatically.</div>
                             )}
                         </div>
                     </div>
 
                     {/* Danger Zone */}
                     <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-3 block">危险区域</label>
-                        
+                        <label className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-3 block">Danger Zone</label>
+
                         <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => setPreserveContext(!preserveContext)}>
                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${preserveContext ? 'bg-violet-500 border-violet-500' : 'bg-slate-100 border-slate-300'}`}>
                                  {preserveContext && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
                              </div>
-                             <span className="text-xs text-slate-600">清空时保留最后10条记录 (维持语境)</span>
+                             <span className="text-xs text-slate-600">Keep the last 10 messages when clearing (preserves context)</span>
                         </div>
 
                         <div className="flex gap-2">
                             <button onClick={handleClearHistory} className="flex-1 py-3 bg-red-50 text-red-500 font-bold rounded-2xl border border-red-100 active:scale-95 transition-transform flex items-center justify-center gap-2 text-xs">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                                清空聊天
+                                Clear Chat
                             </button>
-                            <button onClick={() => { if(activeGroup) handleDeleteGroup(activeGroup.id); }} className="flex-1 py-3 text-white bg-red-500 hover:bg-red-600 rounded-2xl text-xs font-bold transition-colors shadow-lg shadow-red-200">解散群聊</button>
+                            <button onClick={() => { if(activeGroup) handleDeleteGroup(activeGroup.id); }} className="flex-1 py-3 text-white bg-red-500 hover:bg-red-600 rounded-2xl text-xs font-bold transition-colors shadow-lg shadow-red-200">Disband Group</button>
                         </div>
                     </div>
                 </div>
             </Modal>
 
             {/* Message Options Modal */}
-            <Modal isOpen={modalType === 'message-options'} title="消息操作" onClose={() => { setModalType('none'); setSelectedMessage(null); }}>
+            <Modal isOpen={modalType === 'message-options'} title="Message Options" onClose={() => { setModalType('none'); setSelectedMessage(null); }}>
                 <div className="space-y-3">
                     <button
                         onClick={() => {
@@ -2200,31 +2212,31 @@ ${memberTimeline || '(暂无互动记录)'}
                         }}
                         className="w-full py-3 bg-violet-50 text-violet-600 font-medium rounded-2xl active:bg-violet-100 transition-colors flex items-center justify-center gap-2"
                     >
-                        引用 / 回复
+                        Quote / Reply
                     </button>
                     <button onClick={handleEnterSelectionMode} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                        多选 / 批量删除
+                        Multi-select / Batch Delete
                     </button>
                     {selectedMessage?.type === 'text' && (
                         <button onClick={handleCopyMessage} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                            复制文字
+                            Copy Text
                         </button>
                     )}
                     {selectedMessage?.type === 'text' && (
                         <button onClick={handleStartEditMessage} className="w-full py-3 bg-slate-50 text-slate-700 font-medium rounded-2xl active:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                            修改内容
+                            Edit Content
                         </button>
                     )}
                     <button onClick={handleDeleteSingleMessage} className="w-full py-3 bg-red-50 text-red-500 font-medium rounded-2xl active:bg-red-100 transition-colors flex items-center justify-center gap-2">
-                        删除消息
+                        Delete Message
                     </button>
                 </div>
             </Modal>
 
             {/* Edit Message Modal */}
             <Modal
-                isOpen={modalType === 'edit-message'} title="编辑内容" onClose={() => { setModalType('none'); setSelectedMessage(null); }}
-                footer={<><button onClick={() => { setModalType('none'); setSelectedMessage(null); }} className="flex-1 py-3 bg-slate-100 rounded-2xl">取消</button><button onClick={confirmEditMessage} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">保存</button></>}
+                isOpen={modalType === 'edit-message'} title="Edit Content" onClose={() => { setModalType('none'); setSelectedMessage(null); }}
+                footer={<><button onClick={() => { setModalType('none'); setSelectedMessage(null); }} className="flex-1 py-3 bg-slate-100 rounded-2xl">Cancel</button><button onClick={confirmEditMessage} className="flex-1 py-3 bg-primary text-white font-bold rounded-2xl">Save</button></>}
             >
                 <textarea
                     value={editContent}
@@ -2233,12 +2245,12 @@ ${memberTimeline || '(暂无互动记录)'}
                 />
             </Modal>
 
-            {/* Transfer Modal — 红包 2.0：拼手气 / 专属 */}
-            <Modal isOpen={modalType === 'transfer'} title="发送红包" onClose={() => setModalType('none')} footer={<button onClick={handleSendPacket} className="w-full py-3 bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200">塞进红包</button>}>
+            {/* Transfer Modal — Red Packet 2.0: lucky / exclusive */}
+            <Modal isOpen={modalType === 'transfer'} title="Send Red Packet" onClose={() => setModalType('none')} footer={<button onClick={handleSendPacket} className="w-full py-3 bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200">Stuff the Red Packet</button>}>
                 <div className="space-y-4">
-                    {/* Tab 切换 */}
+                    {/* Tab switch */}
                     <div className="flex gap-2">
-                        {([['lucky', '拼手气'], ['direct', '专属']] as const).map(([key, label]) => (
+                        {([['lucky', 'Lucky'], ['direct', 'Exclusive']] as const).map(([key, label]) => (
                             <button
                                 key={key}
                                 onClick={() => setPacketTab(key)}
@@ -2251,16 +2263,16 @@ ${memberTimeline || '(暂无互动记录)'}
 
                     <div className="text-center py-2 animate-bounce"><img src={twemojiUrl('1f9e7')} alt="red envelope" className="w-12 h-12 mx-auto" /></div>
 
-                    <input type="number" value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder={packetTab === 'lucky' ? '总金额' : '金额'} className="w-full px-4 py-4 bg-slate-100 rounded-2xl text-center text-2xl font-bold outline-none text-slate-800 placeholder:text-slate-300" autoFocus />
+                    <input type="number" value={transferAmount} onChange={e => setTransferAmount(e.target.value)} placeholder={packetTab === 'lucky' ? 'Total amount' : 'Amount'} className="w-full px-4 py-4 bg-slate-100 rounded-2xl text-center text-2xl font-bold outline-none text-slate-800 placeholder:text-slate-300" autoFocus />
 
                     {packetTab === 'lucky' ? (
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">份数（大家抢，随机金额）</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Number of shares (everyone grabs, random amounts)</label>
                             <input type="number" value={packetShares} onChange={e => setPacketShares(e.target.value)} min={1} className="w-full px-4 py-3 bg-slate-100 rounded-2xl text-center text-lg font-bold outline-none text-slate-800" />
                         </div>
                     ) : (
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">发给谁（只有 ta 能收）</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Send to whom (only they can receive it)</label>
                             <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
                                 {(activeGroup?.members || []).map(mid => {
                                     const c = characters.find(ch => ch.id === mid);
@@ -2276,16 +2288,16 @@ ${memberTimeline || '(暂无互动记录)'}
                         </div>
                     )}
 
-                    <input value={packetNote} onChange={e => setPacketNote(e.target.value)} placeholder="恭喜发财（祝福语，可不填）" className="w-full px-4 py-3 bg-slate-100 rounded-2xl text-sm outline-none text-slate-700 placeholder:text-slate-300" />
+                    <input value={packetNote} onChange={e => setPacketNote(e.target.value)} placeholder="Wishing you fortune (optional greeting)" className="w-full px-4 py-3 bg-slate-100 rounded-2xl text-sm outline-none text-slate-700 placeholder:text-slate-300" />
                 </div>
             </Modal>
 
-            {/* Packet Detail Modal — 领取明细 + 用户抢/收/退 */}
-            <Modal isOpen={modalType === 'packet-detail'} title="红包详情" onClose={() => { setModalType('none'); setSelectedPacketId(null); }}>
+            {/* Packet Detail Modal — claim breakdown + user grab/receive/return */}
+            <Modal isOpen={modalType === 'packet-detail'} title="Red Packet Details" onClose={() => { setModalType('none'); setSelectedPacketId(null); }}>
                 {(() => {
                     const pMsg = messages.find(m => m.id === selectedPacketId);
                     const meta = pMsg?.metadata as GroupPacketMeta | undefined;
-                    if (!pMsg || !meta?.packet) return <div className="text-center text-xs text-slate-400 py-6">这个红包的数据不见了</div>;
+                    if (!pMsg || !meta?.packet) return <div className="text-center text-xs text-slate-400 py-6">This red packet's data is gone</div>;
                     const status = effectivePacketStatus(meta, Date.now());
                     const senderName = pMsg.role === 'user' ? userProfile.name : nameOf(pMsg.charId);
                     const userClaimed = meta.claims.some(c => c.claimantId === 'user');
@@ -2295,14 +2307,14 @@ ${memberTimeline || '(暂无互动记录)'}
                         <div className="space-y-4">
                             <div className="text-center">
                                 <div className="text-4xl mb-1">🧧</div>
-                                <div className="font-bold text-slate-800">{senderName} 的{meta.packetType === 'lucky' ? '拼手气' : '专属'}红包</div>
-                                <div className="text-xs text-slate-400 mt-1">「{meta.note}」</div>
+                                <div className="font-bold text-slate-800">{senderName}'s {meta.packetType === 'lucky' ? 'lucky' : 'exclusive'} red packet</div>
+                                <div className="text-xs text-slate-400 mt-1">"{meta.note}"</div>
                                 <div className="text-2xl font-black text-orange-500 mt-2">¥{meta.totalAmount}</div>
                                 {meta.packetType === 'lucky' && (
-                                    <div className="text-[10px] text-slate-400 mt-1">共 {meta.shares} 份 · 已领 {meta.claims.length} 份{status === 'expired' ? ' · 已过期' : ''}</div>
+                                    <div className="text-[10px] text-slate-400 mt-1">{meta.shares} shares total · {meta.claims.length} claimed{status === 'expired' ? ' · Expired' : ''}</div>
                                 )}
                                 {meta.packetType === 'direct' && (
-                                    <div className="text-[10px] text-slate-400 mt-1">发给 {nameOf(meta.targetId || '')} · {status === 'pending' ? '待领取' : status === 'done' ? '已收下' : status === 'returned' ? '已退回' : '已过期'}</div>
+                                    <div className="text-[10px] text-slate-400 mt-1">Sent to {nameOf(meta.targetId || '')} · {status === 'pending' ? 'Awaiting claim' : status === 'done' ? 'Received' : status === 'returned' ? 'Returned' : 'Expired'}</div>
                                 )}
                             </div>
 
@@ -2326,13 +2338,13 @@ ${memberTimeline || '(暂无互动记录)'}
 
                             {canGrabLucky && (
                                 <button onClick={() => handleUserPacketAction(pMsg, 'claim')} className="w-full py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 active:scale-95 transition-transform">
-                                    抢红包
+                                    Grab Red Packet
                                 </button>
                             )}
                             {canResolveDirect && (
                                 <div className="flex gap-2">
-                                    <button onClick={() => handleUserPacketAction(pMsg, 'claim')} className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 active:scale-95 transition-transform">收下</button>
-                                    <button onClick={() => handleUserPacketAction(pMsg, 'return')} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl active:scale-95 transition-transform">退回</button>
+                                    <button onClick={() => handleUserPacketAction(pMsg, 'claim')} className="flex-1 py-3 bg-orange-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 active:scale-95 transition-transform">Accept</button>
+                                    <button onClick={() => handleUserPacketAction(pMsg, 'return')} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl active:scale-95 transition-transform">Return</button>
                                 </div>
                             )}
                         </div>
@@ -2340,7 +2352,7 @@ ${memberTimeline || '(暂无互动记录)'}
                 })()}
             </Modal>
 
-            {/* 群「白框自定义」底部 sheet —— 写到 group.chromeCustomCss，叠加在全局之上（对齐私聊做法） */}
+            {/* Group "Whitebox Customization" bottom sheet — writes to group.chromeCustomCss, layered on top of the global default (matches private chat's approach) */}
             {activeGroup && modalType === 'chrome-css' && (
                 <div className="fixed inset-0 z-[110] flex items-end justify-center bg-black/5" onClick={() => setModalType('none')}>
                     <div
@@ -2350,8 +2362,8 @@ ${memberTimeline || '(暂无互动记录)'}
                     >
                         <div className="mb-2 flex items-start justify-between">
                             <div>
-                                <div className="text-sm font-bold text-slate-800">白框自定义 · {activeGroup.name}</div>
-                                <div className="mt-0.5 text-[10px] text-slate-400">↑ 上方群聊界面即实时预览；仅对本群生效，叠加在全局设置之上。</div>
+                                <div className="text-sm font-bold text-slate-800">Whitebox Customization · {activeGroup.name}</div>
+                                <div className="mt-0.5 text-[10px] text-slate-400">↑ The group chat above is a live preview; only applies to this group, layered on top of the global setting.</div>
                             </div>
                             <button onClick={() => setModalType('none')} className="px-2 text-xl leading-none text-slate-400 hover:text-slate-600">{'×'}</button>
                         </div>
@@ -2360,13 +2372,13 @@ ${memberTimeline || '(暂无互动记录)'}
                             onChange={(css) => { updateGroup(activeGroup.id, { chromeCustomCss: css }); setActiveGroup({ ...activeGroup, chromeCustomCss: css }); }}
                         />
                     </div>
-                    {/* 脱离 CSS 控制的救援键：portal 到 body + id 守护，坏 CSS 也点得到（逐字复用私聊方案） */}
+                    {/* A rescue button that escapes CSS control: portal'd to body + id guard, still clickable even with broken CSS (reuses private chat's approach verbatim) */}
                     {createPortal(
                         <>
                             <style>{`#sully-safe-reset{position:fixed!important;top:calc(var(--safe-top) + 6px)!important;left:50%!important;transform:translateX(-50%)!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;display:flex!important;z-index:2147483647!important;}`}</style>
                             <button
                                 id="sully-safe-reset"
-                                onClick={() => { updateGroup(activeGroup.id, { chromeCustomCss: '' }); setActiveGroup({ ...activeGroup, chromeCustomCss: '' }); addToast('已还原本群白框', 'success'); }}
+                                onClick={() => { updateGroup(activeGroup.id, { chromeCustomCss: '' }); setActiveGroup({ ...activeGroup, chromeCustomCss: '' }); addToast("This group's Whitebox has been reset", 'success'); }}
                                 style={{
                                     position: 'fixed', top: 'calc(var(--safe-top) + 6px)', left: '50%', transform: 'translateX(-50%)',
                                     zIndex: 2147483647, display: 'flex', alignItems: 'center', gap: '4px',
@@ -2374,14 +2386,14 @@ ${memberTimeline || '(暂无互动记录)'}
                                     background: 'rgba(15,23,42,0.62)', color: '#fff', fontSize: '11px', fontWeight: 700,
                                     border: '1px solid rgba(255,255,255,0.3)', cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
                                 }}
-                            >⟲ 还原本群白框</button>
+                            >⟲ Reset This Group's Whitebox</button>
                         </>,
                         document.body,
                     )}
                 </div>
             )}
 
-            {/* 群「提示音」底部 sheet —— 默认独立存 group.chatSound；绑定后写进 chromeCustomCss 的 @sully-sound 指令 */}
+            {/* Group "Notification Sound" bottom sheet — stored independently in group.chatSound by default; once bound, writes into chromeCustomCss's @sully-sound directive */}
             {activeGroup && modalType === 'chrome-sound' && (() => {
                 const boundSound = parseWhiteboxSound(activeGroup.chromeCustomCss);
                 const isBound = !!activeGroup.chatSoundBound || !!boundSound;
@@ -2410,8 +2422,8 @@ ${memberTimeline || '(暂无互动记录)'}
                         >
                             <div className="mb-3 flex items-start justify-between">
                                 <div>
-                                    <div className="text-sm font-bold text-slate-800">提示音 · {activeGroup.name}</div>
-                                    <div className="mt-0.5 text-[10px] text-slate-400">成员新发的消息成为最新一条时响一次。默认独立于白框，可选绑定一起分享。</div>
+                                    <div className="text-sm font-bold text-slate-800">Notification Sound · {activeGroup.name}</div>
+                                    <div className="mt-0.5 text-[10px] text-slate-400">Plays once when a member's new message becomes the latest one. Independent from Whitebox by default, but can optionally be bound to share settings together.</div>
                                 </div>
                                 <button onClick={() => setModalType('none')} className="px-2 text-xl leading-none text-slate-400 hover:text-slate-600">{'×'}</button>
                             </div>
@@ -2420,48 +2432,48 @@ ${memberTimeline || '(暂无互动记录)'}
                                 bound={isBound}
                                 onChangeSound={changeSound}
                                 onChangeBound={changeBound}
-                                hint={<>🔔 只在 <b>成员新发的消息成为最新一条</b> 时响一次。这里是<b>本群专属</b>；不设则用「外观 → 聊天界面」里的全局默认提示音。</>}
+                                hint={<>🔔 Only plays once when <b>a member's new message becomes the latest one</b>. This is <b>specific to this group</b>; if unset, it falls back to the global default notification sound in "Appearance → Chat Interface."</>}
                             />
                         </div>
                     </div>
                 );
             })()}
 
-            {/* 群聊记忆规则 */}
-            <Modal isOpen={modalType === 'help'} title="群聊记忆规则" onClose={() => setModalType('none')}>
+            {/* Group Chat Memory Rules */}
+            <Modal isOpen={modalType === 'help'} title="Group Chat Memory Rules" onClose={() => setModalType('none')}>
                 <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
                     <div className="rounded-2xl bg-violet-50 border border-violet-100 p-4 text-violet-800">
-                        群聊内容不是排队延迟发送。角色在私聊中“隔天提起”，通常是最近群聊、话题盒或个人群聊记忆被当作本轮话题选中了。
+                        Group chat content is not sent with a delayed queue. When a character "brings something up a day later" in private chat, it is usually because recent group chat, a topic box, or a personal group-chat memory got selected as this round's topic.
                     </div>
                     <div>
-                        <div className="font-bold text-slate-800 mb-1">最近群聊</div>
-                        <p>角色生成私聊回复时，会看到自己参与群聊中的最近一段消息。记录同时带具体日期和“约 N 天前”，避免把旧消息误认成刚刚发生。</p>
+                        <div className="font-bold text-slate-800 mb-1">Recent Group Chat</div>
+                        <p>When a character generates a private-chat reply, they see the most recent stretch of messages from the group chats they participate in. Records carry both a specific date and an "about N days ago" tag, to avoid mistaking an old message for something that just happened.</p>
                     </div>
                     <div>
-                        <div className="font-bold text-slate-800 mb-1">公共话题盒</div>
-                        <p>群聊积累到一定数量后，较旧内容会被压缩成群成员共享的话题盒，并进入各成员的私聊背景。因此旧话题可能在之后再次被提起。</p>
+                        <div className="font-bold text-slate-800 mb-1">Public Topic Box</div>
+                        <p>Once a group chat accumulates enough messages, older content gets compressed into a topic box shared by group members, which then enters each member's private-chat background. This is why an old topic may get brought up again later.</p>
                     </div>
                     <div>
-                        <div className="font-bold text-slate-800 mb-1">个人群聊记忆</div>
-                        <p>启用群聊记忆宫殿后，较旧群聊会以第三人称分别整理进参与角色的记忆宫殿。它不会要求角色立刻回复，只提供后续回忆依据。</p>
+                        <div className="font-bold text-slate-800 mb-1">Personal Group Chat Memory</div>
+                        <p>With the group chat memory palace enabled, older group chats get organized in third person into the memory palace of each participating character. It doesn't require the character to respond right away — it's just material for future recall.</p>
                     </div>
                     <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-xs text-slate-500">
-                        模型看到一段记录，不代表必须马上回应；是否主动提起仍会受当前话题和角色性格影响。
+                        The model seeing a record doesn't mean it has to respond right away; whether it brings something up on its own is still shaped by the current topic and the character's personality.
                     </div>
                 </div>
             </Modal>
 
-            {/* HTML 模式自定义提示词 Modal（瓦片右键/长按进入） */}
+            {/* HTML Mode Custom Prompt Modal (accessed via right-click/long-press on the tile) */}
             <Modal
-                isOpen={modalType === 'html-prompt'} title="HTML 模式 · 自定义提示词" onClose={() => setModalType('none')}
-                footer={<button onClick={() => { if (activeGroup) { updateGroup(activeGroup.id, { htmlModeCustomPrompt: tempHtmlPrompt }); setActiveGroup({ ...activeGroup, htmlModeCustomPrompt: tempHtmlPrompt }); } setModalType('none'); addToast('已保存', 'success'); }} className="w-full py-3 bg-fuchsia-500 text-white font-bold rounded-2xl shadow-lg shadow-fuchsia-200">保存</button>}
+                isOpen={modalType === 'html-prompt'} title="HTML Mode · Custom Prompt" onClose={() => setModalType('none')}
+                footer={<button onClick={() => { if (activeGroup) { updateGroup(activeGroup.id, { htmlModeCustomPrompt: tempHtmlPrompt }); setActiveGroup({ ...activeGroup, htmlModeCustomPrompt: tempHtmlPrompt }); } setModalType('none'); addToast('Saved', 'success'); }} className="w-full py-3 bg-fuchsia-500 text-white font-bold rounded-2xl shadow-lg shadow-fuchsia-200">Save</button>}
             >
                 <div className="space-y-3">
-                    <p className="text-[10px] text-slate-400 leading-relaxed">追加在内置 HTML 提示词之后（不覆盖）。可以写卡片风格偏好、常用配色、想要的卡片类型等。</p>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">Appended after the built-in HTML prompt (does not overwrite it). You can write card style preferences, common color schemes, desired card types, etc.</p>
                     <textarea
                         value={tempHtmlPrompt}
                         onChange={e => setTempHtmlPrompt(e.target.value)}
-                        placeholder="例如：卡片统一用暖色系、圆角 16px；多用进度条和标签组……"
+                        placeholder="For example: use warm tones for all cards, 16px rounded corners; make heavy use of progress bars and tag groups..."
                         className="w-full h-36 bg-slate-100 rounded-2xl p-4 resize-none focus:ring-1 focus:ring-fuchsia-300 transition-all text-sm leading-relaxed"
                     />
                 </div>
