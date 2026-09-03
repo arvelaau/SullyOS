@@ -19,7 +19,7 @@ describe('查手机独立 API 接线', () => {
     it('全部查手机生成入口统一走 effectiveApiConfig，并在选人页提供设置', () => {
         const source = read('apps/CheckPhone.tsx');
         expect(source).toContain('resolveCheckPhoneApi(phoneApiConfig, apiConfig)');
-        expect(source).toContain('aria-label="查手机 API 设置"');
+        expect(source).toContain('aria-label="Check Phone API settings"');
         expect(source).toContain('api: effectiveApiConfig as any');
         expect(source).not.toMatch(/fetch\(`\$\{apiConfig\.baseUrl/);
         expect(source).not.toContain('api: apiConfig as any');
