@@ -18,6 +18,6 @@ describe('彼方书库 PDF 导入接线', () => {
         expect(uploadModal).toContain('await extractPdfText(buf, {');
         expect(uploadModal).toContain("fileInfo.kind === 'text'");
         expect(uploadModal).toContain('/\\.(txt|text|pdf)$/i');
-        expect(uploadModal).toContain('请先 OCR 后再导入');
+        expect(uploadModal).toContain('run OCR on it first, then import');
     });
 });

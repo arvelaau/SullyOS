@@ -8,7 +8,7 @@ const source = readFileSync(
 );
 
 const uploadModalStart = source.indexOf('const UploadModal:');
-const uploadModalEnd = source.indexOf('// ============ chibi', uploadModalStart);
+const uploadModalEnd = source.indexOf('// ============ Chibi avatar editor', uploadModalStart);
 const uploadModal = source.slice(uploadModalStart, uploadModalEnd);
 
 describe('彼方书库上传编辑框样式', () => {
