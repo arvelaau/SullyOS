@@ -1,6 +1,6 @@
 /**
- * LifeSimApp — 都市模拟人生 · 2026现代版
- * 核心体验：看角色操控都市居民，制造都市Drama，离线回来发现整栋楼翻天覆地
+ * LifeSimApp — City Life · 2026 Modern Edition
+ * Core experience: watch characters control city residents, create city drama, come back offline to find the whole building turned upside down
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -49,7 +49,7 @@ function TwemojiImg({ emoji, size = 16, className = '' }: { emoji: string; size?
     return <img src={`${TWEMOJI_BASE}/${cp}.png`} alt={emoji} width={size} height={size} className={`inline-block ${className}`} style={{ verticalAlign: 'middle' }} draggable={false} />;
 }
 
-// 子组件
+// Subcomponents
 import WorldMap from './lifesim/WorldMap';
 import NPCGrid from './lifesim/NPCGrid';
 import DramaFeed from './lifesim/DramaFeed';
@@ -62,13 +62,13 @@ import LifeSimSettingsPanel from './lifesim/LifeSimSettingsPanel';
 import NPCEditorPanel from './lifesim/NPCEditorPanel';
 import ResetCityDialog from './lifesim/ResetCityDialog';
 
-// ── 常量 ────────────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────
 
 const CHAR_TURN_COUNT_RANGE = [1, 3] as const;
 const MAIN_PLOT_WATCH_CHANCE = 0.45;
 const genId = () => Math.random().toString(36).slice(2, 10);
 
-// ── API调用 ──────────────────────────────────────────────────────
+// ── API calls ──────────────────────────────────────────────────────
 
 const AI_MAX_RETRIES = 2;
 
@@ -92,7 +92,7 @@ async function callCharAI(
                         response_format: { type: 'json_object' },
                     }),
                 },
-                2, 0, { appName: '都市人生', purpose: '剧情生成' }
+                2, 0, { appName: 'City Life', purpose: 'Story generation' }
             );
             return data?.choices?.[0]?.message?.content?.trim() || '';
         } catch (e: any) {
@@ -101,17 +101,17 @@ async function callCharAI(
 
             if (isNetwork && attempt < AI_MAX_RETRIES) {
                 const delay = (attempt + 1) * 2000;
-                console.warn(`[LifeSim] AI请求失败(第${attempt + 1}次)，${delay / 1000}s后重试…`, e?.message);
+                console.warn(`[LifeSim] AI request failed (attempt ${attempt + 1}), retrying in ${delay / 1000}s...`, e?.message);
                 await new Promise(r => setTimeout(r, delay));
                 continue;
             }
             throw lastError;
         }
     }
-    throw lastError || new Error('AI请求失败');
+    throw lastError || new Error('AI request failed');
 }
 
-// ── 主组件 ──────────────────────────────────────────────────────
+// ── Main component ──────────────────────────────────────────────────────
 
 const LifeSimApp: React.FC = () => {
     const { apiConfig, apiPresets, characters, userProfile, closeApp } = useOS();
@@ -131,7 +131,7 @@ const LifeSimApp: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'npcs'|'drama'|'relations'>('npcs');
     const [actionPanel, setActionPanel] = useState<'none'|'stir'|'add'>('none');
 
-    // ── 初始化 ──────────────────────────────────────────────────
+    // ── Initialization ──────────────────────────────────────────────────
 
     useEffect(() => {
         async function init() {
@@ -197,7 +197,7 @@ const LifeSimApp: React.FC = () => {
     const buildMainPlotAction = useCallback(async (state: LifeSimState) => {
         if (!userProfile) return null;
 
-        setProcessingMsg('主线编剧室正在加戏...');
+        setProcessingMsg("Main Plot Writers' Room is spicing things up...");
         const fallback = buildFallbackWorldDramaDecision(state);
         const resolvedApiConfig = resolveLifeSimApiConfig(state);
 
@@ -235,7 +235,7 @@ const LifeSimApp: React.FC = () => {
             const mainPlotAction: SimAction = {
                 id: genId(),
                 turnNumber: state.turnNumber,
-                actor: '主线编剧室',
+                actor: "Main Plot Writers' Room",
                 actorAvatar: '🎬',
                 actorId: 'story',
                 type: 'TRIGGER_EVENT',
@@ -262,50 +262,50 @@ const LifeSimApp: React.FC = () => {
         }
     }, [resolveLifeSimApiConfig, userProfile]);
 
-    // ── 结束回合 ────────────────────────────────────────────────
+    // ── End turn ────────────────────────────────────────────────
 
     const endTurn = useCallback(async () => {
         if (!gameState) return;
 
-        // 1. 推进时间
+        // 1. Advance time
         const { newState: s1, events, festival } = advanceTimeOfDay(gameState);
         let s = deepClone(s1);
         for (const ev of events) {
             const sysAction: SimAction = {
                 id: genId(), turnNumber: s.turnNumber,
-                actor: '时光', actorAvatar: '', actorId: 'system',
+                actor: 'Time', actorAvatar: '', actorId: 'system',
                 type: 'DO_NOTHING', description: ev, immediateResult: ev, timestamp: Date.now(),
             };
             s.actionLog = [...s.actionLog, sysAction];
         }
 
         if (festival) {
-            setFestivalAnnounce(`${festival.name}：${festival.description}`);
+            setFestivalAnnounce(`${festival.name}: ${festival.description}`);
             setTimeout(() => setFestivalAnnounce(''), 4000);
         }
 
-        // 2. NPC自主行为
+        // 2. NPC autonomous behavior
 
-        // 3. 结算待处理效果
+        // 3. Resolve pending effects
         const settled = settlePendingEffects(s);
         s = settled.newState;
         for (const ev of settled.events) {
             const sysAction: SimAction = {
                 id: genId(), turnNumber: s.turnNumber,
-                actor: '连锁', actorAvatar: '', actorId: 'system',
+                actor: 'Chain Reaction', actorAvatar: '', actorId: 'system',
                 type: 'TRIGGER_EVENT', description: ev, immediateResult: ev, timestamp: Date.now(),
             };
             s.actionLog = [...s.actionLog, sysAction];
         }
 
-        // 4. 检查游戏结束
+        // 4. Check game over
         const { over, reason } = checkGameOver(s);
         if (over) {
             s.gameOver = true; s.gameOverReason = reason;
             await saveState(s); setShowGameOver(true); return;
         }
 
-        // 5. 决定CHAR回合
+        // 5. Decide CHAR turns
         const participantIds = new Set(resolveParticipantCharIds(gameState));
         const availableChars = characters.filter(c => c.id && participantIds.has(c.id));
         const charCount = Math.floor(
@@ -343,7 +343,7 @@ const LifeSimApp: React.FC = () => {
         for (const ev of events) {
             const sysAction: SimAction = {
                 id: genId(), turnNumber: s.turnNumber,
-                actor: '时光', actorAvatar: '', actorId: 'system',
+                actor: 'Time', actorAvatar: '', actorId: 'system',
                 type: 'DO_NOTHING', description: ev, immediateResult: ev, storyKind: 'system', timestamp: Date.now(),
             };
             s.actionLog = [...s.actionLog, sysAction];
@@ -351,7 +351,7 @@ const LifeSimApp: React.FC = () => {
         }
 
         if (festival) {
-            setFestivalAnnounce(`${festival.name}：${festival.description}`);
+            setFestivalAnnounce(`${festival.name}: ${festival.description}`);
             setTimeout(() => setFestivalAnnounce(''), 4000);
         }
 
@@ -361,7 +361,7 @@ const LifeSimApp: React.FC = () => {
         for (const ev of settled.events) {
             const sysAction: SimAction = {
                 id: genId(), turnNumber: s.turnNumber,
-                actor: '连锁', actorAvatar: '', actorId: 'system',
+                actor: 'Chain Reaction', actorAvatar: '', actorId: 'system',
                 type: 'TRIGGER_EVENT', description: ev, immediateResult: ev, storyKind: 'system', timestamp: Date.now(),
             };
             s.actionLog = [...s.actionLog, sysAction];
@@ -415,7 +415,7 @@ const LifeSimApp: React.FC = () => {
         return { state: s, replayActions, shouldRunCharTurns: true };
     }, [characters, resolveParticipantCharIds, saveState]);
 
-    // ── CHAR回合引擎 ──────────────────────────────────────────
+    // ── CHAR turn engine ──────────────────────────────────────────
 
     const runCharTurns = useCallback(async (initialState: LifeSimState, seededReplayActions: SimAction[] = []) => {
         if (!userProfile) return;
@@ -428,7 +428,7 @@ const LifeSimApp: React.FC = () => {
             const char = characters.find(c => c.id === charId);
             if (!char) continue;
             s.isProcessingCharTurn = true; s.currentActorId = charId;
-            setProcessingMsg(`${char.name} 正在思考……`);
+            setProcessingMsg(`${char.name} is thinking...`);
             await saveState(s);
 
             try {
@@ -438,7 +438,7 @@ const LifeSimApp: React.FC = () => {
                 if (canUseApi) {
                     const rawMessages = await DB.getRecentMessagesByCharId(charId, 20);
                     const chatHistory = formatRecentChatForSim(
-                        rawMessages as any, char.name, userProfile.name || '你', 20
+                        rawMessages as any, char.name, userProfile.name || 'you', 20
                     );
                     await injectMemoryPalace(char, undefined, chatHistory || undefined);
                     const systemPrompt = buildCharTurnSystemPrompt(char, userProfile, chatHistory, s, s.actionLog);
@@ -451,25 +451,25 @@ const LifeSimApp: React.FC = () => {
                     if (Array.isArray(rawJson)) rawJson = rawJson[0];
                     decision = normalizeCharDecision(rawJson);
 
-                    // 调试日志：查看每回合LLM的原始输出和解析结果
-                    console.group(`[LifeSim] ${char.name} 的回合 (Turn ${s.turnNumber})`);
-                    console.log('LLM原始输出:', raw);
-                    console.log('extractJson结果:', rawJson);
-                    console.log('normalize后决策:', JSON.stringify(decision, null, 2));
-                    if (!rawJson) console.warn('JSON解析失败！LLM输出无法解析为JSON');
+                    // Debug log: view each turn's raw LLM output and parsed result
+                    console.group(`[LifeSim] ${char.name}'s turn (Turn ${s.turnNumber})`);
+                    console.log('Raw LLM output:', raw);
+                    console.log('extractJson result:', rawJson);
+                    console.log('Decision after normalize:', JSON.stringify(decision, null, 2));
+                    if (!rawJson) console.warn('JSON parse failed! LLM output could not be parsed as JSON');
                     if (decision.action.type === 'DO_NOTHING' && rawJson?.type && rawJson.type !== 'DO_NOTHING')
-                        console.warn('action type被fallback为DO_NOTHING，原始type:', rawJson.type);
+                        console.warn('action type fell back to DO_NOTHING, original type:', rawJson.type);
                     console.groupEnd();
                 } else {
                     decision = {
                         action: { type: 'DO_NOTHING' },
                         narrative: {
-                            innerThought: `${char.name}决定先嗑着瓜子围观一轮，看看局面会不会自己炸开。`,
+                            innerThought: `${char.name} decided to munch some snacks and watch for a while, to see if things would blow up on their own.`,
                             dialogue: '',
-                            commentOnWorld: '没接上外部AI的时候，这座城也会自己慢慢酝酿戏剧。',
+                            commentOnWorld: 'When no external AI is connected, this city still quietly brews its own drama.',
                             emotionalTone: 'amused',
                         },
-                        reactionToUser: '你先继续折腾，我在旁边看戏。',
+                        reactionToUser: 'You go ahead and keep stirring things up, I will just watch from the sidelines.',
                     };
                 }
                 const actionResult = executeCharDecision(s, decision, char);
@@ -490,13 +490,13 @@ const LifeSimApp: React.FC = () => {
                 s.actionLog = [...s.actionLog, action];
                 replayActions.push(action);
 
-                // 结算 pending effects
+                // Resolve pending effects
                 const settled = settlePendingEffects(s);
                 s = settled.newState;
                 for (const ev of settled.events) {
                     const sysAction: SimAction = {
                         id: genId(), turnNumber: s.turnNumber,
-                        actor: '系统', actorAvatar: '', actorId: 'system',
+                        actor: 'System', actorAvatar: '', actorId: 'system',
                         type: 'TRIGGER_EVENT', description: ev, immediateResult: ev, storyKind: 'system', timestamp: Date.now(),
                     };
                     s.actionLog = [...s.actionLog, sysAction];
@@ -508,13 +508,13 @@ const LifeSimApp: React.FC = () => {
                 if (over) { s.gameOver = true; s.gameOverReason = reason; break; }
 
             } catch (e: any) {
-                console.error(`[LifeSim] ${char.name} 回合异常:`, e?.message || e);
+                console.error(`[LifeSim] ${char.name} turn error:`, e?.message || e);
                 const fallbackAction: SimAction = {
                     id: genId(), turnNumber: s.turnNumber,
                     actor: char.name, actorAvatar: char.avatar, actorId: char.id,
                     type: 'DO_NOTHING',
-                    description: `${char.name}（因为某些原因）什么都没做，静静地看着局面发展。`,
-                    immediateResult: '……', storyKind: 'character_drama', timestamp: Date.now(),
+                    description: `${char.name} (for some reason) did nothing, quietly watching things unfold.`,
+                    immediateResult: '...', storyKind: 'character_drama', timestamp: Date.now(),
                 };
                 s.actionLog = [...s.actionLog, fallbackAction];
                 replayActions.push(fallbackAction);
@@ -530,11 +530,11 @@ const LifeSimApp: React.FC = () => {
         if (s.gameOver) setShowGameOver(true);
     }, [characters, resolveLifeSimApiConfig, saveState, userProfile]);
 
-    // ── 用户行动：搅局 ──────────────────────────────────────────
+    // ── User action: Stir things up ──────────────────────────────────────────
 
     const handleStir = useCallback(async (action: StirAction) => {
         if (!gameState) return;
-        const userActor = userProfile?.name || '你';
+        const userActor = userProfile?.name || 'you';
         const result = applyTriggerEvent(gameState, action.eventType, action.involvedNpcIds, action.eventDesc);
         const actionDesc = buildUserActionDescription('TRIGGER_EVENT', userActor, {
             eventType: action.eventType, eventDesc: action.eventDesc,
@@ -560,11 +560,11 @@ const LifeSimApp: React.FC = () => {
         }
     }, [gameState, userProfile, finalizeTurn, runCharTurns]);
 
-    // ── 用户行动：加人 ──────────────────────────────────────────
+    // ── User action: Recruit ──────────────────────────────────────────
 
     const handleAddNpc = useCallback(async (action: AddNpcAction) => {
         if (!gameState) return;
-        const userActor = userProfile?.name || '你';
+        const userActor = userProfile?.name || 'you';
         const npc = createNPC(action.name, action.emoji, action.personalities);
         const result = applyAddNPC(gameState, npc, action.familyId);
         const targetFamily = gameState.families.find(f => f.id === action.familyId);
@@ -587,20 +587,20 @@ const LifeSimApp: React.FC = () => {
         }
     }, [gameState, userProfile, finalizeTurn, runCharTurns]);
 
-    // ── 看戏（随机旁观角色戏 / 主线戏） ────────────────────────
+    // ── Watch (randomly observe character drama / main plot) ────────────────────────
 
     const handleWatch = useCallback(async () => {
         if (!gameState) return;
 
-        trackEvent('吃瓜围观推进一轮');
+        trackEvent('Watch A Turn');
 
-        const userActor = userProfile?.name || '你';
+        const userActor = userProfile?.name || 'you';
         const actionDesc = buildUserActionDescription('DO_NOTHING', userActor, {});
         const simAction: SimAction = {
             id: genId(), turnNumber: gameState.turnNumber,
             actor: userActor, actorAvatar: userProfile?.avatar || '',
             actorId: 'user', type: 'DO_NOTHING',
-            description: actionDesc, immediateResult: '你选择了吃瓜围观……', timestamp: Date.now(),
+            description: actionDesc, immediateResult: 'You chose to sit back and watch...', timestamp: Date.now(),
         };
         const watchedState = { ...gameState, actionLog: [...gameState.actionLog, simAction] };
 
@@ -646,26 +646,26 @@ const LifeSimApp: React.FC = () => {
         }
     }, [gameState, userProfile, buildMainPlotAction, finalizeTurn, runCharTurns, saveState]);
 
-    // ── CHAR决策执行 ──────────────────────────────────────────
+    // ── CHAR decision execution ──────────────────────────────────────────
 
     function executeCharDecision(state: LifeSimState, decision: CharDecision, char: CharacterProfile) {
         const act = decision.action;
         try {
             switch (act.type) {
                 case 'ADD_NPC': {
-                    const npc = createNPC(act.newNpcName || `${char.name}的小人`, act.newNpcEmoji || '', act.newNpcPersonality || ['神秘']);
+                    const npc = createNPC(act.newNpcName || `${char.name}'s little person`, act.newNpcEmoji || '', act.newNpcPersonality || ['Mysterious']);
                     const targetId = act.targetFamilyId && state.families.find(f => f.id === act.targetFamilyId) ? act.targetFamilyId : state.families[0]?.id;
-                    if (!targetId) return { newState: state, immediateResult: '没有可用的家庭。' };
+                    if (!targetId) return { newState: state, immediateResult: 'No available family.' };
                     return applyAddNPC(state, npc, targetId);
                 }
                 case 'TRIGGER_EVENT': {
                     const involved = (act.involvedNpcIds || []).filter(id => state.npcs.find(n => n.id === id));
                     const fallback = state.npcs.slice(0, 2).map(n => n.id);
-                    return applyTriggerEvent(state, act.eventType || 'gossip', involved.length ? involved : fallback, act.eventDescription || '发生了一些事');
+                    return applyTriggerEvent(state, act.eventType || 'gossip', involved.length ? involved : fallback, act.eventDescription || 'Something happened');
                 }
-                default: return { newState: state, immediateResult: '……什么都没发生。' };
+                default: return { newState: state, immediateResult: '...Nothing happened.' };
             }
-        } catch { return { newState: state, immediateResult: '操作失败了，有点尴尬。' }; }
+        } catch { return { newState: state, immediateResult: 'The action failed, a bit awkward.' }; }
     }
 
     function buildCharActionDescription(charName: string, decision: CharDecision): string {
@@ -674,13 +674,13 @@ const LifeSimApp: React.FC = () => {
         const toneEmoji = getLifeSimToneEmoji(narr?.emotionalTone);
         const tone = toneEmoji ? ` ${toneEmoji}` : '';
         switch (act.type) {
-            case 'ADD_NPC': return `${charName}${tone}往游戏里捏了个叫"${act.newNpcEmoji}${act.newNpcName}"的小人`;
-            case 'TRIGGER_EVENT': return `${charName}${tone}在游戏里制造了${act.eventType}事件：${act.eventDescription || '…'}`;
-            default: return `${charName}${tone}看了看游戏，这轮跳过了`;
+            case 'ADD_NPC': return `${charName}${tone} crafted a little person named "${act.newNpcEmoji}${act.newNpcName}" in the game`;
+            case 'TRIGGER_EVENT': return `${charName}${tone} triggered a ${act.eventType} event in the game: ${act.eventDescription || '...'}`;
+            default: return `${charName}${tone} glanced at the game and skipped this round`;
         }
     }
 
-    // ── 设置 / 编辑 / 结算重置 ────────────────────────────────
+    // ── Settings / Edit / Archive & Reset ────────────────────────────────
 
     const handleToggleParticipantChar = useCallback(async (charId: string) => {
         if (!gameState) return;
@@ -764,12 +764,12 @@ const LifeSimApp: React.FC = () => {
         const participantIds = resolveParticipantCharIds(gameState);
         const participantChars = getParticipatingCharacters(gameState);
         const participantNames = participantChars.map(char => char.name);
-        const fallbackSummary = buildFallbackLifeSimSessionSummary(userProfile?.name || '用户', participantNames, gameState.actionLog).slice(0, 300);
+        const fallbackSummary = buildFallbackLifeSimSessionSummary(userProfile?.name || 'User', participantNames, gameState.actionLog).slice(0, 300);
         const mainPlots = gameState.actionLog.filter(action => action.storyKind === 'main_plot');
         const resolvedApiConfig = resolveLifeSimApiConfig(gameState);
 
         setIsResetting(true);
-        setProcessingMsg('正在生成城市小结...');
+        setProcessingMsg('Generating city summary...');
 
         try {
             let summary = fallbackSummary;
@@ -790,7 +790,7 @@ const LifeSimApp: React.FC = () => {
                 const cardData = createLifeSimResetCardData({
                     summary,
                     headline: mainPlots[0]?.headline || mainPlots[mainPlots.length - 1]?.headline,
-                    userName: userProfile?.name || '用户',
+                    userName: userProfile?.name || 'User',
                     participantNames,
                     charName: char.name,
                     charAvatar: char.avatar,
@@ -838,7 +838,7 @@ const LifeSimApp: React.FC = () => {
         }
     };
 
-    // ── 渲染 ─────────────────────────────────────────────────
+    // ── Render ─────────────────────────────────────────────────
 
     if (isLoading) {
         return (
@@ -848,7 +848,7 @@ const LifeSimApp: React.FC = () => {
                         <div className="retro-titlebar"><span>loading...</span><span className="retro-dots">···</span></div>
                         <div className="p-4 text-center">
                             <Buildings size={36} weight="duotone" className="mb-2 mx-auto" style={{ color: '#6b5b95' }} />
-                            <p style={{ color: '#6b5b95', fontSize: 11, fontWeight: 700 }}>城市加载中…</p>
+                            <p style={{ color: '#6b5b95', fontSize: 11, fontWeight: 700 }}>Loading city...</p>
                         </div>
                     </div>
                 </div>
@@ -879,7 +879,7 @@ const LifeSimApp: React.FC = () => {
     const pal = seasonPalette[season] || seasonPalette.spring;
     const topSafePadding = 'max(12px, var(--safe-top))';
 
-    const TAB_LABELS: Record<string, string> = { npcs: '住户.exe', drama: '动态.log', relations: '关系.dat' };
+    const TAB_LABELS: Record<string, string> = { npcs: 'Residents.exe', drama: 'Feed.log', relations: 'Relations.dat' };
 
     return (
         <div className="h-full w-full max-w-full flex flex-col overflow-hidden select-none" style={{ background: pal.bg, overflowX: 'hidden' }}>
@@ -959,7 +959,7 @@ const LifeSimApp: React.FC = () => {
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
             `}</style>
 
-            {/* ── 顶部状态栏 (retro taskbar) ── */}
+            {/* ── Top status bar (retro taskbar) ── */}
             <div className="flex-shrink-0" style={{
                 background: `linear-gradient(180deg, ${pal.titlebar}ee, ${pal.accent}dd)`,
                 paddingTop: topSafePadding,
@@ -979,7 +979,7 @@ const LifeSimApp: React.FC = () => {
                             touchAction: 'manipulation',
                             WebkitTapHighlightColor: 'transparent',
                         }}>
-                        <Buildings size={16} weight="fill" /> 返回
+                        <Buildings size={16} weight="fill" /> Back
                     </button>
 
                     <div className="flex-1" />
@@ -1004,7 +1004,7 @@ const LifeSimApp: React.FC = () => {
                             R{gameState.turnNumber} D{gameState.day ?? 1}
                         </span>
                         <button
-                            onClick={() => { trackEvent('打开城市设置面板'); setShowSettings(true); }}
+                            onClick={() => { trackEvent('Open City Settings Panel'); setShowSettings(true); }}
                             className="flex items-center justify-center relative"
                             style={{
                                 width: 44, height: 44, borderRadius: 7,
@@ -1055,10 +1055,10 @@ const LifeSimApp: React.FC = () => {
                 </div>
             )}
 
-            {/* ── 地图窗口 ── */}
+            {/* ── Map window ── */}
             <div className="flex-shrink-0 mx-2 mt-2 retro-window">
                 <div className="retro-titlebar">
-                    <span>cityview.exe — {si.zh}季 Y{gameState.year ?? 1}</span>
+                    <span>cityview.exe — {si.zh} Season Y{gameState.year ?? 1}</span>
                     <span className="retro-dots">
                         <span className="retro-dot" style={{ background: '#fbbf24' }}>─</span>
                         <span className="retro-dot" style={{ background: '#86efac' }}>□</span>
@@ -1092,9 +1092,9 @@ const LifeSimApp: React.FC = () => {
                     border: `1px solid ${gameState.isProcessingCharTurn ? 'rgba(139,107,184,0.2)' : 'rgba(91,139,107,0.2)'}`,
                 }}>
                     {gameState.isProcessingCharTurn ? (
-                        <><Gear size={12} weight="bold" className="animate-spin" /> {processingMsg || '角色们在思考…'}</>
+                        <><Gear size={12} weight="bold" className="animate-spin" /> {processingMsg || 'Characters are thinking...'}</>
                     ) : (
-                        <><Star size={12} weight="fill" /> 你的回合</>
+                        <><Star size={12} weight="fill" /> Your Turn</>
                     )}
                 </div>
             )}
@@ -1117,7 +1117,7 @@ const LifeSimApp: React.FC = () => {
                                 flexShrink: 0,
                             }}>
                                 <span style={{ fontSize: 14 }}>🎬</span>
-                                <span>主线编剧室</span>
+                                <span>Main Plot Writers' Room</span>
                             </div>
                         )}
 
@@ -1170,7 +1170,7 @@ const LifeSimApp: React.FC = () => {
                         <div style={{ marginTop: 5, fontSize: 9, color: '#8b8099', fontWeight: 700 }}>
                             {isMainPlotThinking
                                 ? processingMsg
-                                : `${activeThinkingChar?.name || '角色'} 正在思考…`}
+                                : `${activeThinkingChar?.name || 'Character'} is thinking...`}
                         </div>
                     )}
                 </div>
@@ -1181,11 +1181,11 @@ const LifeSimApp: React.FC = () => {
                 {/* Retro tab bar as titlebar */}
                 <div className="retro-titlebar" style={{ padding: 0 }}>
                     {([
-                        ['npcs', '住户', UsersThree],
-                        ['drama', '动态', MaskSad],
-                        ['relations', '关系', HeartHalf],
+                        ['npcs', 'Residents', UsersThree],
+                        ['drama', 'Feed', MaskSad],
+                        ['relations', 'Relations', HeartHalf],
                     ] as const).map(([tab, label, Icon]) => (
-                        <button key={tab} onClick={() => { trackEvent('切换城市面板标签', { tab }); setActiveTab(tab as any); }}
+                        <button key={tab} onClick={() => { trackEvent('Switch City Panel Tab', { tab }); setActiveTab(tab as any); }}
                             className="flex items-center gap-1 px-3 py-1"
                             style={{
                                 fontSize: 10, fontWeight: 700,
@@ -1215,22 +1215,22 @@ const LifeSimApp: React.FC = () => {
                     <button onClick={() => setActionPanel('stir')}
                         className="flex-1 retro-btn retro-btn-primary flex items-center justify-center gap-1"
                         style={{ padding: '7px 8px' }}>
-                        <MaskHappy size={13} weight="bold" /> 搅局
+                        <MaskHappy size={13} weight="bold" /> Stir
                     </button>
                     <button onClick={() => setActionPanel('add')}
                         className="flex-1 retro-btn retro-btn-primary flex items-center justify-center gap-1"
                         style={{ padding: '7px 8px', background: `linear-gradient(180deg, #7badc4, #5b8fa8)` }}>
-                        <UserPlus size={13} weight="bold" /> 拉人
+                        <UserPlus size={13} weight="bold" /> Recruit
                     </button>
                     <button onClick={handleWatch}
                         className="flex-1 retro-btn flex items-center justify-center gap-1"
                         style={{ padding: '7px 8px' }}>
-                        <Eye size={13} weight="bold" /> 吃瓜
+                        <Eye size={13} weight="bold" /> Watch
                     </button>
                 </div>
             )}
 
-            {/* ── 行动面板 ── */}
+            {/* ── Action panel ── */}
             {actionPanel !== 'none' && isUserTurn && (
                 <ActionPanel
                     gameState={gameState}
@@ -1275,7 +1275,7 @@ const LifeSimApp: React.FC = () => {
                 />
             )}
 
-            {/* ── 回放弹窗 ── */}
+            {/* ── Replay dialog ── */}
             {showReplay && gameState.replayPending && gameState.replayPending.length > 0 && (
                 <NarrativeReplayOverlay
                     actions={gameState.replayPending}
@@ -1284,7 +1284,7 @@ const LifeSimApp: React.FC = () => {
                 />
             )}
 
-            {/* ── 游戏结束 ── */}
+            {/* ── Game over ── */}
             {showGameOver && (
                 <GameOverOverlay reason={gameState.gameOverReason} onRestart={resetGame} />
             )}

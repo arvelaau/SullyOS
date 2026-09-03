@@ -231,7 +231,7 @@ const TypewriterSegments: React.FC<{
             {visibleCount < segments.length && (
                 <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(140,125,130,0.7)' }}>
                     <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#b8a0a8' }} />
-                    <span>{segments[visibleCount]?.speaker === 'gm' ? 'GM' : charName} 正在说话...</span>
+                    <span>{segments[visibleCount]?.speaker === 'gm' ? 'GM' : charName} is speaking...</span>
                 </div>
             )}
         </div>
@@ -357,13 +357,13 @@ const RoundDisplay: React.FC<{
 
                         {/* Inner Thought (now includes prediction) */}
                         <div className="rounded-lg px-2.5 py-2" style={{ background: 'rgba(230,225,238,0.5)', border: '1px solid rgba(185,175,200,0.25)' }}>
-                            <div className="text-[9px] font-bold mb-0.5" style={{ color: '#8a80a0' }}>内心 OS &amp; 预判</div>
+                            <div className="text-[9px] font-bold mb-0.5" style={{ color: '#8a80a0' }}>Inner Monologue &amp; Prediction</div>
                             <div className="text-[11px] italic leading-relaxed" style={{ color: '#6a6080' }}>{round.charInnerThought}</div>
                         </div>
 
                         {/* Score bar */}
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px]" style={{ color: 'rgba(140,125,130,0.6)' }}>好感度</span>
+                            <span className="text-[10px]" style={{ color: 'rgba(140,125,130,0.6)' }}>Affinity</span>
                             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(230,220,225,0.5)' }}>
                                 <div className={`h-full rounded-full transition-all duration-500 ${
                                     affinityDiff > 0 ? 'bg-gradient-to-r from-emerald-300 to-emerald-400' : affinityDiff < 0 ? 'bg-gradient-to-r from-red-300 to-red-400' : 'bg-gray-300'
@@ -382,7 +382,7 @@ const RoundDisplay: React.FC<{
                         {round.charInsight && (
                             <div className="rounded-xl px-3 py-2.5" style={{ background: 'linear-gradient(135deg, rgba(220,235,248,0.55), rgba(210,228,245,0.45))', border: '1px solid rgba(160,190,220,0.35)' }}>
                                 <div className="text-[9px] font-bold mb-1 flex items-center gap-1" style={{ color: '#5a7a9e' }}>
-                                    <Diamond size={12} weight="fill" /> 关于你的发现
+                                    <Diamond size={12} weight="fill" /> What I've Noticed About You
                                 </div>
                                 <div className="text-xs leading-relaxed italic" style={{ color: '#3a5a78' }}>
                                     {round.charInsight}
@@ -394,7 +394,7 @@ const RoundDisplay: React.FC<{
                         {round.charExploration && (
                             <div className="rounded-xl px-3 py-2.5" style={{ background: 'linear-gradient(135deg, rgba(240,235,225,0.6), rgba(238,230,218,0.5))', border: '1px solid rgba(210,195,175,0.3)' }}>
                                 <div className="text-[9px] font-bold mb-1 flex items-center gap-1" style={{ color: '#a09070' }}>
-                                    <Sparkle size={12} weight="fill" /> 深入探讨
+                                    <Sparkle size={12} weight="fill" /> Deeper Discussion
                                 </div>
                                 <div className="text-xs leading-relaxed" style={{ color: '#6a5a45' }}>
                                     <span className="font-bold mr-1" style={{ color: '#8a7a60' }}>{charName}:</span>{round.charExploration}
@@ -439,7 +439,7 @@ const EndCard: React.FC<{
                             {charName[0]}
                         </div>
                     )}
-                    <div className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#9b8a8e' }}>攻略本 · 结算报告</div>
+                    <div className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#9b8a8e' }}>Guidebook · Score Report</div>
                     <div className="text-xl font-black" style={{ color: '#5a4a50' }}>「{title}」</div>
                 </div>
 
@@ -449,18 +449,18 @@ const EndCard: React.FC<{
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="text-sm font-bold" style={{ color: '#5a4a50' }}>{charName}</div>
-                                <div className="text-[10px]" style={{ color: '#9b8a8e' }}>{session.rounds.length} 回合</div>
+                                <div className="text-[10px]" style={{ color: '#9b8a8e' }}>{session.rounds.length} Rounds</div>
                             </div>
                             <div className="text-right">
                                 <div className={`text-2xl font-black ${diff > 0 ? 'text-emerald-500' : diff < 0 ? 'text-red-400' : 'text-gray-400'}`}>
                                     {finalAffinity}
                                 </div>
                                 <div className="text-[10px]" style={{ color: '#9b8a8e' }}>
-                                    {diff >= 0 ? '+' : ''}{diff} 从 {session.initialAffinity}
+                                    {diff >= 0 ? '+' : ''}{diff} from {session.initialAffinity}
                                 </div>
                             </div>
                         </div>
-                        <StatBar label="好感度" value={finalAffinity} color="warm" />
+                        <StatBar label="Affinity" value={finalAffinity} color="warm" />
                     </Card>
 
                     {/* Verdict */}
@@ -474,7 +474,7 @@ const EndCard: React.FC<{
                     {highlights.length > 0 && (
                         <Card className="p-3 space-y-1.5">
                             <div className="text-[10px] tracking-wider font-bold flex items-center gap-1" style={{ color: '#9b8a8e' }}>
-                                <Star size={12} weight="fill" /> 名场面
+                                <Star size={12} weight="fill" /> Highlights
                             </div>
                             {highlights.map((h, i) => (
                                 <div key={i} className="text-xs flex gap-2 rounded-lg p-2" style={{ color: '#5a4a50', background: 'rgba(245,238,235,0.5)' }}>
@@ -489,7 +489,7 @@ const EndCard: React.FC<{
                     {session.endCard?.charNewInsight && (
                         <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(215,230,248,0.65), rgba(200,220,245,0.5))', border: '1px solid rgba(150,185,225,0.4)' }}>
                             <div className="text-[10px] font-bold flex items-center gap-1 mb-2" style={{ color: '#4a6a92' }}>
-                                <Diamond size={12} weight="fill" /> 这局游戏让我发现的你
+                                <Diamond size={12} weight="fill" /> What This Game Revealed About You
                             </div>
                             <div className="text-sm leading-relaxed italic" style={{ color: '#2a4a68' }}>
                                 {session.endCard.charNewInsight}
@@ -503,7 +503,7 @@ const EndCard: React.FC<{
                             <div className="rounded-2xl p-3 backdrop-blur-sm transition-all" style={{ background: 'linear-gradient(135deg, rgba(245,238,235,0.6), rgba(235,228,238,0.5))', border: '1px solid rgba(200,185,190,0.25)' }}>
                                 <div className="flex items-center justify-between mb-1">
                                     <div className="text-[10px] font-bold flex items-center gap-1" style={{ color: '#9b7a7e' }}>
-                                        <Heart size={12} weight="fill" /> {charName}的真心话
+                                        <Heart size={12} weight="fill" /> {charName}'s True Feelings
                                     </div>
                                     <span className="text-xs" style={{ color: '#b8a0a8' }}>{expanded ? <CaretUp size={12} /> : <CaretDown size={12} />}</span>
                                 </div>
@@ -520,11 +520,11 @@ const EndCard: React.FC<{
                     style={{ background: 'linear-gradient(0deg, #ece6e9 0%, transparent 100%)' }}>
                     <button onClick={onClose}
                         className="flex-1 py-2.5 bg-white/80 text-sm font-bold rounded-xl active:scale-95 transition-transform shadow-sm" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                        关闭
+                        Close
                     </button>
                     <button onClick={onSendToChat}
                         className="flex-1 py-2.5 text-white text-sm font-bold rounded-xl active:scale-95 transition-transform shadow-md" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
-                        发送到聊天
+                        Send to Chat
                     </button>
                 </div>
             </div>
@@ -567,10 +567,10 @@ const SessionCard: React.FC<{
                         <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="text-[10px]" style={{ color: '#9b8a8e' }}>{fmtDate(session.createdAt)}</span>
                             <span className="text-[10px]" style={{ color: '#c0b0b5' }}>·</span>
-                            <span className="text-[10px]" style={{ color: '#9b8a8e' }}>{session.rounds.length}回合</span>
+                            <span className="text-[10px]" style={{ color: '#9b8a8e' }}>{session.rounds.length} Rounds</span>
                             <span className="text-[10px]" style={{ color: '#c0b0b5' }}>·</span>
                             <span className={`text-[10px] font-bold`} style={{ color: session.status === 'ended' ? '#9b8a8e' : '#b89a60' }}>
-                                {session.status === 'ended' ? '已结算' : '进行中'}
+                                {session.status === 'ended' ? 'Ended' : 'In Progress'}
                             </span>
                         </div>
                     </div>
@@ -678,9 +678,9 @@ const GuidebookApp: React.FC = () => {
 
     // --- Start Game ---
     const handleStartGame = async () => {
-        if (!selectedCharId) { addToast('请先选择角色', 'error'); return; }
+        if (!selectedCharId) { addToast('Please select a character first', 'error'); return; }
 
-        trackEvent('开始一局攻略');
+        trackEvent('Start Guidebook Session');
         setIsLoading(true);
         setError('');
 
@@ -748,7 +748,7 @@ const GuidebookApp: React.FC = () => {
                 await saveSession(updated);
                 setView('opening');
             } else {
-                throw new Error('AI 返回格式不正确，请重试');
+                throw new Error('AI response format is incorrect, please retry');
             }
         } catch (e: any) {
             setError(e.message);
@@ -772,7 +772,7 @@ const GuidebookApp: React.FC = () => {
     // --- AI Assist ---
     const handleAIAssist = async () => {
         if (!session || !selectedChar) return;
-        trackEvent('让 AI 帮写本回合选项');
+        trackEvent('AI Auto-Fill Round Options');
         setIsLoading(true);
         setError('');
         const wc = extractWorldContext(session.openingSequence);
@@ -798,7 +798,7 @@ const GuidebookApp: React.FC = () => {
                 setOptionScores(opts.slice(0, 3).map((o: any) => Number(o.affinity || o.score || o.value) || 0));
                 if (data.scenario || data.scene) setRoundScenario(String(data.scenario || data.scene));
             } else {
-                throw new Error('AI 生成的选项格式不正确，请重试');
+                throw new Error('AI-generated options format is incorrect, please retry');
             }
         } catch (e: any) { setError(e.message); }
         finally { setIsLoading(false); }
@@ -867,7 +867,7 @@ const GuidebookApp: React.FC = () => {
 
     const handleSubmitRound = async () => {
         if (!session || !selectedChar) return;
-        if (optionTexts.some(t => !t.trim())) { addToast('请填写所有选项', 'error'); return; }
+        if (optionTexts.some(t => !t.trim())) { addToast('Please fill in all options', 'error'); return; }
         setIsLoading(true);
         setError('');
         const roundNum = session.currentRound + 1;
@@ -888,7 +888,7 @@ const GuidebookApp: React.FC = () => {
             const hasChoice = data && (typeof choice === 'number' || (typeof choice === 'string' && choice.trim().length > 0));
             if (hasChoice) {
                 await processRoundResult(data, options, roundNum);
-            } else throw new Error('AI 返回格式不正确，请重试');
+            } else throw new Error('AI response format is incorrect, please retry');
         } catch (e: any) { setError(e.message); }
         finally { setIsLoading(false); }
     };
@@ -897,7 +897,7 @@ const GuidebookApp: React.FC = () => {
     // --- Regenerate from round ---
     const handleRegenerateFrom = async (roundIdx: number) => {
         if (!session || !selectedChar) return;
-        trackEvent('从某回合重新生成');
+        trackEvent('Regenerate From a Round');
         setContextMenuRound(null);
 
         // Restore input fields from the round being regenerated
@@ -924,7 +924,7 @@ const GuidebookApp: React.FC = () => {
     // --- Delete round ---
     const handleDeleteFrom = async (roundIdx: number) => {
         if (!session) return;
-        trackEvent('删掉某回合之后的内容');
+        trackEvent('Delete Content After a Round');
         setContextMenuRound(null);
 
         // Restore input fields from the deleted round
@@ -948,7 +948,7 @@ const GuidebookApp: React.FC = () => {
     // --- End Game ---
     const handleEndGame = async () => {
         if (!session || !selectedChar) return;
-        trackEvent('结束本局出结算卡');
+        trackEvent('End Session & Generate Score Card');
         setIsLoading(true);
         setError('');
         setShowExceedWarning(false);
@@ -992,7 +992,7 @@ const GuidebookApp: React.FC = () => {
                 }
 
                 setShowEndCard(true);
-            } else throw new Error('AI 返回格式不正确');
+            } else throw new Error('AI response format is incorrect');
         } catch (e: any) { setError(e.message); }
         finally { setIsLoading(false); }
     };
@@ -1022,23 +1022,23 @@ const GuidebookApp: React.FC = () => {
                 content: JSON.stringify(cardData),
                 metadata: { scoreCard: cardData },
             });
-            trackEvent('把结算卡发到聊天');
-            addToast('已发送到聊天', 'success');
+            trackEvent('Send Score Card to Chat');
+            addToast('Sent to chat', 'success');
             setShowEndCard(false);
-        } catch (e: any) { addToast('发送失败: ' + e.message, 'error'); }
+        } catch (e: any) { addToast('Send failed: ' + e.message, 'error'); }
     };
 
     // --- Delete Session ---
     const handleDeleteSession = async (id: string) => {
         await DB.deleteGuidebookSession(id);
-        trackEvent('删除一份攻略存档');
+        trackEvent('Delete a Guidebook Save');
         setDeleteSessionId(null);
         loadSessions();
         if (session?.id === id) {
             setSession(null);
             setView('lobby');
         }
-        addToast('已删除', 'success');
+        addToast('Deleted', 'success');
     };
 
     // --- Open Replay ---
@@ -1082,9 +1082,9 @@ const GuidebookApp: React.FC = () => {
                         </button>
                         <div className="flex-1">
                             <div className="text-xs tracking-[0.3em] text-white/40 font-light" style={{ fontFamily: 'Georgia, serif' }}>CHARACTER SELECT</div>
-                            <div className="text-base font-bold text-white/90 tracking-wider mt-0.5">攻略本</div>
+                            <div className="text-base font-bold text-white/90 tracking-wider mt-0.5">Guidebook</div>
                         </div>
-                        <button onClick={() => { trackEvent('打开玩法说明'); setShowTutorial(true); }} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-xs font-bold active:scale-90 transition-transform backdrop-blur-sm border border-white/10">
+                        <button onClick={() => { trackEvent('Open How to Play'); setShowTutorial(true); }} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/50 text-xs font-bold active:scale-90 transition-transform backdrop-blur-sm border border-white/10">
                             ?
                         </button>
                     </div>
@@ -1096,7 +1096,7 @@ const GuidebookApp: React.FC = () => {
                     {/* Title area */}
                     <div className="px-5 pt-5 pb-2">
                         <div className="text-[9px] tracking-[0.25em] text-pink-400/50 font-light mb-1" style={{ fontFamily: 'Georgia, serif' }}>— SELECT YOUR TARGET —</div>
-                        <div className="text-pink-700/70 text-xs">选择攻略你的角色</div>
+                        <div className="text-pink-700/70 text-xs">Choose the character you want to win over</div>
                     </div>
 
                     {/* Character Banners */}
@@ -1108,7 +1108,7 @@ const GuidebookApp: React.FC = () => {
                             return (
                                 <button
                                     key={c.id}
-                                    onClick={() => { trackEvent('选择攻略角色进入配置页'); setSelectedCharId(c.id); setView('setup'); }}
+                                    onClick={() => { trackEvent('Select Guidebook Character & Enter Setup'); setSelectedCharId(c.id); setView('setup'); }}
                                     className="w-full block relative overflow-hidden active:scale-[0.97] transition-all duration-200 group"
                                     style={{ borderRadius: '4px' }}
                                 >
@@ -1183,7 +1183,7 @@ const GuidebookApp: React.FC = () => {
 
                                             {/* Description line */}
                                             <div className="text-white/50 text-[10px] mt-0.5 leading-tight max-w-[85%] truncate">
-                                                {c.description ? c.description.slice(0, 25) : '等待攻略…'}
+                                                {c.description ? c.description.slice(0, 25) : 'Waiting to be won over…'}
                                             </div>
 
                                             {/* Session badge */}
@@ -1191,7 +1191,7 @@ const GuidebookApp: React.FC = () => {
                                                 <div className={`flex items-center gap-1.5 mt-1 ${isEven ? '' : 'flex-row-reverse'}`}>
                                                     <div className="h-px w-3 bg-pink-300/40" />
                                                     <span className="text-[8px] text-pink-200/50 tracking-wider">
-                                                        {charSessions.length}回攻略{lastSession?.endCard ? ` ·「${lastSession.endCard.title}」` : ''}
+                                                        {charSessions.length} playthroughs{lastSession?.endCard ? ` ·「${lastSession.endCard.title}」` : ''}
                                                     </span>
                                                 </div>
                                             )}
@@ -1220,7 +1220,7 @@ const GuidebookApp: React.FC = () => {
                     {characters.length === 0 && (
                         <div className="text-center py-16 px-6">
                             <div className="text-[10px] tracking-[0.3em] mb-2" style={{ fontFamily: 'Georgia, serif', color: 'rgba(180,165,170,0.3)' }}>NO CHARACTERS FOUND</div>
-                            <div className="text-xs" style={{ color: 'rgba(160,145,150,0.5)' }}>还没有角色，先去创建一个吧</div>
+                            <div className="text-xs" style={{ color: 'rgba(160,145,150,0.5)' }}>No characters yet — go create one first</div>
                         </div>
                     )}
 
@@ -1239,7 +1239,7 @@ const GuidebookApp: React.FC = () => {
                                         key={s.id}
                                         session={s}
                                         char={characters.find(c => c.id === s.charId)}
-                                        onTap={() => { trackEvent('回放历史攻略存档'); openReplay(s); }}
+                                        onTap={() => { trackEvent('Replay Guidebook History'); openReplay(s); }}
                                         onLongPress={() => setDeleteSessionId(s.id)}
                                     />
                                 ))}
@@ -1256,17 +1256,17 @@ const GuidebookApp: React.FC = () => {
                             {/* Header */}
                             <div className="px-5 pt-5 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                                 <div className="text-[9px] tracking-[0.3em] text-pink-400/50 mb-1" style={{ fontFamily: 'Georgia, serif' }}>HOW TO PLAY</div>
-                                <div className="text-lg font-bold text-white/90">攻略本 · 玩法说明</div>
+                                <div className="text-lg font-bold text-white/90">Guidebook · How to Play</div>
                             </div>
                             {/* Content */}
                             <div className="px-5 py-4 space-y-3.5 max-h-[65vh] overflow-y-auto no-scrollbar">
                                 {[
-                                    { icon: <Sparkle size={14} weight="fill" />, title: '基本概念', desc: '你是出题人，角色是答题者。每回合你设计三个行为选项（含好感度分值），AI角色会根据自己的性格选一个——你需要猜到她会选哪个！' },
-                                    { icon: <Heart size={14} weight="fill" />, title: '好感度系统', desc: '每个选项对应一个分值（可以是负数）。角色选择后，分值累加到当前好感度。结局好坏取决于最终好感度。' },
-                                    { icon: <FlowerLotus size={14} weight="fill" />, title: 'AI 一键填入', desc: '不知道出什么题？点"AI 一键填入"，AI会根据当前剧情自动帮你生成三个选项和分值，你可以直接用或者修改。' },
-                                    { icon: <Star size={14} weight="fill" />, title: '点击选项快速编辑', desc: '游戏过程中，点击任意选项（A/B/C）可以在弹出框里快速编辑内容和分值，手机党友好！' },
-                                    { icon: <DiamondsFour size={14} weight="fill" />, title: '幻想场景', desc: '开始时可以设定一个场景背景（比如异世界冒险、校园日常），AI会据此生成开场白并保持世界观一致。' },
-                                    { icon: <Cards size={14} weight="fill" />, title: '结算卡片', desc: '游戏结束后生成结算卡，包含角色的真实评语和本局高光时刻，还可以发送到聊天。' },
+                                    { icon: <Sparkle size={14} weight="fill" />, title: 'Basic Concept', desc: 'You are the quizmaster, the character is the one answering. Each round you design three behavior options (each with an affinity score) - the AI character picks one based on her personality. You need to guess which one she will choose!' },
+                                    { icon: <Heart size={14} weight="fill" />, title: 'Affinity System', desc: 'Each option carries a score (which can be negative). After the character chooses, the score is added to the current affinity. The ending depends on the final affinity.' },
+                                    { icon: <FlowerLotus size={14} weight="fill" />, title: 'AI Auto-Fill', desc: 'Not sure what to write? Tap "AI Auto-Fill" and the AI will automatically generate three options and scores based on the current story - use them as-is or edit them.' },
+                                    { icon: <Star size={14} weight="fill" />, title: 'Tap an Option to Quick-Edit', desc: 'During the game, tap any option (A/B/C) to quickly edit its content and score in a popup - mobile-friendly!' },
+                                    { icon: <DiamondsFour size={14} weight="fill" />, title: 'Fantasy Scenario', desc: 'At the start you can set a scene background (like an isekai adventure or everyday school life) - the AI will generate an opening based on it and keep the world consistent.' },
+                                    { icon: <Cards size={14} weight="fill" />, title: 'Score Card', desc: 'After the game ends, a score card is generated with an honest verdict from the character and the highlights of this session - it can also be sent to chat.' },
                                 ].map((item, i) => (
                                     <div key={i} className="flex gap-3">
                                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 mt-0.5" style={{ background: 'rgba(244,143,177,0.15)', color: '#f48fb1' }}>{item.icon}</div>
@@ -1280,7 +1280,7 @@ const GuidebookApp: React.FC = () => {
                             {/* Close */}
                             <div className="px-5 pb-5 pt-3">
                                 <button onClick={() => setShowTutorial(false)} className="w-full py-2.5 rounded-2xl text-sm font-bold active:scale-95 transition-transform" style={{ background: 'linear-gradient(135deg, rgba(244,143,177,0.25), rgba(167,139,250,0.2))', color: '#f48fb1', border: '1px solid rgba(244,143,177,0.2)' }}>
-                                    明白了！开始攻略 <ArrowRight size={14} className="inline" />
+                                    Got it! Start the Guidebook <ArrowRight size={14} className="inline" />
                                 </button>
                             </div>
                         </div>
@@ -1292,10 +1292,10 @@ const GuidebookApp: React.FC = () => {
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
                         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setDeleteSessionId(null)} />
                         <Card className="relative p-5 max-w-xs w-full space-y-3">
-                            <div className="font-bold text-sm text-center" style={{ color: '#5a4a50' }}>删除这条记录？</div>
+                            <div className="font-bold text-sm text-center" style={{ color: '#5a4a50' }}>Delete this record?</div>
                             <div className="flex gap-2">
-                                <button onClick={() => setDeleteSessionId(null)} className="flex-1 py-2.5 bg-white/80 text-xs font-bold rounded-xl active:scale-95 transition-transform" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>取消</button>
-                                <button onClick={() => handleDeleteSession(deleteSessionId)} className="flex-1 py-2.5 bg-red-400 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform shadow-sm">删除</button>
+                                <button onClick={() => setDeleteSessionId(null)} className="flex-1 py-2.5 bg-white/80 text-xs font-bold rounded-xl active:scale-95 transition-transform" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>Cancel</button>
+                                <button onClick={() => handleDeleteSession(deleteSessionId)} className="flex-1 py-2.5 bg-red-400 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform shadow-sm">Delete</button>
                             </div>
                         </Card>
                     </div>
@@ -1318,7 +1318,7 @@ const GuidebookApp: React.FC = () => {
                         </button>
                         <div className="flex-1">
                             <div className="text-xs tracking-[0.3em] text-white/40 font-light" style={{ fontFamily: 'Georgia, serif' }}>GAME SETUP</div>
-                            <div className="text-base font-bold text-white/90 tracking-wider mt-0.5">新游戏</div>
+                            <div className="text-base font-bold text-white/90 tracking-wider mt-0.5">New Game</div>
                         </div>
                     </div>
                     <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(196,139,139,0.4) 30%, rgba(185,163,187,0.4) 70%, transparent 100%)' }} />
@@ -1360,7 +1360,7 @@ const GuidebookApp: React.FC = () => {
                                             {setupChar.name}
                                         </div>
                                         <div className="text-white/40 text-[10px] truncate mt-0.5">
-                                            {setupChar.description ? setupChar.description.slice(0, 30) : '准备被攻略…'}
+                                            {setupChar.description ? setupChar.description.slice(0, 30) : 'Ready to be won over…'}
                                         </div>
                                     </div>
                                 </div>
@@ -1378,7 +1378,7 @@ const GuidebookApp: React.FC = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-1.5">
                                         <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style={{ background: 'linear-gradient(135deg, #d4a0a0, #c48b8b)', color: 'white' }}><Heart size={12} weight="fill" /></div>
-                                        <span className="text-xs font-bold" style={{ color: '#8b6f6f' }}>初始好感度</span>
+                                        <span className="text-xs font-bold" style={{ color: '#8b6f6f' }}>Initial Affinity</span>
                                     </div>
                                     <div className="px-2.5 py-0.5 rounded-full text-xs font-bold" style={{ color: '#9b7a7a', background: 'rgba(212,160,160,0.15)', border: '1px solid rgba(200,180,175,0.2)' }}>
                                         {initialAffinity}
@@ -1411,7 +1411,7 @@ const GuidebookApp: React.FC = () => {
                                         className="w-14 rounded-xl px-2 py-1.5 text-center text-xs font-bold focus:outline-none"
                                         style={{ color: '#8b6f6f', background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(200,180,175,0.2)' }} />
                                 </div>
-                                <div className="text-[9px]" style={{ color: 'rgba(160,130,130,0.5)' }}>支持负数，随便填（角色会看到并做出反应）</div>
+                                <div className="text-[9px]" style={{ color: 'rgba(160,130,130,0.5)' }}>Negative numbers allowed, feel free to experiment (the character will see it and react)</div>
                             </div>
                         </div>
 
@@ -1420,11 +1420,11 @@ const GuidebookApp: React.FC = () => {
                             <div className="p-3 space-y-2">
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style={{ background: 'linear-gradient(135deg, #c9b1bd, #b89aaa)', color: 'white' }}><Sparkle size={12} weight="fill" /></div>
-                                    <span className="text-xs font-bold" style={{ color: '#8b6f6f' }}>回合数</span>
+                                    <span className="text-xs font-bold" style={{ color: '#8b6f6f' }}>Round Count</span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1.5">
                                     {[3, 5, 8, 10].map(n => (
-                                        <button key={n} onClick={() => { trackEvent('选择攻略回合数', { rounds: n }); setMaxRounds(n); }}
+                                        <button key={n} onClick={() => { trackEvent('Select Guidebook Round Count', { rounds: n }); setMaxRounds(n); }}
                                             className="py-2 rounded-xl text-xs transition-all active:scale-90"
                                             style={maxRounds === n ? {
                                                 background: 'linear-gradient(135deg, #c9a0a0, #b88a8a)',
@@ -1446,20 +1446,20 @@ const GuidebookApp: React.FC = () => {
                             <div className="p-3.5 space-y-2.5">
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style={{ background: 'linear-gradient(135deg, #c5b8c9, #b5a3bb)', color: 'white' }}><FlowerLotus size={12} weight="fill" /></div>
-                                    <span className="text-xs font-bold" style={{ color: '#8b6f6f' }}>幻想场景</span>
-                                    <span className="text-[9px] ml-0.5" style={{ color: 'rgba(160,130,130,0.4)' }}>选一个或自己写</span>
+                                    <span className="text-xs font-bold" style={{ color: '#8b6f6f' }}>Fantasy Scenario</span>
+                                    <span className="text-[9px] ml-0.5" style={{ color: 'rgba(160,130,130,0.4)' }}>Pick one or write your own</span>
                                 </div>
                                 {/* Fantasy Presets */}
                                 <div className="grid grid-cols-3 gap-1.5">
                                     {[
-                                        { label: '游戏世界', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3ae.png', value: '你们在一起玩的游戏世界里冒险（RPG/开放世界），角色用游戏内的方式攻略用户' },
-                                        { label: '小说剧情', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4d6.png', value: '你们是小说里的角色，身处用户喜欢的故事类型中，角色按剧情节奏推进攻略' },
-                                        { label: '校园日常', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3eb.png', value: '校园背景，放学后/午休/社团活动等经典galgame场景' },
-                                        { label: '都市奇遇', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f303.png', value: '现代都市奇幻背景，偶然相遇在咖啡馆/书店/雨天的街角' },
-                                        { label: '异世界', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2694.png', value: '奇幻异世界冒险，勇者与同伴的旅程，角色在冒险途中制造心动瞬间' },
-                                        { label: '自由想象', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f52e.png', value: '' },
+                                        { label: 'Game World', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3ae.png', value: 'You adventure together in a shared game world (RPG/open world) - the character pursues the user in ways native to the game' },
+                                        { label: 'Novel Plot', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4d6.png', value: 'You are both characters in a novel, set in a story genre the user likes - the character pursues the user along the pacing of the plot' },
+                                        { label: 'School Life', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f3eb.png', value: 'A school setting - classic galgame scenes like after school, lunch break, or club activities' },
+                                        { label: 'Urban Encounter', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f303.png', value: 'A modern urban fantasy setting - a chance meeting at a cafe, a bookstore, or a rainy street corner' },
+                                        { label: 'Another World', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2694.png', value: 'A fantasy isekai adventure - the journey of a hero and companions, with heart-fluttering moments along the way' },
+                                        { label: 'Free Imagination', icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f52e.png', value: '' },
                                     ].map(preset => (
-                                        <button key={preset.label} onClick={() => { trackEvent('选择幻想场景预设', { preset: preset.label }); setScenarioHint(preset.value); }}
+                                        <button key={preset.label} onClick={() => { trackEvent('Select Fantasy Scenario Preset', { preset: preset.label }); setScenarioHint(preset.value); }}
                                             className="py-2 px-1 rounded-xl text-[10px] transition-all active:scale-90 text-center leading-tight"
                                             style={scenarioHint === preset.value && preset.value ? {
                                                 background: 'linear-gradient(135deg, #c9a0a0, #b88a8a)',
@@ -1476,11 +1476,11 @@ const GuidebookApp: React.FC = () => {
                                     ))}
                                 </div>
                                 <input type="text" value={scenarioHint} onChange={e => setScenarioHint(e.target.value)}
-                                    placeholder="自由描述: 在某个游戏里/小说背景/咖啡馆偶遇/雨天同伞..."
+                                    placeholder="Describe freely: inside a game / novel setting / cafe encounter / sharing an umbrella in the rain..."
                                     className="w-full rounded-xl px-3 py-2.5 text-xs focus:outline-none placeholder-stone-300"
                                     style={{ color: '#6b5555', background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(200,180,175,0.2)' }}
                                     />
-                                <div className="text-[9px]" style={{ color: 'rgba(160,130,130,0.4)' }}>大胆设想！这是游戏，不用拘束于现实</div>
+                                <div className="text-[9px]" style={{ color: 'rgba(160,130,130,0.4)' }}>Dream big! This is a game, no need to stick to reality</div>
                             </div>
                         </div>
 
@@ -1506,10 +1506,10 @@ const GuidebookApp: React.FC = () => {
                         {isLoading ? (
                             <span className="flex items-center justify-center gap-2">
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                生成开场白...
+                                Generating opening...
                             </span>
                         ) : (
-                            <span>开始游戏</span>
+                            <span>Start Game</span>
                         )}
                     </button>
                 </div>
@@ -1522,8 +1522,8 @@ const GuidebookApp: React.FC = () => {
         return (
             <GameFrame>
                 <GameHeader
-                    title="攻略本 · 开场"
-                    subtitle={`${selectedChar?.name} 的攻略之旅`}
+                    title="Guidebook · Opening"
+                    subtitle={`${selectedChar?.name}'s Guidebook Journey`}
                     onBack={handleOpeningDone}
                     affinity={session?.currentAffinity}
                     charAvatar={selectedChar?.avatar}
@@ -1532,7 +1532,7 @@ const GuidebookApp: React.FC = () => {
                 <div className="p-4 shrink-0">
                     <button onClick={handleOpeningDone}
                         className="w-full py-2.5 bg-white/70 text-sm font-bold rounded-xl active:scale-95 transition-transform shadow-sm" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                        跳过 <ArrowRight size={14} className="inline" />
+                        Skip <ArrowRight size={14} className="inline" />
                     </button>
                 </div>
             </GameFrame>
@@ -1548,7 +1548,7 @@ const GuidebookApp: React.FC = () => {
         <GameFrame>
             {/* Header */}
             <GameHeader
-                title={isReplay ? '攻略本 · 回放' : `攻略本 · ${session?.currentRound || 0}/${session?.maxRounds || 0}`}
+                title={isReplay ? 'Guidebook · Replay' : `Guidebook · ${session?.currentRound || 0}/${session?.maxRounds || 0}`}
                 subtitle={`${charName} vs ${userProfile.name}`}
                 onBack={() => {
                     if (isReplay || !session?.rounds.length || session?.status === 'ended') {
@@ -1571,7 +1571,7 @@ const GuidebookApp: React.FC = () => {
                         ))}
                         <div className="flex items-center gap-2 my-2">
                             <div className="h-px flex-1" style={{ background: 'rgba(200,185,190,0.25)' }} />
-                            <span className="text-[10px] font-bold" style={{ color: 'rgba(160,145,150,0.5)' }}>游戏开始</span>
+                            <span className="text-[10px] font-bold" style={{ color: 'rgba(160,145,150,0.5)' }}>Game Start</span>
                             <div className="h-px flex-1" style={{ background: 'rgba(200,185,190,0.25)' }} />
                         </div>
                     </div>
@@ -1593,7 +1593,7 @@ const GuidebookApp: React.FC = () => {
                 {isReplay && session?.endCard && (
                     <Card className="p-4 space-y-3 mt-2">
                         <div className="text-center">
-                            <div className="text-[10px] tracking-wider font-bold mb-1 flex items-center justify-center gap-1" style={{ color: '#9b8a8e' }}><Sparkle size={12} weight="fill" /> 结算 <Sparkle size={12} weight="fill" /></div>
+                            <div className="text-[10px] tracking-wider font-bold mb-1 flex items-center justify-center gap-1" style={{ color: '#9b8a8e' }}><Sparkle size={12} weight="fill" /> Results <Sparkle size={12} weight="fill" /></div>
                             <div className="text-lg font-black" style={{ color: '#5a4a50' }}>「{session.endCard.title}」</div>
                         </div>
                         <div className="text-sm italic text-center rounded-xl p-2" style={{ color: '#5a4a50', background: 'rgba(245,238,235,0.5)' }}>
@@ -1607,7 +1607,7 @@ const GuidebookApp: React.FC = () => {
                         {session.endCard.charSummary && (
                             <div className="rounded-xl p-3" style={{ background: 'linear-gradient(135deg, rgba(245,238,235,0.5), rgba(235,228,238,0.4))', border: '1px solid rgba(200,185,190,0.2)' }}>
                                 <div className="text-[10px] font-bold mb-1 flex items-center gap-1" style={{ color: '#9b7a7e' }}>
-                                    <Heart size={12} weight="fill" /> {charName}的真心话
+                                    <Heart size={12} weight="fill" /> {charName}'s True Feelings
                                 </div>
                                 <div className="text-sm leading-relaxed" style={{ color: '#5a4a50' }}>{session.endCard.charSummary}</div>
                             </div>
@@ -1619,12 +1619,12 @@ const GuidebookApp: React.FC = () => {
                 {isLoading && (
                     <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(140,125,130,0.7)' }}>
                         <div className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid rgba(200,185,190,0.3)', borderTopColor: '#b8909a' }} />
-                        <span>{charName} 正在思考...</span>
+                        <span>{charName} is thinking...</span>
                     </div>
                 )}
 
                 {error && (
-                    // Card 只用自己那套卡片样式，不转发 style，这里原来传的红框/浅红底从来没生效过，就别传了
+                    // Card only uses its own card styling, it does not forward style - the red border/light red background passed here never actually took effect, so leave it out
                     <Card className="p-3">
                         <div className="text-red-500 text-xs">{error}</div>
                     </Card>
@@ -1641,7 +1641,7 @@ const GuidebookApp: React.FC = () => {
                         className="w-full flex items-center justify-center gap-1.5 py-2 active:bg-white/30 transition-colors"
                         style={{ borderBottom: inputCollapsed ? 'none' : '1px solid rgba(200,185,190,0.1)' }}>
                         <span className="text-[10px] font-bold" style={{ color: '#9b8a8e' }}>
-                            {inputCollapsed ? '展开编辑面板' : '收起编辑面板'}
+                            {inputCollapsed ? 'Expand Editor Panel' : 'Collapse Editor Panel'}
                         </span>
                         <span className="text-[10px]" style={{ color: 'rgba(160,145,150,0.5)' }}>
                             {inputCollapsed ? <CaretUp size={12} /> : <CaretDown size={12} />}
@@ -1656,7 +1656,7 @@ const GuidebookApp: React.FC = () => {
                                 style={{ background: 'rgba(255,255,255,0.7)', border: '1px dashed rgba(200,185,190,0.3)', borderRadius: '12px', padding: '8px 10px' }}>
                                 <span className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] shrink-0 mt-0.5" style={{ background: 'rgba(200,185,190,0.2)', color: '#9b8a8e' }}><FlowerLotus size={12} /></span>
                                 <span className="flex-1 text-left text-xs leading-relaxed truncate" style={{ color: roundScenario ? '#5a4a50' : 'rgba(160,140,145,0.5)' }}>
-                                    {roundScenario || '场景描述 (可选，留空由GM发挥)'}
+                                    {roundScenario || 'Scene description (optional, leave blank for GM to improvise)'}
                                 </span>
                                 <span className="text-[10px] shrink-0 mt-0.5" style={{ color: 'rgba(160,140,145,0.5)' }}><PencilSimple size={12} /></span>
                             </button>
@@ -1670,7 +1670,7 @@ const GuidebookApp: React.FC = () => {
                                         {String.fromCharCode(65 + i)}
                                     </span>
                                     <span className="flex-1 text-left text-xs leading-relaxed truncate" style={{ color: optionTexts[i] ? '#5a4a50' : 'rgba(160,140,145,0.5)' }}>
-                                        {optionTexts[i] || `${charName}的行为${String.fromCharCode(65 + i)}...`}
+                                        {optionTexts[i] || `${charName}'s action ${String.fromCharCode(65 + i)}...`}
                                     </span>
                                     <span className="text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded-lg" style={{ color: optionScores[i] >= 0 ? '#7a5a5e' : '#5a5a7a', background: optionScores[i] >= 0 ? 'rgba(200,170,175,0.2)' : 'rgba(170,170,200,0.2)' }}>
                                         {optionScores[i] >= 0 ? '+' : ''}{optionScores[i]}
@@ -1681,24 +1681,24 @@ const GuidebookApp: React.FC = () => {
 
                             {/* Direction hint for GM */}
                             <input type="text" value={nextDirectionHint} onChange={e => setNextDirectionHint(e.target.value)}
-                                placeholder="接下来对GM的剧情方向指导 (选填)"
+                                placeholder="Story direction guidance for the GM going forward (optional)"
                                 className="w-full rounded-xl px-3 py-2 text-[11px] focus:outline-none"
                                 style={{ background: 'rgba(255,255,255,0.5)', border: '1px dashed rgba(200,185,190,0.3)', color: '#5a4a50' }} />
 
                             <div className="flex gap-2">
                                 <button onClick={handleAIAssist} disabled={isLoading}
                                     className="flex-1 py-2 bg-white/70 text-xs font-bold rounded-xl active:scale-95 transition-transform shadow-sm" style={{ color: '#9b8a8e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                                    <Sparkle size={12} weight="fill" className="inline" /> AI 一键填入
+                                    <Sparkle size={12} weight="fill" className="inline" /> AI Auto-Fill
                                 </button>
                                 <button onClick={handleSubmitRound} disabled={isLoading || optionTexts.some(t => !t.trim())}
                                     className="flex-1 py-2 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform disabled:opacity-50 shadow-md" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
-                                    提交本回合
+                                    Submit This Round
                                 </button>
                             </div>
 
                             <button onClick={handleEndGame} disabled={isLoading || !session.rounds.length}
                                 className="w-full py-2 bg-white/50 text-xs rounded-xl active:scale-95 transition-transform disabled:opacity-30" style={{ color: '#9b8a8e', border: '1px solid rgba(200,185,190,0.2)' }}>
-                                就到这吧 · 生成结算卡片
+                                That's enough · Generate Score Card
                             </button>
                         </div>
                     )}
@@ -1710,7 +1710,7 @@ const GuidebookApp: React.FC = () => {
                 <div className="shrink-0 p-3" style={{ background: 'linear-gradient(0deg, rgba(236,230,233,0.9) 0%, transparent 100%)' }}>
                     <button onClick={backToLobby}
                         className="w-full py-2.5 bg-white/70 text-sm font-bold rounded-xl active:scale-95 transition-transform shadow-sm" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                        返回列表
+                        Back to List
                     </button>
                 </div>
             )}
@@ -1731,16 +1731,16 @@ const GuidebookApp: React.FC = () => {
                 <div className="fixed inset-0 z-40 flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowExceedWarning(false)} />
                     <Card className="relative p-5 max-w-xs w-full space-y-3">
-                        <div className="font-bold text-sm text-center" style={{ color: '#5a4a50' }}>已达到预设回合数 ({session?.maxRounds})</div>
-                        <div className="text-xs text-center" style={{ color: '#9b8a8e' }}>要继续玩还是结算？</div>
+                        <div className="font-bold text-sm text-center" style={{ color: '#5a4a50' }}>Reached the preset round count ({session?.maxRounds})</div>
+                        <div className="text-xs text-center" style={{ color: '#9b8a8e' }}>Keep playing or wrap it up?</div>
                         <div className="flex gap-2">
                             <button onClick={() => setShowExceedWarning(false)}
                                 className="flex-1 py-2.5 bg-white/80 text-xs font-bold rounded-xl active:scale-95 transition-transform" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                                继续玩！
+                                Keep Playing!
                             </button>
                             <button onClick={handleEndGame}
                                 className="flex-1 py-2.5 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform shadow-md" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
-                                结算
+                                Wrap Up
                             </button>
                         </div>
                     </Card>
@@ -1757,24 +1757,24 @@ const GuidebookApp: React.FC = () => {
                                 <span className="w-7 h-7 rounded-xl flex items-center justify-center text-sm text-white font-bold shadow-sm" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
                                     {editingOptIdx !== null ? String.fromCharCode(65 + editingOptIdx) : ''}
                                 </span>
-                                <span className="text-sm font-bold" style={{ color: '#5a4a50' }}>编辑选项</span>
+                                <span className="text-sm font-bold" style={{ color: '#5a4a50' }}>Edit Option</span>
                             </div>
                         </div>
                         <div className="px-5 py-4 space-y-3">
                             <div>
-                                <div className="text-[10px] font-bold mb-1.5" style={{ color: '#9b8a8e' }}>选项内容</div>
+                                <div className="text-[10px] font-bold mb-1.5" style={{ color: '#9b8a8e' }}>Option Content</div>
                                 <textarea
                                     autoFocus
                                     value={editOptText}
                                     onChange={e => setEditOptText(e.target.value)}
                                     rows={8}
-                                    placeholder={`${charName}的行为...`}
+                                    placeholder={`${charName}'s action...`}
                                     className="w-full rounded-2xl px-3.5 py-3 text-sm focus:outline-none resize-none"
                                     style={{ background: 'rgba(255,255,255,0.8)', border: '1.5px solid rgba(200,185,190,0.4)', color: '#5a4a50', lineHeight: '1.8' }}
                                 />
                             </div>
                             <div>
-                                <div className="text-[10px] font-bold mb-1.5" style={{ color: '#9b8a8e' }}>好感度变化（支持负数）</div>
+                                <div className="text-[10px] font-bold mb-1.5" style={{ color: '#9b8a8e' }}>Affinity Change (negative numbers allowed)</div>
                                 <input
                                     type="text" inputMode="numeric"
                                     value={editOptScore}
@@ -1792,17 +1792,17 @@ const GuidebookApp: React.FC = () => {
                         <div className="flex gap-2 px-5 pb-5">
                             <button onClick={() => setEditingOptIdx(null)}
                                 className="flex-1 py-2.5 bg-white/80 text-xs font-bold rounded-2xl active:scale-95 transition-transform" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                                取消
+                                Cancel
                             </button>
                             <button onClick={() => {
                                 if (editingOptIdx === null) return;
                                 const t = [...optionTexts]; t[editingOptIdx] = editOptText; setOptionTexts(t);
                                 const s = [...optionScores]; s[editingOptIdx] = Number(editOptScore) || 0; setOptionScores(s);
                                 setEditingOptIdx(null);
-                                trackEvent('手动编辑一个选项');
+                                trackEvent('Manually Edit an Option');
                             }}
                                 className="flex-1 py-2.5 text-white text-xs font-bold rounded-2xl active:scale-95 transition-transform shadow-md" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
-                                确认
+                                Confirm
                             </button>
                         </div>
                     </div>
@@ -1817,17 +1817,17 @@ const GuidebookApp: React.FC = () => {
                         <div className="px-5 pt-5 pb-3" style={{ borderBottom: '1px solid rgba(200,185,190,0.15)' }}>
                             <div className="flex items-center gap-2">
                                 <span className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] shrink-0" style={{ background: 'rgba(200,185,190,0.2)', color: '#9b8a8e' }}><FlowerLotus size={12} /></span>
-                                <span className="text-sm font-bold" style={{ color: '#5a4a50' }}>编辑场景描述</span>
+                                <span className="text-sm font-bold" style={{ color: '#5a4a50' }}>Edit Scene Description</span>
                             </div>
                         </div>
                         <div className="px-5 py-4">
-                            <div className="text-[10px] font-bold mb-1.5" style={{ color: '#9b8a8e' }}>GM 会在这个场景基础上展开叙事 (留空则由GM自由发挥)</div>
+                            <div className="text-[10px] font-bold mb-1.5" style={{ color: '#9b8a8e' }}>The GM will build the narrative on this scene (leave blank for the GM to improvise freely)</div>
                             <textarea
                                 autoFocus
                                 value={editScenarioText}
                                 onChange={e => setEditScenarioText(e.target.value)}
                                 rows={10}
-                                placeholder="比如: 雨天在咖啡馆偶遇 / 一起被困在电梯里 / 在图书馆发现对方的秘密日记..."
+                                placeholder="e.g. a rainy-day cafe encounter / trapped together in an elevator / finding their secret diary in the library..."
                                 className="w-full rounded-2xl px-3.5 py-3 text-sm focus:outline-none resize-none"
                                 style={{ background: 'rgba(255,255,255,0.8)', border: '1.5px solid rgba(200,185,190,0.4)', color: '#5a4a50', lineHeight: '1.8' }}
                             />
@@ -1835,11 +1835,11 @@ const GuidebookApp: React.FC = () => {
                         <div className="flex gap-2 px-5 pb-5">
                             <button onClick={() => setEditingScenario(false)}
                                 className="flex-1 py-2.5 bg-white/80 text-xs font-bold rounded-2xl active:scale-95 transition-transform" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                                取消
+                                Cancel
                             </button>
-                            <button onClick={() => { setRoundScenario(editScenarioText); setEditingScenario(false); trackEvent('手动编辑本回合场景'); }}
+                            <button onClick={() => { setRoundScenario(editScenarioText); setEditingScenario(false); trackEvent('Manually Edit This Round Scenario'); }}
                                 className="flex-1 py-2.5 text-white text-xs font-bold rounded-2xl active:scale-95 transition-transform shadow-md" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
-                                确认
+                                Confirm
                             </button>
                         </div>
                     </div>
@@ -1851,16 +1851,16 @@ const GuidebookApp: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowExitConfirm(false)} />
                     <Card className="relative p-5 max-w-xs w-full space-y-3">
-                        <div className="font-bold text-sm text-center" style={{ color: '#5a4a50' }}>退出游戏？</div>
-                        <div className="text-xs text-center" style={{ color: '#9b8a8e' }}>进度已自动保存，下次可以继续</div>
+                        <div className="font-bold text-sm text-center" style={{ color: '#5a4a50' }}>Exit the game?</div>
+                        <div className="text-xs text-center" style={{ color: '#9b8a8e' }}>Progress is auto-saved, you can continue next time</div>
                         <div className="flex gap-2">
                             <button onClick={() => setShowExitConfirm(false)}
                                 className="flex-1 py-2.5 bg-white/80 text-xs font-bold rounded-xl active:scale-95 transition-transform" style={{ color: '#8b7a7e', border: '1px solid rgba(200,185,190,0.3)' }}>
-                                继续玩
+                                Keep Playing
                             </button>
                             <button onClick={() => { setShowExitConfirm(false); backToLobby(); }}
                                 className="flex-1 py-2.5 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform shadow-md" style={{ background: 'linear-gradient(135deg, #b8909a, #a07880)' }}>
-                                退出
+                                Exit
                             </button>
                         </div>
                     </Card>
@@ -1873,27 +1873,27 @@ const GuidebookApp: React.FC = () => {
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setContextMenuRound(null)} />
                     <Card className="relative w-full max-w-sm overflow-hidden">
                         <div className="text-center text-xs py-2" style={{ color: '#9b8a8e', borderBottom: '1px solid rgba(200,185,190,0.2)' }}>
-                            第 {(session?.rounds[contextMenuRound]?.roundNumber) || '?'} 回合
+                            Round {(session?.rounds[contextMenuRound]?.roundNumber) || '?'}
                         </div>
                         <button
                             onClick={() => handleRegenerateFrom(contextMenuRound)}
                             className="w-full py-3.5 text-sm font-bold transition-colors" style={{ color: '#5a4a50' }}
                         >
-                            从这里重新生成
+                            Regenerate from here
                         </button>
                         <div className="h-px" style={{ background: 'rgba(200,185,190,0.2)' }} />
                         <button
                             onClick={() => handleDeleteFrom(contextMenuRound)}
                             className="w-full py-3.5 text-sm text-red-400 font-bold transition-colors"
                         >
-                            删除此回合及之后的内容
+                            Delete this round and everything after
                         </button>
                         <div className="h-px" style={{ background: 'rgba(200,185,190,0.2)' }} />
                         <button
                             onClick={() => setContextMenuRound(null)}
                             className="w-full py-3 text-sm transition-colors" style={{ color: '#9b8a8e' }}
                         >
-                            取消
+                            Cancel
                         </button>
                     </Card>
                 </div>
