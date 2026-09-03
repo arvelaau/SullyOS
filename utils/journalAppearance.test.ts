@@ -150,6 +150,6 @@ describe('journalAppearance', () => {
         expect(editor).toContain('sully-journal-saved-style-rescue');
         expect(editor).toContain('⟲ Journal skin rescue: restore original');
         expect(settings).toContain('handleJournalAppearanceEmergencyReset');
-        expect(settings).toContain('重置交换日记美化');
+        expect(settings).toContain('Reset Exchange Diary Styling');
     });
 });
