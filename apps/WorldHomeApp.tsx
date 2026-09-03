@@ -1,16 +1,18 @@
 /**
- * 「家园」—— 同世界观多角色共同生活的大世界。
+ * "Homeland" — a big world where multiple characters from the same worldview live together.
  *
- * 三个视图：
- *   - list：世界列表 + 新建
- *   - edit：世界编辑器（世界观/模式/成员/居住安排/NPC/关系/离线 tick/API 覆盖）
- *   - world：大世界主视图（观测推进、拜访各家、关系条、NPC 动静、时间线）
+ * Three views:
+ *   - list: world list + create new
+ *   - edit: world editor (worldview/mode/members/living arrangement/NPCs/relationships/offline ticks/API override)
+ *   - world: the main world view (observe to advance, visit houses, relationship bars, NPC happenings, timeline)
  *
- * 视觉：游戏化——天空随剧情时间昼夜切换（白天暖阳/夜晚星空），小屋是带屋顶的
- * 村庄卡片，角色手机用真手机壳弹窗呈现（动态=信息流、私信=聊天气泡）。
+ * Visuals: gamified — the sky switches day/night with story time (warm daylight/starry night),
+ * houses are roofed village cards, character phones render as a real phone-shell popup
+ * (feed = info stream, DMs = chat bubbles).
  *
- * 演绎引擎跑在 OSContext 全局（WorldScheduler.onTrigger → runWorldEpisode），
- * 本组件只负责触发与观察——用户点完"观测"就算切去和别人私聊，演绎照样完成。
+ * The narrative engine runs globally in OSContext (WorldScheduler.onTrigger → runWorldEpisode),
+ * this component only triggers and observes it — even if the user taps "Observe" and switches to
+ * DM someone else, the narrative still finishes running.
  */
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useOS } from '../context/OSContext';
@@ -36,10 +38,10 @@ import { trackEvent } from '../utils/analytics';
 import type { WorldProfile, WorldEpisode, WorldHomeMode, WorldTimeMode, WorldHouse, WorldThread, WorldChatMessage, WorldNarrativeStyle, CharacterProfile, WorldCharBeat, APIConfig, ApiPreset } from '../types';
 
 /**
- * 家园里「生成内容」的可编辑/删除目标（手机里的动态/备忘/聊天）。
- * newText=null 表示删除；否则替换文本。
- *  - post/memo 落在 episode.beats[charId] 上（按 round 定位 episode）
- *  - msg 落在 world.threads[threadId].messages 上（按 msgId 定位）
+ * The editable/deletable target for "generated content" in a Homeland (feed posts/memos/chats on the phone).
+ * newText=null means delete; otherwise the text is replaced.
+ *  - post/memo lives on episode.beats[charId] (episode located by round)
+ *  - msg lives on world.threads[threadId].messages (located by msgId)
  */
 type WHEditTarget =
     | { type: 'post'; round: number; charId: string; idx: number }
@@ -47,7 +49,7 @@ type WHEditTarget =
     | { type: 'msg'; threadId: string; msgId: string }
     | { type: 'comment'; key: string; idx: number };
 
-/** 自定义文风的本地收藏 / 家园全局 API 的 localStorage key —— 与备份工具共用同一组，避免漂移。 */
+/** localStorage keys for locally-saved custom narrative styles / Homeland's global API — shares the same set as the backup tool to avoid drift. */
 const CUSTOM_STYLE_KEY = WORLD_CUSTOM_STYLE_KEY;
 const loadSavedStyles = (): string[] => {
     try { const s = localStorage.getItem(CUSTOM_STYLE_KEY); return s ? JSON.parse(s) : []; } catch { return []; }
@@ -56,7 +58,7 @@ const persistSavedStyles = (list: string[]) => {
     try { localStorage.setItem(CUSTOM_STYLE_KEY, JSON.stringify(list.slice(0, 12))); } catch { /* ignore */ }
 };
 
-/** 家园全局 API（所有世界共用一份；不设=跟随全局聊天默认）。存 localStorage。 */
+/** Homeland's global API (shared by all worlds; unset = follows the global chat default). Stored in localStorage. */
 const loadWorldApi = (): { baseUrl: string; apiKey: string; model: string } | null => {
     try { const s = localStorage.getItem(WORLD_API_KEY); const c = s ? JSON.parse(s) : null; return c?.baseUrl ? c : null; } catch { return null; }
 };
@@ -64,7 +66,7 @@ const persistWorldApi = (cfg: { baseUrl: string; apiKey: string; model: string }
     try { if (cfg?.baseUrl) localStorage.setItem(WORLD_API_KEY, JSON.stringify(cfg)); else localStorage.removeItem(WORLD_API_KEY); } catch { /* ignore */ }
 };
 
-/** 家园全局 API 设置弹窗（学彼方：跟随全局默认 / 选「设置」里保存的预设；所有世界共用）。 */
+/** Homeland's global API settings popup (same pattern as Beyond: follow the global default / pick a preset saved in "Settings"; shared by all worlds). */
 const WorldApiSettings: React.FC<{
     apiConfig: APIConfig;
     apiPresets: ApiPreset[];
@@ -79,19 +81,19 @@ const WorldApiSettings: React.FC<{
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
             <div className="w-full max-w-md bg-[#f7f3ea] rounded-3xl p-4 max-h-[80%] overflow-y-auto no-scrollbar shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-[15px] font-black text-stone-800 font-serif">家园 · API</h3>
+                    <h3 className="text-[15px] font-black text-stone-800 font-serif">Homeland · API</h3>
                     <button onClick={onClose} className="p-1.5 rounded-full hover:bg-black/5"><X size={16} weight="bold" className="text-stone-500" /></button>
                 </div>
-                <p className="text-[11px] text-stone-400 leading-relaxed mb-3">家园演绎比较费 API，可在这里单独指定一份（<b className="text-stone-500">所有世界共用</b>）；不设则跟随全局聊天默认。</p>
+                <p className="text-[11px] text-stone-400 leading-relaxed mb-3">Homeland's narrative uses a fair amount of API calls — you can assign a dedicated one here (<b className="text-stone-500">shared by all worlds</b>); leave unset to follow the global chat default.</p>
                 <button onClick={() => onChoose(null)} className={`w-full flex items-center gap-2 rounded-xl p-3 mb-1.5 text-left border transition-all ${follow ? 'bg-stone-900 border-stone-900 text-white shadow' : 'bg-white border-stone-200 text-stone-700'}`}>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[12.5px] font-bold">跟随全局默认</div>
-                        <div className={`text-[10px] truncate ${follow ? 'text-white/60' : 'text-stone-400'}`}>{apiConfig?.model || '未配置'} · {host(apiConfig?.baseUrl)}</div>
+                        <div className="text-[12.5px] font-bold">Follow global default</div>
+                        <div className={`text-[10px] truncate ${follow ? 'text-white/60' : 'text-stone-400'}`}>{apiConfig?.model || 'Not configured'} · {host(apiConfig?.baseUrl)}</div>
                     </div>
-                    {follow && <span className="text-[10px] font-bold shrink-0">✓ 使用中</span>}
+                    {follow && <span className="text-[10px] font-bold shrink-0">✓ In use</span>}
                 </button>
                 {apiPresets.length === 0 ? (
-                    <p className="text-[10.5px] text-stone-400 px-1 py-1.5">「设置」里还没有保存的 API 预设——去设置里存几个模型，这里就能直接选。</p>
+                    <p className="text-[10.5px] text-stone-400 px-1 py-1.5">No saved API presets in "Settings" yet — save a few models there and you'll be able to pick them directly here.</p>
                 ) : apiPresets.map(p => {
                     const on = sameAs(p.config);
                     return (
@@ -101,7 +103,7 @@ const WorldApiSettings: React.FC<{
                                 <div className="text-[12.5px] font-bold truncate">{p.name}</div>
                                 <div className={`text-[10px] truncate ${on ? 'text-white/60' : 'text-stone-400'}`}>{p.config.model} · {host(p.config.baseUrl)}</div>
                             </div>
-                            {on && <span className="text-[10px] font-bold shrink-0">✓ 使用中</span>}
+                            {on && <span className="text-[10px] font-bold shrink-0">✓ In use</span>}
                         </button>
                     );
                 })}
@@ -113,27 +115,27 @@ const WorldApiSettings: React.FC<{
 const genId = (p: string) => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 
 const MODE_INFO: Record<WorldHomeMode, { name: string; short: string; desc: string; badge: string }> = {
-    light: { name: '轻度 · 以你为主', short: '以你为主', desc: '只是观察角色生活的一个切面。世界里 ta 依旧以你为最重要的人——和聊天里完全一致。', badge: 'bg-sky-400/90 text-sky-950' },
-    medium: { name: '中度 · 你是一份子', short: '你是一份子', desc: '你是这个世界的普通一员，存在但不特殊，角色不围着你转。', badge: 'bg-amber-400/90 text-amber-950' },
-    heavy: { name: '重度 · 无你世界', short: '无你世界', desc: '你不存在（或只是透明的幽灵）。角色之间自行生活，演绎中完全无视你。', badge: 'bg-rose-400/90 text-rose-950' },
+    light: { name: "Light · Centered on you", short: "Centered on you", desc: "Just a slice of the character's life you get to observe. In the world, they still treat you as the most important person — fully consistent with chat.", badge: 'bg-sky-400/90 text-sky-950' },
+    medium: { name: "Medium · You're one of them", short: "You're one of them", desc: "You're an ordinary member of this world — present but unremarkable, characters don't revolve around you.", badge: 'bg-amber-400/90 text-amber-950' },
+    heavy: { name: "Heavy · A world without you", short: "A world without you", desc: "You don't exist (or are just a transparent ghost). Characters live their own lives, completely ignoring you in the narrative.", badge: 'bg-rose-400/90 text-rose-950' },
 };
 
 const TIME_MODE_INFO: Record<WorldTimeMode, { name: string; short: string; desc: string; hint: string; badge: string }> = {
     real: {
-        name: '真实时间', short: '真实时间',
-        desc: '早/中/晚/凌晨跟着现实时钟走，演绎写回各角色的聊天与记忆，和你平时的聊天连成一体。',
-        hint: '适合「真实系角色」——只能补当天错过的段，过了今天就补不回来；卡片自然不会刷屏。',
+        name: 'Real Time', short: 'Real Time',
+        desc: "Morning/afternoon/evening/late-night follow the real-world clock; the narrative gets written back into each character's chat and memory, blending into your regular chats.",
+        hint: "Good for \"realistic\" characters — only today's missed segment can be caught up on, once the day passes it can't be recovered; naturally keeps the feed from flooding.",
         badge: 'bg-emerald-400/90 text-emerald-950',
     },
     sim: {
-        name: '模拟时间', short: '模拟时间',
-        desc: '自定义起始日期，演绎不进记忆、留在家园里。每 20 天自动结一卷小说体总结并归档原文。',
-        hint: '适合给 OC 们开小剧场图一乐——攒一段时间回来读一卷「这些天发生了什么」。',
+        name: 'Simulated Time', short: 'Simulated Time',
+        desc: 'Custom start date, the narrative stays in Homeland and never enters memory. Every 20 days it auto-wraps into a novel-style summary chapter and archives the original text.',
+        hint: 'Good for giving your OCs a little theater for fun — come back after a while and read a chapter of "what happened these past days."',
         badge: 'bg-violet-400/90 text-violet-950',
     },
 };
 
-/** 全局动画 keyframes（云朵漂浮 / 星星闪烁 / 微光扫过）。 */
+/** Global animation keyframes (cloud drift / star twinkle / sheen sweep). */
 const GameStyles: React.FC = () => (
     <style>{`
         @keyframes wh-drift { 0% { transform: translateX(0); } 50% { transform: translateX(14px); } 100% { transform: translateX(0); } }
@@ -146,7 +148,7 @@ const GameStyles: React.FC = () => (
     `}</style>
 );
 
-/** 夜空星星（纯 CSS，多层 radial-gradient）。 */
+/** Night sky stars (pure CSS, layered radial-gradients). */
 const starsBg = `radial-gradient(1.5px 1.5px at 12% 28%, #fff, transparent),
 radial-gradient(1px 1px at 28% 62%, #ffeebb, transparent),
 radial-gradient(1.5px 1.5px at 44% 18%, #fff, transparent),
@@ -155,7 +157,7 @@ radial-gradient(2px 2px at 72% 24%, #fff, transparent),
 radial-gradient(1px 1px at 84% 56%, #ffeebb, transparent),
 radial-gradient(1.5px 1.5px at 92% 32%, #fff, transparent)`;
 
-/** Q版小人（彼方捏人系统的 chibi，兜底头像）。 */
+/** Chibi figure (from Beyond's character-creator chibi system, with an avatar fallback). */
 const ChibiFigure: React.FC<{ char: CharacterProfile; size?: number; bob?: boolean }> = ({ char, size = 56, bob }) => {
     const c = getChibi(char);
     if (!c.img) {
@@ -180,11 +182,12 @@ const ChibiFigure: React.FC<{ char: CharacterProfile; size?: number; bob?: boole
 };
 
 // ============================================================
-// 真手机弹窗：角色的手机（持久的——动态是历史信息流，私信/群聊是
-// 跨轮累积的真实会话：A 发的和 B 的回应交替出现）
+// Real phone popup: a character's phone (persistent — the feed is a historical info stream, DMs/
+// group chat are real conversations accumulated across rounds: A's message and B's response
+// alternate)
 // ============================================================
 
-/** 会话气泡流：自己右绿、对方左白带头像，剧情时间变化处插分隔条。点按某条气泡可编辑/删除。 */
+/** Chat bubble stream: yours are green on the right, theirs are white with an avatar on the left, with a divider inserted wherever story time changes. Tap a bubble to edit/delete it. */
 const ThreadBubbles: React.FC<{
     thread: WorldThread;
     selfId: string;
@@ -239,7 +242,7 @@ const PhoneModal: React.FC<{
     members: CharacterProfile[];
     initialTab?: 'feed' | 'dm' | 'group' | 'memo';
     onClose: () => void;
-    /** 编辑/删除生成内容（动态/备忘/聊天）；newText=null 表示删除 */
+    /** Edit/delete generated content (feed posts/memos/chats); newText=null means delete */
     onEditContent?: (target: WHEditTarget, newText: string | null) => void | Promise<void>;
 }> = ({ ownerId, world, episodes, members, initialTab, onClose, onEditContent }) => {
     const [tab, setTab] = useState<'feed' | 'dm' | 'group' | 'memo'>(initialTab || 'feed');
@@ -247,17 +250,17 @@ const PhoneModal: React.FC<{
     const ownerName = owner?.name || '?';
     const avatar = owner?.avatar;
     const dmThreads = dmThreadsOf(world, ownerId);
-    const [dmOpenId, setDmOpenId] = useState<string | null>(null); // null = 看联系人列表；非空 = 进了某条会话
+    const [dmOpenId, setDmOpenId] = useState<string | null>(null); // null = viewing the contact list; non-null = inside a conversation
     const group = groupThreadOf(world);
     const latestBeat = episodes[0]?.beats.find(b => b.charId === ownerId);
     const nameById = (id: string) => members.find(m => m.id === id)?.name || world.npcs.find(n => n.id === id)?.name || '?';
     const avatarById = (id: string) => members.find(m => m.id === id)?.avatar;
 
-    // 归档线：sim 模式结卷后，被卷进编年史的轮次（round ≤ 此值）不再在手机里展示
+    // Archive line: after a sim-mode chapter wraps, rounds folded into the chronicle (round ≤ this value) no longer show on the phone
     const archivedClock = world.simSummarizedClock || 0;
     const archivedDays = Math.floor(archivedClock / 3);
 
-    // 动态：跨轮聚合该角色发过的 posts（新的在上；归档的不再显示）。key 用于关联点赞/评论；round+idx 用于编辑/删除。
+    // Feed: aggregates this character's posts across rounds (newest on top; archived ones no longer shown). key correlates likes/comments; round+idx is used for editing/deleting.
     const feed = useMemo(() => {
         const out: { storyTime: string; location: string; post: string; round: number; idx: number; key: string }[] = [];
         for (const ep of episodes) {
@@ -268,7 +271,7 @@ const PhoneModal: React.FC<{
         return out;
     }, [episodes, ownerId, archivedClock]);
 
-    // 备忘录：跨轮聚合（私人，只有屏幕外的玩家翻得到；归档的不再显示）。round+idx 用于编辑/删除。
+    // Memos: aggregated across rounds (private, only readable by the player outside the screen; archived ones no longer shown). round+idx is used for editing/deleting.
     const memos = useMemo(() => {
         const out: { storyTime: string; text: string; round: number; idx: number }[] = [];
         for (const ep of episodes) {
@@ -282,16 +285,16 @@ const PhoneModal: React.FC<{
     const dmCount = dmThreads.reduce((s, t) => s + t.messages.length, 0);
     const activeDm = dmOpenId ? dmThreads.find(t => t.id === dmOpenId) : undefined;
 
-    // 动态/备忘翻页（每页 8）；私聊折叠（默认只看最近 30 条）
+    // Feed/memo pagination (8 per page); DM collapsed (only the most recent 30 shown by default)
     const PER = 8;
     const [feedPage, setFeedPage] = useState(0);
     const [memoPage, setMemoPage] = useState(0);
-    const FOLD = 50; // 私聊/群聊超过这么多条就折叠，避免一次渲染太多卡顿
+    const FOLD = 50; // DM/group chat collapses once it exceeds this many messages, to avoid a laggy render
     const [dmExpanded, setDmExpanded] = useState(false);
     const [groupExpanded, setGroupExpanded] = useState(false);
     useEffect(() => { setDmExpanded(false); }, [dmOpenId]);
 
-    // 聊天像真手机一样：进会话/切到群聊默认落到底部（最新消息），不必从头往下滑
+    // Chat behaves like a real phone: entering a conversation/switching to group chat defaults to the bottom (latest message), no need to scroll down from the top
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if ((tab === 'dm' && dmOpenId) || tab === 'group') {
@@ -300,72 +303,75 @@ const PhoneModal: React.FC<{
         }
     }, [tab, dmOpenId, dmExpanded, groupExpanded]);
 
-    // 编辑/删除某条生成内容的弹层
+    // Overlay for editing/deleting a piece of generated content
     const [editing, setEditing] = useState<{ target: WHEditTarget; text: string; title: string; canDelete: boolean } | null>(null);
     const [confirmDel, setConfirmDel] = useState(false);
     useEffect(() => { setConfirmDel(false); }, [editing]);
     const submitEdit = async (newText: string | null) => {
         if (editing && onEditContent) {
             await onEditContent(editing.target, newText);
-            trackEvent('编辑角色手机里的内容', { action: newText === null ? 'delete' : 'edit' });
+            trackEvent('Edit Content in Character Phone', { action: newText === null ? 'delete' : 'edit' });
         }
         setEditing(null);
     };
 
-    // 把手机内容（动态）转发到「和 ta 的聊天」里
+    // Forward phone content (a feed post) into "chat with them"
     const [sharedKeys, setSharedKeys] = useState<Set<string>>(new Set());
     const shareToChat = async (key: string, text: string) => {
         try {
+            // NOTE: content here is persisted verbatim as this character's assistant chat message and
+            // re-enters LLM history on future turns — the "【家园 · X】...发了条动态：" bracket-tag
+            // prefix is protected AI-facing content, left untranslated on purpose (flagged for review).
             await DB.saveMessage({ charId: ownerId, role: 'assistant', type: 'text', content: `【家园 · ${world.name}】${ownerName} 发了条动态：\n${text}` });
             setSharedKeys(prev => new Set(prev).add(key));
-            trackEvent('转发角色动态到聊天');
+            trackEvent('Share Character Feed Post to Chat');
         } catch { /* ignore */ }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
             <div className="relative" onClick={e => e.stopPropagation()}>
-                {/* 手机壳 */}
+                {/* Phone shell */}
                 <div className="w-[min(360px,92vw)] h-[min(760px,86vh)] rounded-[2.6rem] bg-gradient-to-b from-zinc-800 to-zinc-950 p-[7px] shadow-[0_24px_60px_rgba(0,0,0,.6),inset_0_1px_1px_rgba(255,255,255,.18)]">
                     <div className="relative w-full h-full rounded-[2.15rem] overflow-hidden flex flex-col" style={{ background: 'linear-gradient(170deg,#101426 0%,#1b2138 60%,#232a47 100%)' }}>
-                        {/* 灵动岛 */}
+                        {/* Dynamic Island */}
                         <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-[18px] rounded-full bg-black z-20" />
-                        {/* 状态栏 */}
+                        {/* Status bar */}
                         <div className="pt-2.5 pb-1 px-5 flex items-center justify-between text-[9px] text-white/80 font-semibold shrink-0">
                             <span>{worldTimeLabel(world)}</span>
                             <span className="flex items-center gap-1"><CellSignalFull size={10} weight="fill" /><WifiHigh size={10} weight="bold" /><BatteryFull size={12} weight="fill" /></span>
                         </div>
-                        {/* 机主栏 */}
+                        {/* Owner bar */}
                         <div className="px-4 pt-2 pb-3 flex items-center gap-2.5 shrink-0">
                             {avatar
                                 ? <TokenImg value={avatar} className="w-9 h-9 rounded-2xl object-cover ring-2 ring-white/20" alt="" />
                                 : <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center text-white font-bold">{ownerName.slice(0, 1)}</div>}
                             <div className="min-w-0">
-                                <div className="text-[13px] font-bold text-white truncate">{ownerName} 的手机</div>
-                                <div className="text-[9.5px] text-white/50">{latestBeat ? `${latestBeat.location} · ${latestBeat.mood}` : `${world.name} 居民`}</div>
+                                <div className="text-[13px] font-bold text-white truncate">{ownerName}'s Phone</div>
+                                <div className="text-[9.5px] text-white/50">{latestBeat ? `${latestBeat.location} · ${latestBeat.mood}` : `Resident of ${world.name}`}</div>
                             </div>
                             <button onClick={onClose} className="ml-auto p-1.5 rounded-full bg-white/10 text-white/70 active:scale-90"><X size={13} weight="bold" /></button>
                         </div>
                         {/* Tab */}
                         <div className="px-3 flex gap-1 shrink-0">
-                            {([['feed', '动态', Article, feed.length], ['dm', '私信', ChatCircleDots, dmCount], ['group', '群聊', UsersThree, group?.messages.length || 0], ['memo', '备忘', NotePencil, memos.length]] as const).map(([id, label, Icon, count]) => (
-                                <button key={id} onClick={() => { setTab(id); trackEvent('切换角色手机分区', { tab: id }); }}
+                            {([['feed', 'Feed', Article, feed.length], ['dm', 'DMs', ChatCircleDots, dmCount], ['group', 'Group', UsersThree, group?.messages.length || 0], ['memo', 'Memos', NotePencil, memos.length]] as const).map(([id, label, Icon, count]) => (
+                                <button key={id} onClick={() => { setTab(id); trackEvent('Switch Character Phone Tab', { tab: id }); }}
                                     className={`flex-1 py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-0.5 transition-colors ${tab === id ? 'bg-white text-slate-900' : 'bg-white/10 text-white/60'}`}>
                                     <Icon size={11} weight="bold" />{label}
                                     <span className={`text-[8px] px-1 rounded-full ${tab === id ? 'bg-slate-900/10' : 'bg-white/10'}`}>{count}</span>
                                 </button>
                             ))}
                         </div>
-                        {/* 内容 */}
+                        {/* Content */}
                         <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar px-3.5 py-3 space-y-2">
                             {tab === 'feed' && (
                                 feed.length === 0
-                                    ? <div className="text-center text-[11px] text-white/40 pt-16">还没发过动态{archivedDays > 0 ? `（更早 ${archivedDays} 天已归档进编年史）` : ''}</div>
+                                    ? <div className="text-center text-[11px] text-white/40 pt-16">No feed posts yet{archivedDays > 0 ? ` (earlier ${archivedDays} day(s) archived into the chronicle)` : ''}</div>
                                     : (() => {
                                         const pages = Math.max(1, Math.ceil(feed.length / PER));
                                         const p = Math.min(feedPage, pages - 1);
                                         return (<>
-                                            {p === 0 && archivedDays > 0 && <div className="text-center text-[9px] text-white/35 pb-1">更早 {archivedDays} 天已归档进编年史</div>}
+                                            {p === 0 && archivedDays > 0 && <div className="text-center text-[9px] text-white/35 pb-1">Earlier {archivedDays} day(s) archived into the chronicle</div>}
                                             {feed.slice(p * PER, p * PER + PER).map((f, i) => (
                                                 <div key={i} className="rounded-2xl bg-white/95 p-3 shadow-sm">
                                                     <div className="flex items-center gap-2">
@@ -374,7 +380,7 @@ const PhoneModal: React.FC<{
                                                             : <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">{ownerName.slice(0, 1)}</div>}
                                                         <div>
                                                             <div className="text-[10.5px] font-bold text-slate-800 leading-none">{ownerName}</div>
-                                                            <div className="text-[8.5px] text-slate-400 mt-0.5">{f.storyTime} · 来自{f.location}</div>
+                                                            <div className="text-[8.5px] text-slate-400 mt-0.5">{f.storyTime} · from {f.location}</div>
                                                         </div>
                                                     </div>
                                                     <p className="text-[11.5px] leading-[1.6] text-slate-700 mt-2 whitespace-pre-wrap">{f.post}</p>
@@ -386,24 +392,24 @@ const PhoneModal: React.FC<{
                                                                 <span className="flex items-center gap-0.5 text-[9px]"><Heart size={11} weight={rx?.likes ? 'fill' : 'regular'} className={rx?.likes ? 'text-rose-400' : ''} /> {rx?.likes || 0}</span>
                                                                 <span className="flex items-center gap-0.5 text-[9px]"><ChatCircleDots size={11} /> {rx?.comments.length || 0}</span>
                                                                 {onEditContent && (
-                                                                    <button onClick={() => setEditing({ target: { type: 'post', round: f.round, charId: ownerId, idx: f.idx }, text: f.post, title: '编辑动态', canDelete: true })}
+                                                                    <button onClick={() => setEditing({ target: { type: 'post', round: f.round, charId: ownerId, idx: f.idx }, text: f.post, title: 'Edit Feed Post', canDelete: true })}
                                                                         className="flex items-center gap-0.5 text-[9px] font-bold text-slate-400 active:scale-95">
-                                                                        <NotePencil size={11} />编辑
+                                                                        <NotePencil size={11} />Edit
                                                                     </button>
                                                                 )}
                                                                 <button onClick={() => !done && shareToChat(f.key, f.post)} disabled={done}
                                                                     className={`ml-auto flex items-center gap-0.5 text-[9px] font-bold ${done ? 'text-emerald-500' : 'text-sky-500 active:scale-95'}`}>
-                                                                    <PaperPlaneTilt size={11} weight={done ? 'fill' : 'regular'} />{done ? '已发到聊天' : '发到聊天'}
+                                                                    <PaperPlaneTilt size={11} weight={done ? 'fill' : 'regular'} />{done ? 'Shared to chat' : 'Share to chat'}
                                                                 </button>
                                                             </div>
                                                             {rx && rx.comments.length > 0 && (
                                                                 <div className="mt-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 space-y-1">
                                                                     {rx.comments.map((c, ci) => (
                                                                         <div key={ci} className="group flex items-start gap-1">
-                                                                            <p className="flex-1 text-[10.5px] leading-snug text-slate-600"><span className="font-bold text-slate-700">{c.from}</span>：{c.text}</p>
+                                                                            <p className="flex-1 text-[10.5px] leading-snug text-slate-600"><span className="font-bold text-slate-700">{c.from}</span>: {c.text}</p>
                                                                             {onEditContent && (
                                                                                 <button onClick={() => onEditContent({ type: 'comment', key: f.key, idx: ci }, null)}
-                                                                                    className="shrink-0 mt-px text-slate-300 active:text-rose-500 active:scale-90 transition" title="删除这条评论">
+                                                                                    className="shrink-0 mt-px text-slate-300 active:text-rose-500 active:scale-90 transition" title="Delete this comment">
                                                                                     <X size={11} weight="bold" />
                                                                                 </button>
                                                                             )}
@@ -417,9 +423,9 @@ const PhoneModal: React.FC<{
                                             ))}
                                             {pages > 1 && (
                                                 <div className="flex items-center justify-center gap-3 pt-1">
-                                                    <button onClick={() => setFeedPage(Math.max(0, p - 1))} disabled={p === 0} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">上一页</button>
+                                                    <button onClick={() => setFeedPage(Math.max(0, p - 1))} disabled={p === 0} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">Prev</button>
                                                     <span className="text-[10px] text-white/50 tabular-nums">{p + 1}/{pages}</span>
-                                                    <button onClick={() => setFeedPage(Math.min(pages - 1, p + 1))} disabled={p >= pages - 1} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">下一页</button>
+                                                    <button onClick={() => setFeedPage(Math.min(pages - 1, p + 1))} disabled={p >= pages - 1} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">Next</button>
                                                 </div>
                                             )}
                                         </>);
@@ -427,10 +433,10 @@ const PhoneModal: React.FC<{
                             )}
                             {tab === 'dm' && (
                                 dmThreads.length === 0
-                                    ? <div className="text-center text-[11px] text-white/40 pt-16">私信里还没有会话</div>
+                                    ? <div className="text-center text-[11px] text-white/40 pt-16">No DM conversations yet</div>
                                     : activeDm
                                         ? (() => {
-                                            // 进了某条会话：顶部「← 联系人名」，下面是聊天内容
+                                            // Inside a conversation: "← Contact name" at the top, chat content below
                                             const otherId = activeDm.memberIds.find(id => id !== ownerId) || '';
                                             const otherName = nameById(otherId);
                                             const folded = !dmExpanded && activeDm.messages.length > FOLD;
@@ -441,20 +447,20 @@ const PhoneModal: React.FC<{
                                                         <button onClick={() => setDmOpenId(null)} className="flex items-center gap-1 text-[11px] font-bold text-white/80 active:scale-95 transition-transform">
                                                             <CaretRight size={12} weight="bold" className="rotate-180" />{otherName}
                                                         </button>
-                                                        {onEditContent && <span className="text-[8px] text-white/35">点按消息可编辑/删除</span>}
+                                                        {onEditContent && <span className="text-[8px] text-white/35">Tap a message to edit/delete it</span>}
                                                     </div>
                                                     {folded && (
                                                         <button onClick={() => setDmExpanded(true)} className="w-full text-[10px] font-bold py-1.5 rounded-full bg-white/10 text-white/60 active:scale-95 transition-transform">
-                                                            展开更早的 {activeDm.messages.length - FOLD} 条
+                                                            Show {activeDm.messages.length - FOLD} earlier message(s)
                                                         </button>
                                                     )}
                                                     <ThreadBubbles thread={shownThread} selfId={ownerId} members={members} npcs={world.npcs}
-                                                        onPick={onEditContent ? m => setEditing({ target: { type: 'msg', threadId: activeDm.id, msgId: m.id }, text: m.text, title: '编辑这条私信', canDelete: true }) : undefined} />
+                                                        onPick={onEditContent ? m => setEditing({ target: { type: 'msg', threadId: activeDm.id, msgId: m.id }, text: m.text, title: 'Edit This DM', canDelete: true }) : undefined} />
                                                 </div>
                                             );
                                         })()
                                         : (
-                                            // 联系人列表：每个聊过的人一行，点进去看会话
+                                            // Contact list: one row per person chatted with, tap to view the conversation
                                             <div className="space-y-1.5">
                                                 {dmThreads.map(t => {
                                                     const otherId = t.memberIds.find(id => id !== ownerId) || '';
@@ -473,7 +479,7 @@ const PhoneModal: React.FC<{
                                                                     <span className="text-[12.5px] font-bold text-slate-800 truncate">{otherName}</span>
                                                                     {isNpc && <span className="text-[8px] font-bold px-1 rounded bg-slate-100 text-slate-400 shrink-0">NPC</span>}
                                                                 </div>
-                                                                {last && <div className="text-[10.5px] text-slate-400 truncate">{last.fromId === ownerId ? '我：' : ''}{last.text}</div>}
+                                                                {last && <div className="text-[10.5px] text-slate-400 truncate">{last.fromId === ownerId ? 'Me: ' : ''}{last.text}</div>}
                                                             </div>
                                                             <span className="text-[9px] text-slate-300 shrink-0">{t.messages.length}</span>
                                                         </button>
@@ -484,27 +490,27 @@ const PhoneModal: React.FC<{
                             )}
                             {tab === 'group' && (
                                 !group || group.messages.length === 0
-                                    ? <div className="text-center text-[11px] text-white/40 pt-16">群里还没人说话</div>
+                                    ? <div className="text-center text-[11px] text-white/40 pt-16">No one's said anything in the group yet</div>
                                     : (() => {
                                         const folded = !groupExpanded && group.messages.length > FOLD;
                                         const shownGroup = folded ? { ...group, messages: group.messages.slice(-FOLD) } : group;
                                         return (
                                             <div className="space-y-1.5">
-                                                <div className="text-center text-[9px] text-white/40 font-bold pb-1">「{group.name}」 · {group.memberIds.length} 人{world.npcs.length > 0 ? ` + ${world.npcs.length} NPC` : ''}{onEditContent ? ' · 点按消息可编辑/删除' : ''}</div>
+                                                <div className="text-center text-[9px] text-white/40 font-bold pb-1">"{group.name}" · {group.memberIds.length} member(s){world.npcs.length > 0 ? ` + ${world.npcs.length} NPC` : ''}{onEditContent ? ' · Tap a message to edit/delete it' : ''}</div>
                                                 {folded && (
                                                     <button onClick={() => setGroupExpanded(true)} className="w-full text-[10px] font-bold py-1.5 rounded-full bg-white/10 text-white/60 active:scale-95 transition-transform">
-                                                        展开更早的 {group.messages.length - FOLD} 条
+                                                        Show {group.messages.length - FOLD} earlier message(s)
                                                     </button>
                                                 )}
                                                 <ThreadBubbles thread={shownGroup} selfId={ownerId} members={members} npcs={world.npcs} showNames
-                                                    onPick={onEditContent ? m => setEditing({ target: { type: 'msg', threadId: group.id, msgId: m.id }, text: m.text, title: '编辑这条群消息', canDelete: true }) : undefined} />
+                                                    onPick={onEditContent ? m => setEditing({ target: { type: 'msg', threadId: group.id, msgId: m.id }, text: m.text, title: 'Edit This Group Message', canDelete: true }) : undefined} />
                                             </div>
                                         );
                                     })()
                             )}
                             {tab === 'memo' && (
                                 memos.length === 0
-                                    ? <div className="text-center text-[11px] text-white/40 pt-16">备忘录是空的</div>
+                                    ? <div className="text-center text-[11px] text-white/40 pt-16">The memo pad is empty</div>
                                     : (() => {
                                         const pages = Math.max(1, Math.ceil(memos.length / PER));
                                         const p = Math.min(memoPage, pages - 1);
@@ -515,9 +521,9 @@ const PhoneModal: React.FC<{
                                                     <div className="flex items-center gap-1.5">
                                                         <div className="text-[8.5px] text-amber-500 font-bold">{m.storyTime}</div>
                                                         {onEditContent && (
-                                                            <button onClick={() => setEditing({ target: { type: 'memo', round: m.round, charId: ownerId, idx: m.idx }, text: m.text, title: '编辑备忘', canDelete: true })}
+                                                            <button onClick={() => setEditing({ target: { type: 'memo', round: m.round, charId: ownerId, idx: m.idx }, text: m.text, title: 'Edit Memo', canDelete: true })}
                                                                 className="ml-auto flex items-center gap-0.5 text-[8.5px] font-bold text-amber-500 active:scale-95">
-                                                                <NotePencil size={10} />编辑
+                                                                <NotePencil size={10} />Edit
                                                             </button>
                                                         )}
                                                     </div>
@@ -526,9 +532,9 @@ const PhoneModal: React.FC<{
                                             ))}
                                             {pages > 1 && (
                                                 <div className="flex items-center justify-center gap-3 pt-1">
-                                                    <button onClick={() => setMemoPage(Math.max(0, p - 1))} disabled={p === 0} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">上一页</button>
+                                                    <button onClick={() => setMemoPage(Math.max(0, p - 1))} disabled={p === 0} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">Prev</button>
                                                     <span className="text-[10px] text-white/50 tabular-nums">{p + 1}/{pages}</span>
-                                                    <button onClick={() => setMemoPage(Math.min(pages - 1, p + 1))} disabled={p >= pages - 1} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">下一页</button>
+                                                    <button onClick={() => setMemoPage(Math.min(pages - 1, p + 1))} disabled={p >= pages - 1} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70 disabled:opacity-30">Next</button>
                                                 </div>
                                             )}
                                         </>);
@@ -538,7 +544,7 @@ const PhoneModal: React.FC<{
                         {/* home indicator */}
                         <div className="pb-2 pt-1 flex justify-center shrink-0"><div className="w-24 h-1 rounded-full bg-white/30" /></div>
 
-                        {/* 编辑/删除生成内容的底部弹层 */}
+                        {/* Bottom overlay for editing/deleting generated content */}
                         {editing && (
                             <div className="absolute inset-0 z-30 flex items-end bg-black/40 backdrop-blur-[2px]" onClick={() => setEditing(null)}>
                                 <div className="w-full rounded-t-3xl bg-[#f7f3ea] p-4 shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -552,17 +558,17 @@ const PhoneModal: React.FC<{
                                         {editing.canDelete && (
                                             confirmDel ? (
                                                 <button onClick={() => submitEdit(null)} className="flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-500 text-white text-[12px] font-bold active:scale-95 transition-transform">
-                                                    <Trash size={13} weight="bold" />确认删除
+                                                    <Trash size={13} weight="bold" />Confirm Delete
                                                 </button>
                                             ) : (
                                                 <button onClick={() => setConfirmDel(true)} className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white border border-rose-200 text-rose-500 text-[12px] font-bold active:scale-95 transition-transform">
-                                                    <Trash size={13} weight="bold" />删除
+                                                    <Trash size={13} weight="bold" />Delete
                                                 </button>
                                             )
                                         )}
-                                        <button onClick={() => setEditing(null)} className="ml-auto px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-500 text-[12px] font-bold active:scale-95 transition-transform">取消</button>
+                                        <button onClick={() => setEditing(null)} className="ml-auto px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-500 text-[12px] font-bold active:scale-95 transition-transform">Cancel</button>
                                         <button onClick={() => submitEdit(editing.text.trim())} disabled={!editing.text.trim()}
-                                            className="px-4 py-2 rounded-xl bg-stone-900 text-white text-[12px] font-bold disabled:opacity-40 active:scale-95 transition-transform">保存</button>
+                                            className="px-4 py-2 rounded-xl bg-stone-900 text-white text-[12px] font-bold disabled:opacity-40 active:scale-95 transition-transform">Save</button>
                                     </div>
                                 </div>
                             </div>
@@ -575,12 +581,12 @@ const PhoneModal: React.FC<{
 };
 
 // ============================================================
-// 编辑器
+// Editor
 // ============================================================
 const WorldEditor: React.FC<{
     draft: WorldProfile;
     characters: CharacterProfile[];
-    /** 已解析的家园 API（全局家园设置 ?? 全局聊天默认），AI roll NPC 用 */
+    /** The resolved Homeland API (global Homeland setting ?? global chat default), used for AI-rolled NPCs */
     apiConfig: APIConfig;
     addToast: (m: string, t?: any) => void;
     onSave: (w: WorldProfile) => void;
@@ -589,7 +595,7 @@ const WorldEditor: React.FC<{
 }> = ({ draft, characters, apiConfig, addToast, onSave, onCancel, onDelete }) => {
     const [w, setW] = useState<WorldProfile>(draft);
     const upd = (updates: Partial<WorldProfile>) => setW(prev => ({ ...prev, ...updates }));
-    // 「住进这个世界的角色」多选的分组筛选（只影响显示哪些可选项，已选成员不受影响）
+    // Group filter for the "characters living in this world" multi-select (only affects which options are shown, doesn't affect already-selected members)
     const { characterGroups } = useOS();
     const [memberGroupId, setMemberGroupId] = useState<string>(GROUP_FILTER_ALL);
     const members = useMemo(() => w.memberIds.map(id => characters.find(c => c.id === id)).filter(Boolean) as CharacterProfile[], [w.memberIds, characters]);
@@ -598,9 +604,9 @@ const WorldEditor: React.FC<{
     const [rolling, setRolling] = useState(false);
     const rollNpcs = async () => {
         const api = w.api?.baseUrl ? w.api : apiConfig;
-        if (!api?.baseUrl) { addToast('还没有可用的 API（先在设置里配一个，或给这个世界选个预设）', 'error'); return; }
+        if (!api?.baseUrl) { addToast('No API available yet (configure one in Settings, or pick a preset for this world)', 'error'); return; }
         setRolling(true);
-        trackEvent('用 AI roll 出 NPC');
+        trackEvent('AI Roll NPCs');
         try {
             const baseUrl = api.baseUrl.replace(/\/+$/, '');
             const data = await safeFetchJson(`${baseUrl}/chat/completions`, {
@@ -609,7 +615,7 @@ const WorldEditor: React.FC<{
                 body: JSON.stringify({
                     model: api.model,
                     messages: [{ role: 'user', content: buildNpcRollPrompt({
-                        worldName: w.name || '这个世界',
+                        worldName: w.name || 'this world',
                         worldview: w.worldview,
                         members: members.map(m => ({ name: m.name, persona: (m.description || m.systemPrompt || '').replace(/\s+/g, ' ').trim().slice(0, 200) })),
                         count: 3,
@@ -617,26 +623,26 @@ const WorldEditor: React.FC<{
                     }) }],
                     temperature: 0.95, stream: false,
                 }),
-            }, 2, 0, { appName: '家园', purpose: `roll NPC · ${w.name || '新世界'}` });
+            }, 2, 0, { appName: 'Homeland', purpose: `roll NPC · ${w.name || 'New World'}` });
             const rolled = parseRolledNpcs(data.choices?.[0]?.message?.content || '', w.npcs.map(n => n.name));
-            if (rolled.length === 0) { addToast('这次没 roll 出新的，再试一次？', 'error'); return; }
+            if (rolled.length === 0) { addToast('Nothing new rolled this time — try again?', 'error'); return; }
             upd({ npcs: [...w.npcs, ...rolled.map(n => ({ id: genId('npc'), name: n.name, persona: n.persona, emoji: n.emoji }))] });
-            addToast(`roll 到 ${rolled.length} 个 NPC，可以再改`, 'success');
+            addToast(`Rolled ${rolled.length} NPC(s) — feel free to edit them further`, 'success');
         } catch (e) {
-            addToast('roll 失败了，检查下 API', 'error');
+            addToast('Roll failed — check your API', 'error');
         } finally {
             setRolling(false);
         }
     };
 
-    // 自定义文风收藏
+    // Custom narrative style favorites
     const [savedStyles, setSavedStyles] = useState<string[]>(loadSavedStyles);
     const saveCurrentStyle = () => {
         const txt = (w.narrativeStyleCustom || '').trim();
         if (!txt) return;
         const next = [txt, ...savedStyles.filter(s => s !== txt)].slice(0, 12);
         setSavedStyles(next); persistSavedStyles(next);
-        addToast('文风已收藏，下次创建世界能直接选', 'success');
+        addToast('Style saved — pick it directly next time you create a world', 'success');
     };
     const removeSavedStyle = (txt: string) => {
         const next = savedStyles.filter(s => s !== txt);
@@ -666,7 +672,7 @@ const WorldEditor: React.FC<{
         });
     };
 
-    // 成员两两关系（编辑用：每对展开成 A→B 和 B→A 两条有向边，可以不对等）
+    // Pairwise relationships between members (for editing: each pair expands into two directed edges, A→B and B→A, which need not be symmetric)
     const pairs = useMemo(() => {
         const out: { aId: string; bId: string; aName: string; bName: string }[] = [];
         for (let i = 0; i < members.length; i++) {
@@ -697,15 +703,15 @@ const WorldEditor: React.FC<{
             style={{ paddingBottom: 'calc(7rem + var(--safe-bottom, 0px))', boxSizing: 'border-box' }}
         >
             <div className={sectionCls}>
-                <div className={labelCls}>世界名字</div>
-                <input className={inputCls} value={w.name} onChange={e => upd({ name: e.target.value })} placeholder="比如：栗子镇" />
-                <div className={labelCls}>世界观（这个世界是什么样的、大家以什么身份生活）</div>
+                <div className={labelCls}>World Name</div>
+                <input className={inputCls} value={w.name} onChange={e => upd({ name: e.target.value })} placeholder="e.g. Chestnut Town" />
+                <div className={labelCls}>Worldview (what this world is like, what role everyone lives as)</div>
                 <textarea className={`${inputCls} h-28 resize-none`} value={w.worldview} onChange={e => upd({ worldview: e.target.value })}
-                    placeholder="一个海边小镇，大家是多年的老邻居。镇上有一家面包店和一座旧灯塔……" />
+                    placeholder="A seaside town where everyone's been neighbors for years. There's a bakery and an old lighthouse in town..." />
             </div>
 
             <div className={sectionCls}>
-                <div className={labelCls}>时间模式（世界开始后不可改，先想清楚）{w.storyClock > 0 && <span className="text-stone-400 normal-case tracking-normal font-medium">　· 已开始，锁定</span>}</div>
+                <div className={labelCls}>Time Mode (can't be changed once the world starts, think it through first){w.storyClock > 0 && <span className="text-stone-400 normal-case tracking-normal font-medium">　· Started, locked</span>}</div>
                 {(Object.keys(TIME_MODE_INFO) as WorldTimeMode[]).map(tm => {
                     const on = (w.timeMode || 'real') === tm;
                     const locked = w.storyClock > 0;
@@ -718,12 +724,12 @@ const WorldEditor: React.FC<{
                             } else {
                                 upd({ timeMode: tm });
                             }
-                            trackEvent('选择世界时间模式', { timeMode: tm });
+                            trackEvent('Choose World Time Mode', { timeMode: tm });
                         }}
                             className={`w-full text-left px-3.5 py-2.5 rounded-xl border transition-all disabled:opacity-40 ${on ? 'bg-stone-900 border-stone-900 text-white shadow-lg' : 'bg-white border-stone-200 text-stone-700'}`}>
                             <div className="text-[12px] font-bold flex items-center gap-2">
                                 {TIME_MODE_INFO[tm].name}
-                                {on && <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full font-black ${TIME_MODE_INFO[tm].badge}`}>已选</span>}
+                                {on && <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full font-black ${TIME_MODE_INFO[tm].badge}`}>Selected</span>}
                             </div>
                             <div className={`text-[10.5px] mt-0.5 leading-snug ${on ? 'text-white/70' : 'text-stone-500'}`}>{TIME_MODE_INFO[tm].desc}</div>
                             <div className={`text-[10px] mt-1 leading-snug ${on ? 'text-amber-200/90' : 'text-amber-700/80'}`}>💡 {TIME_MODE_INFO[tm].hint}</div>
@@ -732,56 +738,58 @@ const WorldEditor: React.FC<{
                 })}
                 {(w.timeMode || 'real') === 'sim' && (
                     <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-2.5 space-y-2">
-                        <div className="text-[10.5px] font-bold text-violet-700">起始日期（模拟时间从这天开始走）</div>
+                        <div className="text-[10.5px] font-bold text-violet-700">Start Date (simulated time begins counting from this day)</div>
                         <div className="flex items-center gap-1.5">
                             <input type="number" min={1} className="w-[72px] px-2 py-1 rounded-lg bg-white border border-violet-200 text-[12px] text-center"
                                 value={w.simStartDate?.year ?? new Date().getFullYear()}
                                 onChange={e => upd({ simStartDate: { year: parseInt(e.target.value, 10) || 1, month: w.simStartDate?.month ?? 1, day: w.simStartDate?.day ?? 1 } })} />
-                            <span className="text-[12px] text-violet-600">年</span>
+                            <span className="text-[12px] text-violet-600">Year</span>
                             <input type="number" min={1} max={12} className="w-[52px] px-2 py-1 rounded-lg bg-white border border-violet-200 text-[12px] text-center"
                                 value={w.simStartDate?.month ?? 1}
                                 onChange={e => upd({ simStartDate: { year: w.simStartDate?.year ?? new Date().getFullYear(), month: Math.min(12, Math.max(1, parseInt(e.target.value, 10) || 1)), day: w.simStartDate?.day ?? 1 } })} />
-                            <span className="text-[12px] text-violet-600">月</span>
+                            <span className="text-[12px] text-violet-600">Month</span>
                             <input type="number" min={1} max={31} className="w-[52px] px-2 py-1 rounded-lg bg-white border border-violet-200 text-[12px] text-center"
                                 value={w.simStartDate?.day ?? 1}
                                 onChange={e => upd({ simStartDate: { year: w.simStartDate?.year ?? new Date().getFullYear(), month: w.simStartDate?.month ?? 1, day: Math.min(31, Math.max(1, parseInt(e.target.value, 10) || 1)) } })} />
-                            <span className="text-[12px] text-violet-600">日</span>
+                            <span className="text-[12px] text-violet-600">Day</span>
                         </div>
-                        <div className="text-[9.5px] text-violet-500 leading-snug">每 {SIM_CHAPTER_DAYS} 天（{SIM_CHAPTER_CLOCKS} 次观测/tick）自动结一卷：生成小说体总结 + 每个角色单方面视角，归档原文。不写入聊天与记忆。</div>
+                        <div className="text-[9.5px] text-violet-500 leading-snug">Every {SIM_CHAPTER_DAYS} days ({SIM_CHAPTER_CLOCKS} observations/ticks) it auto-wraps a chapter: generates a novel-style summary + each character's individual perspective, and archives the original text. Not written into chat or memory.</div>
                     </div>
                 )}
                 {(w.timeMode || 'real') === 'real' && (
                     <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-2.5 space-y-2">
-                        <div className="text-[10.5px] font-bold text-sky-700">世界所在时区（随时可改）</div>
+                        <div className="text-[10.5px] font-bold text-sky-700">World Timezone (changeable anytime)</div>
                         <select className={inputCls} value={w.timezone || ''}
                             onChange={e => {
                                 const tz = e.target.value || undefined;
                                 const patch: Partial<WorldProfile> = { timezone: tz };
-                                // 往西换时区会让世界的「现在」倒退，旧时钟落在未来 → 观测一路判"已追上现实"
-                                // 直接卡死。这里顺手把时钟压回当下那一段。
+                                // Moving the timezone westward makes the world's "now" go backward, leaving
+                                // the old clock in the future → observing would keep judging it as "already
+                                // caught up with reality" and get stuck. So the clock is nudged back to the
+                                // current segment here as a convenience.
                                 const probe: WorldProfile = { ...w, timezone: tz };
                                 if (clampRealClockToNow(probe)) patch.realClock = probe.realClock;
                                 upd(patch);
                             }}>
-                            <option value="">跟随本机时间（默认）</option>
+                            <option value="">Follow this device's time (default)</option>
                             {COMMON_TIMEZONES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                         </select>
                         <div className="text-[9.5px] text-sky-600 leading-snug">
-                            一个世界只有一把钟：设了之后，早/中/晚/凌晨的段判定、离线运转的触发时刻、以及注入给<b>每个成员</b>的「当前时间」都按这个时区走。
-                            它会<b>覆盖</b>成员在「神经链接」里各自设的自定义时区——同一个世界里的人不可能各活一个时区，不覆盖的话世界钟和角色的时间会互相打架。
+                            A world has only one clock: once set, the morning/afternoon/evening/late-night segment determination, when offline runs trigger, and the "current time" injected for <b>every member</b> all follow this timezone.
+                            It <b>overrides</b> each member's own custom timezone set in "Neural Link" — people in the same world can't each live in a different timezone; without the override, the world clock and character time would fight each other.
                         </div>
                     </div>
                 )}
             </div>
 
             <div className={sectionCls}>
-                <div className={labelCls}>模式（你在这个世界里的存在感）</div>
+                <div className={labelCls}>Mode (your presence in this world)</div>
                 {(Object.keys(MODE_INFO) as WorldHomeMode[]).map(m => (
-                    <button key={m} onClick={() => { upd({ mode: m }); trackEvent('选择世界存在感模式', { mode: m }); }}
+                    <button key={m} onClick={() => { upd({ mode: m }); trackEvent('Choose World Presence Mode', { mode: m }); }}
                         className={`w-full text-left px-3.5 py-2.5 rounded-xl border transition-all ${w.mode === m ? 'bg-stone-900 border-stone-900 text-white shadow-lg' : 'bg-white border-stone-200 text-stone-700'}`}>
                         <div className="text-[12px] font-bold flex items-center gap-2">
                             {MODE_INFO[m].name}
-                            {w.mode === m && <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full font-black ${MODE_INFO[m].badge}`}>已选</span>}
+                            {w.mode === m && <span className={`text-[8.5px] px-1.5 py-0.5 rounded-full font-black ${MODE_INFO[m].badge}`}>Selected</span>}
                         </div>
                         <div className={`text-[10.5px] mt-0.5 leading-snug ${w.mode === m ? 'text-white/70' : 'text-stone-500'}`}>{MODE_INFO[m].desc}</div>
                     </button>
@@ -789,7 +797,7 @@ const WorldEditor: React.FC<{
             </div>
 
             <div className={sectionCls}>
-                <div className={labelCls}>正文文风（每轮大段正文按这个写）</div>
+                <div className={labelCls}>Narrative Style (each round's main narration is written in this style)</div>
                 <div className="grid grid-cols-2 gap-1.5">
                     {(Object.keys(NARRATIVE_STYLES) as Exclude<WorldNarrativeStyle, 'custom'>[]).map(s => (
                         <button key={s} onClick={() => upd({ narrativeStyle: s })}
@@ -801,18 +809,18 @@ const WorldEditor: React.FC<{
                 </div>
                 <button onClick={() => upd({ narrativeStyle: 'custom' })}
                     className={`w-full text-left px-3 py-2 rounded-xl border transition-all ${w.narrativeStyle === 'custom' ? 'bg-stone-900 border-stone-900 text-white shadow-md' : 'bg-white border-stone-200 text-stone-700'}`}>
-                    <div className="text-[12px] font-bold">自定义文风</div>
+                    <div className="text-[12px] font-bold">Custom Style</div>
                 </button>
                 {w.narrativeStyle === 'custom' && (
                     <div className="space-y-2">
                         <textarea className={`${inputCls} h-20 resize-none`} value={w.narrativeStyleCustom || ''}
                             onChange={e => upd({ narrativeStyleCustom: e.target.value })}
-                            placeholder="描述你想要的文风：比如「古早港风言情，对白多，画面感强，带一点宿命感」" />
+                            placeholder="Describe the style you want: e.g. 'old-school Hong Kong romance drama, lots of dialogue, vivid imagery, a touch of fatalism'" />
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-stone-400">收藏后下次创建世界能直接选用</span>
+                            <span className="text-[10px] text-stone-400">Once saved, you can pick it directly next time you create a world</span>
                             <button onClick={saveCurrentStyle} disabled={!(w.narrativeStyleCustom || '').trim()}
                                 className="text-[11px] px-2.5 py-1 rounded-lg bg-stone-900 text-white font-bold flex items-center gap-1 disabled:opacity-40 active:scale-95 transition-transform">
-                                <Heart size={11} weight="fill" />收藏这个文风</button>
+                                <Heart size={11} weight="fill" />Save This Style</button>
                         </div>
                         {savedStyles.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -827,9 +835,9 @@ const WorldEditor: React.FC<{
                     </div>
                 )}
                 <div className="pt-1">
-                    <div className={`${labelCls} mb-1.5`}>叙述人称（大段正文怎么称呼自己）</div>
+                    <div className={`${labelCls} mb-1.5`}>Narration Person (how the main narration refers to itself)</div>
                     <div className="grid grid-cols-2 gap-1.5">
-                        {([['first', '第一人称', '「我推开门…」'], ['third', '第三人称', `「${members[0]?.name || '名字'}推开门…」`]] as const).map(([p, name, hint]) => {
+                        {([['first', 'First Person', '"I push the door open..."'], ['third', 'Third Person', `"${members[0]?.name || 'Name'} pushes the door open..."`]] as const).map(([p, name, hint]) => {
                             const on = (w.narrationPerson || 'first') === p;
                             return (
                                 <button key={p} onClick={() => upd({ narrationPerson: p })}
@@ -844,8 +852,8 @@ const WorldEditor: React.FC<{
             </div>
 
             <div className={sectionCls}>
-                <div className={labelCls}>住进这个世界的角色（同一世界观的放一起）</div>
-                {/* 分组筛选只影响下方显示哪些可选项，已选成员不会因为切组被移除 */}
+                <div className={labelCls}>Characters Living in This World (group ones from the same worldview together)</div>
+                {/* Group filter only affects which options are shown below, doesn't remove already-selected members when switching groups */}
                 <CharacterGroupFilterBar characters={characters} groups={characterGroups}
                     value={memberGroupId} onChange={setMemberGroupId} />
                 <div className="flex flex-wrap gap-2">
@@ -857,16 +865,16 @@ const WorldEditor: React.FC<{
                         </button>
                     ))}
                 </div>
-                {characters.length === 0 && <div className="text-[11px] text-stone-400">还没有角色，先去「神经链接」创建</div>}
+                {characters.length === 0 && <div className="text-[11px] text-stone-400">No characters yet — go create one in "Neural Link" first</div>}
                 {characters.length > 0 && filterCharactersByGroup(characters, characterGroups, memberGroupId).length === 0 &&
-                    <div className="text-[11px] text-stone-400">该分组下没有角色</div>}
+                    <div className="text-[11px] text-stone-400">No characters in this group</div>}
             </div>
 
             <div className={sectionCls}>
                 <div className="flex items-center justify-between">
-                    <div className={labelCls}>居住安排（没分进小屋的成员独居）</div>
-                    <button onClick={() => upd({ houses: [...w.houses, { id: genId('wh'), name: `小屋 ${w.houses.length + 1}`, residentIds: [] }] })}
-                        className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold flex items-center gap-1 border border-amber-200"><Plus size={12} weight="bold" />同居小屋</button>
+                    <div className={labelCls}>Living Arrangement (members not assigned to a house live alone)</div>
+                    <button onClick={() => upd({ houses: [...w.houses, { id: genId('wh'), name: `House ${w.houses.length + 1}`, residentIds: [] }] })}
+                        className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold flex items-center gap-1 border border-amber-200"><Plus size={12} weight="bold" />Shared House</button>
                 </div>
                 {w.houses.map(h => (
                     <div key={h.id} className="rounded-xl border border-stone-200 bg-white p-2.5 space-y-2">
@@ -883,7 +891,7 @@ const WorldEditor: React.FC<{
                                     {m.name}
                                 </button>
                             ))}
-                            {members.length === 0 && <span className="text-[10px] text-stone-400">先在上面选成员</span>}
+                            {members.length === 0 && <span className="text-[10px] text-stone-400">Select members above first</span>}
                         </div>
                     </div>
                 ))}
@@ -891,26 +899,26 @@ const WorldEditor: React.FC<{
 
             <div className={sectionCls}>
                 <div className="flex items-center justify-between gap-2">
-                    <div className={labelCls}>NPC（无记忆，只为撑世界观）</div>
+                    <div className={labelCls}>NPCs (no memory, just to flesh out the worldview)</div>
                     <div className="flex items-center gap-1.5 shrink-0">
                         <button onClick={rollNpcs} disabled={rolling}
                             className="text-[11px] px-2.5 py-1 rounded-lg bg-violet-100 text-violet-700 font-bold flex items-center gap-1 border border-violet-200 disabled:opacity-50 active:scale-95 transition-transform">
-                            <Sparkle size={12} weight="fill" />{rolling ? 'roll 中…' : 'AI roll'}</button>
+                            <Sparkle size={12} weight="fill" />{rolling ? 'Rolling…' : 'AI roll'}</button>
                         <button onClick={() => upd({ npcs: [...w.npcs, { id: genId('npc'), name: '', persona: '', emoji: '🙂' }] })}
                             className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold flex items-center gap-1 border border-amber-200"><Plus size={12} weight="bold" />NPC</button>
                     </div>
                 </div>
-                <div className="text-[10px] text-stone-400 leading-snug -mt-1">AI roll：让模型读一遍世界观和角色们的人设，自动配几个贴合的配角，可再手动改。</div>
+                <div className="text-[10px] text-stone-400 leading-snug -mt-1">AI roll: has the model read through the worldview and characters' personas, and automatically pairs up a few fitting side characters — you can still edit them by hand afterward.</div>
                 {w.npcs.map(n => (
                     <div key={n.id} className="rounded-xl border border-stone-200 bg-white p-2.5 space-y-1.5">
                         <div className="flex items-center gap-2">
                             <input className="w-10 px-1 py-1 rounded-lg bg-stone-50 border border-stone-100 text-center text-[14px]" value={n.emoji || ''} maxLength={2}
                                 onChange={e => upd({ npcs: w.npcs.map(x => x.id === n.id ? { ...x, emoji: e.target.value } : x) })} />
-                            <input className="flex-1 px-2 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[12px]" value={n.name} placeholder="名字"
+                            <input className="flex-1 px-2 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[12px]" value={n.name} placeholder="Name"
                                 onChange={e => upd({ npcs: w.npcs.map(x => x.id === n.id ? { ...x, name: e.target.value } : x) })} />
                             <button onClick={() => upd({ npcs: w.npcs.filter(x => x.id !== n.id) })} className="p-1 text-stone-400"><X size={14} /></button>
                         </div>
-                        <input className="w-full px-2 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[12px]" value={n.persona} placeholder="一句话人设（面包店老板娘，热心肠爱塞吃的）"
+                        <input className="w-full px-2 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[12px]" value={n.persona} placeholder="One-line persona (bakery owner, warm-hearted and always pushing snacks on people)"
                             onChange={e => upd({ npcs: w.npcs.map(x => x.id === n.id ? { ...x, persona: e.target.value } : x) })} />
                     </div>
                 ))}
@@ -918,7 +926,7 @@ const WorldEditor: React.FC<{
 
             {pairs.length > 0 && (
                 <div className={sectionCls}>
-                    <div className={labelCls}>初始关系（有向：两边可以不对等，比如单恋/单方面死对头；演绎会各自调整）</div>
+                    <div className={labelCls}>Initial Relationships (directed: the two sides need not be symmetric, e.g. unrequited love/one-sided rivalry; the narrative will adjust each independently)</div>
                     {pairs.map(p => (
                         <div key={`${p.aId}_${p.bId}`} className="rounded-xl border border-stone-200 bg-white p-2.5 space-y-2.5">
                             {([[p.aId, p.bId, p.aName, p.bName], [p.bId, p.aId, p.bName, p.aName]] as const).map(([fromId, toId, fromName, toName]) => {
@@ -927,7 +935,7 @@ const WorldEditor: React.FC<{
                                     <div key={`${fromId}_${toId}`} className="space-y-1.5">
                                         <div className="flex items-center gap-2">
                                             <span className="text-[12px] font-bold text-stone-700 shrink-0">{fromName} → {toName}</span>
-                                            <input className="flex-1 min-w-0 px-2 py-0.5 rounded-lg bg-stone-50 border border-stone-100 text-[11px]" placeholder={`${fromName} 眼中的关系（挚友/单恋/死对头…）`}
+                                            <input className="flex-1 min-w-0 px-2 py-0.5 rounded-lg bg-stone-50 border border-stone-100 text-[11px]" placeholder={`How ${fromName} sees the relationship (best friend/unrequited love/rival...)`}
                                                 value={rel?.label || ''} onChange={e => updRel(fromId, toId, { label: e.target.value })} />
                                             <span className={`text-[11px] font-bold w-8 text-right ${(rel?.value ?? 0) < 0 ? 'text-rose-600' : 'text-amber-700'}`}>{rel?.value ?? 0}</span>
                                         </div>
@@ -943,36 +951,36 @@ const WorldEditor: React.FC<{
 
             {(w.timeMode || 'real') === 'real' && (
                 <div className={sectionCls}>
-                    <div className={labelCls}>记忆与聊天</div>
+                    <div className={labelCls}>Memory & Chat</div>
                     <label className="flex items-center justify-between">
-                        <span className="text-[12px] text-stone-700">把这个世界发生的事同步进和角色的聊天、记忆里</span>
+                        <span className="text-[12px] text-stone-700">Sync what happens in this world into chat and memory with the characters</span>
                         <input type="checkbox" checked={w.injectToChat !== false} onChange={e => upd({ injectToChat: e.target.checked })} className="w-4 h-4 accent-amber-500" />
                     </label>
-                    <div className="text-[10px] text-stone-400 leading-snug">世界靠你主动「观测」推进一段（早/午/晚/凌晨四段时光流逝），需要的时候来点一下就行。</div>
+                    <div className="text-[10px] text-stone-400 leading-snug">The world advances by one segment (morning/afternoon/evening/late-night) each time you tap "Observe" — just tap it whenever you feel like it.</div>
                 </div>
             )}
 
             {onDelete && (
                 <button onClick={onDelete} className="w-full py-2.5 rounded-2xl border border-red-200 bg-white/70 text-red-500 text-[12px] font-bold flex items-center justify-center gap-1.5">
-                    <Trash size={14} weight="bold" />删除这个世界（连同演绎历史）
+                    <Trash size={14} weight="bold" />Delete This World (Along With Its History)
                 </button>
             )}
 
-            {/* 用量提示：一次观测 ≈ 角色数 + 1 次 API（NPC 引擎 1 次 + 每个角色各 1 次） */}
+            {/* Usage hint: one observation ≈ member count + 1 API calls (1 for the NPC engine + 1 per character) */}
             <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 text-[11px] leading-relaxed text-amber-800">
-                ⚠️ 每次「观测」大约会调用 <b>{Math.max(1, w.memberIds.length)}+1</b> 次 API（{w.memberIds.length} 个角色各 1 次 + NPC 世界引擎 1 次{w.timeMode === 'sim' ? '，每 20 天结卷再多 1 次' : ''}）。角色越多越费，请留意用量；建议在右上角 <b>齿轮</b> 给家园单独配一份<b>更轻量/便宜的 API</b>。
+                ⚠️ Each "Observe" call makes roughly <b>{Math.max(1, w.memberIds.length)}+1</b> API calls ({w.memberIds.length} character(s) × 1 each + 1 for the NPC world engine{w.timeMode === 'sim' ? ', plus 1 more every 20 days when a chapter wraps' : ''}). More characters means more usage — keep an eye on it; consider assigning a <b>lighter/cheaper API</b> for Homeland via the <b>gear icon</b> in the top right.
             </div>
 
             <div
                 className="fixed bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-[#f3eee3] via-[#f3eee3]/95 to-transparent flex gap-2.5 max-w-md mx-auto"
                 style={{ paddingBottom: 'calc(0.75rem + var(--safe-bottom, 0px))' }}
             >
-                <button onClick={onCancel} className="flex-1 py-2.5 rounded-2xl bg-white border border-stone-200 text-stone-600 text-[13px] font-bold shadow-sm">取消</button>
+                <button onClick={onCancel} className="flex-1 py-2.5 rounded-2xl bg-white border border-stone-200 text-stone-600 text-[13px] font-bold shadow-sm">Cancel</button>
                 <button
                     onClick={() => {
                         const cleaned: WorldProfile = {
                             ...w,
-                            name: w.name.trim() || '未命名世界',
+                            name: w.name.trim() || 'Unnamed World',
                             npcs: w.npcs.filter(n => n.name.trim()),
                             api: w.api?.baseUrl?.trim() ? w.api : undefined,
                             updatedAt: Date.now(),
@@ -981,14 +989,14 @@ const WorldEditor: React.FC<{
                     }}
                     disabled={w.memberIds.length === 0}
                     className="flex-[2] py-2.5 rounded-2xl bg-stone-900 text-white text-[13px] font-bold disabled:opacity-40 shadow-lg">
-                    保存世界
+                    Save World
                 </button>
             </div>
         </div>
     );
 };
 
-/** 冲动决策卡：user 帮角色拿主意（写进 world.directives，下一轮以"心里的声音"注入）。 */
+/** Impulse decision card: the user helps a character make up their mind (written into world.directives, injected next round as an "inner voice"). */
 const ImpulseCard: React.FC<{
     impulse: { text: string; options?: string[] };
     existing?: { text: string };
@@ -999,12 +1007,12 @@ const ImpulseCard: React.FC<{
     return (
         <div className="mt-2.5 rounded-xl border border-violet-400/40 bg-violet-400/10 p-2.5">
             <div className="text-[9px] font-black text-violet-500 tracking-wider flex items-center gap-1">
-                <Sparkle size={10} weight="fill" />状态背后 · TA 此刻的冲动
+                <Sparkle size={10} weight="fill" />Behind the state · Their impulse right now
             </div>
             <p className={`text-[12px] font-semibold mt-1 ${textMain}`}>{impulse.text}</p>
             {existing ? (
                 <div className="mt-1.5 text-[10px] text-violet-500 font-bold flex items-center gap-1">
-                    <PaperPlaneTilt size={10} weight="fill" />你的心声已传达：「{existing.text}」——下一轮生效
+                    <PaperPlaneTilt size={10} weight="fill" />Your inner voice has been delivered: "{existing.text}" — takes effect next round
                 </div>
             ) : (
                 <>
@@ -1020,14 +1028,14 @@ const ImpulseCard: React.FC<{
                     )}
                     <div className="mt-1.5 flex gap-1.5">
                         <input value={custom} onChange={e => setCustom(e.target.value)}
-                            placeholder="或者，悄悄说点别的…"
+                            placeholder="Or, quietly say something else…"
                             className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-white/80 border border-violet-300/50 text-[11px] text-stone-800 focus:outline-none" />
                         <button disabled={!custom.trim()} onClick={() => { onSend(custom.trim()); setCustom(''); }}
                             className="px-2.5 rounded-lg bg-violet-500 text-white disabled:opacity-40 active:scale-95 transition-transform">
                             <PaperPlaneTilt size={13} weight="fill" />
                         </button>
                     </div>
-                    <div className="text-[8.5px] text-violet-400 mt-1">会化作"心里的声音"在下一轮影响 ta 的选择</div>
+                    <div className="text-[8.5px] text-violet-400 mt-1">Becomes an "inner voice" that influences their choice next round</div>
                 </>
             )}
         </div>
@@ -1035,9 +1043,10 @@ const ImpulseCard: React.FC<{
 };
 
 /**
- * 一个住户「这半天」的折叠卡。
- * 默认只露脸：小人 + 名字 + 心情 + 一行剧透；点开才翻出完整正文/时间轴/对话/备忘/状态，
- * 免得一展开小屋就被一整面墙的正文糊脸（更像翻一本小书的某一页）。
+ * A collapsible card for one resident's "this half-day."
+ * By default only shows a peek: figure + name + mood + a one-line teaser; expanding reveals the
+ * full narrative/timeline/dialogue/memos/status, so opening a house doesn't slap a whole wall of
+ * text in your face (more like flipping to a single page of a small book).
  */
 const ResidentDayCard: React.FC<{
     char: CharacterProfile;
@@ -1054,9 +1063,9 @@ const ResidentDayCard: React.FC<{
         return (
             <div className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 ${t.panelSolid}`}>
                 <ChibiFigure char={char} size={30} />
-                <span className={`text-[11px] ${t.textSub}`}>{char.name} 这半天还没有故事</span>
+                <span className={`text-[11px] ${t.textSub}`}>{char.name} doesn't have a story for this half-day yet</span>
                 <button onClick={onPhone} className="ml-auto flex items-center gap-1 text-[9.5px] font-black px-2 py-1 rounded-lg bg-slate-900 text-white shadow active:scale-95 transition-transform shrink-0">
-                    <DeviceMobile size={11} weight="fill" />手机
+                    <DeviceMobile size={11} weight="fill" />Phone
                 </button>
             </div>
         );
@@ -1065,7 +1074,7 @@ const ResidentDayCard: React.FC<{
     const hasDirective = !!(world.directives || []).find(d => d.charId === b.charId);
     return (
         <div className={`rounded-xl border overflow-hidden ${t.panelSolid}`}>
-            {/* 露脸条：可点开/收起 + 看手机 */}
+            {/* Peek bar: expand/collapse + view phone */}
             <div className="flex items-stretch">
                 <button onClick={() => setOpen(o => !o)} className="flex-1 min-w-0 text-left flex items-center gap-2 px-2 py-2">
                     <div className="rounded-lg px-1 pt-1 shrink-0" style={{ background: t.lawnBg }}><ChibiFigure char={char} size={36} bob={open} /></div>
@@ -1073,7 +1082,7 @@ const ResidentDayCard: React.FC<{
                         <div className="flex items-center gap-1.5">
                             <span className={`text-[12px] font-black ${t.textMain}`}>{b.charName}</span>
                             <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400/20 text-amber-600 border border-amber-400/30">{b.mood}</span>
-                            {b.impulse && <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-violet-400/20 text-violet-500 border border-violet-400/30 flex items-center gap-0.5"><Sparkle size={8} weight="fill" />{hasDirective ? '心声已传' : '有心事'}</span>}
+                            {b.impulse && <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-violet-400/20 text-violet-500 border border-violet-400/30 flex items-center gap-0.5"><Sparkle size={8} weight="fill" />{hasDirective ? 'Voice sent' : 'Something on their mind'}</span>}
                         </div>
                         <div className={`text-[10px] truncate mt-0.5 flex items-center gap-1 ${t.textSub}`}>
                             <MapPin size={9} weight="fill" className="text-amber-500 shrink-0" />{b.location} · {teaser}{teaser.length >= 30 ? '…' : ''}
@@ -1081,17 +1090,17 @@ const ResidentDayCard: React.FC<{
                     </div>
                     {open ? <CaretDown size={14} className={`${t.textSub} self-center shrink-0`} /> : <CaretRight size={14} className={`${t.textSub} self-center shrink-0`} />}
                 </button>
-                <button onClick={onPhone} className={`shrink-0 px-2.5 flex items-center justify-center border-l ${t.divider}`} title="看 ta 的手机">
+                <button onClick={onPhone} className={`shrink-0 px-2.5 flex items-center justify-center border-l ${t.divider}`} title="View their phone">
                     <DeviceMobile size={15} weight="fill" className="text-amber-500" />
                 </button>
             </div>
 
             {open && (
                 <div className={`px-2.5 pb-2.5 pt-1 border-t ${t.divider} space-y-2.5`}>
-                    {/* 时间轴（shared=false 只有玩家看得到，标"没声张"） */}
+                    {/* Timeline (shared=false is only visible to the player, marked "kept quiet") */}
                     {b.timeline && b.timeline.length > 0 && (
                         <div className={`mt-2 rounded-xl border p-2.5 ${t.chip}`}>
-                            <div className="text-[9px] font-black tracking-wider opacity-60 mb-1.5">这半天的时间轴</div>
+                            <div className="text-[9px] font-black tracking-wider opacity-60 mb-1.5">Timeline for this half-day</div>
                             <div className="space-y-1.5">
                                 {b.timeline.map((tl, i) => (
                                     <div key={i} className="flex gap-2 items-baseline">
@@ -1099,16 +1108,16 @@ const ResidentDayCard: React.FC<{
                                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 translate-y-[-1px] ${tl.shared ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                                         <span className={`text-[11px] leading-snug ${t.textMain} opacity-85`}>
                                             <b>{tl.place}</b> · {tl.event}
-                                            {!tl.shared && <span className="ml-1 inline-flex items-center gap-0.5 text-[8.5px] font-black text-rose-400"><EyeSlash size={9} weight="bold" />没声张</span>}
+                                            {!tl.shared && <span className="ml-1 inline-flex items-center gap-0.5 text-[8.5px] font-black text-rose-400"><EyeSlash size={9} weight="bold" />Kept quiet</span>}
                                         </span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
-                    {/* 正文：像翻开一页日记 */}
+                    {/* Narrative: like turning to a page in a diary */}
                     <div className={`rounded-xl border p-3 ${t.chip}`}>
-                        <div className="text-[9px] font-black tracking-wider opacity-50 mb-1.5 flex items-center gap-1"><Article size={10} weight="fill" />ta 的这一天</div>
+                        <div className="text-[9px] font-black tracking-wider opacity-50 mb-1.5 flex items-center gap-1"><Article size={10} weight="fill" />Their day</div>
                         <div className="space-y-2">
                             {b.narrative.split(/\n+/).filter(Boolean).map((para, i) => (
                                 <p key={i} className={`text-[12.5px] leading-[1.85] tracking-[0.01em] ${t.textMain} opacity-90`} style={{ textIndent: '2em' }}>{para}</p>
@@ -1119,13 +1128,13 @@ const ResidentDayCard: React.FC<{
                         <div className="space-y-1.5">
                             {b.dialogues.map((d, i) => (
                                 <div key={i} className="rounded-lg border-l-2 border-amber-400/70 bg-amber-400/10 px-2.5 py-1.5">
-                                    <div className="text-[9px] font-black text-amber-600 mb-0.5">当面对 {d.with} 说</div>
-                                    {d.lines.map((l, j) => <div key={j} className={`text-[11.5px] leading-[1.6] ${t.textMain} opacity-90`}>「{l}」</div>)}
+                                    <div className="text-[9px] font-black text-amber-600 mb-0.5">Said to {d.with}</div>
+                                    {d.lines.map((l, j) => <div key={j} className={`text-[11.5px] leading-[1.6] ${t.textMain} opacity-90`}>"{l}"</div>)}
                                 </div>
                             ))}
                         </div>
                     )}
-                    {/* 备忘录（私人，仅玩家可见） */}
+                    {/* Memos (private, only visible to the player) */}
                     {b.memo && b.memo.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                             {b.memo.map((m, i) => (
@@ -1136,7 +1145,7 @@ const ResidentDayCard: React.FC<{
                             ))}
                         </div>
                     )}
-                    {/* 冲动 / 待决策（user 可帮忙拿主意） */}
+                    {/* Impulse / pending decision (the user can help make up their mind) */}
                     {b.impulse && (
                         <ImpulseCard
                             impulse={b.impulse}
@@ -1163,12 +1172,12 @@ const ResidentDayCard: React.FC<{
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                             {onReroll && (
                                 <button onClick={onReroll} className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border ${t.chip} active:scale-95 transition-transform`}>
-                                    <Sparkle size={11} weight="fill" className="text-violet-500" />重演这一段
+                                    <Sparkle size={11} weight="fill" className="text-violet-500" />Replay This Segment
                                 </button>
                             )}
                             {onInject && (
-                                <button onClick={onInject} className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border ${t.chip} active:scale-95 transition-transform`} title="把这段观测补发到和 ta 的聊天里（重 roll 后保底用）">
-                                    <PaperPlaneTilt size={11} weight="fill" className="text-sky-500" />发到聊天
+                                <button onClick={onInject} className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border ${t.chip} active:scale-95 transition-transform`} title="Re-send this observation into chat with them (useful as a fallback after a reroll)">
+                                    <PaperPlaneTilt size={11} weight="fill" className="text-sky-500" />Send to Chat
                                 </button>
                             )}
                         </div>
@@ -1180,7 +1189,7 @@ const ResidentDayCard: React.FC<{
 };
 
 // ============================================================
-// 大世界视图
+// Big world view
 // ============================================================
 const WorldView: React.FC<{
     world: WorldProfile;
@@ -1206,10 +1215,10 @@ const WorldView: React.FC<{
 
     const members = useMemo(() => world.memberIds.map(id => characters.find(c => c.id === id)).filter(Boolean) as CharacterProfile[], [world.memberIds, characters]);
     const latest = episodes[0];
-    // 氛围跟随"即将到来的那一段"：早/中=白天，晚=夜晚
+    // Ambiance follows "the upcoming segment": morning/afternoon = day, evening = night
     const isNight = isNightWorld(world);
 
-    // sim（模拟时间）：章节进度 + 已结的卷
+    // sim (simulated time): chapter progress + wrapped chapters
     const isSim = world.timeMode === 'sim';
     const chapters = useMemo(() => (world.chapters || []).slice().sort((a, b) => b.index - a.index), [world.chapters]);
     const daysIntoChapter = Math.floor((world.storyClock - (world.simSummarizedClock || 0)) / 3);
@@ -1226,8 +1235,8 @@ const WorldView: React.FC<{
         const onBeat = (e: any) => { if (e.detail?.worldId === world.id) setProgress({ done: e.detail.done || 0, total: e.detail.total || members.length, charName: e.detail.charName }); };
         const onDone = (e: any) => { if (e.detail?.worldId === world.id) { loadEpisodes(); onWorldUpdated(); } };
         const onEnd = (e: any) => { if (e.detail?.worldId === world.id) setProgress(null); };
-        const onChapterStart = (e: any) => { if (e.detail?.worldId === world.id) addToast(`满 ${SIM_CHAPTER_DAYS} 天了，正在结第 ${e.detail.index} 卷…`, 'success'); };
-        const onChapterDone = (e: any) => { if (e.detail?.worldId === world.id) { addToast(`第 ${e.detail.index} 卷总结好了，去翻翻这些天的故事`, 'success'); onWorldUpdated(); } };
+        const onChapterStart = (e: any) => { if (e.detail?.worldId === world.id) addToast(`${SIM_CHAPTER_DAYS} days are up — wrapping chapter ${e.detail.index}…`, 'success'); };
+        const onChapterDone = (e: any) => { if (e.detail?.worldId === world.id) { addToast(`Chapter ${e.detail.index} is summarized — go read about these past days`, 'success'); onWorldUpdated(); } };
         window.addEventListener('world-episode-start', onStart);
         window.addEventListener('world-beat-done', onBeat);
         window.addEventListener('world-episode-done', onDone);
@@ -1245,46 +1254,47 @@ const WorldView: React.FC<{
     }, [world.id, members.length, loadEpisodes, onWorldUpdated, addToast]);
 
     const observe = () => {
-        if (isWorldRunning(world.id)) { addToast('这一轮还在演绎中', 'error'); return; }
-        if (members.length === 0) { addToast('这个世界还没有住进角色', 'error'); return; }
-        // 真实时间：跟着现实早/中/晚走，已追上现实就先等等（过去错过的当天可补、隔天补不了）
+        if (isWorldRunning(world.id)) { addToast('This round is still being narrated', 'error'); return; }
+        if (members.length === 0) { addToast('No characters live in this world yet', 'error'); return; }
+        // Real time: follows real-world morning/afternoon/evening — if already caught up with reality, wait a bit (today's missed segment can be caught up, tomorrow's can't)
         if (world.timeMode !== 'sim' && !realObserveTarget(world)) {
-            addToast('已经跟上现实时间啦——等过了这一段（早/中/晚/凌晨）再来观测', 'info');
+            addToast('Already caught up with real time — come observe again once this segment (morning/afternoon/evening/late-night) has passed', 'info');
             return;
         }
         setProgress({ done: 0, total: members.length });
         WorldScheduler.triggerNow(world.id);
-        trackEvent('触发一轮世界观测');
-        addToast(world.timeMode === 'sim' ? '观测开始——世界推进一段（早/中/晚/凌晨），可以先去做别的' : '观测开始——演绎现实中刚过去的这一段，可以先去做别的', 'success');
+        trackEvent('Trigger a World Observation');
+        addToast(world.timeMode === 'sim' ? 'Observation started — the world advances a segment (morning/afternoon/evening/late-night), feel free to go do something else' : 'Observation started — narrating the segment that just passed in reality, feel free to go do something else', 'success');
     };
 
-    // 单个角色重 roll（仅对最新一轮）：派发事件给 OSContext 用完整 deps 重演这一拍
+    // Reroll a single character (only for the latest round): dispatches an event to OSContext to replay this beat with full deps
     const doReroll = (charId: string, charName: string, direction: string) => {
-        if (isWorldRunning(world.id)) { addToast('还在演绎中，稍等', 'error'); return; }
-        if (!latest) { addToast('还没有可重演的一轮', 'error'); return; }
+        if (isWorldRunning(world.id)) { addToast('Still narrating, hang on', 'error'); return; }
+        if (!latest) { addToast('No round available to replay yet', 'error'); return; }
         setProgress({ done: 0, total: 1, charName });
         window.dispatchEvent(new CustomEvent('world-reroll-request', { detail: { worldId: world.id, charId, episodeId: latest.id, direction: direction.trim() || undefined } }));
-        trackEvent('重演某个角色这一段');
-        addToast(`正在重演 ${charName} 这一段…`, 'success');
+        trackEvent("Replay a Character's Segment");
+        addToast(`Replaying ${charName}'s segment…`, 'success');
         setRerollTarget(null); setRerollDir('');
     };
 
-    // 手动把某角色最新一拍补发到「和 ta 的聊天」（保底）：重 roll 后不会自动注入 world_card，
-    // 删掉旧卡片想换上新观测、或当时漏注入时，点这里补一张进上下文与记忆。
+    // Manually re-send a character's latest beat into "chat with them" (a fallback): a reroll
+    // doesn't auto-inject a world_card — use this to add one back into context and memory if you
+    // deleted the old card wanting to swap in the new observation, or it was missed at the time.
     const injectBeatToChat = async (charId: string) => {
-        if (!latest) { addToast('还没有可发送的观测', 'error'); return; }
+        if (!latest) { addToast('No observation available to send yet', 'error'); return; }
         const beat = latest.beats.find(b => b.charId === charId);
-        if (!beat) { addToast('这一轮 ta 还没演出来', 'error'); return; }
+        if (!beat) { addToast("They haven't appeared in this round yet", 'error'); return; }
         try {
             await injectWorldCard(world, beat, latest.round, latest.storyTime);
-            trackEvent('补发观测到聊天');
-            addToast(`已把这段观测发到和 ${beat.charName} 的聊天里`, 'success');
+            trackEvent('Re-send Observation to Chat');
+            addToast(`Sent this observation to chat with ${beat.charName}`, 'success');
         } catch {
-            addToast('发送失败，稍后再试', 'error');
+            addToast('Send failed, try again later', 'error');
         }
     };
 
-    // 拜访视图的住房编排：配置的小屋 + 没分配的成员各自独居
+    // Housing layout for the visit view: configured houses + unassigned members each living solo
     const visitHouses = useMemo(() => {
         const out: { house: WorldHouse; residents: CharacterProfile[] }[] = [];
         for (const h of world.houses) {
@@ -1292,7 +1302,7 @@ const WorldView: React.FC<{
             if (residents.length > 0) out.push({ house: h, residents });
         }
         for (const m of members) {
-            if (!houseOf(world, m.id)) out.push({ house: { id: `solo_${m.id}`, name: `${m.name} 的小屋`, residentIds: [m.id] }, residents: [m] });
+            if (!houseOf(world, m.id)) out.push({ house: { id: `solo_${m.id}`, name: `${m.name}'s House`, residentIds: [m.id] }, residents: [m] });
         }
         return out;
     }, [world, members]);
@@ -1300,16 +1310,16 @@ const WorldView: React.FC<{
     const beatOf = (charId: string): WorldCharBeat | undefined => latest?.beats.find(b => b.charId === charId);
     const nameOf = (id: string) => members.find(m => m.id === id)?.name || world.npcs.find(n => n.id === id)?.name || '?';
 
-    /** 修改世界并刷新（决策/伏笔引爆都走这里）。 */
+    /** Modify the world and refresh (decisions/seed detonation both go through here). */
     const mutateWorld = async (updates: Partial<WorldProfile>) => {
         await DB.saveWorld({ ...world, ...updates, updatedAt: Date.now() });
         onWorldUpdated();
     };
 
-    /** 编辑/删除手机里的生成内容（动态/备忘落 episode；私聊/群聊落 world.threads）。newText=null 表示删除。 */
+    /** Edit/delete generated content on the phone (feed posts/memos live in an episode; DMs/group chat live in world.threads). newText=null means delete. */
     const applyContentEdit = async (target: WHEditTarget, newText: string | null) => {
         if (target.type === 'comment') {
-            // 朋友圈评论删除：feedReactions[key].comments 按下标删一条；删空了就把整条反应去掉
+            // Deleting a feed comment: remove one from feedReactions[key].comments by index; if that empties it out, drop the whole reaction entry
             const rx = world.feedReactions?.[target.key];
             if (!rx) return;
             const comments = rx.comments.filter((_, i) => i !== target.idx);
@@ -1318,7 +1328,7 @@ const WorldView: React.FC<{
             else fr[target.key] = { ...rx, comments };
             await DB.saveWorld({ ...world, feedReactions: fr, updatedAt: Date.now() });
             onWorldUpdated();
-            addToast('已删除', 'success');
+            addToast('Deleted', 'success');
             return;
         }
         if (target.type === 'post' || target.type === 'memo') {
@@ -1332,7 +1342,7 @@ const WorldView: React.FC<{
                 if (target.idx < 0 || target.idx >= posts.length) return;
                 if (newText === null) {
                     posts.splice(target.idx, 1);
-                    // 该动态的点赞/评论按 idx 关联，删一条后把高位的往下挪一格
+                    // This post's likes/comments are correlated by idx — after deleting one, shift the higher-indexed ones down by one
                     if (world.feedReactions) {
                         const fr = { ...world.feedReactions };
                         delete fr[`${target.round}_${target.charId}_${target.idx}`];
@@ -1368,27 +1378,27 @@ const WorldView: React.FC<{
             });
             await mutateWorld({ threads });
         }
-        addToast(newText === null ? '已删除' : '已更新', 'success');
+        addToast(newText === null ? 'Deleted' : 'Updated', 'success');
     };
 
     const sendDirective = (charId: string, impulseText: string, text: string) => {
         const d = { id: `wd_${Date.now().toString(36)}`, charId, impulseText, text, createdRound: world.storyClock };
         void mutateWorld({ directives: [...(world.directives || []), d] });
-        trackEvent('给角色传一句心声');
-        addToast('心声已传达，下一轮生效', 'success');
+        trackEvent('Send Inner Voice to Character');
+        addToast('Inner voice delivered, takes effect next round', 'success');
     };
 
     const armSeed = (seedId: string) => {
         void mutateWorld({ seeds: (world.seeds || []).map(s => s.id === seedId ? { ...s, status: 'armed' as const } : s) });
-        trackEvent('点燃一条伏笔');
-        addToast('伏笔已点燃——下一轮观测时爆发', 'success');
+        trackEvent('Arm a Seed');
+        addToast('Seed armed — it will detonate on the next observation', 'success');
     };
 
     const deleteSeed = (seedId: string) => {
         void mutateWorld({ seeds: (world.seeds || []).filter(s => s.id !== seedId) });
-        addToast('伏笔已删除', 'success');
+        addToast('Seed deleted', 'success');
     };
-    // 长按删除：按住 ~550ms 弹确认框；手指移动超过 10px（在滚动）就取消，避免误删
+    // Long-press to delete: holding for ~550ms pops a confirmation box; moving the finger more than 10px (scrolling) cancels it, to avoid accidental deletes
     const [pendingSeed, setPendingSeed] = useState<{ id: string; charName: string; text: string } | null>(null);
     const seedPressRef = useRef<{ timer: ReturnType<typeof setTimeout>; x: number; y: number } | null>(null);
     const cancelSeedPress = () => { if (seedPressRef.current) { clearTimeout(seedPressRef.current.timer); seedPressRef.current = null; } };
@@ -1403,7 +1413,7 @@ const WorldView: React.FC<{
         if (s && (Math.abs(e.clientX - s.x) > 10 || Math.abs(e.clientY - s.y) > 10)) cancelSeedPress();
     };
 
-    // 主题 token：昼/夜两套
+    // Theme tokens: day/night sets
     const t = isNight ? {
         pageBg: 'linear-gradient(180deg,#11142a 0%,#171b35 30%,#1b2038 100%)',
         skyBg: 'linear-gradient(180deg,#0e1130 0%,#23284f 70%,#3b3866 100%)',
@@ -1442,20 +1452,20 @@ const WorldView: React.FC<{
                 boxSizing: 'border-box',
             }}
         >
-            {/* 伏笔删除确认（自定义弹窗，非原生） */}
+            {/* Seed delete confirmation (custom popup, not native) */}
             {pendingSeed && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 backdrop-blur-sm p-6" onClick={() => setPendingSeed(null)}>
                     <div className="w-full max-w-[300px] rounded-2xl bg-[#f7f3ea] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
                         <div className="px-4 pt-4 pb-3">
-                            <div className="text-[14px] font-black text-stone-800 flex items-center gap-1.5"><EyeSlash size={15} weight="fill" className="text-rose-400" />删除这个伏笔？</div>
+                            <div className="text-[14px] font-black text-stone-800 flex items-center gap-1.5"><EyeSlash size={15} weight="fill" className="text-rose-400" />Delete this seed?</div>
                             <p className="text-[11.5px] text-stone-500 leading-relaxed mt-2">
-                                <span className="font-bold text-stone-700">{pendingSeed.charName}</span>：{pendingSeed.text.slice(0, 50)}{pendingSeed.text.length > 50 ? '…' : ''}
+                                <span className="font-bold text-stone-700">{pendingSeed.charName}</span>: {pendingSeed.text.slice(0, 50)}{pendingSeed.text.length > 50 ? '…' : ''}
                             </p>
-                            <p className="text-[10px] text-stone-400 mt-1.5">删了就不会再爆发了，无法恢复。</p>
+                            <p className="text-[10px] text-stone-400 mt-1.5">Once deleted it won't ever detonate — this can't be undone.</p>
                         </div>
                         <div className="flex border-t border-stone-200">
-                            <button onClick={() => setPendingSeed(null)} className="flex-1 py-2.5 text-[13px] font-bold text-stone-500 active:bg-black/5">取消</button>
-                            <button onClick={() => { deleteSeed(pendingSeed.id); setPendingSeed(null); }} className="flex-1 py-2.5 text-[13px] font-bold text-rose-500 border-l border-stone-200 active:bg-rose-50">删除</button>
+                            <button onClick={() => setPendingSeed(null)} className="flex-1 py-2.5 text-[13px] font-bold text-stone-500 active:bg-black/5">Cancel</button>
+                            <button onClick={() => { deleteSeed(pendingSeed.id); setPendingSeed(null); }} className="flex-1 py-2.5 text-[13px] font-bold text-rose-500 border-l border-stone-200 active:bg-rose-50">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -1464,23 +1474,23 @@ const WorldView: React.FC<{
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 backdrop-blur-sm p-6" onClick={() => { setRerollTarget(null); setRerollDir(''); }}>
                     <div className="w-full max-w-[320px] rounded-2xl bg-[#f7f3ea] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
                         <div className="px-4 pt-4 pb-3">
-                            <div className="text-[14px] font-black text-stone-800 flex items-center gap-1.5"><Sparkle size={15} weight="fill" className="text-violet-500" />重演 {rerollTarget.charName} 这一段</div>
-                            <p className="text-[10.5px] text-stone-400 mt-1.5 leading-relaxed">会重新生成 ta 这一轮的演绎。可以给个大致方向（选填），留空就完全重写。</p>
+                            <div className="text-[14px] font-black text-stone-800 flex items-center gap-1.5"><Sparkle size={15} weight="fill" className="text-violet-500" />Replay {rerollTarget.charName}'s Segment</div>
+                            <p className="text-[10.5px] text-stone-400 mt-1.5 leading-relaxed">Regenerates their narrative for this round. You can give a rough direction (optional), or leave it blank for a full rewrite.</p>
                             <textarea value={rerollDir} onChange={e => setRerollDir(e.target.value)} rows={3}
                                 className="mt-2.5 w-full px-3 py-2 rounded-xl bg-white border border-stone-200 text-[12px] text-stone-800 focus:outline-none focus:border-violet-300 resize-none"
-                                placeholder="比如：让 ta 这次主动去找 XX 摊牌 / 心情写得更低落些 / 别提工作的事…" />
+                                placeholder="e.g. have them proactively confront XX this time / write the mood more down / don't mention work..." />
                         </div>
                         <div className="flex border-t border-stone-200">
-                            <button onClick={() => { setRerollTarget(null); setRerollDir(''); }} className="flex-1 py-2.5 text-[13px] font-bold text-stone-500 active:bg-black/5">取消</button>
-                            <button onClick={() => doReroll(rerollTarget.charId, rerollTarget.charName, rerollDir)} className="flex-1 py-2.5 text-[13px] font-bold text-violet-600 border-l border-stone-200 active:bg-violet-50">重新生成</button>
+                            <button onClick={() => { setRerollTarget(null); setRerollDir(''); }} className="flex-1 py-2.5 text-[13px] font-bold text-stone-500 active:bg-black/5">Cancel</button>
+                            <button onClick={() => doReroll(rerollTarget.charId, rerollTarget.charName, rerollDir)} className="flex-1 py-2.5 text-[13px] font-bold text-violet-600 border-l border-stone-200 active:bg-violet-50">Regenerate</button>
                         </div>
                     </div>
                 </div>
             )}
-            {/* 本轮没演出来的角色：提示 + 可重 roll */}
+            {/* Characters who didn't get a turn this round: notice + option to reroll */}
             {latest && (latest.failedCharIds?.length || 0) > 0 && !progress && (
                 <div className="mx-4 mt-3 rounded-2xl border border-rose-200 bg-rose-50/80 p-3">
-                    <div className="text-[11.5px] font-bold text-rose-600">本轮有角色没演出来</div>
+                    <div className="text-[11.5px] font-bold text-rose-600">Some characters didn't get a turn this round</div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                         {latest.failedCharIds!.map(id => {
                             const c = members.find(m => m.id === id);
@@ -1488,14 +1498,14 @@ const WorldView: React.FC<{
                             return (
                                 <button key={id} onClick={() => { setRerollDir(''); setRerollTarget({ charId: id, charName: c.name }); }}
                                     className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-rose-500 text-white active:scale-95 transition-transform">
-                                    <Sparkle size={11} weight="fill" />重新生成 {c.name}
+                                    <Sparkle size={11} weight="fill" />Regenerate {c.name}
                                 </button>
                             );
                         })}
                     </div>
                 </div>
             )}
-            {/* ── 天空舞台：剧情时间 + 观测 ── */}
+            {/* ── Sky stage: story time + observe ── */}
             <div className="relative mx-4 mt-3 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,.18)]" style={{ background: t.skyBg }}>
                 {isNight ? (
                     <>
@@ -1514,7 +1524,7 @@ const WorldView: React.FC<{
                 )}
                 <div className="relative px-4 pt-4 pb-4">
                     {onBack && (
-                        <button onClick={onBack} className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-black/25 backdrop-blur text-white/90 active:scale-90 transition-transform" title="返回">
+                        <button onClick={onBack} className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-black/25 backdrop-blur text-white/90 active:scale-90 transition-transform" title="Back">
                             <ArrowLeft size={16} weight="bold" />
                         </button>
                     )}
@@ -1522,53 +1532,54 @@ const WorldView: React.FC<{
                         <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-full tracking-wider ${MODE_INFO[world.mode].badge}`}>{MODE_INFO[world.mode].short}</span>
                         <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-full tracking-wider ${TIME_MODE_INFO[world.timeMode || 'real'].badge}`}>{TIME_MODE_INFO[world.timeMode || 'real'].short}</span>
                         {(world.offlineTickSlots?.length || 0) > 0 && (
-                            <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full bg-black/25 text-white/85 tracking-wider">离线运转中</span>
+                            <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full bg-black/25 text-white/85 tracking-wider">Running offline</span>
                         )}
                     </div>
                     <div className="mt-2 flex items-end justify-between gap-3">
                         <div>
                             <div className="flex items-center gap-1.5 text-white/85">
                                 {isNight ? <MoonStars size={15} weight="fill" /> : <SunHorizon size={15} weight="fill" />}
-                                <span className="text-[10px] font-bold tracking-[0.2em]">{latest ? '当前时刻' : '世界尚未开始'}</span>
+                                <span className="text-[10px] font-bold tracking-[0.2em]">{latest ? 'CURRENT MOMENT' : 'WORLD NOT STARTED YET'}</span>
                             </div>
                             <div className="text-[22px] font-black text-white leading-tight font-serif" style={{ textShadow: '0 2px 10px rgba(0,0,0,.3)' }}>
                                 {worldTimeLabel(world)}
                             </div>
-                            {/* 设了世界时区就标出来：不然用户看到的段和自己手机时间对不上会以为是 bug */}
+                            {/* Only shown when a world timezone is set — otherwise users seeing a segment
+                                that doesn't match their own phone's time would think it's a bug */}
                             {worldTzLabel(world) && (
-                                <div className="text-[9.5px] font-bold text-white/60 tracking-wide mt-0.5">🌐 {worldTzLabel(world)} 当地时间</div>
+                                <div className="text-[9.5px] font-bold text-white/60 tracking-wide mt-0.5">🌐 {worldTzLabel(world)} local time</div>
                             )}
                         </div>
                         <button onClick={observe} disabled={!!progress}
                             className="relative overflow-hidden wh-sheen shrink-0 px-4 py-2.5 rounded-2xl text-[12.5px] font-black tracking-wide text-amber-950 shadow-[0_6px_18px_rgba(255,180,60,.45)] disabled:opacity-60 active:scale-95 transition-transform"
                             style={{ background: 'linear-gradient(135deg,#ffd76e 0%,#ffb347 100%)' }}>
-                            <span className="relative z-10 flex items-center gap-1.5"><Sparkle size={15} weight="fill" />{progress ? '演绎中…' : '观测 · 推进一段'}</span>
+                            <span className="relative z-10 flex items-center gap-1.5"><Sparkle size={15} weight="fill" />{progress ? 'Narrating…' : 'Observe · Advance a segment'}</span>
                         </button>
                     </div>
                     {progress && (
                         <div className="mt-3 rounded-xl bg-black/25 backdrop-blur px-3 py-2">
                             <div className="flex justify-between text-[10px] text-white/90 mb-1.5 font-semibold">
-                                <span className="flex items-center gap-1"><span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />{progress.charName ? `正在演绎：${progress.charName}` : '世界引擎运转中（NPC）…'}</span>
+                                <span className="flex items-center gap-1"><span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />{progress.charName ? `Narrating: ${progress.charName}` : 'World engine running (NPCs)…'}</span>
                                 <span>{progress.done}/{progress.total}</span>
                             </div>
                             <div className="h-1.5 rounded-full bg-white/15 overflow-hidden">
                                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.round((progress.done / Math.max(1, progress.total)) * 100)}%`, background: 'linear-gradient(90deg,#ffd76e,#ffb347)' }} />
                             </div>
-                            <div className="text-[9px] text-white/55 mt-1">可以离开这个界面，演绎在后台继续</div>
+                            <div className="text-[9px] text-white/55 mt-1">You can leave this screen — narration continues in the background</div>
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="px-4 mt-4 space-y-4">
-                {/* ── sim 模式：结卷进度 + 已归档的卷 ── */}
+                {/* ── sim mode: chapter progress + archived chapters ── */}
                 {isSim && (
                     <div>
-                        <div className={`text-[10px] font-black tracking-[0.25em] uppercase px-1 mb-2 flex items-center gap-1.5 ${t.textLabel}`}><Article size={11} weight="fill" />编年史 · 每 {SIM_CHAPTER_DAYS} 天一卷</div>
+                        <div className={`text-[10px] font-black tracking-[0.25em] uppercase px-1 mb-2 flex items-center gap-1.5 ${t.textLabel}`}><Article size={11} weight="fill" />Chronicle · One chapter every {SIM_CHAPTER_DAYS} days</div>
                         <div className={`rounded-2xl border p-3 ${t.panel}`}>
                             <div className="flex items-center justify-between mb-1.5">
-                                <span className={`text-[11px] font-bold ${t.textMain}`}>本卷进度</span>
-                                <span className={`text-[10px] ${t.textSub}`}>{daysToNextChapter > 0 ? `还有 ${daysToNextChapter} 天结第 ${chapters.length + 1} 卷` : '即将结卷'}</span>
+                                <span className={`text-[11px] font-bold ${t.textMain}`}>Current Chapter Progress</span>
+                                <span className={`text-[10px] ${t.textSub}`}>{daysToNextChapter > 0 ? `${daysToNextChapter} day(s) until chapter ${chapters.length + 1} wraps` : 'Wrapping up soon'}</span>
                             </div>
                             <div className={`h-1.5 rounded-full overflow-hidden ${t.barTrack}`}>
                                 <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.round((daysIntoChapter / SIM_CHAPTER_DAYS) * 100)}%`, background: 'linear-gradient(90deg,#a78bfa,#7c3aed)' }} />
@@ -1586,7 +1597,7 @@ const WorldView: React.FC<{
                                     return (
                                         <div key={ch.id} className={`rounded-2xl border overflow-hidden ${t.panel}`}>
                                             <button className="w-full text-left px-3 py-2.5 flex items-center gap-2" onClick={() => setOpenChapterId(open ? null : ch.id)}>
-                                                <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-violet-400/90 text-violet-950 shrink-0">第 {ch.index} 卷</span>
+                                                <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-violet-400/90 text-violet-950 shrink-0">Chapter {ch.index}</span>
                                                 <span className={`text-[10.5px] truncate ${t.textSub}`}>{ch.fromLabel} ～ {ch.toLabel}</span>
                                                 {open ? <CaretDown size={13} className={`${t.textSub} ml-auto shrink-0`} /> : <CaretRight size={13} className={`${t.textSub} ml-auto shrink-0`} />}
                                             </button>
@@ -1595,12 +1606,12 @@ const WorldView: React.FC<{
                                                     <p className={`text-[12px] leading-[1.85] whitespace-pre-wrap mt-2 ${t.textMain}`}>{ch.synopsis}</p>
                                                     {ch.relationshipEval && (
                                                         <div className="mt-3">
-                                                            <div className={`text-[9.5px] font-black tracking-wider flex items-center gap-1 ${t.textLabel}`}><Heart size={10} weight="fill" />关系走向</div>
+                                                            <div className={`text-[9.5px] font-black tracking-wider flex items-center gap-1 ${t.textLabel}`}><Heart size={10} weight="fill" />Relationship Direction</div>
                                                             <p className={`text-[11.5px] leading-[1.8] mt-1 ${t.textSub}`}>{ch.relationshipEval}</p>
                                                         </div>
                                                     )}
                                                     {ch.atmosphere && (
-                                                        <div className={`mt-3 text-[10.5px] italic rounded-lg px-2.5 py-1.5 ${isNight ? 'bg-white/5 text-indigo-200/70' : 'bg-violet-50/70 text-violet-700'}`}>氛围：{ch.atmosphere}</div>
+                                                        <div className={`mt-3 text-[10.5px] italic rounded-lg px-2.5 py-1.5 ${isNight ? 'bg-white/5 text-indigo-200/70' : 'bg-violet-50/70 text-violet-700'}`}>Atmosphere: {ch.atmosphere}</div>
                                                     )}
                                                 </div>
                                             )}
@@ -1622,19 +1633,19 @@ const WorldView: React.FC<{
                     </div>
                 )}
 
-                {/* ── 邻里：各家小屋（去串门） ── */}
+                {/* ── Neighbors: each house (go visit) ── */}
                 <div>
-                    <div className={`text-[10px] font-black tracking-[0.25em] uppercase px-1 mb-2 flex items-center gap-1.5 ${t.textLabel}`}><House size={11} weight="fill" />邻里 · 去串门</div>
+                    <div className={`text-[10px] font-black tracking-[0.25em] uppercase px-1 mb-2 flex items-center gap-1.5 ${t.textLabel}`}><House size={11} weight="fill" />Neighbors · Go Visit</div>
                     <div className="space-y-2.5">
                         {visitHouses.map(({ house, residents }) => {
                             const open = openHouseId === house.id;
                             return (
                                 <div key={house.id} className={`rounded-2xl border overflow-hidden ${t.panel}`}>
                                     <button className="w-full text-left" onClick={() => setOpenHouseId(open ? null : house.id)}>
-                                        {/* 屋顶 */}
+                                        {/* Roof */}
                                         <div className="h-2.5" style={{ background: t.roofBg }} />
                                         <div className="flex items-center gap-3 px-3 py-2.5">
-                                            {/* 草坪上的小人 */}
+                                            {/* Figures on the lawn */}
                                             <div className="rounded-xl px-2 pt-1.5 flex items-end -space-x-3 shrink-0" style={{ background: t.lawnBg }}>
                                                 {residents.map(r => <ChibiFigure key={r.id} char={r} size={46} bob={open} />)}
                                             </div>
@@ -1643,7 +1654,7 @@ const WorldView: React.FC<{
                                                 <div className={`text-[10px] truncate mt-0.5 ${t.textSub}`}>
                                                     {residents.map(r => {
                                                         const b = beatOf(r.id);
-                                                        return b ? `${r.name} · ${b.location}` : `${r.name} · 还没动静`;
+                                                        return b ? `${r.name} · ${b.location}` : `${r.name} · nothing yet`;
                                                     }).join('　')}
                                                 </div>
                                             </div>
@@ -1659,7 +1670,7 @@ const WorldView: React.FC<{
                                                     beat={beatOf(r.id)}
                                                     t={t}
                                                     world={world}
-                                                    onPhone={() => { setPhoneView({ ownerId: r.id }); trackEvent('打开角色手机面板'); }}
+                                                    onPhone={() => { setPhoneView({ ownerId: r.id }); trackEvent('Open Character Phone Panel'); }}
                                                     onDirective={(impulseText, text) => sendDirective(r.id, impulseText, text)}
                                                     onReroll={latest?.beats.some(b => b.charId === r.id) ? () => { setRerollDir(''); setRerollTarget({ charId: r.id, charName: r.name }); } : undefined}
                                                     onInject={world.timeMode !== 'sim' && world.injectToChat !== false && latest?.beats.some(b => b.charId === r.id) ? () => injectBeatToChat(r.id) : undefined}
@@ -1673,7 +1684,7 @@ const WorldView: React.FC<{
                     </div>
                 </div>
 
-                {/* ── 世界群聊（公共空间：成员 + NPC 都在里面冒泡） ── */}
+                {/* ── World group chat (public space: members + NPCs all pop up in it) ── */}
                 {(() => {
                     const group = groupThreadOf(world);
                     if (!group || group.messages.length === 0) return null;
@@ -1682,13 +1693,13 @@ const WorldView: React.FC<{
                         <button onClick={() => members[0] && setPhoneView({ ownerId: members[0].id, tab: 'group' })}
                             className={`w-full text-left rounded-2xl border p-3.5 ${t.panel} active:scale-[0.99] transition-transform`}>
                             <div className={`text-[10px] font-black tracking-[0.25em] uppercase flex items-center gap-1.5 mb-2 ${t.textLabel}`}>
-                                <ChatCircleDots size={11} weight="fill" />「{group.name}」
-                                <span className="ml-auto normal-case tracking-normal font-bold text-[9px] opacity-70">{group.messages.length} 条 · 点开看全部</span>
+                                <ChatCircleDots size={11} weight="fill" />"{group.name}"
+                                <span className="ml-auto normal-case tracking-normal font-bold text-[9px] opacity-70">{group.messages.length} message(s) · tap to view all</span>
                             </div>
                             <div className="space-y-1">
                                 {recent.map(m => (
                                     <div key={m.id} className={`text-[11px] leading-snug truncate ${t.textMain} opacity-85`}>
-                                        <span className="font-bold">{m.fromName}：</span>{m.text}
+                                        <span className="font-bold">{m.fromName}:</span> {m.text}
                                     </div>
                                 ))}
                             </div>
@@ -1696,13 +1707,13 @@ const WorldView: React.FC<{
                     );
                 })()}
 
-                {/* ── 关系（有向：同一对上下两根，直观看出不对等） ── */}
+                {/* ── Relationships (directed: two bars per pair, stacked, to visually show asymmetry) ── */}
                 {world.relationships.length > 0 && (
                     <div className={`rounded-2xl border p-3.5 ${t.panel}`}>
-                        <div className={`text-[10px] font-black tracking-[0.25em] uppercase flex items-center gap-1.5 mb-2.5 ${t.textLabel}`}><UsersThree size={11} weight="fill" />羁绊</div>
+                        <div className={`text-[10px] font-black tracking-[0.25em] uppercase flex items-center gap-1.5 mb-2.5 ${t.textLabel}`}><UsersThree size={11} weight="fill" />Bonds</div>
                         <div className="space-y-2.5">
                             {(() => {
-                                // 同一对的两条有向边排到一起展示
+                                // The two directed edges of the same pair are displayed together
                                 const seen = new Set<string>();
                                 const groups: { fwd: typeof world.relationships[0]; rev?: typeof world.relationships[0] }[] = [];
                                 for (const r of world.relationships) {
@@ -1722,7 +1733,7 @@ const WorldView: React.FC<{
                                                     </span>
                                                     <span className={`font-black flex items-center gap-0.5 ${r!.value < 0 ? 'text-slate-400' : 'text-rose-400'}`}><Heart size={10} weight="fill" />{r!.value}</span>
                                                 </div>
-                                                {/* 好感 -100~100：中点为 0，向右暖色=好感、向左冷色=负好感 */}
+                                                {/* Affinity -100~100: midpoint is 0, warm color to the right = affinity, cool color to the left = negative affinity */}
                                                 <div className={`relative h-1.5 rounded-full overflow-hidden mt-1 ${t.barTrack}`}>
                                                     <div className="absolute top-0 bottom-0 left-1/2 w-px bg-black/20" />
                                                     <div className="absolute top-0 bottom-0 rounded-full transition-all"
@@ -1739,11 +1750,11 @@ const WorldView: React.FC<{
                     </div>
                 )}
 
-                {/* ── 伏笔栏：角色们瞒下的事（玩家上帝视角），点击引爆生成冲突 ── */}
+                {/* ── Seeds shelf: things characters are hiding (player's god's-eye view), tap to detonate and generate conflict ── */}
                 {(world.seeds || []).length > 0 && (
                     <div className={`rounded-2xl border p-3.5 ${t.panel}`}>
                         <div className={`text-[10px] font-black tracking-[0.25em] uppercase flex items-center gap-1.5 mb-2.5 ${t.textLabel}`}>
-                            <EyeSlash size={11} weight="fill" />伏笔栏 · 只有你看得到<span className="normal-case tracking-normal font-medium opacity-60 ml-1">（长按删除）</span>
+                            <EyeSlash size={11} weight="fill" />Seeds Shelf · Only you can see this<span className="normal-case tracking-normal font-medium opacity-60 ml-1">(long-press to delete)</span>
                         </div>
                         {(() => {
                             const activeSeeds = (world.seeds || []).filter(s => s.status !== 'resolved').slice().reverse();
@@ -1758,20 +1769,20 @@ const WorldView: React.FC<{
                                     onPointerDown={e => startSeedPress(e, seed)} onPointerMove={moveSeedPress} onPointerUp={cancelSeedPress} onPointerLeave={cancelSeedPress} onPointerCancel={cancelSeedPress}>
                                     <div className={`text-[11px] leading-snug ${t.textMain}`}>
                                         <span className="font-black">{seed.charName}</span>
-                                        <span className={`text-[9px] ml-1.5 ${t.textSub}`}>{seed.storyTime} · 瞒着{seed.hideFrom.length > 0 ? seed.hideFrom.join('、') : '所有人'}</span>
+                                        <span className={`text-[9px] ml-1.5 ${t.textSub}`}>{seed.storyTime} · hiding it from {seed.hideFrom.length > 0 ? seed.hideFrom.join(', ') : 'everyone'}</span>
                                     </div>
                                     <p className={`text-[11.5px] mt-1 ${t.textMain} opacity-90`}>{seed.text}</p>
                                     {seed.status === 'pending' ? (
                                         <button onClick={() => armSeed(seed.id)}
                                             className="mt-1.5 flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg bg-rose-500 text-white active:scale-95 transition-transform">
-                                            <Lightning size={11} weight="fill" />引爆这个伏笔
+                                            <Lightning size={11} weight="fill" />Detonate This Seed
                                         </button>
                                     ) : (
                                         <div className="mt-1.5 flex items-center gap-2">
-                                            <span className="text-[10px] font-black text-rose-400 flex items-center gap-1"><Lightning size={11} weight="fill" />已点燃 · 下一轮爆发</span>
+                                            <span className="text-[10px] font-black text-rose-400 flex items-center gap-1"><Lightning size={11} weight="fill" />Armed · detonates next round</span>
                                             <button onClick={observe} disabled={!!progress}
                                                 className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-rose-500 text-white disabled:opacity-40 active:scale-95 transition-transform">
-                                                立即观测
+                                                Observe Now
                                             </button>
                                         </div>
                                     )}
@@ -1788,7 +1799,7 @@ const WorldView: React.FC<{
                             )}
                             {resolvedCount > 0 && (
                                 <div className={`text-[9.5px] ${t.textSub}`}>
-                                    已爆发：{(world.seeds || []).filter(s => s.status === 'resolved').slice(-3).map(s => `${s.charName}·${s.text.slice(0, 16)}…`).join(' / ')}
+                                    Detonated: {(world.seeds || []).filter(s => s.status === 'resolved').slice(-3).map(s => `${s.charName}·${s.text.slice(0, 16)}…`).join(' / ')}
                                 </div>
                             )}
                         </div>
@@ -1797,11 +1808,11 @@ const WorldView: React.FC<{
                     </div>
                 )}
 
-                {/* ── 镇上的动静（NPC） ── */}
+                {/* ── Town happenings (NPCs) ── */}
                 {latest?.npcScene && (
                     <div className={`rounded-2xl border p-3.5 ${t.panel}`}>
                         <div className={`text-[10px] font-black tracking-[0.25em] uppercase flex items-center gap-1.5 mb-2 ${t.textLabel}`}>
-                            <Sparkle size={11} weight="fill" />镇上的动静 · {latest.storyTime}
+                            <Sparkle size={11} weight="fill" />Town Happenings · {latest.storyTime}
                         </div>
                         <p className={`text-[12px] leading-[1.7] whitespace-pre-wrap ${t.textMain} opacity-90`}>{latest.npcScene}</p>
                         {world.npcs.length > 0 && (
@@ -1814,10 +1825,10 @@ const WorldView: React.FC<{
                     </div>
                 )}
 
-                {/* ── 世界纪事（时间线） ── */}
+                {/* ── World chronicle (timeline) ── */}
                 {episodes.length > 0 && (
                     <div>
-                        <div className={`text-[10px] font-black tracking-[0.25em] uppercase px-1 mb-2 ${t.textLabel}`}>世界纪事</div>
+                        <div className={`text-[10px] font-black tracking-[0.25em] uppercase px-1 mb-2 ${t.textLabel}`}>World Chronicle</div>
                         <div className="space-y-2">
                             {episodes.map(ep => {
                                 const open = openEpisodeId === ep.id;
@@ -1829,7 +1840,7 @@ const WorldView: React.FC<{
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className={`text-[12px] font-black font-serif ${t.textMain}`}>{ep.storyTime}
-                                                    <span className={`text-[9px] font-normal ml-1.5 ${t.textSub}`}>{ep.trigger === 'tick' ? '离线推进' : '观测'} · {new Date(ep.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                                                    <span className={`text-[9px] font-normal ml-1.5 ${t.textSub}`}>{ep.trigger === 'tick' ? 'Offline advance' : 'Observed'} · {new Date(ep.createdAt).toLocaleString('en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                                 {!open && <div className={`text-[10px] truncate mt-0.5 ${t.textSub}`}>{ep.summary}</div>}
                                             </div>
@@ -1853,8 +1864,8 @@ const WorldView: React.FC<{
                                                             <div className="mt-2 space-y-1">
                                                                 {b.dialogues.map((d, i) => (
                                                                     <div key={i} className="rounded-lg border-l-2 border-amber-400/70 bg-amber-400/10 px-2 py-1">
-                                                                        <span className="text-[9px] font-black text-amber-600">对 {d.with}：</span>
-                                                                        <span className={`text-[10.5px] ${t.textMain} opacity-85`}>{d.lines.map(l => `「${l}」`).join(' ')}</span>
+                                                                        <span className="text-[9px] font-black text-amber-600">To {d.with}:</span>
+                                                                        <span className={`text-[10.5px] ${t.textMain} opacity-85`}>{d.lines.map(l => `"${l}"`).join(' ')}</span>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -1871,11 +1882,11 @@ const WorldView: React.FC<{
                 )}
 
                 <button onClick={onEdit} className={`w-full py-2.5 rounded-2xl border text-[12px] font-bold flex items-center justify-center gap-1.5 ${t.panel} ${t.textSub}`}>
-                    <GearSix size={14} weight="bold" />世界设置
+                    <GearSix size={14} weight="bold" />World Settings
                 </button>
             </div>
 
-            {/* 真手机弹窗 */}
+            {/* Real phone popup */}
             {phoneView && (
                 <PhoneModal
                     ownerId={phoneView.ownerId}
@@ -1892,7 +1903,7 @@ const WorldView: React.FC<{
 };
 
 // ============================================================
-// 主组件
+// Main component
 // ============================================================
 const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean) => void }> = ({ embedded, onFullscreen }) => {
     const { closeApp, characters, addToast, apiConfig, apiPresets } = useOS();
@@ -1900,21 +1911,21 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
     const [view, setView] = useState<'list' | 'edit' | 'world'>('list');
     const [activeId, setActiveId] = useState<string | null>(null);
     const [draft, setDraft] = useState<WorldProfile | null>(null);
-    // 家园全局 API（所有世界共用一份；不设=跟随全局聊天默认）
+    // Homeland's global API (shared by all worlds; unset = follows the global chat default)
     const [worldApi, setWorldApi] = useState<{ baseUrl: string; apiKey: string; model: string } | null>(loadWorldApi);
     const [showApiSettings, setShowApiSettings] = useState(false);
     const resolvedApi = useMemo(() => (worldApi?.baseUrl ? { ...apiConfig, ...worldApi } : apiConfig), [worldApi, apiConfig]);
 
     const reload = useCallback(async () => {
         const all = await DB.getWorlds();
-        // 旧存档（一天三段制）→ 四段制（含凌晨）一次性迁移并写回
+        // One-time migration of old saves (3-segment days) → 4-segment days (including late-night), written back
         for (const w of all) {
             if (migrateWorldDaySegs(w)) await DB.saveWorld(w).catch(() => {});
         }
         setWorlds(all);
     }, []);
     useEffect(() => { reload(); }, [reload]);
-    // 内嵌进「小小窝」时：开始玩（进世界/编辑）就让外层隐去三栏，回列表恢复
+    // When embedded in "Dwelling": starting to play (entering a world/editing) hides the outer three-column layout, restored on returning to the list
     useEffect(() => { if (embedded) onFullscreen?.(view !== 'list'); }, [embedded, view, onFullscreen]);
 
     const active = worlds.find(w => w.id === activeId) || null;
@@ -1927,19 +1938,19 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
             createdAt: Date.now(), updatedAt: Date.now(),
         });
         setView('edit');
-        trackEvent('新建家园世界');
+        trackEvent('Create New Homeland World');
     };
 
     const saveWorld = async (w: WorldProfile) => {
         await DB.saveWorld(w);
-        // 调度表对账：所有世界的离线 tick 设置一起重建
+        // Reconcile the schedule: rebuild every world's offline tick settings together
         const all = await DB.getWorlds();
         WorldScheduler.reconcile(toTickEntries(all));
         setWorlds(all);
         setActiveId(w.id);
         setDraft(null);
         setView('world');
-        addToast('世界已保存', 'success');
+        addToast('World saved', 'success');
     };
 
     const deleteWorld = async (id: string) => {
@@ -1950,12 +1961,12 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
         setDraft(null);
         setActiveId(null);
         setView('list');
-        addToast('世界已删除', 'success');
+        addToast('World deleted', 'success');
     };
 
-    const headerTitle = view === 'edit' ? (draft && worlds.some(w => w.id === draft.id) ? '世界设置' : '创建世界')
-        : view === 'world' ? (active?.name || '家园')
-        : '家园';
+    const headerTitle = view === 'edit' ? (draft && worlds.some(w => w.id === draft.id) ? 'World Settings' : 'Create World')
+        : view === 'world' ? (active?.name || 'Homeland')
+        : 'Homeland';
 
     const goBack = () => {
         if (view === 'edit') { setDraft(null); setView(activeId && worlds.some(w => w.id === activeId) ? 'world' : 'list'); }
@@ -1963,20 +1974,21 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
         else closeApp();
     };
 
-    // 世界视图的顶栏要压在深色页底上，配色跟着走
+    // The world view's top bar sits on top of a dark page background, so its colors follow suit
     const worldNight = view === 'world' && active ? isNightWorld(active) : false;
     const darkHeader = view === 'world' && worldNight;
     const headerBg = view === 'world'
         ? (worldNight ? '#11142a' : '#cfe7da')
         : '#f1ebf9';
-    // 列表/编辑页用淡紫奇幻底，和「小小窝」选择页一致
+    // The list/edit pages use a pale-lavender fantasy background, matching the "Dwelling" select page
     const pageBg = view === 'edit' || view === 'list' ? 'linear-gradient(180deg,#efe9f7 0%,#f4eff9 45%,#f7f2fb 100%)' : undefined;
 
     return (
         <div className="h-full w-full flex flex-col" style={{ background: pageBg }}>
             <GameStyles />
-            {/* 顶栏：内嵌进「小小窝」时，列表页只留齿轮/新建；进世界（正式开始玩）整条隐去做全屏，
-                返回靠世界视图里的浮动返回键。 */}
+            {/* Top bar: when embedded in "Dwelling", the list page only keeps the gear/new-world
+                buttons; entering a world (actually starting to play) hides the whole bar for
+                fullscreen, relying on the floating back button inside the world view instead. */}
             {!(embedded && view === 'world') && (
             <div className="shrink-0 sticky top-0 z-10" style={{ background: headerBg, paddingTop: embedded && view === 'list' ? undefined : 'var(--safe-top)' }}>
             <div className={embedded ? `${view === 'list' ? 'h-12' : 'h-20'} flex items-end pb-3 px-4` : 'flex items-center px-4 py-3'}>
@@ -1993,7 +2005,7 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
                     )}
                     {view === 'list' && (
                         <div className="ml-auto flex items-center gap-0.5">
-                            <button onClick={() => setShowApiSettings(true)} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform" title="家园 API 设置">
+                            <button onClick={() => setShowApiSettings(true)} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform" title="Homeland API Settings">
                                 <GearSix size={20} weight="bold" className="text-stone-800" />
                             </button>
                             <button onClick={startCreate} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
@@ -2021,21 +2033,21 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
                     className="flex-1 overflow-y-auto no-scrollbar px-4 pt-1 space-y-3"
                     style={{ paddingBottom: 'calc(6rem + var(--safe-bottom, 0px))', boxSizing: 'border-box' }}
                 >
-                    {/* 游戏封面横幅（淡紫梦幻：月亮 + 云霭 + 星点） */}
+                    {/* Game cover banner (pale-lavender fantasy: moon + mist + stars) */}
                     <div className="relative rounded-3xl overflow-hidden p-5 shadow-[0_10px_30px_rgba(120,100,180,.25)]" style={{ background: 'linear-gradient(150deg,#8e83c4 0%,#a99fd6 52%,#c3c9ea 100%)' }}>
                         <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: starsBg, animation: 'wh-twinkle 4s ease-in-out infinite' }} />
-                        {/* 月亮 */}
+                        {/* Moon */}
                         <div className="absolute top-5 right-7 w-12 h-12 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle at 38% 35%,#fbf7ff,#d9d2ee 70%)', boxShadow: '0 0 26px 6px rgba(255,255,255,.4)' }} />
-                        {/* 云霭 */}
+                        {/* Mist */}
                         <div className="absolute -bottom-3 -left-4 w-40 h-16 rounded-full bg-white/30 blur-xl pointer-events-none" />
                         <div className="absolute bottom-2 right-6 w-28 h-12 rounded-full bg-white/20 blur-lg pointer-events-none" />
                         <div className="relative">
                             <div className="text-[9px] font-black tracking-[0.45em] text-white/70 uppercase">World · Home</div>
-                            <div className="text-[26px] font-black text-white font-serif tracking-[0.18em] mt-1" style={{ textShadow: '0 2px 14px rgba(90,60,140,.45)' }}>家　园</div>
+                            <div className="text-[26px] font-black text-white font-serif tracking-[0.18em] mt-1" style={{ textShadow: '0 2px 14px rgba(90,60,140,.45)' }}>HOMELAND</div>
                             <p className="text-[10.5px] leading-[1.7] text-white/85 mt-2" style={{ textShadow: '0 1px 6px rgba(80,60,130,.3)' }}>
-                                把同一世界观的角色放进一个世界，让他们在你不看的时候慢慢生活。
-                                每次<b className="text-amber-100">观测</b>，世界推进一段（早/中/晚/凌晨）——每个角色独立演绎，绝不上帝视角；
-                                NPC 由世界引擎一口气演完。所有故事都会写回各自的聊天与记忆。
+                                Put characters from the same worldview into one world, and let them slowly live their lives while you're not watching.
+                                Each time you <b className="text-amber-100">observe</b>, the world advances a segment (morning/afternoon/evening/late-night) — each character is narrated independently, never from a god's-eye view;
+                                NPCs are handled in one go by the world engine. Every story gets written back into each character's own chat and memory.
                             </p>
                         </div>
                     </div>
@@ -2044,9 +2056,9 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
                         const ms = w.memberIds.map(id => characters.find(c => c.id === id)).filter(Boolean) as CharacterProfile[];
                         const night = isNightWorld(w);
                         return (
-                            <button key={w.id} onClick={() => { setActiveId(w.id); setView('world'); trackEvent('进入家园世界'); }}
+                            <button key={w.id} onClick={() => { setActiveId(w.id); setView('world'); trackEvent('Enter Homeland World'); }}
                                 className="w-full rounded-2xl overflow-hidden text-left shadow-[0_6px_18px_rgba(120,100,180,.18)] active:scale-[0.99] transition-transform border border-white/70">
-                                {/* 世界缩略天空（淡紫梦幻） */}
+                                {/* World thumbnail sky (pale-lavender fantasy) */}
                                 <div className="relative h-14 flex items-end px-3.5 pb-1.5" style={{ background: night ? 'linear-gradient(180deg,#3a3566,#5b5590)' : 'linear-gradient(180deg,#b3a6dd,#d8d2ee)' }}>
                                     {night && <div className="absolute inset-0" style={{ backgroundImage: starsBg }} />}
                                     <div className="relative flex -space-x-3 items-end">
@@ -2061,7 +2073,7 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
                                     <div className="min-w-0">
                                         <div className="text-[14px] font-black font-serif text-stone-800 truncate">{w.name}</div>
                                         <div className="text-[10px] text-stone-500 mt-0.5">
-                                            {ms.length} 位角色{w.npcs.length > 0 ? ` · ${w.npcs.length} 个NPC` : ''} · {worldTimeLabel(w)}
+                                            {ms.length} character(s){w.npcs.length > 0 ? ` · ${w.npcs.length} NPC(s)` : ''} · {worldTimeLabel(w)}
                                         </div>
                                     </div>
                                     <CaretRight size={14} className="text-stone-400 shrink-0 ml-auto" />
@@ -2071,7 +2083,7 @@ const WorldHomeApp: React.FC<{ embedded?: boolean; onFullscreen?: (full: boolean
                     })}
                     {worlds.length === 0 && (
                         <button onClick={startCreate} className="w-full rounded-2xl border-2 border-dashed border-stone-300 py-10 text-stone-500 text-[13px] font-bold flex flex-col items-center gap-2 bg-white/40">
-                            <Plus size={24} weight="bold" />创建第一个世界
+                            <Plus size={24} weight="bold" />Create Your First World
                         </button>
                     )}
                 </div>

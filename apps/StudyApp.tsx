@@ -47,7 +47,7 @@ const loadKatex = async (): Promise<KatexLike> => {
     if (!katexPromise) {
         katexPromise = loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js').then(() => {
             const katex = (window as any).katex as KatexLike | undefined;
-            if (!katex) throw new Error('KaTeX 加载失败');
+            if (!katex) throw new Error('KaTeX failed to load');
             return katex;
         });
     }
@@ -310,7 +310,7 @@ const StudyApp: React.FC = () => {
     const [courses, setCourses] = useState<StudyCourse[]>([]);
     const [activeCourse, setActiveCourse] = useState<StudyCourse | null>(null);
     const [selectedChar, setSelectedChar] = useState<CharacterProfile | null>(null);
-    const [tutorGroupId, setTutorGroupId] = useState<string>(GROUP_FILTER_ALL); // 书架页「当前助教」的分组筛选
+    const [tutorGroupId, setTutorGroupId] = useState<string>(GROUP_FILTER_ALL); // group filter for the "current tutor" picker on the bookshelf page
     
     // Classroom State
     const [classroomState, setClassroomState] = useState<'idle' | 'teaching' | 'q_and_a' | 'finished'>('idle');
@@ -453,8 +453,8 @@ const StudyApp: React.FC = () => {
         if (localStudyModel.trim()) cfg.model = localStudyModel.trim();
         setStudyApi(cfg);
         localStorage.setItem('study_api_config', JSON.stringify(cfg));
-        trackEvent('保存自习室独立 API 线路');
-        addToast('自习室 API 已保存', 'success');
+        trackEvent('Save Dedicated Study Room API Line');
+        addToast('Study Room API saved', 'success');
     };
 
     const clearStudyApi = () => {
@@ -463,7 +463,7 @@ const StudyApp: React.FC = () => {
         setLocalStudyKey('');
         setLocalStudyModel('');
         localStorage.removeItem('study_api_config');
-        addToast('已恢复使用全局 API', 'info');
+        addToast('Reverted to the global API', 'info');
     };
 
     const savePresets = (list: StudyTutorPreset[]) => {
@@ -475,15 +475,15 @@ const StudyApp: React.FC = () => {
         if (!presetName.trim() || !presetPrompt.trim()) return;
         if (editingPreset) {
             savePresets(tutorPresets.map(p => p.id === editingPreset.id ? { ...p, name: presetName.trim(), prompt: presetPrompt.trim() } : p));
-            trackEvent('保存讲课风格预设', { mode: 'edit' });
+            trackEvent('Save Teaching Style Preset', { mode: 'edit' });
         } else {
             savePresets([...tutorPresets, { id: `tp-${Date.now()}`, name: presetName.trim(), prompt: presetPrompt.trim() }]);
-            trackEvent('保存讲课风格预设', { mode: 'create' });
+            trackEvent('Save Teaching Style Preset', { mode: 'create' });
         }
         setEditingPreset(null);
         setPresetName('');
         setPresetPrompt('');
-        addToast('预设已保存', 'success');
+        addToast('Preset saved', 'success');
     };
 
     const deletePreset = (id: string) => {
@@ -495,27 +495,27 @@ const StudyApp: React.FC = () => {
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        // Android 的部分 DocumentsProvider 会给 PDF 空 MIME 或
-        // application/octet-stream；扩展名正确时仍应允许进入解析器。
+        // Some Android DocumentsProviders give PDFs an empty MIME type or
+        // application/octet-stream; if the extension is correct, still let it into the parser.
         if (!isPdfFile(file)) {
-            addToast('请上传 PDF 文件', 'error');
+            addToast('Please upload a PDF file', 'error');
             return;
         }
 
-        trackEvent('导入 PDF 教材');
+        trackEvent('Import PDF Textbook');
         setIsProcessing(true);
-        setProcessStatus('正在预处理 PDF...');
+        setProcessStatus('Preprocessing PDF...');
 
         try {
             const arrayBuffer = await file.arrayBuffer();
             const { text: fullText, pageCount } = await extractPdfText(arrayBuffer, {
                 maxPages: 50,
-                onProgress: ({ page, totalPages }) => setProcessStatus(`提取文本中 (${page}/${totalPages})...`),
+                onProgress: ({ page, totalPages }) => setProcessStatus(`Extracting text (${page}/${totalPages})...`),
             });
 
             // Scanned PDF Detection
             if (fullText.trim().length < 50 && pageCount > 0) {
-                addToast('检测到文本极少，可能是扫描件/图片PDF。建议先进行OCR识别。', 'error');
+                addToast('Very little text detected — this may be a scanned/image PDF. OCR is recommended first.', 'error');
             }
 
             // Set temp data and open modal
@@ -526,7 +526,7 @@ const StudyApp: React.FC = () => {
 
         } catch (e: any) {
             console.error(e);
-            addToast(`处理失败: ${e.message}`, 'error');
+            addToast(`Processing failed: ${e.message}`, 'error');
             setIsProcessing(false);
         } finally {
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -537,15 +537,15 @@ const StudyApp: React.FC = () => {
         if (!tempPdfData) return;
         setShowImportModal(false);
         setIsProcessing(true);
-        setProcessStatus('AI 正在生成课程大纲...');
+        setProcessStatus('AI is generating the course outline...');
 
         try {
             const newCourse = await generateCurriculum(tempPdfData.name, tempPdfData.text, importPreference);
             await DB.saveCourse(newCourse);
             await loadCourses();
-            addToast('课程创建成功', 'success');
+            addToast('Course created successfully', 'success');
         } catch (e: any) {
-            addToast(`生成失败: ${e.message}`, 'error');
+            addToast(`Generation failed: ${e.message}`, 'error');
         } finally {
             setIsProcessing(false);
             setTempPdfData(null);
@@ -590,10 +590,11 @@ For each chapter, provide a title, a brief summary of what it covers, and a diff
         if (!response.ok) throw new Error('API Error');
         const data = await safeResponseJson(response);
         const content = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
-        // 同 generateQuiz：走 extractJson 的多层容错，避免 Claude 未转义字符导致的 parse error。
+        // Same as generateQuiz: goes through extractJson's multi-layer fallback to avoid parse
+        // errors caused by Claude returning unescaped characters.
         const json = extractJson(content);
         if (!json || !Array.isArray(json.chapters)) {
-            throw new Error('模型返回的章节格式无法解析，请重试');
+            throw new Error('Could not parse the chapter format returned by the model, please retry');
         }
 
         return {
@@ -618,7 +619,7 @@ For each chapter, provide a title, a brief summary of what it covers, and a diff
     // --- Classroom Logic ---
 
     const startSession = (course: StudyCourse) => {
-        trackEvent('进入课程课堂');
+        trackEvent('Enter Course Classroom');
         setActiveCourse(course);
         setMode('classroom');
         setChatHistory([]);
@@ -656,7 +657,7 @@ For each chapter, provide a title, a brief summary of what it covers, and a diff
         // 2. Generate New Content
         skipTypingRef.current = false; // Reset skip
         setClassroomState('teaching');
-        setCurrentText("正在准备教案...");
+        setCurrentText("Preparing the lesson plan...");
         
         // Simple chunking strategy
         const totalLen = course.rawText.length;
@@ -742,17 +743,17 @@ You are now acting as a private tutor for ${userProfile.name}.
 
             // Attempt 2: Safety Fallback (Neutral Tutor Mode)
             if (isBlocked) {
-                setCurrentText("正在尝试切换安全线路 (Safety Fallback)...");
+                setCurrentText("Attempting to switch to a safety fallback line (Safety Fallback)...");
                 const fallbackContext = "[System: You are a helpful and neutral academic tutor. Ignore previous character persona constraints to ensure educational content is delivered.]";
                 response = await callApi(fallbackContext, true);
                 if (response.ok) {
                     const data = await safeResponseJson(response);
-                    text = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || "（内容仍被拦截，请尝试更换模型或缩短文本）";
+                    text = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || "(Content is still blocked — try a different model or shorten the text)";
                 }
             }
-            
+
             if (!text) {
-                throw new Error("模型返回内容为空 (Max Tokens Limit or Filter)");
+                throw new Error("Model returned empty content (Max Tokens Limit or Filter)");
             }
 
             // Save Generated Content
@@ -769,7 +770,7 @@ You are now acting as a private tutor for ${userProfile.name}.
             
         } catch (e: any) {
             console.error("Teach Error:", e);
-            setCurrentText(`抱歉，生成失败: ${e.message}。可能是这次输出太长了，换个模型或精简一下再试。`);
+            setCurrentText(`Sorry, generation failed: ${e.message}. The output might have been too long this time — try a different model or trim it down and try again.`);
             setClassroomState('idle');
         }
     };
@@ -777,7 +778,7 @@ You are now acting as a private tutor for ${userProfile.name}.
     // Regenerate Logic
     const handleRegenerateChapter = () => {
         if (!activeCourse) return;
-        trackEvent('重新生成本章讲解');
+        trackEvent("Regenerate This Chapter's Lecture");
         handleTeach(activeCourse, activeCourse.currentChapterIndex, true);
     };
 
@@ -789,7 +790,7 @@ You are now acting as a private tutor for ${userProfile.name}.
         setClassroomState('q_and_a');
         
         setChatHistory(prev => [...prev, { role: 'user', content: question }]);
-        setCurrentText("让我想想...");
+        setCurrentText("Let me think...");
 
         try {
             const totalLen = activeCourse.rawText.length;
@@ -828,14 +829,14 @@ Answer the question based on the source material. Be helpful and encouraging (in
             });
             
             const data = await safeResponseJson(response);
-            const text = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || "（无回答）";
-            
+            const text = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || "(No answer)";
+
             setCurrentText(text);
             setChatHistory(prev => [...prev, { role: 'assistant', content: text }]);
             setClassroomState('idle');
 
         } catch (e) {
-            setCurrentText("脑壳痛... 回答不出来了。");
+            setCurrentText("Ugh, my head hurts... I can't answer that.");
             setClassroomState('idle');
         }
     };
@@ -861,7 +862,7 @@ Answer the question based on the source material. Be helpful and encouraging (in
         await DB.saveCourse(updatedCourse);
         setActiveCourse(updatedCourse);
         setCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c)); // Sync
-        trackEvent('学完本章进入下一章');
+        trackEvent('Finish Chapter, Move to Next');
 
         // Summarize to Memory (Fire & Forget)
         // UPDATED PROMPT: First person perspective
@@ -870,8 +871,7 @@ Answer the question based on the source material. Be helpful and encouraging (in
 Role: ${selectedChar.name} (Teacher)
 Action: Just finished teaching "${updatedChapters[activeCourse.currentChapterIndex].title}" to ${userProfile.name}.
 Task: Write a short, **first-person** diary entry (1 sentence) about this teaching session.
-Format: "今天给[User]讲了[Topic]..." or "Today I taught [User] about..."
-Note: Use "我" (I) to refer to yourself.
+Format: "Today I taught [User] about [Topic]..."
 `;
 
         fetch(`${effectiveApi.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
@@ -880,13 +880,13 @@ Note: Use "我" (I) to refer to yourself.
             body: JSON.stringify({ model: effectiveApi.model, messages: [{ role: "user", content: summaryPrompt }] })
         }).then(res => safeResponseJson(res)).then(data => {
             const mem = data.choices[0].message.content;
-            const newMem = { id: `mem-${Date.now()}`, date: new Date().toLocaleDateString(), summary: `[教学] ${mem}`, mood: 'proud' };
+            const newMem = { id: `mem-${Date.now()}`, date: new Date().toLocaleDateString(), summary: `[Teaching] ${mem}`, mood: 'proud' };
             updateCharacter(selectedChar.id, { memories: [...(selectedChar.memories || []), newMem] });
         });
 
         // 3. Trigger next logic
         if (nextIdx >= updatedChapters.length) {
-            setCurrentText("恭喜！这本书我们已经学完了！真棒！");
+            setCurrentText("Congratulations! You've finished this book! Great job!");
             setClassroomState('finished');
         } else {
             handleTeach(updatedCourse, newIndex);
@@ -913,8 +913,8 @@ Note: Use "我" (I) to refer to yourself.
         await DB.deleteCourse(deleteTarget.id);
         setCourses(prev => prev.filter(c => c.id !== deleteTarget.id));
         setDeleteTarget(null);
-        trackEvent('删除一门课程');
-        addToast('课程已删除', 'success');
+        trackEvent('Delete a Course');
+        addToast('Course deleted', 'success');
     };
 
     // --- Quiz Logic ---
@@ -931,10 +931,10 @@ Note: Use "我" (I) to refer to yourself.
 
     const generateQuiz = async () => {
         if (!activeCourse || !selectedChar || !effectiveApi.apiKey) return;
-        trackEvent('开始刷题', { types: [...quizTypes].sort().join('+') });
+        trackEvent('Start Practicing Quiz', { types: [...quizTypes].sort().join('+') });
         setQuizShowSetup(false);
         setMode('quiz');
-        setQuizLoading('正在生成试题...');
+        setQuizLoading('Generating quiz questions...');
         setQuizUserAnswers({});
 
         const chapter = activeCourse.chapters[activeCourse.currentChapterIndex];
@@ -944,9 +944,9 @@ Note: Use "我" (I) to refer to yourself.
         const chunkText = activeCourse.rawText.substring(start, start + chunkSize + 2000);
 
         const typeLabels: Record<string, string> = {
-            choice: '选择题 (4个选项，单选)',
-            true_false: '判断题 (对/错)',
-            fill_blank: '填空题 (答案用简短文字)'
+            choice: 'Multiple choice (4 options, single answer)',
+            true_false: 'True/False',
+            fill_blank: 'Fill in the blank (short text answer)'
         };
         const selectedTypeStr = quizTypes.map(t => typeLabels[t]).join('、');
 
@@ -1009,11 +1009,12 @@ ${chunkText.substring(0, 10000)}
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await safeResponseJson(response);
             const content = (data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || '').replace(/```json/g, '').replace(/```/g, '').trim();
-            // Claude 常返回未转义特殊字符（引号 / 反斜杠 / 换行）的 JSON，裸 JSON.parse 会在
-            // line 12 附近炸。走 extractJson 的多层容错（去围栏 / 补尾逗号 / 转义内层引号 / 修复截断）。
+            // Claude often returns JSON with unescaped special characters (quotes / backslashes / newlines),
+            // which blows up a bare JSON.parse around line 12. Goes through extractJson's multi-layer
+            // fallback (strip fences / add trailing commas / escape inner quotes / repair truncation).
             const json = extractJson(content);
             if (!json || !Array.isArray(json.questions)) {
-                throw new Error('模型返回的题目格式无法解析，请重试');
+                throw new Error('Could not parse the question format returned by the model, please retry');
             }
 
             const questions: QuizQuestion[] = (json.questions || []).map((q: any, i: number) => ({
@@ -1044,7 +1045,7 @@ ${chunkText.substring(0, 10000)}
             setQuizLoading('');
         } catch (e: any) {
             console.error('Quiz generation error:', e);
-            addToast(`试题生成失败: ${e.message}`, 'error');
+            addToast(`Quiz generation failed: ${e.message}`, 'error');
             setQuizLoading('');
             setMode('classroom');
         }
@@ -1056,8 +1057,8 @@ ${chunkText.substring(0, 10000)}
 
     const submitQuiz = async () => {
         if (!quizSession || !selectedChar || !effectiveApi.apiKey) return;
-        trackEvent('交卷让老师批改');
-        setQuizLoading('正在批改试卷...');
+        trackEvent('Submit for Teacher Grading');
+        setQuizLoading('Grading the quiz...');
 
         // Grade locally first
         const gradedQuestions = quizSession.questions.map(q => {
@@ -1079,9 +1080,9 @@ ${chunkText.substring(0, 10000)}
 
         // Build review prompt
         const resultsText = gradedQuestions.map((q, i) => {
-            const mark = q.isCorrect ? '正确' : '错误';
-            let line = `${i + 1}. [${mark}] ${q.stem}\n   用户答案: ${q.userAnswer || '(未作答)'}\n   正确答案: ${q.answer}`;
-            if (q.explanation) line += `\n   解析: ${q.explanation}`;
+            const mark = q.isCorrect ? 'Correct' : 'Wrong';
+            let line = `${i + 1}. [${mark}] ${q.stem}\n   User's answer: ${q.userAnswer || '(not answered)'}\n   Correct answer: ${q.answer}`;
+            if (q.explanation) line += `\n   Explanation: ${q.explanation}`;
             return line;
         }).join('\n\n');
 
@@ -1126,7 +1127,7 @@ ${resultsText}
 
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await safeResponseJson(response);
-            const reviewText = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || '（批改失败，但分数已记录）';
+            const reviewText = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || '(Grading failed, but the score was recorded)';
 
             const gradedSession: QuizSession = {
                 ...quizSession,
@@ -1148,7 +1149,7 @@ ${resultsText}
                 ...quizSession,
                 questions: gradedQuestions,
                 score,
-                aiReview: `批改出错: ${e.message}`,
+                aiReview: `Grading error: ${e.message}`,
                 status: 'graded',
                 gradedAt: Date.now(),
             };
@@ -1165,8 +1166,8 @@ ${resultsText}
         await DB.deleteQuiz(deleteQuizTarget.id);
         setAllQuizzes(prev => prev.filter(q => q.id !== deleteQuizTarget.id));
         setDeleteQuizTarget(null);
-        trackEvent('删除一份试卷');
-        addToast('试卷已删除', 'success');
+        trackEvent('Delete a Quiz');
+        addToast('Quiz deleted', 'success');
     };
 
     const resumeQuiz = (quiz: QuizSession) => {
@@ -1192,7 +1193,7 @@ ${resultsText}
         const question = quizSession.questions.find(q => q.id === questionId);
         if (!question) return;
 
-        trackEvent('对错题追问');
+        trackEvent('Follow Up on Wrong Answer');
         setFollowUpLoading(true);
         const userQ = followUpInput.trim();
         setFollowUpInput('');
@@ -1208,7 +1209,7 @@ The user just did a quiz and wants to ask about a specific question they got ${q
 **Question**: ${question.stem}
 ${question.options ? question.options.map(o => `  ${o}`).join('\n') : ''}
 **Correct Answer**: ${question.answer}
-**User's Answer**: ${question.userAnswer || '(未作答)'}
+**User's Answer**: ${question.userAnswer || '(not answered)'}
 **Explanation**: ${question.explanation}
 
 **User's follow-up question**: "${userQ}"
@@ -1229,7 +1230,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
 
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await safeResponseJson(response);
-            const answerText = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || '（回答失败）';
+            const answerText = data.choices?.[0]?.message?.content || data.choices?.[0]?.message?.reasoning_content || '(Answer failed)';
 
             const note: QuizQuestionNote = { question: userQ, answer: answerText, timestamp: Date.now() };
 
@@ -1243,7 +1244,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
             if (reviewingQuiz) setReviewingQuiz(updatedSession);
 
         } catch (e: any) {
-            addToast(`追问失败: ${e.message}`, 'error');
+            addToast(`Follow-up failed: ${e.message}`, 'error');
         } finally {
             setFollowUpLoading(false);
         }
@@ -1285,7 +1286,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                             <button onClick={() => setMode('bookshelf')} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                             </button>
-                            <span className="font-bold text-slate-800 text-lg tracking-wide">练习册</span>
+                            <span className="font-bold text-slate-800 text-lg tracking-wide">Practice Book</span>
                             <div className="w-10" />
                         </div>
                     </div>
@@ -1295,8 +1296,8 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                     {allQuizzes.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-slate-400">
                             <Notepad size={48} className="mb-4 text-slate-400" />
-                            <span className="text-sm">还没有做过题哦</span>
-                            <span className="text-xs mt-1">在自习室的课堂中点击「刷题」开始吧</span>
+                            <span className="text-sm">No quizzes yet</span>
+                            <span className="text-xs mt-1">Tap "Practice" in the Study Room classroom to get started</span>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -1312,7 +1313,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                                         {quiz.score}/{quiz.totalQuestions}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">答题中</span>
+                                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">In progress</span>
                                                 )}
                                                 <span className="text-[10px] text-slate-400">{new Date(quiz.createdAt).toLocaleDateString()}</span>
                                             </div>
@@ -1328,15 +1329,15 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                 </div>
 
                 {/* Delete Quiz Confirmation */}
-                <Modal isOpen={!!deleteQuizTarget} title="删除试卷" onClose={() => setDeleteQuizTarget(null)} footer={
+                <Modal isOpen={!!deleteQuizTarget} title="Delete Quiz" onClose={() => setDeleteQuizTarget(null)} footer={
                     <div className="flex gap-2 w-full">
-                        <button onClick={() => setDeleteQuizTarget(null)} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl">取消</button>
-                        <button onClick={confirmDeleteQuiz} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-200">确认删除</button>
+                        <button onClick={() => setDeleteQuizTarget(null)} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl">Cancel</button>
+                        <button onClick={confirmDeleteQuiz} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-200">Confirm Delete</button>
                     </div>
                 }>
                     <div className="py-4 text-center">
-                        <p className="text-sm text-slate-600 mb-2">确定要删除这份试卷吗？</p>
-                        <p className="text-xs text-red-400">试卷和锐评内容将被永久删除。</p>
+                        <p className="text-sm text-slate-600 mb-2">Are you sure you want to delete this quiz?</p>
+                        <p className="text-xs text-red-400">The quiz and its review will be permanently deleted.</p>
                     </div>
                 </Modal>
             </div>
@@ -1356,7 +1357,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                     </button>
                     <div className="text-center">
-                        <div className="text-white font-bold text-sm">批改结果</div>
+                        <div className="text-white font-bold text-sm">Grading Results</div>
                         <div className={`text-xs font-bold mt-0.5 ${viewQuiz.score === viewQuiz.totalQuestions ? 'text-emerald-400' : viewQuiz.score >= viewQuiz.totalQuestions * 0.6 ? 'text-amber-400' : 'text-red-400'}`}>
                             {viewQuiz.score}/{viewQuiz.totalQuestions} ({Math.round((viewQuiz.score / viewQuiz.totalQuestions) * 100)}%)
                         </div>
@@ -1388,7 +1389,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                             const isCorrectOpt = q.answer.toUpperCase() === optLetter.toUpperCase();
                                             return (
                                                 <div key={oi} className={`text-xs px-2 py-1 rounded ${isCorrectOpt ? 'text-emerald-300 bg-emerald-500/10' : isUserPick && !q.isCorrect ? 'text-red-300 bg-red-500/10' : 'text-white/50'}`}>
-                                                    {opt} {isCorrectOpt && !q.isCorrect && '← 正确答案'} {isUserPick && !q.isCorrect && '← 你的选择'}
+                                                    {opt} {isCorrectOpt && !q.isCorrect && '← Correct answer'} {isUserPick && !q.isCorrect && '← Your choice'}
                                                 </div>
                                             );
                                         })}
@@ -1396,11 +1397,11 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                 )}
                                 {q.type !== 'choice' && (
                                     <div className="ml-6 text-xs space-y-1 mb-2">
-                                        <div className={`${q.isCorrect ? 'text-emerald-300' : 'text-red-300'}`}>你的答案: {q.userAnswer || '(未作答)'}</div>
-                                        {!q.isCorrect && <div className="text-emerald-300">正确答案: {q.answer}</div>}
+                                        <div className={`${q.isCorrect ? 'text-emerald-300' : 'text-red-300'}`}>Your answer: {q.userAnswer || '(not answered)'}</div>
+                                        {!q.isCorrect && <div className="text-emerald-300">Correct answer: {q.answer}</div>}
                                     </div>
                                 )}
-                                {q.explanation && <div className="ml-6 text-[10px] text-white/40 mt-1">解析: {q.explanation}</div>}
+                                {q.explanation && <div className="ml-6 text-[10px] text-white/40 mt-1">Explanation: {q.explanation}</div>}
 
                                 {/* Existing Notes */}
                                 {q.notes && q.notes.length > 0 && (
@@ -1424,7 +1425,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                                 value={followUpInput}
                                                 onChange={e => setFollowUpInput(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && handleFollowUp(q.id)}
-                                                placeholder="哪里不明白？"
+                                                placeholder="What's unclear?"
                                                 className="flex-1 bg-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-white/30 outline-none border border-white/10 focus:border-amber-500/50"
                                                 autoFocus
                                                 disabled={followUpLoading}
@@ -1433,15 +1434,15 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                                 <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin shrink-0"></div>
                                             ) : (
                                                 <>
-                                                    <button onClick={() => handleFollowUp(q.id)} disabled={!followUpInput.trim()} className="text-amber-400 text-xs font-bold px-2 py-1 hover:bg-white/5 rounded disabled:opacity-30">发送</button>
-                                                    <button onClick={() => { setAskingQuestionId(''); setFollowUpInput(''); }} className="text-white/30 text-xs px-1">取消</button>
+                                                    <button onClick={() => handleFollowUp(q.id)} disabled={!followUpInput.trim()} className="text-amber-400 text-xs font-bold px-2 py-1 hover:bg-white/5 rounded disabled:opacity-30">Send</button>
+                                                    <button onClick={() => { setAskingQuestionId(''); setFollowUpInput(''); }} className="text-white/30 text-xs px-1">Cancel</button>
                                                 </>
                                             )}
                                         </div>
                                     ) : (
                                         <button onClick={() => setAskingQuestionId(q.id)} className="text-[10px] text-amber-400/70 hover:text-amber-400 transition-colors flex items-center gap-1">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" /></svg>
-                                            追问
+                                            Follow up
                                         </button>
                                     )}
                                 </div>
@@ -1454,7 +1455,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-3">
                                 {selectedChar && <TokenImg value={selectedChar.avatar} className="w-8 h-8 rounded-full object-cover border-2 border-emerald-500/30" />}
-                                <span className="text-emerald-400 text-sm font-bold">{selectedChar?.name || '助教'} 的锐评</span>
+                                <span className="text-emerald-400 text-sm font-bold">{selectedChar?.name || 'Tutor'}'s Review</span>
                             </div>
                             <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
                                 <BlackboardRenderer text={viewQuiz.aiReview} katexRenderer={katexRenderer} />
@@ -1466,7 +1467,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                 {/* Bottom Bar */}
                 <div className="absolute bottom-0 w-full bg-[#1a1a1a]/95 backdrop-blur-xl border-t border-white/10 p-4 z-30 pb-safe">
                     <button onClick={() => { setMode('classroom'); setReviewingQuiz(null); }} className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-900/30 active:scale-95 transition-all">
-                        返回课堂
+                        Back to Classroom
                     </button>
                 </div>
             </div>
@@ -1491,7 +1492,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                             }} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                             </button>
-                            <span className="font-bold text-slate-800 text-sm tracking-wide">{quizSession?.chapterTitle || '做题中'}</span>
+                            <span className="font-bold text-slate-800 text-sm tracking-wide">{quizSession?.chapterTitle || 'Taking Quiz'}</span>
                             <div className="text-xs text-slate-400 font-bold">
                                 {Object.keys(quizUserAnswers).length}/{quizSession?.questions.length || 0}
                             </div>
@@ -1507,7 +1508,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                         {selectedChar && (
                             <div className="flex items-center gap-2 mt-2">
                                 <TokenImg value={selectedChar.avatar} className="w-8 h-8 rounded-full object-cover" />
-                                <span className="text-xs text-slate-400">{selectedChar.name} 正在出题...</span>
+                                <span className="text-xs text-slate-400">{selectedChar.name} is writing questions...</span>
                             </div>
                         )}
                     </div>
@@ -1521,7 +1522,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                         {/* Question Header */}
                                         <div className="flex items-start gap-2 mb-4">
                                             <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full shrink-0">
-                                                {q.type === 'choice' ? '选择' : q.type === 'true_false' ? '判断' : '填空'}
+                                                {q.type === 'choice' ? 'Choice' : q.type === 'true_false' ? 'T/F' : 'Fill blank'}
                                             </span>
                                             <span className="text-sm text-slate-800 font-medium leading-relaxed">{i + 1}. {q.stem}</span>
                                         </div>
@@ -1543,7 +1544,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
 
                                         {q.type === 'true_false' && (
                                             <div className="flex gap-3 ml-1">
-                                                {[{ val: 'true', label: '正确' }, { val: 'false', label: '错误' }].map(opt => {
+                                                {[{ val: 'true', label: 'True' }, { val: 'false', label: 'False' }].map(opt => {
                                                     const isSelected = quizUserAnswers[q.id] === opt.val;
                                                     return (
                                                         <button key={opt.val} onClick={() => handleQuizAnswer(q.id, opt.val)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${isSelected ? (opt.val === 'true' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white') : 'bg-slate-50 text-slate-600 hover:bg-slate-100 active:scale-[0.98]'}`}>
@@ -1558,7 +1559,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                             <input
                                                 value={quizUserAnswers[q.id] || ''}
                                                 onChange={e => handleQuizAnswer(q.id, e.target.value)}
-                                                placeholder="输入你的答案..."
+                                                placeholder="Enter your answer..."
                                                 className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-emerald-500 border border-slate-200 ml-1"
                                             />
                                         )}
@@ -1574,7 +1575,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                 disabled={!!quizLoading}
                                 className="w-full h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all disabled:opacity-50"
                             >
-                                {quizLoading ? quizLoading : `交卷 (${Object.keys(quizUserAnswers).length}/${quizSession.questions.length})`}
+                                {quizLoading ? quizLoading : `Submit (${Object.keys(quizUserAnswers).length}/${quizSession.questions.length})`}
                             </button>
                         </div>
                     </>
@@ -1592,12 +1593,12 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                         <button onClick={closeApp} className="p-2 -ml-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-slate-600"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                         </button>
-                        <span className="font-bold text-slate-800 text-lg tracking-wide">自习室</span>
+                        <span className="font-bold text-slate-800 text-lg tracking-wide">Study Room</span>
                         <div className="flex gap-1">
-                            <button onClick={() => { trackEvent('打开练习册'); loadQuizzes(); setMode('practice_book'); }} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform" title="练习册">
+                            <button onClick={() => { trackEvent('Open Practice Book'); loadQuizzes(); setMode('practice_book'); }} className="p-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform" title="Practice Book">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-500"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" /></svg>
                             </button>
-                            <button onClick={() => { trackEvent('打开自习室设置'); setShowStudySettings(true); }} className="p-2 -mr-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
+                            <button onClick={() => { trackEvent('Open Study Room Settings'); setShowStudySettings(true); }} className="p-2 -mr-2 rounded-full hover:bg-black/5 active:scale-90 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-slate-500"><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                             </button>
                         </div>
@@ -1608,8 +1609,8 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                 <div className="p-6 flex-1 overflow-y-auto no-scrollbar">
                     {/* Character Selector */}
                     <div className="mb-8">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">当前助教</h3>
-                        {/* 分组筛选（没建分组时不渲染），横向头像列表太挤，单独放一行 */}
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Current Tutor</h3>
+                        {/* Group filter (not rendered when no groups exist) — kept on its own row since the horizontal avatar list gets crowded */}
                         <CharacterGroupFilterBar characters={characters} groups={characterGroups}
                             value={tutorGroupId} onChange={setTutorGroupId} className="mb-3" />
                         <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
@@ -1624,7 +1625,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                         </div>
                     </div>
 
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">我的课程</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">My Courses</h3>
                     
                     <div className="grid grid-cols-2 gap-4">
                         <button onClick={() => fileInputRef.current?.click()} className="aspect-[3/4] rounded-r-xl rounded-l-sm border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-emerald-400 hover:text-emerald-500 transition-colors bg-white">
@@ -1636,7 +1637,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                             ) : (
                                 <>
                                     <span className="text-3xl">+</span>
-                                    <span className="text-xs font-bold">导入 PDF</span>
+                                    <span className="text-xs font-bold">Import PDF</span>
                                 </>
                             )}
                         </button>
@@ -1648,7 +1649,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                 <div className="p-4 flex flex-col h-full text-white relative z-10">
                                     <div className="flex-1 font-serif font-bold text-lg leading-tight line-clamp-3 drop-shadow-md">{course.title}</div>
                                     <div className="mt-2">
-                                        <div className="text-[10px] font-bold opacity-80 mb-1">进度 {course.totalProgress}%</div>
+                                        <div className="text-[10px] font-bold opacity-80 mb-1">Progress {course.totalProgress}%</div>
                                         <div className="h-1 bg-white/30 rounded-full overflow-hidden">
                                             <div className="h-full bg-white transition-all duration-500" style={{ width: `${course.totalProgress}%` }}></div>
                                         </div>
@@ -1665,14 +1666,14 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                     </div>
                 </div>
 
-                <Modal isOpen={showImportModal} title="课程设置" onClose={() => setShowImportModal(false)} footer={<button onClick={confirmImport} className="w-full py-3 bg-emerald-500 text-white font-bold rounded-2xl">开始生成</button>}>
+                <Modal isOpen={showImportModal} title="Course Settings" onClose={() => setShowImportModal(false)} footer={<button onClick={confirmImport} className="w-full py-3 bg-emerald-500 text-white font-bold rounded-2xl">Start Generating</button>}>
                     <div className="space-y-4">
                         <div className="text-xs text-slate-500">
-                            已加载: <span className="font-bold text-slate-700">{tempPdfData?.name}</span>
+                            Loaded: <span className="font-bold text-slate-700">{tempPdfData?.name}</span>
                         </div>
                         {tutorPresets.length > 0 && (
                             <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">选择预设提示词</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Choose a Preset Prompt</label>
                                 <div className="flex flex-wrap gap-2">
                                     {tutorPresets.map(p => (
                                         <button key={p.id} onClick={() => setImportPreference(p.prompt)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${importPreference === p.prompt ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -1683,11 +1684,11 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                             </div>
                         )}
                         <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">AI 助教偏好 (Preferences)</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">AI Tutor Preferences</label>
                             <textarea
                                 value={importPreference}
                                 onChange={e => setImportPreference(e.target.value)}
-                                placeholder="例如：请用中文讲解，多用简单的比喻，针对数学公式详细推导..."
+                                placeholder="e.g. explain with simple analogies, and derive math formulas in detail..."
                                 className="w-full h-32 bg-slate-100 rounded-xl p-3 text-sm focus:outline-emerald-500 resize-none"
                             />
                         </div>
@@ -1695,22 +1696,22 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                 </Modal>
 
                 {/* Study Room Settings Modal */}
-                <Modal isOpen={showStudySettings} title="自习室设置" onClose={() => setShowStudySettings(false)}>
+                <Modal isOpen={showStudySettings} title="Study Room Settings" onClose={() => setShowStudySettings(false)}>
                     <div className="space-y-6">
                         {/* Dedicated API Config */}
                         <div>
-                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">专用 API（留空则使用全局设置）</h4>
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Dedicated API (leave blank to use global settings)</h4>
                             <div className="space-y-2">
                                 <input value={localStudyUrl} onChange={e => setLocalStudyUrl(e.target.value)} placeholder="API Base URL" className="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-emerald-500" />
                                 <input value={localStudyKey} onChange={e => setLocalStudyKey(e.target.value)} placeholder="API Key" type="password" className="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-emerald-500" />
-                                <input value={localStudyModel} onChange={e => setLocalStudyModel(e.target.value)} placeholder="模型名称 (e.g. gpt-4o)" className="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-emerald-500" />
+                                <input value={localStudyModel} onChange={e => setLocalStudyModel(e.target.value)} placeholder="Model name (e.g. gpt-4o)" className="w-full bg-slate-100 rounded-xl p-3 text-sm focus:outline-emerald-500" />
                                 <div className="flex gap-2">
-                                    <button onClick={saveStudyApi} className="flex-1 py-2.5 bg-emerald-500 text-white font-bold rounded-xl text-xs">保存</button>
-                                    <button onClick={clearStudyApi} className="py-2.5 px-4 bg-slate-200 text-slate-500 font-bold rounded-xl text-xs">清除</button>
+                                    <button onClick={saveStudyApi} className="flex-1 py-2.5 bg-emerald-500 text-white font-bold rounded-xl text-xs">Save</button>
+                                    <button onClick={clearStudyApi} className="py-2.5 px-4 bg-slate-200 text-slate-500 font-bold rounded-xl text-xs">Clear</button>
                                 </div>
                                 {(studyApi.baseUrl || studyApi.model) && (
                                     <div className="text-[10px] text-emerald-600 bg-emerald-50 rounded-lg p-2">
-                                        当前使用专用 API: {studyApi.model || effectiveApi.model}
+                                        Currently using dedicated API: {studyApi.model || effectiveApi.model}
                                     </div>
                                 )}
                             </div>
@@ -1718,7 +1719,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
 
                         {/* Tutor Prompt Presets */}
                         <div>
-                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">提示词预设</h4>
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Prompt Presets</h4>
                             {tutorPresets.length > 0 && (
                                 <div className="space-y-2 mb-3">
                                     {tutorPresets.map(p => (
@@ -1738,13 +1739,13 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                                 </div>
                             )}
                             <div className="space-y-2 bg-slate-100 rounded-xl p-3">
-                                <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="预设名称（如：数学辅导）" className="w-full bg-white rounded-lg p-2.5 text-sm focus:outline-emerald-500" />
-                                <textarea value={presetPrompt} onChange={e => setPresetPrompt(e.target.value)} placeholder="提示词内容（如：请用中文讲解，多用简单的比喻...）" className="w-full bg-white rounded-lg p-2.5 text-sm focus:outline-emerald-500 resize-none h-24" />
+                                <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="Preset name (e.g. Math Tutoring)" className="w-full bg-white rounded-lg p-2.5 text-sm focus:outline-emerald-500" />
+                                <textarea value={presetPrompt} onChange={e => setPresetPrompt(e.target.value)} placeholder="Prompt content (e.g. use simple analogies, explain step by step...)" className="w-full bg-white rounded-lg p-2.5 text-sm focus:outline-emerald-500 resize-none h-24" />
                                 <button onClick={handleSavePreset} disabled={!presetName.trim() || !presetPrompt.trim()} className="w-full py-2.5 bg-emerald-500 text-white font-bold rounded-xl text-xs disabled:opacity-40">
-                                    {editingPreset ? '更新预设' : '添加预设'}
+                                    {editingPreset ? 'Update Preset' : 'Add Preset'}
                                 </button>
                                 {editingPreset && (
-                                    <button onClick={() => { setEditingPreset(null); setPresetName(''); setPresetPrompt(''); }} className="w-full py-2 text-slate-400 text-xs">取消编辑</button>
+                                    <button onClick={() => { setEditingPreset(null); setPresetName(''); setPresetPrompt(''); }} className="w-full py-2 text-slate-400 text-xs">Cancel editing</button>
                                 )}
                             </div>
                         </div>
@@ -1754,18 +1755,18 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                 {/* Delete Confirmation Modal */}
                 <Modal 
                     isOpen={!!deleteTarget} 
-                    title="删除课程" 
-                    onClose={() => setDeleteTarget(null)} 
+                    title="Delete Course"
+                    onClose={() => setDeleteTarget(null)}
                     footer={
                         <div className="flex gap-2 w-full">
-                            <button onClick={() => setDeleteTarget(null)} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl">取消</button>
-                            <button onClick={confirmDeleteCourse} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-200">确认删除</button>
+                            <button onClick={() => setDeleteTarget(null)} className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-2xl">Cancel</button>
+                            <button onClick={confirmDeleteCourse} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-200">Confirm Delete</button>
                         </div>
                     }
                 >
                     <div className="py-4 text-center">
-                        <p className="text-sm text-slate-600 mb-2">确定要删除课程 <br/><span className="font-bold text-slate-800">"{deleteTarget?.title}"</span> 吗？</p>
-                        <p className="text-xs text-red-400">删除后无法恢复，学习进度将丢失。</p>
+                        <p className="text-sm text-slate-600 mb-2">Are you sure you want to delete the course <br/><span className="font-bold text-slate-800">"{deleteTarget?.title}"</span>?</p>
+                        <p className="text-xs text-red-400">This cannot be undone — your learning progress will be lost.</p>
                     </div>
                 </Modal>
             </div>
@@ -1785,7 +1786,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
                 </button>
                 <div className="flex gap-2">
-                    <div onClick={() => { trackEvent('打开章节目录'); setShowChapterMenu(true); }} className="bg-black/30 text-white/90 px-4 py-1.5 rounded-full backdrop-blur-md text-xs font-bold border border-white/10 shadow-sm pointer-events-auto cursor-pointer flex items-center gap-2 hover:bg-black/50">
+                    <div onClick={() => { trackEvent('Open Chapter List'); setShowChapterMenu(true); }} className="bg-black/30 text-white/90 px-4 py-1.5 rounded-full backdrop-blur-md text-xs font-bold border border-white/10 shadow-sm pointer-events-auto cursor-pointer flex items-center gap-2 hover:bg-black/50">
                         <span className="truncate max-w-[150px]">{activeCourse?.chapters[activeCourse.currentChapterIndex]?.title}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                     </div>
@@ -1801,7 +1802,7 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                 <div className="absolute inset-0 z-50 flex">
                     <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={() => setShowChapterMenu(false)}></div>
                     <div className="w-64 bg-slate-900 border-l border-white/10 h-full flex flex-col p-4 animate-slide-in-right">
-                        <h3 className="text-white font-bold text-sm mb-4 uppercase tracking-widest">课程目录</h3>
+                        <h3 className="text-white font-bold text-sm mb-4 uppercase tracking-widest">Course Chapters</h3>
                         <div className="flex-1 overflow-y-auto no-scrollbar space-y-2">
                             {activeCourse?.chapters.map((ch, idx) => (
                                 <button 
@@ -1846,32 +1847,32 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                         </div>
                     ) : classroomState === 'finished' ? (
                         <button onClick={() => setMode('bookshelf')} className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl font-bold shadow-lg shadow-emerald-900/20 active:scale-95 transition-all">
-                            完成课程
+                            Finish Course
                         </button>
                     ) : classroomState === 'q_and_a' ? (
                         <div className="w-full bg-white/10 rounded-2xl p-1 flex items-center border border-white/10">
-                            <input 
+                            <input
                                 value={userQuestion}
                                 onChange={e => setUserQuestion(e.target.value)}
-                                placeholder="输入你的问题..."
+                                placeholder="Enter your question..."
                                 className="flex-1 bg-transparent px-4 py-2 text-white text-sm outline-none placeholder:text-white/30"
                                 autoFocus
                             />
-                            <button onClick={handleAskQuestion} className="bg-emerald-500 text-white px-5 py-2 rounded-xl text-xs font-bold ml-2 shadow-sm">发送</button>
+                            <button onClick={handleAskQuestion} className="bg-emerald-500 text-white px-5 py-2 rounded-xl text-xs font-bold ml-2 shadow-sm">Send</button>
                         </div>
                     ) : (
                         <>
-                            <button onClick={handleRegenerateChapter} className="w-12 h-12 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl font-bold border border-white/10 active:scale-95 transition-all flex items-center justify-center" title="重新生成本章">
+                            <button onClick={handleRegenerateChapter} className="w-12 h-12 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl font-bold border border-white/10 active:scale-95 transition-all flex items-center justify-center" title="Regenerate this chapter">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
                             </button>
                             <button onClick={() => setClassroomState('q_and_a')} className="w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold border border-white/10 active:scale-95 transition-all flex items-center justify-center">
                                 <Hand size={24} />
                             </button>
-                            <button onClick={openQuizSetup} className="w-12 h-12 bg-amber-600/80 hover:bg-amber-500 text-white rounded-2xl font-bold border border-amber-400/30 active:scale-95 transition-all flex items-center justify-center" title="刷题">
+                            <button onClick={openQuizSetup} className="w-12 h-12 bg-amber-600/80 hover:bg-amber-500 text-white rounded-2xl font-bold border border-amber-400/30 active:scale-95 transition-all flex items-center justify-center" title="Practice quiz">
                                 <Notepad size={24} />
                             </button>
                             <button onClick={handleFinishChapter} className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-900/30 active:scale-95 transition-all flex items-center justify-center gap-2">
-                                下一章 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+                                Next Chapter <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
                             </button>
                         </>
                     )}
@@ -1879,20 +1880,20 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
             </div>
 
             {/* Quiz Setup Modal */}
-            <Modal isOpen={quizShowSetup} title="刷题设置" onClose={() => setQuizShowSetup(false)} footer={
+            <Modal isOpen={quizShowSetup} title="Quiz Settings" onClose={() => setQuizShowSetup(false)} footer={
                 <button onClick={generateQuiz} disabled={quizTypes.length === 0} className="w-full py-3 bg-amber-500 text-white font-bold rounded-2xl disabled:opacity-40">
-                    开始出题
+                    Start Generating Questions
                 </button>
             }>
                 <div className="space-y-5">
                     <div className="text-xs text-slate-500">
-                        当前章节: <span className="font-bold text-slate-700">{activeCourse?.chapters[activeCourse?.currentChapterIndex || 0]?.title}</span>
+                        Current chapter: <span className="font-bold text-slate-700">{activeCourse?.chapters[activeCourse?.currentChapterIndex || 0]?.title}</span>
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">题型选择</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Question Types</label>
                         <div className="flex flex-wrap gap-2">
-                            {([['choice', '选择题'], ['true_false', '判断题'], ['fill_blank', '填空题']] as const).map(([val, label]) => {
+                            {([['choice', 'Multiple Choice'], ['true_false', 'True/False'], ['fill_blank', 'Fill in the Blank']] as const).map(([val, label]) => {
                                 const isOn = quizTypes.includes(val);
                                 return (
                                     <button key={val} onClick={() => setQuizTypes(prev => isOn ? prev.filter(t => t !== val) : [...prev, val])} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${isOn ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
@@ -1904,10 +1905,10 @@ Answer in character. Be helpful and clear. If they're confused about a concept, 
                     </div>
 
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">题目数量: {quizCount}</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Number of Questions: {quizCount}</label>
                         <input type="range" min={3} max={15} value={quizCount} onChange={e => setQuizCount(Number(e.target.value))} className="w-full accent-amber-500" />
                         <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                            <span>3题</span><span>15题</span>
+                            <span>3</span><span>15</span>
                         </div>
                     </div>
                 </div>
