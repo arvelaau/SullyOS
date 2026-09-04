@@ -43,7 +43,7 @@ const StoryQuickPresetPanel: React.FC<Props> = ({ document, hasOverride, onApply
                     <div className='text-[9px] font-bold text-violet-500'>{page + 1} / {pages.length}</div>
                     <h3 className='mt-1 text-3xl font-serif font-semibold'>{current.label}</h3>
                     <p className='mt-2 text-[11px] leading-5 text-slate-500'>{current.hint}</p>
-                    <div className='mt-6 border-y border-slate-200 divide-y divide-slate-200'>{current.options.map(option => {
+                    <div className='mt-6 border-y border-slate-200 divide-y divide-slate-200'>{current.options.filter(option => !option.id || draft.prompts.some(prompt => prompt.id === option.id)).map(option => {
                         const activeId = current.ids.find(id => draft.prompts.find(prompt => prompt.id === id)?.enabled);
                         const selected = option.id ? activeId === option.id : !activeId;
                         return <button key={option.id || 'default'} onClick={() => choose(option.id)} className='w-full py-3.5 flex items-center gap-3 text-left'><span className={`w-5 h-5 rounded-full border grid place-items-center ${selected ? 'bg-violet-600 border-violet-600 text-white' : 'border-slate-300 text-transparent'}`}><Check size={12} weight='bold' /></span><span className='text-xs font-semibold'>{option.label}</span></button>;
