@@ -5,7 +5,7 @@ import { useOS } from '../../context/OSContext';
 import { DB } from '../../utils/db';
 import DateSettings from './DateSettings';
 import ObserveHUD from './ObserveHUD';
-import { extractObservation, hasObservation } from '../../utils/datePrompts';
+import { extractObservation, hasObservation, isThinkingHeaderOn } from '../../utils/datePrompts';
 import { useBlobRefUrl } from '../../utils/blobRef';
 import TokenImg from '../os/TokenImg';
 import { clearDateResumeAttempt } from '../../utils/dateSessionRecovery';
@@ -113,6 +113,33 @@ const renderLineWithDialogueHighlight = (line: string): React.ReactNode => {
     if (lastIndex < line.length) segments.push(line.slice(lastIndex));
     return segments;
 };
+
+// Matches a leading [Header] bracket, same shape as an [emotion] sprite tag (1-14 chars).
+// Only ever run when the character's Thinking Header setting is on (isThinkingHeaderOn) --
+// running this unconditionally would misidentify a normal [emotion] tag on the first line
+// as a thinking header, since both use identical bracket syntax.
+const THINKING_HEADER_REGEX = /^\s*\[([^\]\n]{1,14})\][ \t]*\n?/;
+
+// Pulls the leading thinking-header off the raw message body (before per-line splitting), the
+// same way extractObservation pulls the OBSERVE block out -- so it never runs through
+// cleanTextForDisplay's blanket `[...]` stripping and can be rendered with its own styling.
+const extractThinkingHeader = (text: string): { header: string | null; rest: string } => {
+    const match = THINKING_HEADER_REGEX.exec(text || '');
+    if (!match) return { header: null, rest: text || '' };
+    return { header: match[1], rest: (text || '').slice(match[0].length) };
+};
+
+// Muted "eyebrow label" styling for the thinking-header line, matching this file's existing
+// light/dark reading-theme split (char.dateLightReading) rather than a single hardcoded color.
+const thinkingHeaderStyle = (light: boolean): React.CSSProperties => ({
+    display: 'block',
+    margin: '0 0 0.4em',
+    color: light ? '#a8a29e' : '#64748b',
+    fontWeight: 700,
+    letterSpacing: '1.5px',
+    textTransform: 'uppercase',
+    fontSize: '10px',
+});
 
 const parseDialogue = (fullText: string, initialEmotion: string = 'normal'): DialogueItem[] => {
     if (!fullText) return [];
@@ -1213,6 +1240,9 @@ const DateSession: React.FC<DateSessionProps> = ({
                                     ) : (() => {
                                         // OBSERVE protocol: strip the observation block out of this reply, render it as a standalone card above the body text; the body itself doesn't show the block's raw text
                                         const { observation: msgObs, rest: msgBody } = extractObservation(msg.content || '', { lenient: observeEnabled, custom: char.dateObserve?.custom });
+                                        const { header: thinkingHeader, rest: narrativeBody } = isThinkingHeaderOn(char.dateStyleConfig)
+                                            ? extractThinkingHeader(msgBody)
+                                            : { header: null, rest: msgBody };
                                         return (
                                         <div className="flex min-w-0 items-start gap-3">
                                             {char.dateReadingShowAvatars && (
@@ -1222,7 +1252,10 @@ const DateSession: React.FC<DateSessionProps> = ({
                                                 {observeEnabled && hasObservation(msgObs) && (
                                                     <ObserveHUD observation={msgObs} variant="card" charName={char.name} config={char.dateObserve} />
                                                 )}
-                                                {(msgBody || '').split('\n').map((line, idx) => {
+                                                {thinkingHeader && (
+                                                    <span style={thinkingHeaderStyle(!!char.dateLightReading)}>{thinkingHeader}</span>
+                                                )}
+                                                {(narrativeBody || '').split('\n').map((line, idx) => {
                                                 const cleanLine = cleanTextForDisplay(line);
                                                 if (!cleanLine) return null;
                                                 const lineIsDialogue = isDialogueLine(line);

@@ -377,6 +377,20 @@ const DateSettings: React.FC<DateSettingsProps> = ({ char, onBack }) => {
                         </button>
                     </div>
 
+                    {/* Thinking header */}
+                    <div className="mb-5 flex items-center justify-between">
+                        <div className="pr-4">
+                            <label className="text-[11px] text-slate-500 font-bold block">Thinking Header</label>
+                            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">Off by default. When on, each reply opens with a short bracketed header (e.g. [Plan]) naming this beat's direction, before the narrative text begins.</p>
+                        </div>
+                        <button
+                            onClick={() => patchStyleConfig({ thinkingHeader: styleConfig.thinkingHeader === true ? undefined : true })}
+                            className={`w-12 h-7 rounded-full transition-colors relative shrink-0 ${styleConfig.thinkingHeader === true ? 'bg-primary' : 'bg-slate-200'}`}
+                        >
+                            <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${styleConfig.thinkingHeader === true ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
+                        </button>
+                    </div>
+
                     {/* Custom addition */}
                     <div>
                         <label className="text-[11px] text-slate-500 font-bold mb-2 block">Custom Addition (Optional)</label>

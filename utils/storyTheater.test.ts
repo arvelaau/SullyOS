@@ -132,7 +132,7 @@ describe('糯米机原生剧情预设边界', () => {
         expect(document.schema).toBe('sullyos.story-preset');
         expect(document.version).toBe(1);
         expect(document.name).toContain('V6.27');
-        expect(document.prompts).toHaveLength(133);
+        expect(document.prompts).toHaveLength(134);
         expect(document.prompts.filter(prompt => prompt.enabled)).toHaveLength(53);
         const serialized = JSON.stringify(document);
         expect(serialized).not.toContain('prompt_order');

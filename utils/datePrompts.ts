@@ -278,6 +278,23 @@ const DIG_DEEPER_BLOCK = `### 💎 素材永远比你以为的多（深挖，别
 - 觉得"没什么可写"的时候，恰恰说明该回到上面的清单里找。空泛的感慨和万能句式都是没话找话，宁可写一个具体的小动作。
 `;
 
+// ─────────────────────────────────────────────────────────────
+// 思维前置标题：可选功能，默认关闭。开启时，回复开头先输出一个简短方括号
+// 标题（格式与 [emotion] 立绘标签相同，但语义不同——不是表情，是这一拍的
+// 打算），再进入正文。前端渲染时只在该角色开启本设置时才尝试从消息开头解析
+// 标题，避免把正常的 [emotion] 首行标签误判成标题（见 DateSession.tsx）。
+// ─────────────────────────────────────────────────────────────
+
+/** 缺省 = 关闭，与 isDigDeeperOn（缺省开启）方向相反 —— 这是一个可选附加项，不是默认行为。 */
+export const isThinkingHeaderOn = (config?: DateStyleConfig): boolean => config?.thinkingHeader === true;
+
+const THINKING_HEADER_BLOCK = `### 🧠 开场前置标题（可选，仅在本设置开启时生效）
+在正式台词/动作之前，先单独输出一个简短的方括号标题，概括这一次要怎么接、走向是什么——例如 [计划]、[念头]、[转折]，用词不固定，挑当下最贴切的一个词，1～14 字以内。
+- 只写在整段回复的最开头，只出现一次，不要在中途或结尾重复；
+- 标题行不需要再加 [emotion] 立绘标签，也不需要引号；
+- 标题之后另起一行，从正常的 [emotion] 台词/动作行开始，按平时的格式继续。
+`;
+
 /** 每轮随机注入一条，把注意力推向不同的具体方向；reroll 时另抽一条换切入角度 */
 export const DIG_FOCUS_HINTS = [
     '从对方刚才的用词里挑一个词，作为这一轮回应的起点',
@@ -614,6 +631,7 @@ const buildVNModeBlock = (char: CharacterProfile, userName: string): string => {
     const povBlock = buildPovBlock(styleConfig, char.name, userName);
     const extraBlock = buildExtraStyleBlock(styleConfig);
     const digBlock = isDigDeeperOn(styleConfig) ? `${DIG_DEEPER_BLOCK}\n` : '';
+    const thinkingBlock = isThinkingHeaderOn(styleConfig) ? `${THINKING_HEADER_BLOCK}\n` : '';
     const observeBlock = isObserveOn(char) ? buildObserveBlock(char) : '';
     return `### [Visual Novel Mode: 视觉小说脚本模式]
 你正在与用户进行**面对面**的互动。这不是聊天，是一场真实的见面。
@@ -627,7 +645,7 @@ ${char.dateVoiceEnabled ? (getVoicePromptOverride('dateVoice') ?? DATE_VOICE_GUI
 
 ${preset.block}
 
-${digBlock}${povBlock}${extraBlock}### 场景上下文
+${digBlock}${thinkingBlock}${povBlock}${extraBlock}### 场景上下文
 ${timeLine}- **Location**: 你们现在**面对面**。
 - **Context**: 参考历史记录。如果刚刚才看到开场白（Opening），请自然接话。
 ${observeBlock}`;

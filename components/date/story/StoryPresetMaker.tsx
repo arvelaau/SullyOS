@@ -67,6 +67,11 @@ export const STORY_PRESET_SIMPLE_CHOICES: StoryPresetSimpleChoice[] = [
         ids: ['nmj-v3-length-short', 'nmj-v3-length-medium', 'nmj-v3-length-long', 'romcom-length-proportional'],
         options: [{ id: 'nmj-v3-length-short', label: 'Short' }, { id: 'nmj-v3-length-medium', label: 'Medium' }, { id: 'nmj-v3-length-long', label: 'Long' }, { id: 'romcom-length-proportional', label: "Proportional to your message" }],
     },
+    {
+        label: 'Thinking header', hint: 'Adds a short [Header] line before the narrative prose, naming this beat\'s direction. Off by default.',
+        ids: ['story-thinking-header'],
+        options: [{ label: 'Off' }, { id: 'story-thinking-header', label: 'On' }],
+    },
 ];
 
 const STORY_ROLE_LABELS: Record<StoryTheaterPresetPrompt['role'], string> = {

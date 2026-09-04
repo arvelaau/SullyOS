@@ -266,6 +266,33 @@ const renderUserTextWithBoldHighlight = (text: string): React.ReactNode => {
     return segments;
 };
 
+// Matches a leading [Header] bracket at the very start of the story-prose block (same shape as
+// Date mode's thinking-header convention, 1-14 chars). Unlike Date mode, Story has no
+// [emotion]-tag convention inside <story_text> that this could collide with, so it's safe to
+// run unconditionally on block.text rather than gating on a per-preset toggle state, which
+// isn't available at this render layer anyway (StoryOutput only receives the raw content
+// string, not which preset/prompt produced it).
+const STORY_THINKING_HEADER_REGEX = /^\s*\[([^\]\n]{1,14})\][ \t]*\n?/;
+
+const splitLeadingThinkingHeader = (text: string): { header: string | null; rest: string } => {
+    const match = STORY_THINKING_HEADER_REGEX.exec(text);
+    if (!match) return { header: null, rest: text };
+    return { header: match[1], rest: text.slice(match[0].length) };
+};
+
+// Muted "eyebrow label" styling matching this file's existing violet-toned section labels
+// (e.g. the scene block's uppercase, tracking-wide, violet-600 headers) rather than a flat
+// hardcoded black.
+const storyThinkingHeaderStyle: React.CSSProperties = {
+    display: 'block',
+    margin: '0 0 0.5em',
+    color: '#7c3aed',
+    fontWeight: 700,
+    letterSpacing: '1.5px',
+    textTransform: 'uppercase',
+    fontSize: '10px',
+};
+
 const StoryOutput: React.FC<{ content: string; onChoose?: (text: string) => void; affinityInputs: StoryAffinityInput[] }> = ({ content, onChoose, affinityInputs }) => {
     const blocks = parseStoryDisplayBlocks(content);
     const relationshipSceneIndex = blocks.findIndex(block => block.kind === 'scene');
@@ -283,7 +310,13 @@ const StoryOutput: React.FC<{ content: string; onChoose?: (text: string) => void
         {!hasScene && relationship}
         {blocks.map((block, index) => {
             const lines = splitDisplayLines(block.text);
-            if (block.kind === 'story') return <p key={index} className='font-serif text-[15px] leading-8 text-slate-800 whitespace-pre-wrap'>{renderStoryTextWithDialogueHighlight(block.text)}</p>;
+            if (block.kind === 'story') {
+                const { header: thinkingHeader, rest: storyRest } = splitLeadingThinkingHeader(block.text);
+                return <p key={index} className='font-serif text-[15px] leading-8 text-slate-800 whitespace-pre-wrap'>
+                    {thinkingHeader && <span style={storyThinkingHeaderStyle}>{thinkingHeader}</span>}
+                    {renderStoryTextWithDialogueHighlight(storyRest)}
+                </p>;
+            }
             if (block.kind === 'scene') return <section key={index} className='py-4 border-y border-slate-300'>
                 <div className='flex items-center gap-2 text-[9px] tracking-[.22em] uppercase font-bold text-violet-600'><FilmSlate size={14} weight='fill' />{block.title}</div>
                 <div className='mt-3 grid grid-cols-2 gap-x-5 gap-y-3'>{lines.map((line, lineIndex) => <div key={lineIndex} className={line.label === '场面' ? 'col-span-2' : ''}><div className='flex items-center gap-1 text-[9px] font-bold text-slate-400'>{line.label === '时间' ? <Clock size={11} /> : line.label === '地点' ? <MapPin size={11} /> : null}{line.label || 'Scene'}</div><div className='mt-1 text-[12px] leading-5 text-slate-700'>{line.value}</div></div>)}</div>
