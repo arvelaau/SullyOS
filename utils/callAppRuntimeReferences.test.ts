@@ -25,14 +25,14 @@ describe('CallApp runtime references', () => {
     const source = readFileSync(path.resolve(__dirname, '../apps/CallApp.tsx'), 'utf8');
 
     for (const eventName of [
-      '发起通话',
-      '设置通话语音语种',
-      '重掷角色的通话台词',
-      '重播一条通话语音',
+      'Start a Call',
+      'Set Call Voice Language',
+      'Reroll Character Call Line',
+      'Replay a Call Voice Clip',
     ]) {
       expect(source).toContain(`trackEvent('${eventName}'`);
     }
-    expect(source).toMatch(/const beginSelectedCall[\s\S]*?trackEvent\('发起通话'\)/);
+    expect(source).toMatch(/const beginSelectedCall[\s\S]*?trackEvent\('Start a Call'\)/);
   });
 
   it('routes every memory-palace trigger through the defined call hook', () => {
@@ -50,11 +50,11 @@ describe('CallApp runtime references', () => {
 
     expect(source).toContain("onFinal: (t) => setDraftInput(t)");
     expect(source).toContain("await requestAssistantReply(input, userDbId, pendingTouchesForTurn, true, userCameraSnapshotForTurn)");
-    expect(source).toContain("{sendingBusy ? '…' : '发送'}");
+    expect(source).toContain("{sendingBusy ? '…' : 'Send'}");
     expect(source).toMatch(/const beginSelectedCall[\s\S]*?setViewMode\('in-call'\);\s+setCallStartedAt\(Date\.now\(\)\);\s+setCallState\('listening'\);/);
     expect(source).toContain('fireIdleNudge');
     expect(source).toContain('idleNudgeCountRef');
-    expect(source).toContain('电话刚接通。你先开口');
+    expect(source).toContain('The call was just picked up. You speak first');
     expect(source).toContain('callPreferences.characterInitiative');
     expect(source).toContain('callPreferences.idleNudgeEnabled');
     expect(preferenceSource).toContain('characterInitiative: true');
@@ -76,7 +76,7 @@ describe('CallApp runtime references', () => {
     expect(source).toContain('if (!callPreferences.voiceAutoPlay || !canSpeakVoice()) return');
     expect(source).toMatch(/if \(!callPreferences\.voiceAutoPlay\) \{\s+setCallState\('listening'\);\s+return;/);
     expect(source).toContain('const handlePlayBubbleAudio = async (bubble: CallBubble) =>');
-    expect(source).toContain("trackEvent('按需生成并播放通话语音')");
+    expect(source).toContain("trackEvent('Generate and Play Call Voice on Demand')");
     expect(source).toContain('shouldKeepNativeCallAudio');
     expect(source).not.toContain('<audio');
     expect(preferenceSheetSource).toContain("the chat page's voice settings are unchanged");
@@ -128,7 +128,7 @@ describe('CallApp runtime references', () => {
     expect(source).toContain('min-h-[5rem] flex-1 overflow-y-auto overscroll-contain');
     expect(source).not.toContain('min-h-[5rem] max-h-[15rem]');
     expect(source).toContain('data-testid="video-call-advanced-settings"');
-    expect(source).toContain('模型画质、导入与动作排练');
+    expect(source).toContain('Model quality, import, and action rehearsal');
   });
 
   it('pins voice and video setup actions to the same viewport bottom edge', () => {
@@ -200,7 +200,7 @@ describe('CallApp runtime references', () => {
       expect(source).toContain(`id: '${size}'`);
     }
     expect(source).toContain("const [userCameraMode, setUserCameraMode] = useState<UserCameraMode>('off')");
-    expect(source).toContain('这张图只用于画面，不会发送给角色');
+    expect(source).toContain('this image is for display only and will not be sent to the character');
     expect(source).toContain("userCameraStreamRef.current?.getTracks().forEach(track => track.stop())");
   });
 
