@@ -144,8 +144,7 @@ Express your SURPRISE and JOY at finding your APP PET here!
 - Comment on the café AND your pet reunion
 - Stay in character based on your personality and recent chat context
 
-Output JSON: { "action": "...", "comment": "你的反应和评论" }
-Language: Chinese. Be in character!`;
+Output JSON: { "action": "...", "comment": "your reaction and comment" }`;
             } else {
                 prompt += `
 ### Task
@@ -154,8 +153,7 @@ You're visiting this virtual café. Describe your entrance and leave a comment.
 - You can comment on the shop, the vibe, or reference recent chats with the user
 - Be in character!
 
-Output JSON: { "action": "...", "comment": "你进店后说的话" }
-Language: Chinese.`;
+Output JSON: { "action": "...", "comment": "what you say after entering the shop" }`;
             }
 
             const res = await fetch(`${apiConfig.baseUrl.replace(/\/+$/, '')}/chat/completions`, {

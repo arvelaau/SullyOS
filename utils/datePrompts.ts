@@ -200,7 +200,7 @@ This is contemporary New Adult rom-com — think Elle Kennedy's *Off Campus* boo
     },
 ];
 
-const DEFAULT_STYLE_ID = 'cinematic';
+const DEFAULT_STYLE_ID = 'romcom';
 
 const getStylePreset = (config?: DateStyleConfig): DateStylePreset =>
     DATE_STYLE_PRESETS.find(p => p.id === (config?.style || DEFAULT_STYLE_ID)) || DATE_STYLE_PRESETS[0];

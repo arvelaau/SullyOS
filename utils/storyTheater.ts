@@ -547,18 +547,18 @@ export const parseStoryTheaterPreset = (rawText: string, sourceFileName: string,
     return { id: makeStoryTheaterId(), name: document.name, sourceFileName, format: 'sullyos-story-preset', document, createdAt: now, updatedAt: now };
 };
 
-export const createBlankStoryPreset = (name = '新剧情预设', now = Date.now()): StoryTheaterPreset => ({
+export const createBlankStoryPreset = (name = 'New Story Preset', now = Date.now()): StoryTheaterPreset => ({
     id: makeStoryTheaterId(), name, format: 'sullyos-story-preset', createdAt: now, updatedAt: now,
     document: {
         schema: 'sullyos.story-preset', version: 1, name,
         generation: { temperature: 0.9, topP: 1, frequencyPenalty: 0, presencePenalty: 0, maxTokens: 8000 },
         prompts: [
-            { id: makeStoryTheaterId(), name: '主叙事规则', enabled: true, role: 'system', content: '直接续写连续的第三人称故事，让人物保持独立动机与知识边界。' },
-            { id: makeStoryTheaterId(), name: '世界书 · 角色设定前', enabled: true, role: 'system', content: '', marker: 'world_before' },
-            { id: makeStoryTheaterId(), name: '角色资料', enabled: true, role: 'system', content: '', marker: 'characters' },
-            { id: makeStoryTheaterId(), name: '世界书', enabled: true, role: 'system', content: '', marker: 'world_after' },
-            { id: makeStoryTheaterId(), name: '剧情设定', enabled: true, role: 'system', content: '', marker: 'scenario' },
-            { id: makeStoryTheaterId(), name: '聊天历史', enabled: true, role: 'system', content: '', marker: 'history' },
+            { id: makeStoryTheaterId(), name: 'Main narrative rules', enabled: true, role: 'system', content: 'Continue the story directly in a continuous third-person narrative, keeping each character\'s motives and knowledge independent of one another.' },
+            { id: makeStoryTheaterId(), name: 'World Info · Before Character', enabled: true, role: 'system', content: '', marker: 'world_before' },
+            { id: makeStoryTheaterId(), name: 'Character Profile', enabled: true, role: 'system', content: '', marker: 'characters' },
+            { id: makeStoryTheaterId(), name: 'World Info', enabled: true, role: 'system', content: '', marker: 'world_after' },
+            { id: makeStoryTheaterId(), name: 'Scenario', enabled: true, role: 'system', content: '', marker: 'scenario' },
+            { id: makeStoryTheaterId(), name: 'Chat History', enabled: true, role: 'system', content: '', marker: 'history' },
         ],
     },
 });

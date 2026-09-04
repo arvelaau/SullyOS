@@ -679,8 +679,8 @@
                     },
                     {
                         "id":  "nmj-v3-language-cn",
-                        "name":  "🀄语言｜简体中文｜默认",
-                        "enabled":  true,
+                        "name":  "🀄语言｜简体中文｜备选",
+                        "enabled":  false,
                         "role":  "system",
                         "content":  "使用自然流畅的简体中文和全角中文标点。对白属于具体人物和具体关系。角色卡与世界资料里的既有专名保持原样。"
                     },
@@ -693,8 +693,8 @@
                     },
                     {
                         "id":  "romcom-language-en",
-                        "name":  "🀄Language｜English｜alternative",
-                        "enabled":  false,
+                        "name":  "🀄Language｜English｜default",
+                        "enabled":  true,
                         "role":  "system",
                         "content":  "Write in natural, contemporary English with standard English punctuation. Dialogue belongs to specific characters and specific relationships. Keep existing proper nouns from the character card and world info as written."
                     },

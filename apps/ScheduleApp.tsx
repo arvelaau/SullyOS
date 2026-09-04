@@ -162,7 +162,6 @@ Based on your persona, react to the user completing this task.
 
 **Output requirements**:
 - Output only one sentence (like a bubble notification).
-- **Must use the user's usual language**.
 - No quotation marks.`;
 
             // 2. Separate System and User roles
@@ -246,8 +245,7 @@ Time status: ${dayText}
 ### Task
 Based on your persona, share a brief thought about this date.
 **Output requirements**:
-- Output only one sentence.
-- **Must use the user's usual language**.`;
+- Output only one sentence.`;
 
         const messages = [
             { role: "system", content: baseContext },

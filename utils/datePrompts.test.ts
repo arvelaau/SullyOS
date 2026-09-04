@@ -40,10 +40,10 @@ describe('DatePrompts.buildSessionPayload', () => {
         variant: 'send' as const,
     });
 
-    it('默认注入电影感风格块，不注入人称块', async () => {
+    it('默认注入 rom-com 风格块，不注入人称块', async () => {
         const { messages } = await DatePrompts.buildSessionPayload(baseInput(makeChar()));
         const sys = sysOf(messages);
-        expect(sys).toContain('风格：电影感');
+        expect(sys).toContain('Contemporary rom-com');
         expect(sys).toContain('Visual Novel Mode');
         expect(sys).not.toContain('叙事人称');
     });
