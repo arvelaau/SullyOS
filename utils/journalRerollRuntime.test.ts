@@ -10,13 +10,13 @@ describe('Journal character-page rewrite feedback', () => {
     const exchangeSource = source.slice(exchangeStart, archiveStart);
 
     expect(source).toContain("const saveEntry = async (options: { silent?: boolean } = {})");
-    expect(source).toContain("if (!options.silent) addToast('日记已保存', 'success')");
+    expect(source).toContain("if (!options.silent) addToast('Diary saved', 'success')");
     expect(exchangeSource).toContain('await saveEntry({ silent: true })');
     expect(exchangeSource).not.toContain('saveEntry();');
-    expect(exchangeSource).toContain('正在请 ${selectedChar.name} 重新写这篇日记');
-    expect(exchangeSource).toContain('角色日记已重新写好 · 已同步到聊天');
-    expect(exchangeSource).toContain("'重新写日记' : '交换日记'");
+    expect(exchangeSource).toContain('Asking ${selectedChar.name} to rewrite this diary');
+    expect(exchangeSource).toContain('Character diary rewritten · synced to chat');
+    expect(exchangeSource).toContain("'Rewrite diary' : 'Exchange diary'");
     expect(source).toContain('data-testid="journal-rewrite-character-page"');
-    expect(source).toContain('aria-label="重新写角色日记"');
+    expect(source).toContain('aria-label="Rewrite character\'s diary"');
   });
 });

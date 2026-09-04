@@ -53,8 +53,8 @@ const THEMES: Record<ThemeMode, any> = {
         decoLine: 'bg-pink-200',
         modalBg: 'bg-white/90 rounded-[2.5rem]',
         input: 'bg-pink-50 text-slate-700 border border-pink-100 rounded-xl',
-        label: '心愿单',
-        eventLabel: '纪念日'
+        label: 'Wish List',
+        eventLabel: 'Anniversaries'
     },
     minimal: {
         id: 'minimal',
@@ -98,12 +98,12 @@ const ScheduleApp: React.FC = () => {
     // Forms
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskSupervisor, setNewTaskSupervisor] = useState<string>(activeCharacterId || '');
-    const [supervisorGroupId, setSupervisorGroupId] = useState<string>(GROUP_FILTER_ALL); // 选监督人的分组筛选
+    const [supervisorGroupId, setSupervisorGroupId] = useState<string>(GROUP_FILTER_ALL); // Group filter for selecting the supervisor
 
     const [newAnniTitle, setNewAnniTitle] = useState('');
     const [newAnniDate, setNewAnniDate] = useState('');
     const [newAnniChar, setNewAnniChar] = useState<string>(activeCharacterId || '');
-    const [anniCharGroupId, setAnniCharGroupId] = useState<string>(GROUP_FILTER_ALL); // 纪念日关联对象的分组筛选
+    const [anniCharGroupId, setAnniCharGroupId] = useState<string>(GROUP_FILTER_ALL); // Group filter for the anniversary's linked character
 
     useEffect(() => {
         loadData();
@@ -120,7 +120,7 @@ const ScheduleApp: React.FC = () => {
         const nextMode = modes[nextIndex];
         setCurrentThemeMode(nextMode);
         localStorage.setItem('schedule_app_theme', nextMode);
-        trackEvent('切换日程界面主题', { theme: nextMode });
+        trackEvent('Switch Schedule Theme', { theme: nextMode });
     };
 
     const loadData = async () => {
@@ -134,13 +134,13 @@ const ScheduleApp: React.FC = () => {
     const generateTaskReward = async (task: Task) => {
         const supervisor = characters.find(c => c.id === task.supervisorId);
         if (!supervisor || !apiConfig.apiKey) {
-            addToast('任务已完成', 'success');
+            addToast('Task completed', 'success');
             return;
         }
 
         // FEEDBACK: Show loading state immediately
         // Note: The caller handles setting processingTaskIds, but we can also add a toast
-        addToast(`${supervisor.name} 正在确认你的成果...`, 'info');
+        addToast(`${supervisor.name} is reviewing your progress...`, 'info');
 
         try {
             // 1. Build Persona Context
@@ -149,21 +149,21 @@ const ScheduleApp: React.FC = () => {
             const baseContext = ContextBuilder.buildCoreContext(supervisor, userProfile);
 
             const userPrompt = `
-### 场景：任务完成 (Task Completed)
-用户 (${userProfile.name}) 刚刚在现实生活中完成了一个任务/契约： "${task.title}"。
-你是监督人。
+### Scene: Task Completed
+The user (${userProfile.name}) just completed a task/contract in real life: "${task.title}".
+You are the supervisor.
 
-### 任务
-请根据你的人设，对用户完成任务这一行为做出反应。
-- 如果你是严厉的：勉强认可，或者催促下一个。
-- 如果你是温柔的：给予温暖的夸奖。
-- 如果你是傲娇的：别扭地表示一下。
-- **关键**：不要问我用什么语气，**你自己**根据你的人设决定。
+### Task
+Based on your persona, react to the user completing this task.
+- If you're strict: grudgingly acknowledge it, or push them toward the next one.
+- If you're gentle: give warm praise.
+- If you're tsundere: express it awkwardly.
+- **Key**: don't ask me what tone to use — decide **for yourself** based on your persona.
 
-**输出要求**:
-- 仅输出一句话（类似气泡通知）。
-- **必须使用用户常用语言**。
-- 不要有引号。`;
+**Output requirements**:
+- Output only one sentence (like a bubble notification).
+- **Must use the user's usual language**.
+- No quotation marks.`;
 
             // 2. Separate System and User roles
             const messages = [
@@ -204,16 +204,16 @@ const ScheduleApp: React.FC = () => {
                     charId: supervisor.id,
                     role: 'system',
                     type: 'text',
-                    content: `[系统: ${userProfile.name} 完成了任务 "${task.title}"。${supervisor.name} 评价道: "${text}"]`
+                    content: `[System: ${userProfile.name} completed the task "${task.title}". ${supervisor.name} commented: "${text}"]`
                 });
             } else {
                 console.warn("AI returned empty content", data);
-                addToast('任务完成 (AI 未返回评价)', 'success');
+                addToast('Task completed (AI did not return a comment)', 'success');
             }
 
         } catch (e: any) {
             console.error("Task Reward Error:", e);
-            addToast(`评价生成失败: ${e.message}`, 'error');
+            addToast(`Failed to generate comment: ${e.message}`, 'error');
         }
     };
 
@@ -228,26 +228,26 @@ const ScheduleApp: React.FC = () => {
 
         // FEEDBACK: Show loading state if explicit call
         if (Date.now() - (anni.lastThoughtGeneratedAt || 0) > 10000) {
-             addToast(`${char.name} 正在查阅日历...`, 'info');
+             addToast(`${char.name} is checking the calendar...`, 'info');
         }
 
         const daysDiff = getCalendarDayDifference(getLocalDateKey(), anni.date) ?? 0;
-        const dayText = daysDiff > 0 ? `还有 ${daysDiff} 天` : (daysDiff === 0 ? '就是今天!' : `已经过去 ${Math.abs(daysDiff)} 天了`);
+        const dayText = daysDiff > 0 ? `${daysDiff} days to go` : (daysDiff === 0 ? "It's today!" : `${Math.abs(daysDiff)} days ago`);
 
         // RESTORED: Full context
         await injectMemoryPalace(char, undefined, anni.title);
         const baseContext = ContextBuilder.buildCoreContext(char, userProfile);
 
         const userPrompt = `
-### 场景：纪念日提醒
-事件: "${anni.title}"
-时间状态: ${dayText}
+### Scene: Anniversary Reminder
+Event: "${anni.title}"
+Time status: ${dayText}
 
-### 任务
-请根据你的人设，针对这个日期发表一句简短的感想。
-**输出要求**:
-- 仅输出一句话。
-- **必须使用用户常用语言**。`;
+### Task
+Based on your persona, share a brief thought about this date.
+**Output requirements**:
+- Output only one sentence.
+- **Must use the user's usual language**.`;
 
         const messages = [
             { role: "system", content: baseContext },
@@ -402,8 +402,8 @@ const ScheduleApp: React.FC = () => {
 
                 {/* Tabs */}
                 <div className={`flex gap-1 p-1 rounded-lg ${currentThemeMode === 'cyber' ? 'bg-black/40 border border-cyan-900/50' : (currentThemeMode === 'minimal' ? 'bg-[#eef2f6] shadow-[inset_2px_2px_5px_#d1d9e6,inset_-2px_-2px_5px_#ffffff]' : 'bg-white/50')}`}>
-                    <button onClick={() => { setActiveTab('quest'); trackEvent('切换日程标签页', { tab: 'quest' }); }} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'quest' ? `${theme.accent} ${currentThemeMode === 'cyber' ? 'bg-cyan-900/50 shadow-sm' : (currentThemeMode === 'minimal' ? 'shadow-[2px_2px_5px_#d1d9e6,-2px_-2px_5px_#ffffff] bg-[#eef2f6]' : 'bg-white shadow-sm')}` : `${theme.textSub}`}`}>{theme.label}</button>
-                    <button onClick={() => { setActiveTab('server_events'); trackEvent('切换日程标签页', { tab: 'server_events' }); }} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'server_events' ? `${theme.accent} ${currentThemeMode === 'cyber' ? 'bg-cyan-900/50 shadow-sm' : (currentThemeMode === 'minimal' ? 'shadow-[2px_2px_5px_#d1d9e6,-2px_-2px_5px_#ffffff] bg-[#eef2f6]' : 'bg-white shadow-sm')}` : `${theme.textSub}`}`}>{theme.eventLabel}</button>
+                    <button onClick={() => { setActiveTab('quest'); trackEvent('Switch Schedule Tab', { tab: 'quest' }); }} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'quest' ? `${theme.accent} ${currentThemeMode === 'cyber' ? 'bg-cyan-900/50 shadow-sm' : (currentThemeMode === 'minimal' ? 'shadow-[2px_2px_5px_#d1d9e6,-2px_-2px_5px_#ffffff] bg-[#eef2f6]' : 'bg-white shadow-sm')}` : `${theme.textSub}`}`}>{theme.label}</button>
+                    <button onClick={() => { setActiveTab('server_events'); trackEvent('Switch Schedule Tab', { tab: 'server_events' }); }} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${activeTab === 'server_events' ? `${theme.accent} ${currentThemeMode === 'cyber' ? 'bg-cyan-900/50 shadow-sm' : (currentThemeMode === 'minimal' ? 'shadow-[2px_2px_5px_#d1d9e6,-2px_-2px_5px_#ffffff] bg-[#eef2f6]' : 'bg-white shadow-sm')}` : `${theme.textSub}`}`}>{theme.eventLabel}</button>
                 </div>
 
                 {/* Right Actions */}
@@ -416,7 +416,7 @@ const ScheduleApp: React.FC = () => {
                     </button>
 
                     {/* Add Button */}
-                    <button onClick={() => { activeTab === 'quest' ? setShowTaskModal(true) : setShowAnniModal(true); trackEvent('打开新建条目弹窗', { kind: activeTab }); }} className={`p-2 rounded-full active:scale-90 transition-transform ${theme.accent} ${currentThemeMode === 'minimal' ? 'shadow-[4px_4px_8px_#d1d9e6,-4px_-4px_8px_#ffffff]' : 'hover:bg-white/10'}`}>
+                    <button onClick={() => { activeTab === 'quest' ? setShowTaskModal(true) : setShowAnniModal(true); trackEvent('Open New Entry Modal', { kind: activeTab }); }} className={`p-2 rounded-full active:scale-90 transition-transform ${theme.accent} ${currentThemeMode === 'minimal' ? 'shadow-[4px_4px_8px_#d1d9e6,-4px_-4px_8px_#ffffff]' : 'hover:bg-white/10'}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     </button>
                 </div>
@@ -433,16 +433,16 @@ const ScheduleApp: React.FC = () => {
                     <div className={`w-full rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 ${currentThemeMode === 'minimal' ? 'bg-[#eef2f6] shadow-[inset_5px_5px_10px_#d1d9e6,inset_-5px_-5px_10px_#ffffff]' : (currentThemeMode === 'soft' ? 'bg-gradient-to-r from-pink-300 to-purple-300 text-white shadow-lg shadow-pink-200' : 'bg-gradient-to-r from-slate-900 to-slate-800 border border-purple-500/30')}`}>
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-2">
-                                <div className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${currentThemeMode === 'minimal' ? 'text-slate-400' : 'text-white/80 bg-white/20'}`}>即将到来</div>
-                                <div className="text-3xl font-bold tracking-tighter">{getDaysUntil(upcomingAnni.date)} <span className="text-xs opacity-60 font-normal">天后</span></div>
+                                <div className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${currentThemeMode === 'minimal' ? 'text-slate-400' : 'text-white/80 bg-white/20'}`}>Coming Up</div>
+                                <div className="text-3xl font-bold tracking-tighter">{getDaysUntil(upcomingAnni.date)} <span className="text-xs opacity-60 font-normal">days left</span></div>
                             </div>
                             <div className="text-xl font-bold mb-4">{upcomingAnni.title}</div>
-                            
+
                             {/* AI Thought Bubble */}
                             <div className={`flex items-start gap-3 p-3 rounded-xl ${currentThemeMode === 'minimal' ? 'bg-[#eef2f6] shadow-[5px_5px_10px_#d1d9e6,-5px_-5px_10px_#ffffff]' : 'bg-white/20 backdrop-blur-md'}`}>
                                 <TokenImg value={characters.find(c => c.id === upcomingAnni.charId)?.avatar} className="w-8 h-8 rounded-full object-cover" />
                                 <div className={`text-xs font-medium leading-relaxed italic ${currentThemeMode === 'minimal' ? 'text-slate-500' : 'text-white/90'}`}>
-                                    "{upcomingAnni.aiThought || "加载中..."}"
+                                    "{upcomingAnni.aiThought || "Loading..."}"
                                 </div>
                             </div>
                         </div>
@@ -453,12 +453,12 @@ const ScheduleApp: React.FC = () => {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-2 px-1">
                             <div className={`w-2 h-2 rounded-full animate-pulse ${currentThemeMode === 'cyber' ? 'bg-cyan-500' : (currentThemeMode === 'soft' ? 'bg-pink-400' : 'bg-slate-400')}`}></div>
-                            <h3 className={`text-xs font-bold uppercase tracking-[0.2em] ${theme.accent}`}>进行中任务</h3>
+                            <h3 className={`text-xs font-bold uppercase tracking-[0.2em] ${theme.accent}`}>Active Tasks</h3>
                         </div>
-                        
+
                         {tasks.filter(t => !t.isCompleted).length === 0 && (
                             <div className={`text-center py-12 border-2 border-dashed rounded-xl ${currentThemeMode === 'cyber' ? 'border-slate-800' : 'border-slate-200'}`}>
-                                <div className={theme.textSub}>暂无任务</div>
+                                <div className={theme.textSub}>No tasks yet</div>
                             </div>
                         )}
 
@@ -477,7 +477,7 @@ const ScheduleApp: React.FC = () => {
                                     <div className="flex-1">
                                         <div className={`${theme.text} font-bold text-sm tracking-wide`}>{task.title}</div>
                                         <div className={`text-[10px] ${theme.textSub} mt-1 font-mono uppercase`}>
-                                            监督人: {supervisor?.name || 'Unknown'}
+                                            Supervisor: {supervisor?.name || 'Unknown'}
                                         </div>
                                     </div>
 
@@ -485,14 +485,14 @@ const ScheduleApp: React.FC = () => {
                                     {isProcessing ? (
                                         <div className="flex items-center gap-2 px-2 py-2">
                                             <div className={`w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin ${theme.accent}`}></div>
-                                            <span className={`text-[10px] font-bold animate-pulse ${theme.accent}`}>验收中...</span>
+                                            <span className={`text-[10px] font-bold animate-pulse ${theme.accent}`}>Reviewing...</span>
                                         </div>
                                     ) : (
-                                        <button 
+                                        <button
                                             onClick={() => handleToggleTask(task)}
                                             className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded transition-all active:scale-95 ${currentThemeMode === 'minimal' ? 'shadow-[4px_4px_8px_#d1d9e6,-4px_-4px_8px_#ffffff] text-slate-500 active:shadow-[inset_2px_2px_5px_#d1d9e6,inset_-2px_-2px_5px_#ffffff]' : (currentThemeMode === 'soft' ? 'bg-pink-100 text-pink-500' : 'bg-cyan-900/30 text-cyan-400 border border-cyan-800')}`}
                                         >
-                                            完成
+                                            Complete
                                         </button>
                                     )}
                                     
@@ -503,7 +503,7 @@ const ScheduleApp: React.FC = () => {
 
                         {tasks.filter(t => t.isCompleted).length > 0 && (
                             <div className="pt-8 opacity-50">
-                                <h3 className={`text-xs font-bold uppercase tracking-[0.2em] px-1 mb-4 ${theme.textSub}`}>已完成</h3>
+                                <h3 className={`text-xs font-bold uppercase tracking-[0.2em] px-1 mb-4 ${theme.textSub}`}>Completed</h3>
                                 {tasks.filter(t => t.isCompleted).map(task => (
                                     <div key={task.id} className={`flex items-center gap-3 py-2 px-2 border-b ${currentThemeMode === 'cyber' ? 'border-slate-800/50' : 'border-slate-100'}`}>
                                         <div className={`${theme.iconDone} text-xs font-mono`}>[DONE]</div>
@@ -520,7 +520,7 @@ const ScheduleApp: React.FC = () => {
                     <div className={`relative pl-6 space-y-8 before:absolute before:left-2 before:top-2 before:bottom-0 before:w-[1px] ${theme.decoLine}`}>
                         {/* Anniversaries List */}
                         <div>
-                             <h3 className={`text-xs font-bold uppercase tracking-widest mb-6 -ml-6 pl-6 ${theme.textSub}`}>时间线事件</h3>
+                             <h3 className={`text-xs font-bold uppercase tracking-widest mb-6 -ml-6 pl-6 ${theme.textSub}`}>Timeline Events</h3>
                              <div className="space-y-4">
                                  {anniversaries.map(a => (
                                      <div key={a.id} className="relative group">
@@ -539,12 +539,12 @@ const ScheduleApp: React.FC = () => {
 
                         {/* Completed Tasks History Log */}
                          <div>
-                             <h3 className={`text-xs font-bold uppercase tracking-widest mb-6 -ml-6 pl-6 pt-4 ${theme.textSub}`}>完成履历</h3>
+                             <h3 className={`text-xs font-bold uppercase tracking-widest mb-6 -ml-6 pl-6 pt-4 ${theme.textSub}`}>Completion History</h3>
                              <div className="space-y-4">
                                  {tasks.filter(t => t.isCompleted).sort((a,b) => (b.completedAt || 0) - (a.completedAt || 0)).map(t => (
                                      <div key={t.id} className="relative">
                                          <div className={`absolute -left-[20px] top-2 w-2 h-2 rounded-full z-10 ${currentThemeMode === 'cyber' ? 'bg-black border border-green-600' : 'bg-slate-300'}`}></div>
-                                         <div className={`text-xs ${theme.textSub} font-mono`}>[{new Date(t.completedAt || 0).toLocaleDateString()}] 任务完成</div>
+                                         <div className={`text-xs ${theme.textSub} font-mono`}>[{new Date(t.completedAt || 0).toLocaleDateString()}] Task completed</div>
                                          <div className={`text-sm ${theme.text} font-bold mt-1 pl-1 border-l-2 ${theme.decoLine}`}>{t.title}</div>
                                      </div>
                                  ))}
@@ -556,13 +556,13 @@ const ScheduleApp: React.FC = () => {
             </div>
 
             {/* Task Modal */}
-            <Modal isOpen={showTaskModal} title={currentThemeMode === 'cyber' ? "INITIALIZE QUEST" : "新建任务"} onClose={() => setShowTaskModal(false)} footer={<button onClick={handleAddTask} className={`w-full py-3 font-bold transition-all ${theme.buttonPrimary}`}>确认添加</button>}>
+            <Modal isOpen={showTaskModal} title={currentThemeMode === 'cyber' ? "INITIALIZE QUEST" : "New Task"} onClose={() => setShowTaskModal(false)} footer={<button onClick={handleAddTask} className={`w-full py-3 font-bold transition-all ${theme.buttonPrimary}`}>Confirm</button>}>
                 <div className={`space-y-6 ${currentThemeMode === 'minimal' ? 'p-2' : ''}`}>
-                    <input autoFocus value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="任务目标 (例如: 背单词)" className={`w-full px-4 py-3 text-sm focus:outline-none ${theme.input}`} />
-                    
+                    <input autoFocus value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="Task goal (e.g. Learn 10 new words)" className={`w-full px-4 py-3 text-sm focus:outline-none ${theme.input}`} />
+
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">选择监督人</label>
-                        {/* 分组筛选（没建分组时不渲染）。Modal 恒为白底，走浅色配色 */}
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">Select Supervisor</label>
+                        {/* Group filter (hidden if no groups exist). Modal is always on a white background, uses the light color scheme */}
                         <CharacterGroupFilterBar characters={characters} groups={characterGroups}
                             value={supervisorGroupId} onChange={setSupervisorGroupId} className="mb-2" />
                         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
@@ -578,14 +578,14 @@ const ScheduleApp: React.FC = () => {
             </Modal>
 
             {/* Anniversary Modal */}
-            <Modal isOpen={showAnniModal} title={currentThemeMode === 'cyber' ? "REGISTER EVENT" : "添加纪念日"} onClose={() => setShowAnniModal(false)} footer={<button onClick={handleAddAnni} className={`w-full py-3 font-bold transition-all ${theme.buttonPrimary}`}>保存记录</button>}>
+            <Modal isOpen={showAnniModal} title={currentThemeMode === 'cyber' ? "REGISTER EVENT" : "Add Anniversary"} onClose={() => setShowAnniModal(false)} footer={<button onClick={handleAddAnni} className={`w-full py-3 font-bold transition-all ${theme.buttonPrimary}`}>Save</button>}>
                 <div className={`space-y-4 ${currentThemeMode === 'minimal' ? 'p-2' : ''}`}>
-                    <input value={newAnniTitle} onChange={e => setNewAnniTitle(e.target.value)} placeholder="事件名称 (例如: 第一次见面)" className={`w-full px-4 py-3 text-sm focus:outline-none ${theme.input}`} />
+                    <input value={newAnniTitle} onChange={e => setNewAnniTitle(e.target.value)} placeholder="Event name (e.g. First time we met)" className={`w-full px-4 py-3 text-sm focus:outline-none ${theme.input}`} />
                     <input type="date" value={newAnniDate} onChange={e => setNewAnniDate(e.target.value)} className={`w-full px-4 py-3 text-sm focus:outline-none ${theme.input}`} />
-                    
+
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">关联对象</label>
-                        {/* 分组筛选（没建分组时不渲染）。Modal 恒为白底，走浅色配色 */}
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">Linked Character</label>
+                        {/* Group filter (hidden if no groups exist). Modal is always on a white background, uses the light color scheme */}
                         <CharacterGroupFilterBar characters={characters} groups={characterGroups}
                             value={anniCharGroupId} onChange={setAnniCharGroupId} className="mb-2" />
                         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
