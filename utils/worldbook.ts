@@ -31,23 +31,23 @@ export interface WorldbookSystemSections {
 }
 
 export const WORLDBOOK_POSITION_LABELS: Record<WorldbookPosition, string> = {
-    0: '角色设定前',
-    1: '角色设定后',
-    2: '作者注释顶部',
-    3: '作者注释底部',
-    4: '聊天记录指定深度',
-    5: '示例消息前',
-    6: '示例消息后',
+    0: 'Before Character Definition',
+    1: 'After Character Definition',
+    2: "Top of Author's Note",
+    3: "Bottom of Author's Note",
+    4: 'At Depth in Chat History',
+    5: 'Before Example Messages',
+    6: 'After Example Messages',
 };
 
 export const WORLDBOOK_POSITION_DESCRIPTIONS: Record<WorldbookPosition, string> = {
-    0: '适合放全局规则、基础背景；会出现在角色身份与性格设定之前。',
-    1: '适合一般世界观、人物与地点设定；这是旧版世界书一直使用的默认位置。',
-    2: '适合放写作方向、语气或节奏要求；位于作者注释内容顶部。',
-    3: '适合放作者注释后的补充与强调；比顶部内容更靠后。',
-    4: '适合临时状态、近期事件或强提醒；按深度和角色插入聊天记录。',
-    5: '适合放阅读示例对话前需要先知道的说明。',
-    6: '适合放示例对话结束后的补充说明。',
+    0: "Good for global rules and baseline background — appears before the character's identity and personality.",
+    1: 'Good for general worldbuilding, characters, and locations — the default position the old worldbook system always used.',
+    2: "Good for writing direction, tone, or pacing — sits at the top of the Author's Note.",
+    3: "Good for follow-ups and emphasis after the Author's Note — placed later than the top-of-note content.",
+    4: 'Good for temporary state, recent events, or strong reminders — inserted into the chat history at a given depth and role.',
+    5: 'Good for context the reader needs before the example dialogue.',
+    6: 'Good for follow-up notes after the example dialogue ends.',
 };
 
 export const WORLDBOOK_ROLE_LABELS: Record<WorldbookDepthRole, string> = {
@@ -231,7 +231,7 @@ export const formatWorldbookSection = (
     for (const entry of entries) {
         // SillyTavern comments are editor-only and are not part of the prompt.
         if (entry.book.sourceUid === undefined) {
-            const category = entry.book.category || '通用设定 (General)';
+            const category = entry.book.category || 'General';
             if (category !== lastLegacyCategory) {
                 output += `#### [${category}]\n`;
                 lastLegacyCategory = category;
@@ -315,7 +315,7 @@ export const parseStandardWorldbook = (
 ): Worldbook[] => {
     const parsed = JSON.parse(rawText);
     if (!parsed || typeof parsed !== 'object' || !parsed.entries || typeof parsed.entries !== 'object') {
-        throw new Error('不是受支持的标准世界书文件：缺少 entries');
+        throw new Error('Not a supported standard worldbook file: missing "entries"');
     }
     const rawEntries = Array.isArray(parsed.entries)
         ? parsed.entries
@@ -328,7 +328,7 @@ export const parseStandardWorldbook = (
         const rawRole = value.role == null ? null : clamp(value.role, 0, 2, 0) as WorldbookDepthRole;
         return [{
             id: `wb-${now}-${index}-${Math.random().toString(36).slice(2, 8)}`,
-            title: String(value.comment || value.name || `条目 ${uid + 1}`),
+            title: String(value.comment || value.name || `Entry ${uid + 1}`),
             content: value.content,
             category,
             createdAt: now,
@@ -352,6 +352,6 @@ export const parseStandardWorldbook = (
         }];
     });
 
-    if (books.length === 0) throw new Error('世界书里没有可导入的有效条目');
+    if (books.length === 0) throw new Error('No valid entries found to import in this worldbook');
     return books;
 };
