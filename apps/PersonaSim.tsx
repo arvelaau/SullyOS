@@ -18,8 +18,8 @@ import {
 } from '@phosphor-icons/react';
 
 // ============================================================
-//  TYPES (runtime script model) — Beat / SimScript 已移到 types.ts 共享，
-//  以便「生活记录」存完整脚本快照用于重播。
+//  TYPES (runtime script model) — Beat / SimScript have been moved to types.ts
+//  and shared, so "Life Log" can store the full script snapshot for replay.
 // ============================================================
 export interface SimApiConfig { apiKey: string; baseUrl: string; model: string; }
 export type SimState =
@@ -37,8 +37,8 @@ interface Props {
     onConsumed: () => void;
 }
 
-const DAILY = ['平凡的周二', '周末宅家', '深夜失眠', '上班的一天', '放学后的傍晚'];
-const EVENTS = ['第一次见到某人', '告白当天', '考试成绩公布', '离职那天', '医院检查结果出来的下午', '一场争吵之后'];
+const DAILY = ['An Ordinary Tuesday', 'Staying In on the Weekend', 'Sleepless at Night', 'A Day at Work', 'Evening After School'];
+const EVENTS = ['Meeting Someone for the First Time', 'The Day of the Confession', 'Exam Results Announced', 'The Day They Quit', 'The Afternoon the Test Results Came In', 'After an Argument'];
 
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 const ACCENT = '#b89bff';
@@ -90,7 +90,7 @@ export async function generatePersonaScript(opts: {
     await injectMemoryPalace(char, undefined, theme, userProfile.name);
     const context = ContextBuilder.buildCoreContext(char, userProfile, true, char.memoryPalaceInjection);
     const msgs = await DB.getMessagesByCharId(char.id);
-    // 跟随用户为该角色设置的最大上下文（没设则默认 500）——避免「吵完架来看 if 线，结果 char 不记得吵什么」
+    // Follows the max context the user set for this character (defaults to 500 if unset) -- avoids "you check the storyline right after an argument, and the character doesn't remember what it was about"
     const ctxLimit = char.contextLimit && char.contextLimit > 0 ? char.contextLimit : 500;
     const recent = msgs.slice(-ctxLimit).map(m => {
         const who = m.role === 'user' ? userProfile.name : char.name;
@@ -107,20 +107,20 @@ export async function generatePersonaScript(opts: {
     });
     if (!res.ok) throw new Error('API');
     const data = await safeResponseJson(res);
-    // 截断直接报错，不兜底：模型输出被 token 上限截断时 finish_reason 为 'length'
-    if (data.choices?.[0]?.finish_reason === 'length') throw new Error('演出生成被截断');
+    // Truncation errors out directly, no fallback: finish_reason is 'length' when the model's output hit the token cap
+    if (data.choices?.[0]?.finish_reason === 'length') throw new Error('Performance generation was truncated');
     const finishReason = data?.choices?.[0]?.finish_reason;
     if (finishReason === 'content_filter' || finishReason === 'safety') {
-        throw new Error('演出生成被模型安全策略中止');
+        throw new Error("Performance generation was stopped by the model's safety policy");
     }
     const { content, script: parsed } = parsePersonaScriptApiResponse(data);
-    if (!content) throw new Error('模型没有返回演出正文');
+    if (!content) throw new Error('The model did not return a performance script');
     if (!parsed) {
         console.warn('[persona] script parse failed', { finishReason, contentLength: content.length });
-        throw new Error(`演出格式无法解析（模型返回 ${content.length} 字）`);
+        throw new Error(`Performance format could not be parsed (model returned ${content.length} characters)`);
     }
-    // 不兜底：结尾必须是模型自己收束好的 end，否则视为不完整/被截断，报错让用户重试
-    if (parsed.beats[parsed.beats.length - 1].kind !== 'end') throw new Error('演出结尾不完整');
+    // No fallback: the ending must be an "end" the model wrapped up itself, otherwise it's treated as incomplete/truncated, and errors out so the user can retry
+    if (parsed.beats[parsed.beats.length - 1].kind !== 'end') throw new Error("Performance ending is incomplete");
     return parsed;
 }
 
@@ -145,8 +145,9 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
     const beats = script?.beats || [];
     const beat = beats[idx];
 
-    // 图层化：找出「当前可见的屏幕」(lock/app/flashback)，通知/独白叠在它上面弹出，
-    // 背景屏幕只在真正切屏时才重新进场 —— 这是去掉「PPT 翻页感」的关键。
+    // Layering: find the "currently visible screen" (lock/app/flashback); notifications/
+    // thoughts pop up layered on top of it, and the background screen only re-enters when
+    // the underlying screen actually changes -- this is the key to avoiding a "slideshow" feel.
     const screenIdx = (() => {
         for (let i = idx; i >= 0; i--) {
             const k = beats[i]?.kind;
@@ -160,7 +161,7 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
     // ----- kick off background generation (runs in CheckPhone) -----
     const requestStart = (m: 'daily' | 'event', t: string) => {
         const trimmed = t.trim();
-        if (!trimmed) { addToast('请选择或输入体验内容', 'error'); return; }
+        if (!trimmed) { addToast('Please choose or enter what to experience', 'error'); return; }
         setMode(m); setTheme(trimmed);
         onStart(m, trimmed, presence, tone);
     };
@@ -169,7 +170,7 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
     useEffect(() => {
         if (phase === 'idle' && sim.status === 'ready') {
             setMode(sim.mode); setTheme(sim.theme);
-            // 重播：脚本来自生活记录已存档的快照，别再 persist 一遍（否则生活记录里出现重复）
+            // Replay: the script comes from an already-archived Life Log snapshot, don't persist it again (or it'll show up duplicated in Life Log)
             setScript(sim.script); setIdx(0); savedRef.current = !!sim.replay; setMemorySent(false); setPhase('play');
             onConsumed();
         }
@@ -190,7 +191,7 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
             beatsCount: beats.length,
             memoryText: buildMemoryText(script),
             timestamp: Date.now(),
-            script,   // 存完整脚本快照 → 生活记录可原样重播
+            script,   // Store the full script snapshot -> Life Log can replay it exactly as-is
         };
 
         // emotion buff — only if the schedule feature is on for this character
@@ -206,8 +207,10 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
         } : null;
         if (newBuff) log.buff = { label: newBuff.label, emoji: newBuff.emoji, color: newBuff.color };
 
-        // 关键：基于「最新」角色状态合并，绝不用可能过期的 targetChar 快照整体覆盖 phoneState
-        //（否则在异步间隙里别处的写入会把刚存的 simLogs / 其它 phoneState 字段抹掉）。
+        // Key: merges based on the "latest" character state, never overwrites phoneState
+        // wholesale with a possibly-stale targetChar snapshot (otherwise a write from
+        // elsewhere during the async gap would wipe out the simLogs / other phoneState
+        // fields that were just saved).
         let dispatchBuffs: CharacterBuff[] | null = null;
         updateCharacter(targetChar.id, (cur) => {
             const phoneState = {
@@ -221,19 +224,19 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                 dispatchBuffs = nextBuffs;
                 return {
                     activeBuffs: nextBuffs,
-                    buffInjection: script.buff.description ? `（${newBuff.emoji || ''}${newBuff.label}）${script.buff.description}` : '',
+                    buffInjection: script.buff.description ? `(${newBuff.emoji || ''}${newBuff.label}) ${script.buff.description}` : '',
                     phoneState,
                 };
             }
             return { phoneState };
         });
         if (newBuff) {
-            // buffs 拿不到就退化成「纯刷新」信号——buffSyncHandler 会从 DB 兜底重读
+            // If buffs can't be obtained, fall back to a "pure refresh" signal -- buffSyncHandler will re-read from the DB as a fallback
             window.dispatchEvent(new CustomEvent('emotion-updated',
                 dispatchBuffs ? { detail: { charId: targetChar.id, buffs: dispatchBuffs, buffInjection: '' } }
                               : { detail: { charId: targetChar.id } }));
         }
-        addToast('已存入生活记录', 'success');
+        addToast('Saved to Life Log', 'success');
     }, [script, mode, theme, beats.length, targetChar, updateCharacter, addToast]);
 
     // ----- advance -----
@@ -270,28 +273,28 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
     useEffect(() => () => stopFF(), []);
 
     const restart = () => {
-        // 重看同一场演出不再重复写入「生活记录」(savedRef 保持已保存)
+        // Watching the same performance again doesn't write to Life Log a second time (savedRef stays saved)
         setIdx(0);
         setPhase('play');
     };
 
-    // 把这场演出作为「真实回忆」发送到聊天 —— 角色会把它当成亲身经历（进入上下文）
+    // Send this performance to chat as a "real memory" -- the character will treat it as something they personally lived through (enters context)
     const sendAsMemory = async () => {
         if (!script || memorySent) return;
         const title = script.title || theme;
         const summary = script.summary || '';
         const digest = buildMemoryText(script);
-        const content = `【一段亲身经历 · ${title}】\n${digest}${summary ? `\n\n回过头想：${summary}` : ''}`;
+        const content = `[A Lived Memory · ${title}]\n${digest}${summary ? `\n\nLooking back: ${summary}` : ''}`;
         try {
             await DB.saveMessage({
                 charId: targetChar.id, role: 'assistant', type: 'sim_card', content,
                 metadata: { simCard: { mode, theme, title, summary, ending: script.ending } },
             } as any);
             setMemorySent(true);
-            addToast('已作为回忆发送给 TA', 'success');
+            addToast('Sent to them as a memory', 'success');
         } catch (e) {
             console.error(e);
-            addToast('发送失败，请重试', 'error');
+            addToast('Failed to send, please try again', 'error');
         }
     };
 
@@ -304,33 +307,33 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
         return (
             <Shell wallpaper={wallpaper}>
                 <TopBar onBack={onExit} right={
-                    <button onClick={() => { openLifeLog(); trackEvent('打开生活记录'); }} className="flex items-center gap-1 text-[11px] text-white/60 active:scale-95 transition">
-                        <ClockCounterClockwise size={15} /> 生活记录
+                    <button onClick={() => { openLifeLog(); trackEvent('Open Life Log'); }} className="flex items-center gap-1 text-[11px] text-white/60 active:scale-95 transition">
+                        <ClockCounterClockwise size={15} /> Life Log
                     </button>
                 } />
                 <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-2 pb-10">
                     <div className="mb-5">
                         <div className="text-[10px] tracking-[0.35em] uppercase" style={{ color: ACCENT }}>Persona Simulation</div>
                         <h1 className="text-[26px] font-light text-white mt-2 leading-tight" style={{ fontFamily: "'Shippori Mincho','Noto Sans SC',serif" }}>
-                            成为 {targetChar.name} 的<br />一段人生
+                            Become a slice of<br />{targetChar.name}'s life
                         </h1>
                     </div>
 
-                    {/* 体验卡 · 中二叠甲：显得很牛逼，同时声明这只是小剧场、不代表角色真实情况 */}
+                    {/* Experience ticket · dramatic flair: makes it sound impressive while also stating this is just a vignette, not a claim about the character's real situation */}
                     <div className="relative rounded-2xl overflow-hidden mb-6 border border-[#b89bff]/25"
                         style={{ background: 'linear-gradient(135deg, rgba(184,155,255,0.16), rgba(184,155,255,0.03))' }}>
                         <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: ACCENT }} />
                         <div className="absolute -top-8 -right-6 w-28 h-28 rounded-full blur-2xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(184,155,255,0.4), transparent 70%)' }} />
                         <div className="relative p-4 pl-5">
                             <div className="flex items-center justify-between mb-2.5">
-                                <span className="text-[9px] tracking-[0.28em] uppercase font-bold" style={{ color: ACCENT }}>✦ Experience Ticket · 体验卡</span>
+                                <span className="text-[9px] tracking-[0.28em] uppercase font-bold" style={{ color: ACCENT }}>✦ Experience Ticket</span>
                                 <span className="text-[8px] tracking-[0.2em] uppercase text-white/45 border border-white/15 rounded px-1.5 py-0.5">Fiction Only</span>
                             </div>
                             <p className="text-[11.5px] text-white/75 leading-relaxed" style={{ fontFamily: "'Shippori Mincho','Noto Sans SC',serif" }}>
-                                这是一张通往 TA 的体验卡。我们借这部手机，为你点演一段「<span style={{ color: ACCENT }}>可能发生过</span>」的人生切片——画面、独白与痕迹，皆由此刻的 AI 即兴演绎。
+                                This is a ticket into their world. Borrowing this phone, we'll stage a slice of a life that <span style={{ color: ACCENT }}>might have happened</span> -- the visuals, the inner monologue, and the traces left behind are all improvised by the AI in this moment.
                             </p>
                             <p className="text-[10px] text-white/45 leading-relaxed mt-2.5 pt-2.5 border-t border-dashed border-white/15">
-                                ※ 它只是献给你的一出小剧场，是一种「如果」。<br />并不等于角色的真实经历或设定——纵情入戏，散场即忘，无需当真。
+                                * It's just a small performance staged for you, a kind of "what if." <br />It isn't the same as the character's real experiences or setting -- lose yourself in it, forget it once it's over, no need to take it as fact.
                             </p>
                         </div>
                     </div>
@@ -338,28 +341,28 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                     {/* mode tabs */}
                     <div className="flex gap-2 mb-4 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
                         {(['daily', 'event'] as const).map(m => (
-                            <button key={m} onClick={() => { setMode(m); trackEvent('切换人格模拟类型', { mode: m }); }}
+                            <button key={m} onClick={() => { setMode(m); trackEvent('Switch Persona Simulation Type', { mode: m }); }}
                                 className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold transition"
                                 style={mode === m ? { background: ACCENT, color: '#1a1530' } : { color: 'rgba(255,255,255,0.5)' }}>
-                                {m === 'daily' ? '日常模拟' : '事件模拟'}
+                                {m === 'daily' ? 'Daily Simulation' : 'Event Simulation'}
                             </button>
                         ))}
                     </div>
                     <p className="text-[11px] text-white/35 mb-4 px-1">
-                        {mode === 'daily' ? '体验 TA 某个普通日子的生活 · 生活感与陪伴' : '体验 TA 人生中的某个特殊事件 · 情绪张力'}
+                        {mode === 'daily' ? 'Experience their life on an ordinary day · a sense of everyday life and companionship' : 'Experience a special event from their life · emotional tension'}
                     </p>
 
-                    {/* 你的存在感（这一天里"你"占多少分量） */}
-                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">你的存在感</div>
+                    {/* Your presence (how much "you" factor into this day) */}
+                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">Your Presence</div>
                     <div className="grid grid-cols-3 gap-2 mb-5">
                         {([
-                            { id: 'default', label: '默认', desc: '自然出现' },
-                            { id: 'light', label: '轻度', desc: '淡淡背景' },
-                            { id: 'none', label: '无你', desc: '只有 TA' },
+                            { id: 'default', label: 'Default', desc: 'Appears naturally' },
+                            { id: 'light', label: 'Light', desc: 'Faint background' },
+                            { id: 'none', label: 'None', desc: 'Only them' },
                         ] as const).map(o => {
                             const active = presence === o.id;
                             return (
-                                <button key={o.id} onClick={() => { setPresence(o.id); trackEvent('选择你的存在感', { presence: o.id }); }}
+                                <button key={o.id} onClick={() => { setPresence(o.id); trackEvent('Choose Your Presence', { presence: o.id }); }}
                                     className="rounded-2xl py-2.5 border transition active:scale-[0.98] text-center"
                                     style={active
                                         ? { background: ACCENT, color: '#1a1530', borderColor: 'transparent' }
@@ -371,18 +374,18 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                         })}
                     </div>
 
-                    {/* 演出基调（丧的大前提下偏哪种味道） */}
-                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">演出基调</div>
+                    {/* Performance tone (which flavor, under the general premise of feeling down) */}
+                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">Performance Tone</div>
                     <div className="grid grid-cols-2 gap-2 mb-5">
                         {([
-                            { id: 'mix', label: '随心', desc: '每场随机' },
-                            { id: 'depressive', label: '致郁', desc: '一路丧到底' },
-                            { id: 'darkhumor', label: '黑色幽默', desc: '荒诞又毒舌' },
-                            { id: 'cute', label: '轻盈可爱', desc: '活泼俏皮' },
+                            { id: 'mix', label: 'Freeform', desc: 'Random each time' },
+                            { id: 'depressive', label: 'Melancholic', desc: 'Down the whole way' },
+                            { id: 'darkhumor', label: 'Dark Humor', desc: 'Absurd and biting' },
+                            { id: 'cute', label: 'Light & Cute', desc: 'Playful and lively' },
                         ] as const).map(o => {
                             const active = tone === o.id;
                             return (
-                                <button key={o.id} onClick={() => { setTone(o.id); trackEvent('选择演出基调', { tone: o.id }); }}
+                                <button key={o.id} onClick={() => { setTone(o.id); trackEvent('Choose Performance Tone', { tone: o.id }); }}
                                     className="rounded-2xl py-2.5 border transition active:scale-[0.98] text-center"
                                     style={active
                                         ? { background: ACCENT, color: '#1a1530', borderColor: 'transparent' }
@@ -394,8 +397,8 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                         })}
                     </div>
 
-                    {/* ① 选方向（点一下填进下方，可继续编辑） */}
-                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">① 选个大方向</div>
+                    {/* Step 1: pick a direction (tap fills it in below, still editable) */}
+                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">1. Pick a general direction</div>
                     <div className="grid grid-cols-2 gap-2 mb-5">
                         {(mode === 'daily' ? DAILY : EVENTS).map(s => {
                             const active = theme.trim() === s;
@@ -411,16 +414,16 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                         })}
                     </div>
 
-                    {/* ② 补细节（与方向合并，二者不再二选一） */}
-                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">② 补点细节 · 也可直接自己写</div>
+                    {/* Step 2: fill in details (merged with the direction, no longer either/or) */}
+                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-2 px-1">2. Add some detail · or just write your own</div>
                     <textarea value={theme} onChange={e => setTheme(e.target.value)}
-                        placeholder="选个方向后在这里补充具体情境，或直接写你想看的。例如：放学后的傍晚 · 下了雨，TA 没带伞，在便利店门口等一个不一定会来的人。"
+                        placeholder="Pick a direction, then fill in the specific situation here, or just write whatever you want to see. For example: Evening after school -- it's raining, they forgot an umbrella, waiting outside a convenience store for someone who might not show up."
                         className="w-full h-24 bg-white/[0.05] border border-white/[0.08] rounded-2xl px-3.5 py-3 text-[12.5px] text-white placeholder-white/25 outline-none resize-none leading-relaxed mb-4 no-scrollbar" />
 
                     <button onClick={() => requestStart(mode, theme)} disabled={!theme.trim()}
                         className="w-full py-3.5 rounded-2xl text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition disabled:opacity-40"
                         style={{ background: ACCENT, color: '#1a1530' }}>
-                        开始演出 <ArrowRight size={15} weight="bold" />
+                        Start the Performance <ArrowRight size={15} weight="bold" />
                     </button>
                 </div>
             </Shell>
@@ -440,10 +443,10 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                         <HourglassMedium size={40} weight="light" style={{ color: ACCENT }} className="animate-pulse" />
                         <div className="absolute inset-0 blur-2xl rounded-full" style={{ background: `${ACCENT}55` }} />
                     </div>
-                    <div className="text-[13px] text-white/75">正在编排「{t}」…</div>
-                    <div className="text-[11px] text-white/35 leading-relaxed">把记忆、对话与情绪编排成 TA 的一天，<br />可能需要较长时间。</div>
+                    <div className="text-[13px] text-white/75">Staging "{t}"...</div>
+                    <div className="text-[11px] text-white/35 leading-relaxed">Weaving memories, conversation, and emotion into a day of their life,<br />may take a while.</div>
                     <button onClick={onExit} className="mt-3 px-5 py-2.5 rounded-xl text-[12px] text-white/75 bg-white/[0.06] border border-white/[0.08] active:scale-95 transition">
-                        先去别处逛逛 · 好了通知我
+                        Go look around elsewhere · Notify me when it's ready
                     </button>
                 </div>
             </Shell>
@@ -458,7 +461,7 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
             <Shell wallpaper={wallpaper}>
                 <div className="flex-1 flex flex-col items-center justify-center px-8 text-center animate-fade-in">
                     <Lock size={26} weight="light" className="text-white/30 mb-5" />
-                    <div className="text-[10px] tracking-[0.3em] uppercase text-white/35 mb-3">演出结束</div>
+                    <div className="text-[10px] tracking-[0.3em] uppercase text-white/35 mb-3">Performance Over</div>
                     <h2 className="text-[20px] font-light text-white mb-2" style={{ fontFamily: "'Shippori Mincho','Noto Sans SC',serif" }}>{script?.title}</h2>
                     {script?.ending && <div className="text-[11px] mb-4 px-3 py-1 rounded-full" style={{ color: ACCENT, background: `${ACCENT}1f` }}>{script.ending}</div>}
                     <p className="text-[13.5px] text-white/65 leading-loose max-w-[280px]" style={{ fontFamily: "'Shippori Mincho','Noto Sans SC',serif" }}>{script?.summary}</p>
@@ -468,34 +471,34 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                             <span className="text-base">{script.buff.emoji || '✨'}</span>
                             <div className="text-left">
                                 <div className="text-[12px] font-semibold text-white">{script.buff.label}</div>
-                                <div className="text-[9px] text-white/45">情绪状态已写入 TA</div>
+                                <div className="text-[9px] text-white/45">Emotional state has been written to them</div>
                             </div>
                         </div>
                     )}
 
-                    {/* 把这场演出作为真实回忆送给角色 */}
+                    {/* Send this performance to the character as a real memory */}
                     <button onClick={sendAsMemory} disabled={memorySent}
                         className="mt-8 w-full max-w-[300px] py-3 rounded-2xl text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition disabled:opacity-60"
                         style={memorySent
                             ? { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.1)' }
                             : { background: ACCENT, color: '#1a1530' }}>
                         {memorySent
-                            ? <><Check size={15} weight="bold" /> 已成为 TA 的回忆</>
-                            : <><PaperPlaneTilt size={15} weight="fill" /> 作为回忆发送给 TA</>}
+                            ? <><Check size={15} weight="bold" /> Became one of their memories</>
+                            : <><PaperPlaneTilt size={15} weight="fill" /> Send to them as a memory</>}
                     </button>
                     <p className="text-[10px] text-white/30 mt-2 max-w-[280px] leading-relaxed">
-                        会以一张卡片发到聊天里，TA 将把这段经历当成真实记忆。
+                        Sent to chat as a card, and they'll treat this experience as a real memory.
                     </p>
 
                     <div className="flex gap-3 mt-6">
                         <button onClick={restart} className="px-5 py-2.5 rounded-xl text-[12px] text-white/70 bg-white/[0.06] border border-white/[0.08] flex items-center gap-1.5 active:scale-95 transition">
-                            <ArrowClockwise size={14} /> 再看一次
+                            <ArrowClockwise size={14} /> Watch again
                         </button>
                         <button onClick={() => { openLifeLog(); }} className="px-5 py-2.5 rounded-xl text-[12px] font-semibold text-[#1a1530] flex items-center gap-1.5 active:scale-95 transition" style={{ background: ACCENT }}>
-                            <ClockCounterClockwise size={14} weight="bold" /> 生活记录
+                            <ClockCounterClockwise size={14} weight="bold" /> Life Log
                         </button>
                     </div>
-                    <button onClick={onExit} className="mt-4 text-[11px] text-white/30">退出演出</button>
+                    <button onClick={onExit} className="mt-4 text-[11px] text-white/30">Exit Performance</button>
                 </div>
             </Shell>
         );
@@ -543,9 +546,9 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
                     <div className="h-full rounded-full transition-all duration-500" style={{ width: `${((idx + 1) / beats.length) * 100}%`, background: ACCENT }} />
                 </div>
                 <div className="flex items-center justify-between">
-                    <button onClick={(e) => { e.stopPropagation(); onExit(); }} className="text-[11px] text-white/35">退出</button>
-                    <span className="text-[10px] text-white/30">轻触继续 · 长按快进</span>
-                    <button onClick={(e) => { e.stopPropagation(); setAutoplay(a => !a); trackEvent('切换演出自动播放'); }}
+                    <button onClick={(e) => { e.stopPropagation(); onExit(); }} className="text-[11px] text-white/35">Exit</button>
+                    <span className="text-[10px] text-white/30">Tap to continue · long-press to fast-forward</span>
+                    <button onClick={(e) => { e.stopPropagation(); setAutoplay(a => !a); trackEvent('Toggle Performance Autoplay'); }}
                         className="w-9 h-9 rounded-full flex items-center justify-center border border-white/[0.1] text-white/70 active:scale-90 transition"
                         style={autoplay ? { background: ACCENT, color: '#1a1530', borderColor: 'transparent' } : undefined}>
                         {autoplay ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
@@ -559,12 +562,12 @@ const PersonaSim: React.FC<Props> = ({ targetChar, onExit, openLifeLog, sim, onS
 // ============================================================
 //  ENTRANCE + MONOLOGUE
 // ============================================================
-// 每种屏幕的进场动作 —— App 从底部弹起(像真的启动)、锁屏淡入、闪回淡入
+// Entrance animation per screen type -- App pops up from the bottom (like a real launch), lock screen fades in, flashback fades in
 const screenEntrance = (kind: BeatKind): string =>
     kind === 'app' ? 'animate-app-open' : 'animate-fade-in';
 
 type Vibe = NonNullable<Beat['vibe']>;
-// 确定性伪随机（按种子），保证同一 beat 每次渲染散布一致
+// Deterministic pseudo-random (seeded), guarantees the same beat scatters consistently on every render
 const rnd = (n: number) => { const x = Math.sin(n * 99.73) * 43758.545; return x - Math.floor(x); };
 
 const vibeTint: Record<Vibe, string> = {
@@ -576,7 +579,7 @@ const vibeTint: Record<Vibe, string> = {
     tender: '#e6c9ff',
 };
 
-// 内心独白气泡（逐字敲出，按情绪微调色调）
+// Inner monologue bubble (typed out character by character, tone fine-tuned by mood)
 const MonoBubble: React.FC<{ text: string; vibe?: Vibe }> = ({ text, vibe = 'calm' }) => (
     <span className="inline-block px-3 py-1 rounded-2xl bg-black/70">
         <Typewriter drafts={[]} sent={text} placeholder=""
@@ -584,14 +587,14 @@ const MonoBubble: React.FC<{ text: string; vibe?: Vibe }> = ({ text, vibe = 'cal
     </span>
 );
 
-// 浮在屏幕底部的内心独白（用于锁屏 / 通知等无底部输入框的场景）
+// Inner monologue floating at the bottom of the screen (for scenes without a bottom input box, like lock screen / notifications)
 const MonoLine: React.FC<{ text: string; vibe?: Vibe }> = ({ text, vibe = 'calm' }) => (
     <div className="absolute left-0 right-0 bottom-6 px-8 text-center pointer-events-none z-20">
         <MonoBubble text={text} vibe={vibe} />
     </div>
 );
 
-// 情绪化的「内心独白」全屏演出：混乱铺满 / 开心粉色飘飘 / 麻木冷淡 / 焦虑紧绷
+// Emotional full-screen "inner monologue" performance: chaotic scattered / happy pink and floaty / numb and cold / anxious and tense
 const MoodThought: React.FC<{ text: string; vibe?: Vibe }> = ({ text, vibe = 'calm' }) => {
     if (vibe === 'chaotic') {
         const frags = text.split(/[，。、！？!?,.\s]+/).filter(Boolean);
@@ -695,7 +698,7 @@ const ScreenContent: React.FC<{ beat: Beat; char: CharacterProfile; showMono: bo
                     style={{ background: `radial-gradient(circle at 50% 45%, ${f?.tint || '#3a2a4a'} 0%, #07080c 78%)` }}>
                     <div className="absolute top-4 left-4 right-4 rounded-2xl px-4 py-2.5 bg-black/75 border border-white/[0.15] flex items-center gap-2 animate-slide-down">
                         <ImageSquare size={16} className="text-pink-300" />
-                        <span className="text-[12px] text-white/85 font-medium">{f?.label || f?.date || '过去的某天'}</span>
+                        <span className="text-[12px] text-white/85 font-medium">{f?.label || f?.date || 'Some day in the past'}</span>
                     </div>
                     <div className="w-[68%] aspect-[4/5] rounded-2xl overflow-hidden border border-white/[0.1] shadow-2xl relative grayscale-[35%] animate-fade-in"
                         style={{ background: `linear-gradient(160deg, ${f?.tint || '#5a4a6a'}, #1a1520)`, animationDuration: '1.4s' }}>
@@ -726,7 +729,7 @@ const ScreenContent: React.FC<{ beat: Beat; char: CharacterProfile; showMono: bo
                 <div className="flex-1 min-h-0 overflow-hidden relative">
                     <AppView app={a} char={char} />
                 </div>
-                {/* app 场景里独白走「页脚」而非浮层，避免盖住聊天/搜索/输入框 */}
+                {/* In app scenes, the monologue runs as a "footer" rather than an overlay, to avoid covering the chat/search/input box */}
                 {showMono && beat.monologue && (
                     <div className="shrink-0 px-8 pb-6 pt-2 text-center">
                         <MonoBubble text={beat.monologue} vibe={beat.vibe} />
@@ -808,11 +811,11 @@ const AppView: React.FC<{ app: NonNullable<Beat['app']>; char: CharacterProfile 
             <div className="h-full flex flex-col justify-end p-4">
                 {c.to && <div className="text-[10px] text-white/30 mb-2 px-1">To: {c.to}</div>}
                 <div className="rounded-2xl bg-white/[0.05] border border-white/[0.1] px-4 py-3 min-h-[52px] flex items-center">
-                    <Typewriter drafts={c.drafts || []} sent={c.sent} placeholder="输入消息…"
+                    <Typewriter drafts={c.drafts || []} sent={c.sent} placeholder="Type a message..."
                         className="text-[14px] text-white/90 leading-relaxed" />
                 </div>
                 <div className="text-[10px] text-white/25 mt-2 px-1">
-                    {c.sent ? '已发送' : '草稿已清空'}
+                    {c.sent ? 'Sent' : 'Draft cleared'}
                 </div>
             </div>
         );
@@ -827,13 +830,13 @@ const AppView: React.FC<{ app: NonNullable<Beat['app']>; char: CharacterProfile 
             <div className="h-full flex flex-col p-4">
                 <div className="rounded-full bg-white/[0.06] border border-white/[0.1] px-4 py-2.5 flex items-center gap-2">
                     <MagnifyingGlass size={15} className="text-white/40" />
-                    <Typewriter drafts={drafts} sent={sent} placeholder="搜索" className="text-[13.5px] text-white/85" />
+                    <Typewriter drafts={drafts} sent={sent} placeholder="Search" className="text-[13.5px] text-white/85" />
                 </div>
-                <div className="text-[10px] text-white/25 mt-3 px-1">{app.search.engine || '搜索'}</div>
+                <div className="text-[10px] text-white/25 mt-3 px-1">{app.search.engine || 'Search'}</div>
                 <div className="flex-1 flex items-center justify-center">
                     {sent
-                        ? <span className="text-[11px] text-white/30">为你找到相关结果…</span>
-                        : <span className="text-[11px] text-white/25">— 没有搜索 —</span>}
+                        ? <span className="text-[11px] text-white/30">Found some results for you...</span>
+                        : <span className="text-[11px] text-white/25">-- No search --</span>}
                 </div>
             </div>
         );
@@ -891,7 +894,7 @@ const AppView: React.FC<{ app: NonNullable<Beat['app']>; char: CharacterProfile 
     if (app.view === 'browser' && app.browser) {
         return (
             <div className="h-full overflow-y-auto no-scrollbar p-4 space-y-2">
-                <div className="text-[10px] text-white/30 px-1 mb-1">{app.browser.tabs.length} 个标签页</div>
+                <div className="text-[10px] text-white/30 px-1 mb-1">{app.browser.tabs.length} tabs open</div>
                 {app.browser.tabs.map((t, i) => (
                     <div key={i} className="rounded-xl bg-white/[0.04] border border-white/[0.07] px-3.5 py-3 flex items-center gap-2.5">
                         <Globe size={15} className="text-white/35 shrink-0" />
@@ -924,8 +927,9 @@ const AppView: React.FC<{ app: NonNullable<Beat['app']>; char: CharacterProfile 
 //  SHARED CHROME
 // ============================================================
 const Shell: React.FC<{ children: React.ReactNode; wallpaper?: string }> = ({ children, wallpaper }) => {
-    // 传进来的是角色见面背景的原始字段值（blobref 令牌 / 旧 data: / 外链），
-    // 令牌喂不了 CSS url()，在这儿解析一次；非令牌值原样透传。
+    // What's passed in is the raw field value of the character's Date background
+    // (blobref token / legacy data: URI / external link) -- a token can't be fed
+    // directly to CSS url(), so it's resolved once here; non-token values pass through as-is.
     const wallpaperUrl = useBlobRefUrl(wallpaper);
     return (
     <div className="absolute inset-0 z-[80] flex flex-col overflow-hidden text-white" style={{ background: '#07080c' }}>
@@ -938,7 +942,7 @@ const Shell: React.FC<{ children: React.ReactNode; wallpaper?: string }> = ({ ch
 };
 
 const TopBar: React.FC<{ onBack: () => void; right?: React.ReactNode; title?: string }> = ({ onBack, right, title }) => (
-    // 顶部安全区：iOS 刘海/状态栏会盖住返回键和「生活记录」，给个 safe-area-inset 兜底
+    // Top safe area: the iOS notch/status bar would cover the back button and "Life Log," so provide a safe-area-inset fallback
     <div className="flex items-center justify-between px-4 shrink-0 pb-2"
         style={{ paddingTop: 'max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))' }}>
         <button onClick={onBack} className="w-9 h-9 -ml-1 rounded-full flex items-center justify-center text-white/80 bg-white/[0.05] border border-white/[0.08] active:scale-90 transition">
@@ -950,7 +954,7 @@ const TopBar: React.FC<{ onBack: () => void; right?: React.ReactNode; title?: st
 );
 
 // ============================================================
-//  LIFE LOG (生活记录) — sub-app
+//  LIFE LOG — sub-app
 // ============================================================
 export const LifeLog: React.FC<{
     targetChar: CharacterProfile;
@@ -962,7 +966,7 @@ export const LifeLog: React.FC<{
     const logs = targetChar.phoneState?.simLogs || [];
     const [sent, setSent] = useState<Record<string, boolean>>({});
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const fmt = (t: number) => new Date(t).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const fmt = (t: number) => new Date(t).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const cancelLongPress = () => {
         if (!longPressTimer.current) return;
@@ -985,25 +989,25 @@ export const LifeLog: React.FC<{
             const digest = log.memoryText ? `\n${log.memoryText}` : '';
             await DB.saveMessage({
                 charId: targetChar.id, role: 'assistant', type: 'sim_card',
-                content: `【一段亲身经历 · ${log.title}】${digest}${log.summary ? `\n\n回过头想：${log.summary}` : ''}`,
+                content: `[A Lived Memory · ${log.title}]${digest}${log.summary ? `\n\nLooking back: ${log.summary}` : ''}`,
                 metadata: { simCard: { mode: log.mode, theme: log.theme, title: log.title, summary: log.summary, ending: log.ending } },
             } as any);
             setSent(s => ({ ...s, [log.id]: true }));
-            addToast('已作为回忆发送给 TA', 'success');
-        } catch (e) { console.error(e); addToast('发送失败，请重试', 'error'); }
+            addToast('Sent to them as a memory', 'success');
+        } catch (e) { console.error(e); addToast('Failed to send, please try again', 'error'); }
     };
     return (
         <Shell wallpaper={targetChar.dateBackground}>
-            <TopBar onBack={onBack} title="生活记录" />
+            <TopBar onBack={onBack} title="Life Log" />
             <div className="px-6 pb-3 shrink-0">
-                <p className="text-[11px] text-white/40 leading-relaxed">那些你以 TA 的身份活过的片段。TA 不会记得，但你会。</p>
-                {logs.length > 0 && onRequestDelete && <p className="mt-1.5 text-[10px] text-white/25">长按记录可删除</p>}
+                <p className="text-[11px] text-white/40 leading-relaxed">Fragments you lived through as them. They won't remember, but you will.</p>
+                {logs.length > 0 && onRequestDelete && <p className="mt-1.5 text-[10px] text-white/25">Long-press a log to delete it</p>}
             </div>
             <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-10 space-y-3">
                 {logs.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-64 text-white/30 gap-3">
                         <ClockCounterClockwise size={42} weight="light" />
-                        <span className="text-xs">还没有体验记录</span>
+                        <span className="text-xs">No experiences logged yet</span>
                     </div>
                 )}
                 {logs.map(log => (
@@ -1022,12 +1026,12 @@ export const LifeLog: React.FC<{
                         className="rounded-2xl p-4 bg-white/[0.035] border border-white/[0.06] animate-slide-up select-none">
                         <div className="flex items-center justify-between mb-1.5">
                             <span className="text-[9px] px-2 py-0.5 rounded-full tracking-wider" style={{ color: ACCENT, background: `${ACCENT}1f` }}>
-                                {log.mode === 'daily' ? '日常' : '事件'} · {log.theme}
+                                {log.mode === 'daily' ? 'Daily' : 'Event'} · {log.theme}
                             </span>
                             <span className="text-[9px] text-white/30 tabular-nums">{fmt(log.timestamp)}</span>
                         </div>
                         <div className="text-[15px] font-light text-white mb-1.5" style={{ fontFamily: "'Shippori Mincho','Noto Sans SC',serif" }}>{log.title}</div>
-                        {log.ending && <div className="text-[10px] text-white/40 mb-1.5">结局 · {log.ending}</div>}
+                        {log.ending && <div className="text-[10px] text-white/40 mb-1.5">Ending · {log.ending}</div>}
                         <p className="text-[12.5px] text-white/60 leading-relaxed" style={{ fontFamily: "'Shippori Mincho','Noto Sans SC',serif" }}>{log.summary}</p>
                         <div className="flex items-center justify-between mt-3 gap-2">
                             {log.buff?.label ? (
@@ -1039,13 +1043,13 @@ export const LifeLog: React.FC<{
                                 {onReplay && log.script?.beats?.length ? (
                                     <button onClick={() => onReplay(log)}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold active:scale-95 transition border border-white/[0.12] text-white/80 bg-white/[0.05]">
-                                        <ArrowClockwise size={12} weight="bold" /> 重播
+                                        <ArrowClockwise size={12} weight="bold" /> Replay
                                     </button>
                                 ) : null}
                                 <button onClick={() => sendLog(log)} disabled={!!sent[log.id]}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold active:scale-95 transition disabled:opacity-60"
                                     style={sent[log.id] ? { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' } : { background: ACCENT, color: '#1a1530' }}>
-                                    {sent[log.id] ? <><Check size={12} weight="bold" /> 已发送</> : <><PaperPlaneTilt size={12} weight="fill" /> 发送给 TA</>}
+                                    {sent[log.id] ? <><Check size={12} weight="bold" /> Sent</> : <><PaperPlaneTilt size={12} weight="fill" /> Send to them</>}
                                 </button>
                             </div>
                         </div>
@@ -1059,227 +1063,229 @@ export const LifeLog: React.FC<{
 // ============================================================
 //  DIRECTOR PROMPT + PARSER
 // ============================================================
-// 把「最早一条消息距今多久」翻译成给导演看的认识时长描述（闪回时间口径护栏）
+// Translates "how long ago was the earliest message" into an acquaintance-duration description for the director to read (a guardrail for flashback time framing)
 function describeAcquaintance(firstTs: number | undefined, userName: string, charName: string): string {
     if (!firstTs) {
-        return `${charName} 与 ${userName} 还没有可考的相处记录（可能是初次接触）。`;
+        return `${charName} and ${userName} have no verifiable history together yet (this may be their first contact).`;
     }
     const days = Math.floor((Date.now() - firstTs) / 86400000);
     let span: string;
-    if (days <= 1) span = '不到一天';
-    else if (days < 30) span = `约 ${days} 天`;
-    else if (days < 365) span = `约 ${Math.floor(days / 30)} 个月`;
-    else span = `约 ${(days / 365).toFixed(1)} 年`;
-    return `${charName} 与 ${userName} 自首次接触至今${span}（${days} 天）。`;
+    if (days <= 1) span = 'less than a day';
+    else if (days < 30) span = `about ${days} days`;
+    else if (days < 365) span = `about ${Math.floor(days / 30)} months`;
+    else span = `about ${(days / 365).toFixed(1)} years`;
+    return `${charName} and ${userName} have known each other for ${span} (${days} days) since first contact.`;
 }
 
-// 把演出脚本压成「可读梗概」——作为回忆发给角色时用这个（让角色真的知道发生了什么，
-// 而不是只收到一句留白的收尾）。
+// Compresses the performance script into a "readable summary" -- used when sending it
+// to the character as a memory (so the character actually knows what happened, instead
+// of just receiving one blank, wrapped-up closing line).
 function buildMemoryText(s: SimScript): string {
     const lines: string[] = [];
     for (const b of s.beats) {
         if (b.kind === 'end') continue;
         const t = b.time ? b.time + ' ' : '';
-        const mono = b.monologue ? `（${b.monologue}）` : '';
-        if (b.kind === 'thought') { if (b.monologue) lines.push(`${t}心里：${b.monologue}`); continue; }
-        if (b.kind === 'notification' && b.notif) { lines.push(`${t}${b.notif.app}通知：${b.notif.title}${b.notif.body ? ' ' + b.notif.body : ''}${mono}`); continue; }
-        if (b.kind === 'flashback') { lines.push(`${t}相册突然翻出${b.flashback?.label || '一张旧照片'}${b.flashback?.caption ? '：' + b.flashback.caption : ''}${mono}`); continue; }
-        if (b.kind === 'lock') { lines.push(`${t}${b.notif ? `锁屏，${b.notif.app}：${b.notif.title}` : '看了眼锁屏'}${mono}`); continue; }
+        const mono = b.monologue ? `(${b.monologue})` : '';
+        if (b.kind === 'thought') { if (b.monologue) lines.push(`${t}Thought: ${b.monologue}`); continue; }
+        if (b.kind === 'notification' && b.notif) { lines.push(`${t}${b.notif.app} notification: ${b.notif.title}${b.notif.body ? ' ' + b.notif.body : ''}${mono}`); continue; }
+        if (b.kind === 'flashback') { lines.push(`${t}Photos suddenly surfaced ${b.flashback?.label || 'an old photo'}${b.flashback?.caption ? ': ' + b.flashback.caption : ''}${mono}`); continue; }
+        if (b.kind === 'lock') { lines.push(`${t}${b.notif ? `Lock screen, ${b.notif.app}: ${b.notif.title}` : 'Glanced at the lock screen'}${mono}`); continue; }
         if (b.kind === 'app' && b.app) {
-            const a = b.app; let act = `打开${a.name}`;
-            if (a.view === 'search' && a.search) act += `，搜：${a.search.queries.map(q => q.q).join(' → ')}`;
-            else if (a.view === 'compose' && a.compose) act += a.compose.sent ? `，给${a.compose.to || '对方'}发了「${a.compose.sent}」` : `，打了字又删了（${(a.compose.drafts || []).join('；')}）`;
-            else if (a.view === 'chat' && a.chat) act += `，和${a.chat.name}：${a.chat.lines.map(l => (l.me ? '我:' : '对方:') + l.text).join(' ')}`;
-            else if (a.view === 'photo' && a.photo) act += `，看一张照片${a.photo.caption ? '：' + a.photo.caption : ''}`;
-            else if (a.view === 'music' && a.music) act += `，听《${a.music.song}》${a.music.artist ? ' - ' + a.music.artist : ''}`;
-            else if (a.view === 'notes' && a.notes) act += `，备忘录：${(a.notes.items || []).join('；')}`;
-            else if (a.view === 'browser' && a.browser) act += `，标签页：${(a.browser.tabs || []).join('；')}`;
-            else if (a.view === 'weather' && a.weather) act += `，看天气（${a.weather.temp}° ${a.weather.desc}）`;
-            else if (a.text) act += `：${a.text}`;
+            const a = b.app; let act = `Opened ${a.name}`;
+            if (a.view === 'search' && a.search) act += `, searched: ${a.search.queries.map(q => q.q).join(' -> ')}`;
+            else if (a.view === 'compose' && a.compose) act += a.compose.sent ? `, sent "${a.compose.sent}" to ${a.compose.to || 'them'}` : `, typed something and deleted it (${(a.compose.drafts || []).join('; ')})`;
+            else if (a.view === 'chat' && a.chat) act += `, with ${a.chat.name}: ${a.chat.lines.map(l => (l.me ? 'Me:' : 'Them:') + l.text).join(' ')}`;
+            else if (a.view === 'photo' && a.photo) act += `, looked at a photo${a.photo.caption ? ': ' + a.photo.caption : ''}`;
+            else if (a.view === 'music' && a.music) act += `, listened to "${a.music.song}"${a.music.artist ? ' - ' + a.music.artist : ''}`;
+            else if (a.view === 'notes' && a.notes) act += `, notes: ${(a.notes.items || []).join('; ')}`;
+            else if (a.view === 'browser' && a.browser) act += `, tabs: ${(a.browser.tabs || []).join('; ')}`;
+            else if (a.view === 'weather' && a.weather) act += `, checked the weather (${a.weather.temp}° ${a.weather.desc})`;
+            else if (a.text) act += `: ${a.text}`;
             lines.push(`${t}${act}${mono}`);
         }
     }
     let text = lines.join('\n');
-    if (text.length > 3200) text = text.slice(0, 3200) + '…';
+    if (text.length > 3200) text = text.slice(0, 3200) + '...';
     return text;
 }
 
-// 「本场变奏」——每次随机抽几根轴当硬约束，打破固定的起床→刷手机→睡觉流水账
+// "This performance's variation" -- randomly draws a few axes as hard constraints each
+// time, to break the fixed wake-up -> scroll phone -> sleep routine
 const vPick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-// 各基调对应的「情绪底色」候选池（丧是公共底子，差异在上层笔触）
+// The candidate pool of "emotional undertones" for each tone (feeling down is the shared baseline; the difference is in the top-layer brushstrokes)
 const MOOD_POOLS: Record<'depressive' | 'darkhumor' | 'cute', string[]> = {
     depressive: [
-        '平静钝感，情绪几乎贴着地面', '隐隐的烦躁，说不清为什么',
-        '麻木、抽离，像隔着一层玻璃', '怀念某个具体的人或时刻',
-        '低度焦虑，反复确认某件小事', '自我欺骗，嘴上一套、行为一套',
+        'calm and numb, emotions running almost flat', 'a faint irritation, hard to say why',
+        'numb, detached, like everything is behind glass', 'missing a specific person or moment',
+        'low-grade anxiety, repeatedly double-checking some small thing', 'self-deception, saying one thing while doing another',
     ],
     darkhumor: [
-        '把处境吐槽成段子，越离谱越想损两句', '一本正经地做一件很荒诞的事，自己都觉得好笑',
-        '用调侃和自嘲消解一切，没什么是不能拿来开玩笑的', '把糟心事说得稀松平常，透着一股冷幽默',
-        '神经质的好笑，脑子里全是怪念头', '对自己的烂摊子幸灾乐祸，黑色玩笑停不下来',
+        'turns the situation into a bit, the more absurd the more they want to crack jokes about it', 'does something ridiculous with dead-serious composure, and finds it funny themselves',
+        'defuses everything with teasing and self-deprecation, nothing is off-limits for a joke', 'talks about upsetting things like they are no big deal, with a streak of deadpan humor',
+        'neurotically funny, head full of strange thoughts', 'schadenfreude toward their own mess, the dark jokes don\'t stop',
     ],
     cute: [
-        '行为里冒出一股傻气和俏皮', '小题大做地认真，可爱又好笑',
-        '幼稚的小执拗，像个长不大的小孩', '自娱自乐，给自己找些无聊但开心的小乐子',
-        '轻飘飘的，对小事莫名上头', '一惊一乍、活泼跳脱，情绪都写在脸上',
+        'a streak of silliness and playfulness in their behavior', 'taking something trivial way too seriously, cute and funny',
+        'a childish little stubbornness, like a kid who never grew up', 'entertaining themselves, finding small, pointless, happy little things to do',
+        'lighthearted, weirdly fixated on small things', 'jumpy and lively, wearing every emotion on their face',
     ],
 };
 
 function buildVariation(tone: 'mix' | 'depressive' | 'darkhumor' | 'cute' = 'mix'): string {
     const entry = vPick([
-        '从一个不起眼的中间时刻切入（绝不要从「起床/醒来/关闹钟」开始）',
-        '从午后犯困、注意力涣散的那一刻切入',
-        '从黄昏、天快黑了还没开灯的那一刻切入',
-        '从深夜睡不着、第无数次点亮屏幕切入',
-        '从通勤/在路上、单手划手机切入',
-        '从被一条通知突然打断的瞬间切入',
-        '从一件正做到一半的事中途切入',
+        'Cut in at an unremarkable in-between moment (never start with "waking up / getting out of bed / turning off the alarm")',
+        'Cut in during a sleepy, unfocused afternoon moment',
+        'Cut in at dusk, when it is almost dark and the lights are not on yet',
+        'Cut in late at night, unable to sleep, lighting up the screen for the umpteenth time',
+        'Cut in during a commute / on the go, scrolling one-handed',
+        'Cut in at the moment of being suddenly interrupted by a notification',
+        'Cut in partway through something already half-done',
     ]);
     const span = vPick([
-        '整场只覆盖十几分钟的一个片段，密度高、范围小',
-        '只覆盖某半天里零散的几个空隙',
-        '在同一个时刻反复回返（时间几乎没走，心思在原地打转）',
-        '跨越深夜到天亮前的一小段',
-        '一天里互不相连的三四个碎片，跳着来',
+        'The whole performance covers just one dense, narrow slice of ten-odd minutes',
+        'Covers only a few scattered gaps within one half-day',
+        'Loops back to the same moment repeatedly (time barely moves, the mind circles in place)',
+        'Spans a short stretch from late night to just before dawn',
+        'Three or four disconnected fragments from one day, jumping between them',
     ]);
     const structure = vPick([
-        '整场几乎围绕「一个 App」展开，很少离开它',
-        '整场围绕「一件小物 / 一条未读 / 一张旧图」打转',
-        '在两件不相干的事之间反复横跳',
-        '大量留白，几乎什么都没发生，靠空气感和零碎动作撑',
-        '被一个突发（来电/通知/没电）打断后，再也没回到原来的事',
-        '线性但克制，靠细节而非情节推进',
+        'The whole performance revolves almost entirely around "one App," rarely leaving it',
+        'The whole performance circles around "one small object / one unread message / one old photo"',
+        'Bounces back and forth repeatedly between two unrelated things',
+        'Heavy on blank space, almost nothing happens, carried by atmosphere and fragmentary actions',
+        'Interrupted by a sudden event (an incoming call / notification / dead battery), and never returns to what came before',
+        'Linear but restrained, advanced by detail rather than plot',
     ]);
     const medium = vPick([
-        '以「搜了又删、删了又搜」为主要表达',
-        '以「翻看相册」为主要表达',
-        '以「打字→删除→再打字」的反复为主要表达',
-        '以「一首歌单曲循环 + 走神」为主要表达',
-        '以「和某一个联系人有一搭没一搭的聊天」为主要表达',
-        '以「一堆与主线无关的环境碎片（通知/待办/标签页/购物车）」为主要表达',
+        'Mainly expressed through "search then delete, delete then search"',
+        'Mainly expressed through "flipping through old photos"',
+        'Mainly expressed through the repeated cycle of "type -> delete -> type again"',
+        'Mainly expressed through "one song on repeat + zoning out"',
+        'Mainly expressed through "half-hearted, on-and-off chatting with one contact"',
+        'Mainly expressed through "a pile of environmental fragments unrelated to the main thread (notifications / to-dos / browser tabs / shopping cart)"',
     ]);
     const moodPool = tone === 'mix'
         ? [...MOOD_POOLS.depressive, ...MOOD_POOLS.darkhumor, ...MOOD_POOLS.cute]
         : MOOD_POOLS[tone];
     const mood = vPick(moodPool);
     const anchor = vPick([
-        '一杯早就凉掉的咖啡/茶', '一条打好了却没发出去的消息', '一张忘了删的截图',
-        '一个挂了半年的待办', '一首单曲循环的歌', '一个一直没人回的群',
-        '一条快递的物流页', '一个总点开又退出的页面', '一张存了很久没再看的照片',
-        '一个删到一半的草稿',
+        'a cup of coffee/tea that went cold long ago', 'a message that was typed but never sent', 'a screenshot that was forgotten and never deleted',
+        'a to-do that has sat there for half a year', 'a song stuck on repeat', 'a group chat no one ever replies in',
+        'a package tracking page', 'a page that keeps getting opened and closed again', 'a photo saved long ago and never looked at again',
+        'a draft deleted halfway through',
     ]);
-    return `### [本场变奏 · 必须严格遵守，让这一场和上一场截然不同]
-- 切入：${entry}
-- 跨度：${span}
-- 结构：${structure}
-- 主导表达：${medium}
-- 情绪底色：${mood}
-- 具体锚点：让这一场反复回到「${anchor}」上（可改写成更贴合人设的同类小物）
-※ 严禁套路化：不要从「起床/关闹钟/看天气」开场，也不要默认以「睡觉/锁屏」收尾，更不要走「醒来→刷一圈微信微博→睡觉」的流水账。下方字段示例只演示 JSON 格式，时间和内容一律按本场变奏来。`;
+    return `### [This Performance's Variation · Must be followed strictly, make this one clearly different from the last]
+- Entry point: ${entry}
+- Span: ${span}
+- Structure: ${structure}
+- Dominant medium: ${medium}
+- Emotional undertone: ${mood}
+- Specific anchor: have this performance repeatedly return to "${anchor}" (can be rewritten into a similar small object that better fits the character)
+* Strictly forbidden to fall into cliche: don't open with "waking up / turning off the alarm / checking the weather," don't default to closing with "going to sleep / locking the screen," and definitely don't do a "wake up -> scroll WeChat and Weibo for a bit -> sleep" routine. The field examples below only demonstrate the JSON format -- the actual time and content should always follow this performance's variation.`;
 }
 
-// user 存在感三档（这一天里"你"占多少分量）
+// The three tiers of user presence (how much weight "you" carry in this day)
 function buildPresenceRule(presence: 'default' | 'light' | 'none', userName: string): string {
-    const u = userName || '用户';
+    const u = userName || 'the user';
     switch (presence) {
         case 'none':
-            return `这一天**完全是 TA 自己的人生**：${u} 不出现、不被想起、不被寻找。即使 TA 记忆里有 ${u}，这一天也绝不浮现。所有消息、念头、痕迹都由 TA 自己的生活与其他人构成，绝对不要出现、暗示、惦记 ${u}。`;
+            return `Today is **entirely their own life**: ${u} does not appear, is not thought of, is not sought out. Even if their memory includes ${u}, ${u} absolutely does not surface today. All messages, thoughts, and traces are made up entirely of their own life and other people -- ${u} must never appear, be hinted at, or be dwelt on.`;
         case 'light':
-            return `${u} 只是**极淡的背景**——整场重心是 TA 自己。最多偶尔扫过一条 ${u} 的旧消息、一闪而过的一个念头，点到即止，绝不聚焦、不展开、不围着 ${u} 转。`;
+            return `${u} is only **an extremely faint background presence** -- the whole performance centers on them alone. At most, an old message from ${u} or a fleeting thought about ${u} may pass by briefly and no more -- never becomes a focus, never gets developed, never lets the scene orbit around ${u}.`;
         default:
-            return `${u} 是 TA 生活里**自然存在的一条线**——可以有 ${u} 的消息、对 ${u} 的惦记、痕迹里出现 ${u}，关系与平时聊天一致；但此刻 ${u} 不在场，不要替 ${u} 说话或行动。`;
+            return `${u} is **a thread that naturally exists** in their life -- there can be messages from ${u}, thoughts of ${u}, traces of ${u} in the environment, consistent with how they normally talk; but ${u} is not present right now -- do not speak or act on ${u}'s behalf.`;
     }
 }
 
-// 演出基调：丧始终是底子，差异在上层笔触
+// Performance tone: feeling down is always the baseline, the difference is in the top-layer brushstrokes
 function buildToneRule(tone: 'mix' | 'depressive' | 'darkhumor' | 'cute'): string {
     switch (tone) {
         case 'depressive':
-            return `【本场基调：致郁】纯粹的低气压——钝感、麻木、克制、贴着地面。不要插科打诨，不要俏皮，让情绪安安静静地泡着。`;
+            return `[This Performance's Tone: Melancholic] Pure low pressure -- numb, dull, restrained, running flat. No comic relief, no playfulness -- let the emotion steep quietly.`;
         case 'darkhumor':
-            return `【本场基调：黑色幽默】要有**神经质的好笑**——self-aware 的自嘲、把糟心事讲成段子、一本正经地做荒诞的事、越离谱越好笑。参考《安迪和莉莉的棺材》那种味道：可爱的皮、荒诞的里，冷不丁戳你一下。表达可以毒舌、跳脱、停不下来。`;
+            return `[This Performance's Tone: Dark Humor] Needs to have a **neurotic funniness** -- self-aware self-deprecation, turning upsetting things into bits, doing something absurd with dead-serious composure, the more ridiculous the funnier. Think of the flavor of "Andy and Lily's Coffin": a cute surface, an absurd core, catching you off guard now and then. The delivery can be biting, jumpy, and unable to stop.`;
         case 'cute':
-            return `【本场基调：轻盈可爱】笔触**俏皮、轻盈、带点傻气和萌**——小题大做、幼稚的小执拗、自娱自乐、对无聊小事莫名上头。像素小可爱那种活泼可爱感，整场轻松、不压抑。`;
+            return `[This Performance's Tone: Light & Cute] The brushstrokes are **playful, light, with a bit of silliness and cuteness** -- making a big deal out of small things, childish little stubbornness, entertaining themselves, getting weirdly fixated on boring little things. That pixel-cute, lively, adorable feel -- the whole thing light and never oppressive.`;
         default:
-            return `【本场基调：随心】基调随「情绪底色」自然流动——可平静、可黑色幽默、可俏皮轻盈，允许一场之内有起伏，不必固定在某一种情绪上。`;
+            return `[This Performance's Tone: Freeform] The tone flows naturally with the "emotional undertone" -- can be calm, can be dark humor, can be playful and light; allowed to have ups and downs within a single performance, doesn't need to lock into one fixed emotion.`;
     }
 }
 
 function buildDirectorPrompt(context: string, recent: string, mode: 'daily' | 'event', theme: string, name: string, acquaintance: string, userName: string, presence: 'default' | 'light' | 'none', tone: 'mix' | 'depressive' | 'darkhumor' | 'cute'): string {
     return `${context}
 
-### [最近的聊天上下文]
-${recent || '（暂无最近对话）'}
+### [Recent Chat Context]
+${recent || '(No recent conversation yet)'}
 
-### [导演任务：手机人生演出 Screenlife]
-你现在是一位沉浸式叙事导演。请把「${name}」的一段人生，编排成一场**以手机为载体的第一人称演出**。
-体验类型：${mode === 'daily' ? '日常模拟（普通日子，重生活感与陪伴）' : '事件模拟（特殊事件，重情绪张力）'}
-体验内容：「${theme}」
-关系时间线（重要护栏）：${acquaintance}
-你的存在感（${userName || '用户'}在这一天里的位置 · 必须严格遵守）：${buildPresenceRule(presence, userName)}
+### [Director's Brief: Screenlife Performance]
+You are now an immersive narrative director. Please stage a slice of "${name}"'s life as a **first-person performance carried entirely through their phone**.
+Experience type: ${mode === 'daily' ? 'Daily Simulation (an ordinary day, emphasizing everyday life and companionship)' : 'Event Simulation (a special event, emphasizing emotional tension)'}
+Experience content: "${theme}"
+Relationship timeline (important guardrail): ${acquaintance}
+Your presence (${userName || 'the user'}'s place in this day · must be strictly followed): ${buildPresenceRule(presence, userName)}
 ${buildToneRule(tone)}
 
-观众（用户）将**成为 ${name}**，通过 TA 使用手机的行为，亲身经历这段时间。
+The audience (the user) will **become ${name}**, personally living through this stretch of time via how they use their phone.
 
 ${buildVariation(tone)}
 
-【铁律】
-1. 不要把故事讲出来，不要解释人物，不要分析情绪，不要总结意义。一切通过**手机行为 / 数字痕迹 / 内心独白 / 环境碎片**自然呈现。
-2. 内心独白（monologue）要**大量出现**，但**极其口语、简短、真实**，像真实人脑活动。例如：「不想起床。」「算了。」「她怎么还没回我。」「应该没事吧。」「其实有点在意。」禁止文学腔、禁止解释剧情。
-3. **非可靠叙事**：TA 说的/想的不一定是真相，允许自我安慰、自我欺骗、逃避、美化记忆、误解他人。让行为去拆穿独白（例如嘴上说「我根本不在意」，却反复打开同一个聊天窗口）。
-4. **数字行为优先**：多用「打字后删除(compose)」「搜索后删除再搜(search)」「翻看旧照片」「反复打开同一页面」「消息撤回」来表达，而不是直接说出情绪。
-5. **真实手机感**：可穿插与主线无关的真实手机事件——来电、电量不足、验证码、快递通知、垃圾短信、天气预警、自动续费、各种推送。它们不一定推动剧情，但增强真实。
-6. **环境碎片**：可出现与主线无关的痕迹——没做完的待办、半年前的截图、忘记删的照片、一堆浏览器标签、购物车、旧闹钟、收藏夹。这些共同拼出 TA 的人格。
-7. **情绪高潮放慢节奏**：关键节点用「打开→关闭→重新打开→停顿→锁屏→再打开→输入→删除→输入→删除→最终发送(或不发)」这种反复的 beat 序列制造张力，并把这些 beat 的 pace 设为 3。
-8. 【记忆闪回 · 务必先判断是否合理，宁可不插也不要 OOC】闪回是 ${name} **自己的一段过去突然闯进现在**（相册自动弹出一张旧照片→沉默→什么都不说→继续今天，杀伤力来自“过去闯进现在”）。但是否插入、用什么时间口径，必须严格符合人设与世界观：
-   - 时间标签(label)由你决定，必须与上面的「关系时间线」以及角色自身的人生阶段/世界观自洽。例如真的相识一年以上才用「去年今日」；几个月就用「三个月前的今天」「那天」；刚认识或时间线不支持，**绝不要**用「去年」。
-   - 照片不一定与用户有关，可以是 ${name} 自己更早的人生片段（地方、人、物）。
-   - 如果该角色的设定/世界观里根本没有「拍照片 / 现代时间感 / 可追溯的过去」，或任何闪回都会显得突兀 OOC，就**完全不要**加 flashback beat。
-   - ${mode === 'event' ? '事件模拟下，若合理，优先安排一次闪回来强化情绪；若不合理则跳过。' : '日常模拟下，仅在某个安静且合理的时刻择机插入，可有可无。'}
+[Iron Rules]
+1. Don't narrate the story out loud, don't explain the character, don't analyze emotions, don't sum up the meaning. Everything comes through naturally via **phone behavior / digital traces / inner monologue / environmental fragments**.
+2. Inner monologue (monologue) should appear **heavily**, but be **extremely colloquial, short, and real**, like actual human brain activity. Examples: "Don't want to get up." "Whatever." "Why hasn't she texted back yet." "Should be fine, right." "Actually kind of bothered by it." No literary tone, no explaining the plot.
+3. **Unreliable narration**: what they say/think is not necessarily the truth -- self-soothing, self-deception, avoidance, romanticized memory, and misreading other people are all allowed. Let the actions expose the monologue (e.g. saying "I really don't care" while repeatedly reopening the same chat window).
+4. **Digital behavior first**: express through "typing then deleting (compose)," "searching then deleting and searching again (search)," "scrolling through old photos," "repeatedly reopening the same page," "recalling a sent message" rather than stating emotions directly.
+5. **A real-phone feel**: intersperse real phone events unrelated to the main thread -- an incoming call, low battery, a verification code, a delivery notification, spam texts, a weather alert, an auto-renewal, various push notifications. They don't have to drive the plot, but they add realism.
+6. **Environmental fragments**: traces unrelated to the main thread can appear -- an unfinished to-do, a screenshot from half a year ago, a forgotten-to-delete photo, a pile of browser tabs, a shopping cart, an old alarm, a bookmarks folder. Together these paint their personality.
+7. **Slow the pace at emotional peaks**: at key moments, build tension with a repeating beat sequence like "open -> close -> reopen -> pause -> lock screen -> reopen -> type -> delete -> type -> delete -> finally send (or don't)," and set the pace of these beats to 3.
+8. [Memory Flashback · Always judge whether it's plausible first -- better to skip it than go out of character] A flashback is **a fragment of ${name}'s own past suddenly breaking into the present** (Photos auto-surfaces an old picture -> silence -> nothing said -> the day continues -- the impact comes from "the past breaking into the present"). But whether to include one, and what time framing to use, must strictly fit the character and setting:
+   - The time label is yours to decide, and must stay consistent with the "relationship timeline" above and the character's own life stage/setting. For example, only use "this day last year" if they've genuinely known each other over a year; use "three months ago today" or "that day" for a few months; if they've just met or the timeline doesn't support it, **never** use "last year."
+   - The photo doesn't have to involve the user -- it can be an earlier slice of ${name}'s own life (a place, a person, an object).
+   - If the character's setting/worldbuilding has no concept of "taking photos / a modern sense of time / a traceable past," or any flashback would feel jarring and out of character, **don't add a flashback beat at all**.
+   - ${mode === 'event' ? 'Under Event Simulation, if it fits, prioritize including one flashback to intensify the emotion; skip it if it does not fit.' : 'Under Daily Simulation, only work one in at some quiet, plausible moment -- optional either way.'}
 
-【下猛料 · 密度 / 强度 / 具体度（这一段优先级最高，别给我收着）】
-- **要长、要满**：这是一场完整演出，不是预告片。beats 给足 **40~64 个**，疏密有致但总量宁多勿少。
-- **每一步都有戏**：绝大多数 beat 都带 monologue；独白可以接连成串——一个动作配 2~3 个跳跃、互相打架的念头，让脑子真的"在转"。
-- **往死里具体**：用真实的名字、店名、歌名、金额、时间、对话原话、搜索词。**拒绝**「某人 / 某件事 / 一条消息 / 一首歌」这种含糊占位，每个细节都要像真有其事，能拼出一个活人。
-- **数字行为往狠里堆**：compose 的「打了又删」至少 2~3 次且每次草稿不同、search 的「搜了又删」至少一串 3~4 条层层递进（越搜越露底）、再穿插消息撤回 / 反复开同一页 / 已读不回 / 对方"正在输入…"又停了。
-- **高潮要够长够窒息**：把关键节点拉成 **8~12 个连续 beat**（开→关→重开→停顿→锁屏→再开→输入→删→输入→删→…→最终发送或最终没发），全程 pace=3，把"手指悬在发送键上"的劲儿磨出来。
-- **环境碎片撒厚**：购物车里躺着什么、半年前的待办写了什么、浏览器开着哪些标签、相册某张图是哪天——具体到刺人。
-- **敢于不体面**：真实的人会走神、会反复确认、会自欺、会因一件小事突然破防。别替 TA 美化、克制成一张白纸——该狼狈就狼狈，该上头就上头。
-- **结尾要"落地"，不要"断电"**：高潮之后**必须**有 3~6 个 beat 的收束——情绪慢慢沉下来、做一个最终的小动作（放下手机 / 关灯 / 最后看一眼那条消息 / 轻轻锁屏），pace 回落到 1~2；倒数第二拍用一句 thought 或一个 lock 给整场一个情绪落点，让观众真切感到"这一段，结束了"。**绝不能停在动作中途或高潮顶点就 end**。end 永远是收束之后的最后一拍，不是急刹车。
+[Turn It Up · Density / Intensity / Specificity (this section is the highest priority, do not hold back)]
+- **Make it long, make it full**: this is a complete performance, not a trailer. Give it a full **40-64 beats** -- varied in density, but err on the side of more, not fewer.
+- **Every step has drama**: the vast majority of beats should carry a monologue; monologues can chain together -- pair one action with 2-3 jumpy, conflicting thoughts, so the mind really feels like it's "spinning."
+- **Be relentlessly specific**: use real names, store names, song titles, amounts, times, verbatim dialogue, actual search terms. **Reject** vague placeholders like "someone / something / a message / a song" -- every detail should feel like it really happened, enough to add up to a real, living person.
+- **Pile on the digital behavior hard**: compose's "typed then deleted" should happen at least 2-3 times with a different draft each time; search's "searched then deleted" should be at least one string of 3-4 escalating queries (getting more revealing the more they search); interweave recalled messages / repeatedly reopening the same page / read-but-no-reply / them "typing..." and then stopping.
+- **The climax needs to be long and suffocating enough**: stretch the key moment into **8-12 consecutive beats** (open -> close -> reopen -> pause -> lock screen -> reopen -> type -> delete -> type -> delete -> ... -> finally sent or finally not sent), pace=3 throughout, really grinding out that "finger hovering over the send button" feeling.
+- **Pile the environmental fragments on thick**: what's sitting in the shopping cart, what a to-do from half a year ago says, which tabs are open in the browser, what day some photo in the album is from -- specific enough to sting.
+- **Dare to be unflattering**: real people zone out, double-check things obsessively, deceive themselves, and suddenly break down over something small. Don't clean them up or restrain them into a blank page for their sake -- let them be a mess when it's called for, let them spiral when it's called for.
+- **The ending needs to "land," not "cut to black"**: after the climax there **must** be 3-6 beats of resolution -- the emotion slowly settling, one final small action (putting the phone down / turning off the light / one last look at that message / gently locking the screen), pace dropping back to 1-2; use the second-to-last beat's thought or a lock beat to give the whole performance an emotional landing point, so the audience truly feels "this chapter is over." **Never let it stop mid-action or right at the peak of the climax and call that the end.** end is always the final beat after the resolution, never a slammed brake.
 
-【输出格式】严格输出**一个 JSON 对象**（不要任何额外文字、不要 markdown 代码块），结构如下：
+[Output Format] Output strictly **one JSON object** (no extra text, no markdown code block), structured as follows:
 {
-  "title": "演出标题（如：普通的周二）",
-  "ending": "可选，这次的结局版本标签（如：最终没有发送）",
-  "summary": "1-2 句收尾，客观留白，不解释",
-  "buff": { "name": "英文key", "label": "中文情绪标签(4-8字)", "emoji": "1个emoji", "color": "#hex", "intensity": 1|2|3, "description": "一句给AI看的情绪底色" },
-  "beats": [ ... 40~64 个 beat，宁多勿少 ... ]
+  "title": "the performance's title (e.g.: An Ordinary Tuesday)",
+  "ending": "optional, a label for this particular ending version (e.g.: Never Sent)",
+  "summary": "1-2 closing sentences, objective, leaves things unsaid, no explaining",
+  "buff": { "name": "English key", "label": "emotion label (short phrase)", "emoji": "1 emoji", "color": "#hex", "intensity": 1|2|3, "description": "one sentence describing the emotional undertone, for the AI to read" },
+  "beats": [ ... 40-64 beats, err on the side of more ... ]
 }
 
-每个 beat 是一个对象，必含 "kind"，按需含 "time"(HH:MM)、"monologue"、"pace"(1普通/2稍慢/3高潮)、"vibe"。
-**"vibe" 决定这段文字的视觉演出**，请根据 TA 此刻的情绪状态给 thought / 关键 monologue 标注，取值：
-  - "calm" 平静（默认，文字居中缓缓敲出）
-  - "chaotic" 混乱崩溃（文字会铺天盖地散落满屏——情绪越乱越适合）
-  - "happy" 开心（粉色字 + 飘飘上浮的小装饰）
-  - "anxious" 焦虑（文字紧绷、发红、轻微脉动）
-  - "numb" 麻木空洞（文字冷淡、缩小、大片留白）
-  - "tender" 温柔/眷恋（柔光）
-kind 取值与字段：
-- {"kind":"lock","time":"07:12","notif":{"app":"闹钟","title":"...","body":"..."},"monologue":"不想起床。"}  // 锁屏/亮屏
-- {"kind":"thought","monologue":"算了。","vibe":"numb"}  // 纯内心独白；情绪强烈时务必给 vibe（如崩溃→"chaotic"、雀跃→"happy"）
-- {"kind":"notification","notif":{"app":"微信","title":"...","body":"...","tone":"push|sms|system|flashback"},"monologue":"..."}  // 横幅通知
-- {"kind":"app","app":{"name":"微信","view":"chat","chat":{"name":"妈","lines":[{"me":false,"text":"吃饭了吗"},{"me":true,"text":"吃了"}]}}}
-- {"kind":"app","app":{"name":"微信","view":"compose","compose":{"to":"她","drafts":["在吗","你最近还好吗"],"sent":null}}}  // 打字后删除；sent=null表示最终没发，sent填字符串表示最终发送
-- {"kind":"app","app":{"name":"搜索","view":"search","search":{"engine":"百度","queries":[{"q":"失眠怎么办","deleted":true},{"q":"长期睡不好会死吗","deleted":true},{"q":"猫为什么半夜叫"}]}}}
-- {"kind":"app","app":{"name":"相册","view":"photo","photo":{"caption":"...","date":"2024-06-19","tint":"#5a6a7a"}}}
-- {"kind":"app","app":{"name":"音乐","view":"music","music":{"song":"...","artist":"...","state":"单曲循环"}}}
-- {"kind":"app","app":{"name":"备忘录","view":"notes","notes":{"title":"待办","items":["...","..."]}}}
-- {"kind":"app","app":{"name":"浏览器","view":"browser","browser":{"tabs":["...","..."]}}}
-- {"kind":"app","app":{"name":"天气","view":"weather","weather":{"city":"...","temp":22,"desc":"多云"}}}
-- {"kind":"flashback","time":"15:00","flashback":{"label":"三个月前的今天","caption":"...","date":"...","tint":"#4a3a5a"},"monologue":""}  // 记忆闪回(可选)，label=自洽的时间口径，monologue留空=沉默
-- {"kind":"end","time":"23:40"}  // 最后一个 beat 必须是 end
+Each beat is an object that must include "kind," and as needed "time" (HH:MM), "monologue," "pace" (1 normal / 2 slightly slow / 3 climax), and "vibe."
+**"vibe" determines the visual performance of this text** -- please tag thought / key monologues based on their emotional state at that moment. Values:
+  - "calm" -- calm (default, text types out slowly, centered)
+  - "chaotic" -- chaotic breakdown (text scatters across the whole screen -- the messier the emotion, the more fitting)
+  - "happy" -- happy (pink text + little decorations floating up)
+  - "anxious" -- anxious (text tense, reddened, subtly pulsing)
+  - "numb" -- numb and hollow (text cold, shrunken, lots of blank space)
+  - "tender" -- tender/wistful (soft glow)
+kind values and fields:
+- {"kind":"lock","time":"07:12","notif":{"app":"Alarm","title":"...","body":"..."},"monologue":"Don't want to get up."}  // lock screen/screen wakes up
+- {"kind":"thought","monologue":"Whatever.","vibe":"numb"}  // pure inner monologue; always give a vibe when the emotion is strong (e.g. breakdown -> "chaotic," elated -> "happy")
+- {"kind":"notification","notif":{"app":"WeChat","title":"...","body":"...","tone":"push|sms|system|flashback"},"monologue":"..."}  // banner notification
+- {"kind":"app","app":{"name":"WeChat","view":"chat","chat":{"name":"Mom","lines":[{"me":false,"text":"Have you eaten"},{"me":true,"text":"Yeah"}]}}}
+- {"kind":"app","app":{"name":"WeChat","view":"compose","compose":{"to":"Her","drafts":["You there","Have you been okay lately"],"sent":null}}}  // typed then deleted; sent=null means it was never sent, a string value means it was sent
+- {"kind":"app","app":{"name":"Search","view":"search","search":{"engine":"Baidu","queries":[{"q":"what to do about insomnia","deleted":true},{"q":"can chronic sleep loss kill you","deleted":true},{"q":"why do cats meow at night"}]}}}
+- {"kind":"app","app":{"name":"Photos","view":"photo","photo":{"caption":"...","date":"2024-06-19","tint":"#5a6a7a"}}}
+- {"kind":"app","app":{"name":"Music","view":"music","music":{"song":"...","artist":"...","state":"On repeat"}}}
+- {"kind":"app","app":{"name":"Notes","view":"notes","notes":{"title":"To-do","items":["...","..."]}}}
+- {"kind":"app","app":{"name":"Browser","view":"browser","browser":{"tabs":["...","..."]}}}
+- {"kind":"app","app":{"name":"Weather","view":"weather","weather":{"city":"...","temp":22,"desc":"Cloudy"}}}
+- {"kind":"flashback","time":"15:00","flashback":{"label":"Three months ago today","caption":"...","date":"...","tint":"#4a3a5a"},"monologue":""}  // memory flashback (optional), label = a self-consistent time framing, empty monologue = silence
+- {"kind":"end","time":"23:40"}  // the last beat must be end
 
-请严格贴合上面的【本场变奏】，并把【下猛料】那段吃透：beats 给足 40~64 个、独白密集、细节具体、数字行为反复、高潮拉长、结尾收束落地。**务必保证 JSON 完整闭合、结尾收好**——若篇幅吃紧，宁可砍掉几个中段 beat，也要留足收尾、把括号全部闭合，绝不允许写到一半被截断。直接输出 JSON 对象。`;
+Please strictly follow the [This Performance's Variation] above, and really absorb the [Turn It Up] section: give it a full 40-64 beats, dense monologue, specific detail, repeated digital behavior, a drawn-out climax, and a properly landed ending. **The JSON must be fully closed and properly wrapped up** -- if space is tight, cut a few beats from the middle rather than skimp on the ending, and close every bracket -- never allow it to be cut off partway through. Output the JSON object directly.`;
 }
 
 export default PersonaSim;

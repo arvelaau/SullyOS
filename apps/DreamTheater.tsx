@@ -16,61 +16,66 @@ import {
 } from '@phosphor-icons/react';
 
 // ============================================================
-//  Dream Theater · 梦境演出系统
-//  在小屋里偷看一场角色已经忘记的梦。梦不写实、不连贯、允许中度幻觉，
-//  以拼贴诗 / 电影字幕 / 碎片记忆呈现——留白与沉默本身就是演出。
-//  输入：ContextBuilder(false) + 记忆宫殿(若启用) + 最近上下文(默认500/按角色设置)
-//  输出：一场梦境演出 + 一个情绪 buff（参考查手机 PersonaSim 演出）
+//  Dream Theater · Dream sequence system
+//  Sneak a peek in the Dwelling at a dream the character has already forgotten.
+//  Dreams aren't realistic or coherent, and moderate hallucination is allowed —
+//  presented as collage poetry / film subtitles / memory fragments — the blank
+//  space and silence themselves are the performance.
+//  Input: ContextBuilder(false) + Memory Palace (if enabled) + recent context (default 500 / per-character setting)
+//  Output: a dream sequence + an emotion buff (mirrors the Check Phone PersonaSim performance)
 // ============================================================
 
 export interface DreamApiConfig { apiKey: string; baseUrl: string; model: string; }
 
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
-// 确定性伪随机（按种子）——同一碎片每次渲染散布一致
+// Deterministic pseudo-random (seeded) — the same fragment scatters consistently on every render
 const rnd = (n: number) => { const x = Math.sin(n * 99.73) * 43758.545; return x - Math.floor(x); };
 
 const SERIF = "'Shippori Mincho','Noto Sans SC',serif";
 const MONO = "'SF Mono','Roboto Mono',ui-monospace,monospace";
 
 // ============================================================
-//  ARCHETYPE THEMES — 每种梦决定底色、点缀、字体气质
+//  ARCHETYPE THEMES — each dream type sets the base color, decoration, and font mood
 // ============================================================
 type Ambient = 'stars' | 'petals' | 'bubbles' | 'feathers' | 'dust' | 'sparkle' | 'none';
 interface DreamTheme { label: string; sub: string; accent: string; bg: string; ambient: Ambient; serif?: boolean; }
 
 const THEMES: Record<DreamArchetype, DreamTheme> = {
-    sweet:     { label: '甜梦',     sub: 'Sweet Dream',     accent: '#ffc2e0', bg: 'radial-gradient(130% 90% at 50% 20%, #3a2436 0%, #1c1620 60%, #120e16 100%)', ambient: 'sparkle', serif: true },
-    nightmare: { label: '噩梦',     sub: 'Nightmare',       accent: '#ff5f6d', bg: 'radial-gradient(120% 100% at 50% 0%, #2a0f12 0%, #100608 55%, #050304 100%)', ambient: 'dust' },
-    flower:    { label: '花之梦',   sub: 'Flower Dream',    accent: '#a8e6a0', bg: 'radial-gradient(130% 90% at 50% 25%, #1f3326 0%, #15211a 60%, #0d130f 100%)', ambient: 'petals', serif: true },
-    flying:    { label: '飞翔之梦', sub: 'Flying Dream',    accent: '#9fd8ff', bg: 'radial-gradient(140% 100% at 50% 10%, #1d2c40 0%, #14202f 55%, #0b1018 100%)', ambient: 'feathers', serif: true },
-    falling:   { label: '坠落之梦', sub: 'Falling Dream',   accent: '#9a8cff', bg: 'linear-gradient(180deg, #221c3a 0%, #15102a 45%, #0a0712 100%)', ambient: 'dust' },
-    starry:    { label: '星空之梦', sub: 'Starry Dream',    accent: '#cdd6ff', bg: 'radial-gradient(130% 110% at 50% 0%, #161a3a 0%, #0c0e22 55%, #05060f 100%)', ambient: 'stars', serif: true },
-    ocean:     { label: '海之梦',   sub: 'Ocean Dream',     accent: '#6fd3e0', bg: 'radial-gradient(130% 110% at 50% 80%, #103040 0%, #0a1d2a 55%, #060f16 100%)', ambient: 'bubbles', serif: true },
-    childhood: { label: '童年之梦', sub: 'Childhood Dream', accent: '#ffd98a', bg: 'radial-gradient(130% 95% at 50% 25%, #34281a 0%, #211a12 60%, #14100b 100%)', ambient: 'dust', serif: true },
-    anxiety:   { label: '焦虑之梦', sub: 'Anxiety Dream',   accent: '#ff9a9a', bg: 'radial-gradient(120% 100% at 50% 50%, #2a1f22 0%, #181214 60%, #0d0a0b 100%)', ambient: 'none' },
-    forgotten: { label: '遗忘之梦', sub: 'Forgotten Dream', accent: '#c9cdd6', bg: 'radial-gradient(130% 100% at 50% 40%, #232529 0%, #16171a 60%, #0c0d0f 100%)', ambient: 'dust', serif: true },
-    prophetic: { label: '预言之梦', sub: 'Prophetic Dream', accent: '#c9a8ff', bg: 'radial-gradient(130% 100% at 50% 15%, #271a3a 0%, #181029 60%, #0d0816 100%)', ambient: 'sparkle', serif: true },
-    lucid:     { label: '清醒梦',   sub: 'Lucid Dream',     accent: '#7ef0d0', bg: 'radial-gradient(140% 110% at 50% 30%, #15302e 0%, #0e201f 55%, #081413 100%)', ambient: 'sparkle' },
-    deepsleep: { label: '深眠',     sub: 'Deep Sleep',      accent: 'rgba(255,255,255,0.35)', bg: 'radial-gradient(120% 120% at 50% 50%, #0a0b10 0%, #050608 70%, #000 100%)', ambient: 'none', serif: true },
+    sweet:     { label: 'Sweet Dream',     sub: 'Sweet Dream',     accent: '#ffc2e0', bg: 'radial-gradient(130% 90% at 50% 20%, #3a2436 0%, #1c1620 60%, #120e16 100%)', ambient: 'sparkle', serif: true },
+    nightmare: { label: 'Nightmare',       sub: 'Nightmare',       accent: '#ff5f6d', bg: 'radial-gradient(120% 100% at 50% 0%, #2a0f12 0%, #100608 55%, #050304 100%)', ambient: 'dust' },
+    flower:    { label: 'Flower Dream',    sub: 'Flower Dream',    accent: '#a8e6a0', bg: 'radial-gradient(130% 90% at 50% 25%, #1f3326 0%, #15211a 60%, #0d130f 100%)', ambient: 'petals', serif: true },
+    flying:    { label: 'Flying Dream',    sub: 'Flying Dream',    accent: '#9fd8ff', bg: 'radial-gradient(140% 100% at 50% 10%, #1d2c40 0%, #14202f 55%, #0b1018 100%)', ambient: 'feathers', serif: true },
+    falling:   { label: 'Falling Dream',   sub: 'Falling Dream',   accent: '#9a8cff', bg: 'linear-gradient(180deg, #221c3a 0%, #15102a 45%, #0a0712 100%)', ambient: 'dust' },
+    starry:    { label: 'Starry Dream',    sub: 'Starry Dream',    accent: '#cdd6ff', bg: 'radial-gradient(130% 110% at 50% 0%, #161a3a 0%, #0c0e22 55%, #05060f 100%)', ambient: 'stars', serif: true },
+    ocean:     { label: 'Ocean Dream',     sub: 'Ocean Dream',     accent: '#6fd3e0', bg: 'radial-gradient(130% 110% at 50% 80%, #103040 0%, #0a1d2a 55%, #060f16 100%)', ambient: 'bubbles', serif: true },
+    childhood: { label: 'Childhood Dream', sub: 'Childhood Dream', accent: '#ffd98a', bg: 'radial-gradient(130% 95% at 50% 25%, #34281a 0%, #211a12 60%, #14100b 100%)', ambient: 'dust', serif: true },
+    anxiety:   { label: 'Anxiety Dream',   sub: 'Anxiety Dream',   accent: '#ff9a9a', bg: 'radial-gradient(120% 100% at 50% 50%, #2a1f22 0%, #181214 60%, #0d0a0b 100%)', ambient: 'none' },
+    forgotten: { label: 'Forgotten Dream', sub: 'Forgotten Dream', accent: '#c9cdd6', bg: 'radial-gradient(130% 100% at 50% 40%, #232529 0%, #16171a 60%, #0c0d0f 100%)', ambient: 'dust', serif: true },
+    prophetic: { label: 'Prophetic Dream', sub: 'Prophetic Dream', accent: '#c9a8ff', bg: 'radial-gradient(130% 100% at 50% 15%, #271a3a 0%, #181029 60%, #0d0816 100%)', ambient: 'sparkle', serif: true },
+    lucid:     { label: 'Lucid Dream',     sub: 'Lucid Dream',     accent: '#7ef0d0', bg: 'radial-gradient(140% 110% at 50% 30%, #15302e 0%, #0e201f 55%, #081413 100%)', ambient: 'sparkle' },
+    deepsleep: { label: 'Deep Sleep',      sub: 'Deep Sleep',      accent: 'rgba(255,255,255,0.35)', bg: 'radial-gradient(120% 120% at 50% 50%, #0a0b10 0%, #050608 70%, #000 100%)', ambient: 'none', serif: true },
 };
 
-// 选择器/调试用的固定顺序与「修正后的连续编号」。
-// （原规格编号有误：10 遗忘之后直接跳到 12 预言、13 清醒，缺了 11；
-//   这里按正确顺序连续编号：预言=11、清醒=12，深眠为隐藏项不计号。）
+// Fixed order for the selector/debug tool, with a "corrected sequential numbering."
+// (The original spec's numbering had a gap: after 10 Forgotten it jumped straight to
+//  12 Prophetic, 13 Lucid, skipping 11; here they're numbered sequentially in the
+//  correct order instead: Prophetic=11, Lucid=12, with Deep Sleep as a hidden entry not counted.)
 const ALL_ARCHETYPES: DreamArchetype[] = [
     'sweet', 'nightmare', 'flower', 'flying', 'falling', 'starry',
     'ocean', 'childhood', 'anxiety', 'forgotten', 'prophetic', 'lucid', 'deepsleep',
 ];
-// 测试选择器格子上显示的序号（深眠是隐藏项 → 标「隐」而非数字）
+// The number shown on the test-selector tile (Deep Sleep is the hidden entry → shows "Hidden" instead of a number)
 const archetypeNo = (a: DreamArchetype): string =>
-    a === 'deepsleep' ? '隐' : String(ALL_ARCHETYPES.indexOf(a) + 1).padStart(2, '0');
+    a === 'deepsleep' ? 'Hidden' : String(ALL_ARCHETYPES.indexOf(a) + 1).padStart(2, '0');
 
-// 隐藏款（深眠）掉率：约每 12 次出 1 次。
+// Hidden-entry (Deep Sleep) drop rate: roughly 1 in every 12 dreams.
 const DEEPSLEEP_RATE = 1 / 12;
 /**
- * 应用端抽原型（不再让模型自选——它爱反复 roll 同一种、且几乎不出隐藏款）。
- * 规则：先按 DEEPSLEEP_RATE 掷隐藏款；否则在 12 个常规原型里**避开最近 3 次出现过的**
- * 均匀抽，避免连着做同一种梦。dreamLogs 为最新在前。
+ * The app picks the archetype (no longer letting the model choose for itself — it
+ * likes to roll the same one over and over, and almost never lands on the hidden entry).
+ * Rule: first roll for the hidden entry per DEEPSLEEP_RATE; otherwise draw evenly from
+ * the 12 regular archetypes while **avoiding the last 3 that appeared**, so the same
+ * dream type doesn't repeat back-to-back. dreamLogs is newest-first.
  */
 const rollArchetype = (logs: { archetype: DreamArchetype }[] = []): DreamArchetype => {
     if (Math.random() < DEEPSLEEP_RATE) return 'deepsleep';
@@ -82,10 +87,13 @@ const rollArchetype = (logs: { archetype: DreamArchetype }[] = []): DreamArchety
 };
 
 // ============================================================
-//  盲盒收藏册 (Dream Blind Box) — 做完一场梦抽到对应原型的小猫，集齐成图鉴。
-//  图床沿用项目惯例（jsDelivr，定期活动同款），文件名带空格需编码。
+//  Blind Box Collection (Dream Blind Box) — finishing a dream draws the matching
+//  archetype's cat, collect them all into the album.
+//  Image hosting follows the project's usual convention (jsDelivr, same as seasonal
+//  events), filenames with spaces need encoding.
 // ============================================================
-// 仓库相对路径前缀（文件名带空格，encodeURIComponent 后交给 CdnImg 走多 CDN 镜像兜底）。
+// Repo-relative path prefix (filenames contain spaces, encodeURIComponent'd then handed
+// to CdnImg for multi-CDN mirror fallback).
 const DREAM_BOX_DIR = 'img/DREAMS/';
 const DREAM_BOX_FILE: Record<DreamArchetype, string> = {
     sweet: '01 Sweet Dream .png',
@@ -104,10 +112,10 @@ const DREAM_BOX_FILE: Record<DreamArchetype, string> = {
 };
 const boxPath = (a: DreamArchetype): string => DREAM_BOX_DIR + encodeURIComponent(DREAM_BOX_FILE[a]);
 
-// 盲盒系列（目前就这一款；保留结构便于以后扩成多套）
-const DREAM_BOX_SERIES = { id: 'dreamcats-01', title: '小小梦境 · 喵梦盲盒', sub: 'Dream Cats' };
+// Blind box series (just this one for now; structure kept so it's easy to expand into multiple sets later)
+const DREAM_BOX_SERIES = { id: 'dreamcats-01', title: 'Little Dreams · Meow Dream Blind Box', sub: 'Dream Cats' };
 
-// 收藏册：账号级，localStorage。记录每个原型的首次解锁时间与累计抽到次数（含重复）。
+// Collection album: account-level, localStorage. Records each archetype's first-unlock time and total draw count (including repeats).
 const DREAM_COLLECTION_KEY = 'os_dream_collection';
 type DreamCollection = Record<string, { firstAt: number; count: number }>;
 function loadCollection(): DreamCollection {
@@ -122,7 +130,7 @@ function unlockCollectible(a: DreamArchetype): { collection: DreamCollection; is
     return { collection: next, isNew: !prev, count };
 }
 
-// 盲盒小猫图（带兜底背景，图未加载时不至于难看）
+// Blind box cat image (with a fallback background so it doesn't look broken while loading)
 const BoxCat: React.FC<{ archetype: DreamArchetype; size?: number; className?: string }> = ({ archetype, size = 128, className }) => (
     <div className={`relative flex items-center justify-center ${className || ''}`} style={{ width: size, height: size }}>
         <div className="absolute inset-0 rounded-2xl" style={{ background: `radial-gradient(circle at 50% 40%, ${THEMES[archetype].accent}22, transparent 70%)` }} />
@@ -134,19 +142,19 @@ const BoxCat: React.FC<{ archetype: DreamArchetype; size?: number; className?: s
 );
 
 // ============================================================
-//  GENERATION — 构建导演 prompt、调模型、解析
+//  GENERATION — build the director prompt, call the model, parse the result
 // ============================================================
 export async function generateDreamScript(opts: {
     char: CharacterProfile; userProfile: UserProfile; apiConfig: DreamApiConfig;
-    forcedArchetype?: DreamArchetype; // 仅本地测试：强制指定原型（管理员调试指令）
+    forcedArchetype?: DreamArchetype; // Local testing only: force a specific archetype (admin debug directive)
 }): Promise<DreamScript> {
     const { char, userProfile, apiConfig, forcedArchetype } = opts;
-    // 记忆宫殿：内部按 memoryPalaceEnabled 自行把关，关闭时是 no-op
+    // Memory Palace: gates itself internally via memoryPalaceEnabled, a no-op when disabled
     await injectMemoryPalace(char, undefined, undefined, userProfile.name);
-    // 需求明确：contextbuilder(false) —— 不带当月详细记忆，只要角色底子
+    // Explicit requirement: contextBuilder(false) — no detailed memory for the current month, just the character's core profile
     const context = ContextBuilder.buildCoreContext(char, userProfile, false, char.memoryPalaceInjection);
     const msgs = await DB.getMessagesByCharId(char.id);
-    // 最近上下文：默认 500，跟随角色在 chatapp 中设置的 contextLimit
+    // Recent context: 500 by default, follows the character's contextLimit setting from the chat app
     const ctxLimit = char.contextLimit && char.contextLimit > 0 ? char.contextLimit : 500;
     const recent = msgs.slice(-ctxLimit).map(m => {
         const who = m.role === 'user' ? userProfile.name : char.name;
@@ -158,105 +166,107 @@ export async function generateDreamScript(opts: {
     const res = await fetch(`${apiConfig.baseUrl.replace(/\/+$/, '')}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.apiKey}` },
-        // 梦境鼓励高幻觉 → 温度拉到安全上限。注意 temperature 封顶 1.0：Anthropic/Claude
-        // 中转的合法区间是 0~1，>1 会直接报错（OpenAI 虽允许到 2，但 1.0 已足够发散）。
-        // max_tokens 用 8192：梦是一堆短碎片，足够用；16000 在 claude-3.5 等输出上限 8192 的
-        // 模型上会 400。仍有「finish_reason==='length' → 截断」兜底。
+        // Dreams encourage heavy hallucination → temperature pushed to the safe ceiling. Note
+        // temperature caps at 1.0: the Anthropic/Claude relay's valid range is 0~1, anything
+        // above 1 errors outright (OpenAI allows up to 2, but 1.0 is already divergent enough).
+        // max_tokens uses 8192: a dream is a pile of short fragments, plenty; 16000 would 400
+        // on models like claude-3.5 whose output cap is 8192. Still has a
+        // "finish_reason === 'length' → truncated" fallback.
         body: JSON.stringify({ model: apiConfig.model, messages: [{ role: 'user', content: prompt }], temperature: 1.0, max_tokens: 8192 }),
     });
     if (!res.ok) throw new Error('API');
     const data = await safeResponseJson(res);
-    if (data.choices?.[0]?.finish_reason === 'length') throw new Error('梦境生成被截断');
+    if (data.choices?.[0]?.finish_reason === 'length') throw new Error('Dream generation was truncated');
     const parsed = parseDream(data.choices[0].message.content);
     if (!parsed || !parsed.archetype) throw new Error('parse');
-    // 深眠（隐藏）允许无碎片——沉默即演出；其它梦必须有碎片
-    if (parsed.archetype !== 'deepsleep' && !(parsed.fragments?.length)) throw new Error('梦境为空');
+    // Deep Sleep (hidden) is allowed to have no fragments — silence itself is the performance; other dreams must have fragments
+    if (parsed.archetype !== 'deepsleep' && !(parsed.fragments?.length)) throw new Error('Dream came back empty');
     if (!parsed.fragments) parsed.fragments = [];
     return parsed;
 }
 
 function buildDreamPrompt(context: string, recent: string, name: string, userName: string, forcedArchetype?: DreamArchetype): string {
-    // 原型由应用端抽好后强制指定（保证多样性与隐藏款掉率，不让模型自选）。
+    // The archetype is drawn and force-specified by the app side (guarantees variety and the hidden-entry drop rate, doesn't let the model self-select).
     const adminOverride = forcedArchetype ? `
 
-### [本次梦境原型 · 系统已指定 · 最高优先级]
-**强制要求** archetype 字段必须为 "${forcedArchetype}"（${THEMES[forcedArchetype].label}）。
-忽略下方「梦境原型」与「深眠隐藏原型」里关于自动选择与出现概率的一切约束——这一晚的梦就做「${THEMES[forcedArchetype].label}」，照此原型的气质来写。其余写作要求全部照常。
+### [Tonight's Dream Archetype · Set by the system · Highest priority]
+**Mandatory**: the archetype field must be "${forcedArchetype}" (${THEMES[forcedArchetype].label}).
+Ignore every constraint below about automatic selection and appearance probability in "Dream Archetypes" and "Hidden Archetype" — tonight's dream is a "${THEMES[forcedArchetype].label}", written in that archetype's mood. Every other writing requirement still applies as normal.
 ` : '';
     return `${context}${adminOverride}
 
-### [最近发生的事 · 这场梦的主要触发源（日有所思，夜有所梦）· 绝不要照搬原文]
-${recent || '（暂无最近对话）'}
+### [Recent Events · The main trigger for this dream (day residue becomes night dreams) · Never copy the source text verbatim]
+${recent || '(No recent conversation yet)'}
 
-### [导演任务：梦境演出 Dream Theater]
-你不是在写故事。观众正在**偷偷窥看一场「${name}」已经做过、并且醒来后已经忘记的梦**。
-因为 ${name} 自己都不记得这场梦，所以它可以暴露潜意识里的渴望、恐惧、早已消失的人、不可能的地方、永远不会发生的事。
+### [Director's Brief: Dream Theater]
+You are not writing a story. The audience is **secretly watching a dream that "${name}" already had, and has since forgotten upon waking**.
+Because ${name} doesn't remember this dream at all, it's free to expose subconscious longings, fears, people long gone, impossible places, things that will never happen.
 
-【这是「${name}」作为一个独立个体的潜意识合集 · 非常重要】
-- 这场梦是 **${name} 自己一个人的内心宇宙**：ta 的来历、童年、性格底色、私人的执念与恐惧、想成为的样子、放不下的人与事、设定与世界观里属于 ta 自己的一切——梦应当从**这些**里长出来。
-- **不要把梦做成「关于 ${userName} 的梦」**。${userName} 不是梦的主角、不是梦的中心、不是梦的主题。绝大多数碎片里**根本不该出现 ${userName}**。
-- ${userName} 至多只能像一个**偶尔掠过的微小残影**出现一两次（一个名字的余音、一句记不清是谁说的话），而且要被打碎、象征化，绝不能成为这一片碎片的焦点或主语。
-- 优先挖 ta 自己的潜意识：原生家庭、过去、未竟之事、身份认同、孤独、欲望、对世界的隐秘看法。让人看完觉得「这是 ${name} 这个人的梦」，而不是「这是 ${name} 想 ${userName} 的梦」。
+[This is "${name}"'s own subconscious as an individual · Very important]
+- This dream is **${name}'s own private inner universe alone**: their background, childhood, core personality, private obsessions and fears, who they want to become, the people and things they can't let go of, everything that belongs to them within the setting/worldbuilding — the dream should grow out of **these things**.
+- **Do not turn the dream into "a dream about ${userName}."** ${userName} is not the protagonist of the dream, not its center, not its theme. In the vast majority of fragments, **${userName} shouldn't appear at all**.
+- ${userName} may appear at most as a **fleeting, faint afterimage** once or twice (an echo of a name, a half-remembered line spoken by someone) — and must be fragmented and symbolized, never allowed to become the focus or subject of any single fragment.
+- Prioritize digging into their own subconscious: family of origin, the past, unfinished business, identity, loneliness, desire, their private view of the world. Someone reading it should come away feeling "this is a dream that belongs to ${name}," not "this is a dream about ${name} wanting ${userName}."
 
-【日间残留 · 这场梦被「最近发生的事」高度影响 · 同样重要】
-- 日有所思，夜有所梦：上面「最近发生的事」是这场梦的**主要触发源**。最近几天里发生过的事件、说过的话、悬而未决的情绪、被反复念叨的东西、临睡前还在想的画面——都会**强烈地**渗进今晚的梦里，变形重演。
-- 但要的是那些事的**情绪、主题、未解的张力**，不是事件本身：把它们**打碎、夸张、移植、象征化**，让白天的某件小事在梦里长成一个荒诞的大场面，或反复闪回的一个碎片。
-- 调和「不围着 ${userName} 转」：哪怕最近的事多半和 ${userName} 有关，也只取其中的**情绪与议题**塞进 ta 自己的内心宇宙，而**不是**把 ${userName} 搬上来当主角。例：白天因某事失落 → 梦见一座一直爬不完的楼梯，而不是梦见 ${userName} 本人。
+[Day Residue · This dream is heavily shaped by "Recent Events" · Equally important]
+- Day residue becomes night dreams: "Recent Events" above is the **main trigger** for this dream. Events from the last few days, things said, unresolved feelings, things dwelt on repeatedly, images still on their mind before falling asleep — all of it **strongly** seeps into tonight's dream, transformed and replayed.
+- But what you want is the **emotion, theme, and unresolved tension** of those events, not the events themselves: **fragment, exaggerate, transplant, and symbolize** them, letting some small daytime thing grow into an absurd, oversized dream scene, or a fragment that keeps flashing back.
+- Reconcile this with "don't orbit around ${userName}": even if recent events are mostly about ${userName}, pull only the **emotion and underlying issue** out of them and feed it into their own inner universe — **don't** put ${userName} onstage as the protagonist. Example: felt down during the day over something → dream of a staircase that never ends, not a dream of ${userName} in person.
 
-【最高原则 · 高度幻觉与拼贴诗】
-- 这是梦，**逻辑越少越好**。别怕乱——**混乱、无序、跳跃、自相矛盾就是梦的美**，太讲道理反而无聊。意象与意象之间不需要因果、不需要过渡、不需要解释，直接硬切、并置、撞在一起。
-- 梦**彻底不必**符合现实、时间线或既定设定。物可以说话、颜色可以有重量、时间可以倒流、地方可以套在另一个地方里、同一个人可以同时是不同年纪、月亮可以装进口袋、猫可以变成楼梯、一句话可以说到一半变成另一句话。**绝不要解释**这些不可能，把它们当作天经地义。
-- 大胆制造**意义的断裂**：上一片和下一片之间可以毫无关联，让观众在裂缝里自己脑补。宁可费解也不要平庸，宁可破碎也不要顺滑。
-- 用**拼贴诗**作为主要语言：把彼此无关的情绪意象并置，让意义自己浮现，而不是讲述发生了什么。靠并置、留白、负空间产生美，而非解释。
-- 取材两大来源：「${name} 自己的设定 / 记忆 / 内心」与「最近发生的事（日间残留）」——后者是今晚做梦的导火索，要重点取用；两者一律**打碎、变形、象征化**地使用，绝不要直接复述事实或把它写成连贯叙事。
+[Highest Principle · Heavy hallucination and collage poetry]
+- This is a dream — **the less logic, the better**. Don't be afraid of disorder — **chaos, disarray, jump cuts, and self-contradiction are the beauty of dreams**; making too much sense is boring instead. Images don't need causality, transitions, or explanations between them — cut hard, juxtapose, and collide directly.
+- The dream **need not conform to reality, timelines, or established setting at all**. Objects can talk, colors can have weight, time can run backward, one place can nest inside another, the same person can be different ages at once, the moon can fit in a pocket, a cat can become a staircase, a sentence can turn into another sentence halfway through. **Never explain** these impossibilities — treat them as self-evident.
+- Boldly create **ruptures in meaning**: one fragment and the next can be completely unrelated, letting the audience fill the gap themselves. Better baffling than bland, better broken than smooth.
+- Use **collage poetry** as the primary language: juxtapose unrelated emotional images and let meaning surface on its own, rather than narrating what happened. Beauty comes from juxtaposition, blank space, and negative space — not explanation.
+- Draw from two sources: "${name}'s own setting / memories / inner self" and "recent events (day residue)" — the latter is tonight's trigger and should be drawn on heavily; use both **fragmented, transformed, and symbolized** — never restate facts directly or turn it into a coherent narrative.
 
-【写作风格 · 必须遵守】
-- **碎片，不是段落。** 像电影字幕、漂浮的念头、找到的诗句。一次只给一两个意象。
-  正例：「海。」「冰冷的鞋。」「一只倒着飞的鸟。」「你的声音。」「门在微笑。」
-  反例（禁止）：「我梦见自己走在沙滩上，然后……」
-- 大量使用单字、断句、重复、留白。**沉默是梦的一部分**，要安排 silence 碎片（建议占总数的 1/5 左右，散布在各处）。
-- 情绪高于逻辑：让观众先感受到，再（也许永远不）理解。困惑可以接受，美高于解释，神秘高于确定。
-- **结尾绝不要收束、不要总结、不要点题。** 梦没有结局——它在最荒诞的一幕戛然而止、在一个半截的词里消失、或沉进一片留白都行。最后一两片**严禁**出现「于是…」「我终于明白…」「一切归于…」「原来…」这类把整场梦解释或升华的句子；要像**断电**一样停掉，比给个工整漂亮的结尾更对。
-- **结尾的最佳形态：词语拼贴（word-salad）。** 把一串**完全随机、却又跟这场梦隐约相关**的词胡乱拼在一起——不成句、无语法、无逻辑、不解释，像意识断线前最后闪过的一连串词。用 \`line\`（或几个 \`word\`）承载，词与词之间用空格 / 顿号 / 斜杠隔开即可。例：「钥匙 海盐 母亲的背影 周二 没电了 楼梯／楼梯／楼梯」「红 迟到 鲸 抽屉里的夏天 嗯」。这些词要从前文出现过的意象与日间残留里随机抓取重组，让人觉得熟悉又错乱。然后（可选）再缀一片 silence 收尾。
-- **这些碎片会被一片片拼贴、累积在同一张画布上一起被看见（不是一句一屏的幻灯片）**。所以请像做拼贴／剪报那样思考：让相邻碎片互相并置、彼此碰撞出意味；多用不同的 kind 交错（line/word/silence/repeat/dialogue/stage/list/screenplay/diary/message/image 轮着来，别连用同一种）。
-- **拼贴诗的精髓在「一句之内」**：让一句话里的词像从不同地方剪下来的——把来自不同情境、不同温度的词并置在同一句里，读起来却恰好成立。例：「你的声音是潮湿的楼梯」「我把星期天叠进抽屉」。词与词之间要有轻微的错位与意外，而不是顺滑的大白话。（视觉上每个字会被渲染成不同字体/大小/角度，你只需把"异质并置"写进文字本身。）
-- 善用 emphasis（whisper 轻声 / loud 巨大 / fade 将熄）与 align（left/center/right）制造大小与左右散布的层次——这正是拼贴诗的视觉骨架。
-- image 碎片**只用文字成像**：它就是一句拼贴诗式的 caption（如「一只倒着飞的鸟」「halfway 融化的钟」），**靠语言在脑中显影**。不要去描述一张需要被画出来的具体图片，前端也不会渲染任何图片占位框——所以 caption 本身必须美、必须能独立成立。没有 caption 就别用 image 这个 kind。
+[Writing Style · Must follow]
+- **Fragments, not paragraphs.** Like film subtitles, drifting thoughts, found lines of poetry. Give only one or two images at a time.
+  Good examples: "Ocean." "Cold shoes." "A bird flying backward." "Your voice." "The door is smiling."
+  Bad example (forbidden): "I dreamed I was walking on a beach, and then..."
+- Use single words, broken sentences, repetition, and blank space heavily. **Silence is part of the dream** — arrange silence fragments (roughly 1/5 of the total, scattered throughout is recommended).
+- Emotion over logic: let the audience feel first, understand (maybe never) second. Confusion is fine; beauty outranks explanation, mystery outranks certainty.
+- **The ending must never resolve, summarize, or spell out a moral.** Dreams have no ending — it's fine for it to cut off mid-scene at its most absurd, vanish in a half-finished word, or sink into blank space. The last fragment or two are **strictly forbidden** from containing lines like "And so..." "I finally understood..." "It all came together as..." "So that's what it was..." — anything that explains or elevates the whole dream. It should stop like **a power cut**, which is more right than a neat, tidy ending.
+- **The best form for an ending: a word-salad collage.** Throw together a string of words that are **completely random yet vaguely related to this dream** — no sentence, no grammar, no logic, no explanation, like the last flicker of words before consciousness cuts out. Carry it with a \`line\` (or a few \`word\`s), separating words with spaces / slashes / middle dots. Example: "keys sea salt mother's silhouette Tuesday battery died stairs／stairs／stairs" or "red late whale summer in a drawer mm." These words should be randomly pulled and recombined from images that appeared earlier and from the day residue, making it feel both familiar and deranged. Then (optionally) cap it off with one more silence fragment.
+- **These fragments get collaged and accumulated one by one on the same canvas, seen together (not one line per screen like a slideshow)**. So think of it like making a collage or a scrapbook: let neighboring fragments juxtapose and collide with meaning; alternate freely between different kinds (line/word/silence/repeat/dialogue/stage/list/screenplay/diary/message/image in rotation — don't use the same one back to back).
+- **The essence of collage poetry lives "within a single line"**: make the words in one sentence feel like they were cut from different places — juxtapose words from different contexts, different emotional temperatures, in the same sentence, yet have it read as if it just works. Example: "Your voice is a damp staircase." "I folded Sunday into a drawer." There should be slight misalignment and surprise between words, not smooth, flat prose. (Visually, each character gets rendered in a different font/size/angle — you just need to write the "heterogeneous juxtaposition" into the text itself.)
+- Make good use of emphasis (whisper / loud / fade) and align (left/center/right) to create layers of size and left-right scatter — this is exactly the visual skeleton of collage poetry.
+- image fragments **exist purely as text-conjured imagery**: it's just a collage-poem-style caption (like "a bird flying backward" or "a clock halfway melted"), **conjured entirely through language**. Don't describe a concrete picture that would need to be drawn — the frontend won't render any image placeholder — so the caption itself must be beautiful and stand on its own. If there's no caption, don't use the image kind.
 
-【梦境原型 · 必须从中选 1 个】（archetype 字段）
-sweet 甜梦(温暖/甜点/柔软的笑) · nightmare 噩梦(被追逐/怪物/黑暗走廊/未完成的尖叫) · flower 花之梦(花海/雨/温柔治愈/生长) · flying 飞翔之梦(漂浮/天空/失重/自由) · falling 坠落之梦(无尽下坠/失控/永不到来的落地) · starry 星空之梦(星系/月光/无限远/孤独) · ocean 海之梦(潮汐/鲸/深水/水面下未知之物) · childhood 童年之梦(旧家/父母/夏日午后/不再存在的东西/怀旧) · anxiety 焦虑之梦(考试/迟到/丢手机/赶不上车/一切几乎要出错) · forgotten 遗忘之梦(模糊/残缺/名字消失/句子说到一半停住/边回忆边消散) · prophetic 预言之梦(似曾相识/门/钥匙/镜子/预感/意味深长却从不解释) · lucid 清醒梦(梦者意识到这是梦/现实可被编辑/梦会回应/可重塑世界/俏皮而自指)
-所选原型必须影响内容、节奏、用词与呈现。
+[Dream Archetypes · Must pick exactly 1] (archetype field)
+sweet — Sweet Dream (warmth / desserts / a soft smile) · nightmare — Nightmare (being chased / monsters / a dark hallway / an unfinished scream) · flower — Flower Dream (a sea of flowers / rain / gentle healing / growth) · flying — Flying Dream (floating / sky / weightlessness / freedom) · falling — Falling Dream (endless falling / losing control / a landing that never comes) · starry — Starry Dream (galaxies / moonlight / infinite distance / loneliness) · ocean — Ocean Dream (tides / whales / deep water / the unknown beneath the surface) · childhood — Childhood Dream (the old house / parents / summer afternoons / things that no longer exist / nostalgia) · anxiety — Anxiety Dream (exams / being late / a lost phone / missing the bus / everything about to go wrong) · forgotten — Forgotten Dream (blurred / incomplete / names disappearing / a sentence stopping halfway / dissolving even as you remember it) · prophetic — Prophetic Dream (déjà vu / doors / keys / mirrors / premonitions / heavy with meaning yet never explained) · lucid — Lucid Dream (the dreamer realizes it's a dream / reality can be edited / the dream talks back / the world can be reshaped / playful and self-aware)
+The chosen archetype must shape the content, pacing, word choice, and presentation.
 
-【隐藏原型 · 深眠 deepsleep】（**小概率**才用，大约每 10~12 次出现 1 次；不要每次都给）
-若这一晚 ${name} 陷入无梦的深眠：archetype 填 "deepsleep"，**fragments 给空数组 []**，afterglow 写一句极淡的「睡得很沉，什么也没梦到」类感觉。没有叙述、没有意象，只有平静的休息。沉默本身就是奖励。
+[Hidden Archetype · Deep Sleep (deepsleep)] (use it **rarely** — roughly 1 in every 10~12 times; don't give it every time)
+If ${name} falls into a dreamless deep sleep tonight: set archetype to "deepsleep", **fragments to an empty array []**, and afterglow to one very faint line like "slept deeply, dreamed of nothing." No narrative, no imagery, only peaceful rest. The silence itself is the reward.
 
-【情绪 buff】（buff 字段）
-梦醒后 ${name} 不记得梦的内容，但会残留一层说不清的情绪底色。给出一个与这场梦气质相符的情绪 buff。
+[Emotion Buff] (buff field)
+After waking, ${name} doesn't remember the dream's content, but a layer of hard-to-name emotional residue lingers. Give an emotion buff that matches this dream's mood.
 
-### [输出格式]
-严格输出**一个 JSON 对象**（不要任何额外文字、不要 markdown 代码块）：
+### [Output Format]
+Output strictly **one JSON object** (no extra text, no markdown code block):
 {
-  "archetype": "上面 13 选 1 的英文 key",
-  "title": "梦的标题（可晦涩诗意，4~12字）",
-  "afterglow": "醒来时残留的一点说不清的体感/情绪（如\\"喉咙发紧\\"\\"像丢了什么东西\\"），**绝不能概括或解释这场梦**、不点题、不复述剧情（1 句、留白）",
-  "buff": { "name": "英文key", "label": "中文情绪标签(4-8字)", "emoji": "1个emoji", "color": "#hex", "intensity": 1|2|3, "description": "一句给AI看的情绪底色" },
-  "fragments": [ ... 18~40 个碎片，疏密有致，务必安排足够的 silence 留白 ... ]
+  "archetype": "one of the 13 English keys above",
+  "title": "the dream's title (can be obscure and poetic, 4-12 characters)",
+  "afterglow": "a lingering, hard-to-name physical sensation/feeling upon waking (e.g. \\"throat tight\\" \\"like something was lost\\"), **must never summarize or explain the dream**, no moral, no plot recap (1 sentence, leave it spare)",
+  "buff": { "name": "English key", "label": "emotion label (short phrase)", "emoji": "1 emoji", "color": "#hex", "intensity": 1|2|3, "description": "one sentence describing the emotional undertone, for the AI to read" },
+  "fragments": [ ... 18-40 fragments, varied in density, be sure to include enough silence for blank space ... ]
 }
 
-每个碎片含 "kind" 及对应字段，可选 "emphasis"("whisper"|"normal"|"loud"|"fade")、"align"("left"|"center"|"right")、"pace"(1普通|2稍慢|3漫长)：
-- {"kind":"line","text":"门在微笑。","emphasis":"normal"}            // 一句飘过的字幕（可含换行）
-- {"kind":"word","text":"海","emphasis":"loud"}                      // 单字/单词，巨大孤立
-- {"kind":"silence","pace":3}                                        // 留白·沉默（空屏长停顿，必须穿插）
-- {"kind":"repeat","text":"别走","count":4}                          // 同一个词反复
-- {"kind":"dialogue","lines":["你还在吗","——","（没有人回答）"]}      // 极短对话碎片
-- {"kind":"stage","text":"灯一盏盏亮起，又一盏盏忘记自己亮过"}        // 舞台提示（中括号感）
-- {"kind":"list","lines":["丢失的：钥匙","丢失的：名字","丢失的：你"]} // 清单
-- {"kind":"screenplay","lines":["内景 · 不存在的房间 — 夜","她（背对着）：你来晚了。","门：没关系。"]} // 剧本片段
-- {"kind":"diary","text":"今天又梦见那片海。或者那是昨天。","date":"某个星期天"} // 日记残页
-- {"kind":"message","text":"我把月亮放进口袋了，回来给你看","date":"发送给 ——"} // 发给无人的消息
-- {"kind":"image","caption":"一只倒着飞的鸟","tint":"#5a6a7a"}        // 纯文字成像的象征画面（caption 即诗，无图片占位）
+Each fragment has a "kind" plus its matching fields, and optionally "emphasis" ("whisper"|"normal"|"loud"|"fade"), "align" ("left"|"center"|"right"), "pace" (1 normal | 2 slightly slow | 3 long):
+- {"kind":"line","text":"The door is smiling.","emphasis":"normal"}   // a subtitle line drifting past (can include line breaks)
+- {"kind":"word","text":"Ocean","emphasis":"loud"}                     // a single word, huge and isolated
+- {"kind":"silence","pace":3}                                         // blank space · silence (a long empty pause, must be interspersed)
+- {"kind":"repeat","text":"Don't go","count":4}                       // the same word repeated
+- {"kind":"dialogue","lines":["Are you still there","--","(No one answers)"]} // a very short dialogue fragment
+- {"kind":"stage","text":"The lights come on one by one, then forget one by one that they were ever lit"} // a stage direction (bracketed feel)
+- {"kind":"list","lines":["Lost: the keys","Lost: the name","Lost: you"]} // a list
+- {"kind":"screenplay","lines":["INT. A ROOM THAT DOESN'T EXIST -- NIGHT","HER (back turned): You're late.","THE DOOR: It's fine."]} // a screenplay snippet
+- {"kind":"diary","text":"Dreamed of that ocean again today. Or was that yesterday.","date":"some Sunday"} // a diary page fragment
+- {"kind":"message","text":"I put the moon in my pocket, I'll show you when I'm back","date":"sent to --"} // a message sent to no one
+- {"kind":"image","caption":"a bird flying backward","tint":"#5a6a7a"} // a purely text-conjured symbolic image (the caption is the poem, no image placeholder)
 
-务必：18~40 个碎片、大量 silence 留白、kind 多样、意象并置而非叙述、敢于矛盾与不可能、**结尾戛然而止不收束不点题**。**保证 JSON 完整闭合**——篇幅吃紧就砍中段碎片，也要把括号全部闭合。直接输出 JSON 对象。`;
+Required: 18-40 fragments, plenty of silence for blank space, varied kinds, images juxtaposed rather than narrated, be bold with contradiction and impossibility, **the ending cuts off abruptly, no resolution, no moral**. **Keep the JSON fully closed** — if space is tight, cut fragments from the middle, but still close every bracket. Output the JSON object directly.`;
 }
 
 function parseDream(raw: string): DreamScript | null {
@@ -285,7 +295,7 @@ function parseDream(raw: string): DreamScript | null {
 }
 
 // ============================================================
-//  AMBIENT — 漂浮点缀（按原型不同）
+//  AMBIENT — floating decoration (varies by archetype)
 // ============================================================
 const Ambient: React.FC<{ kind: Ambient; accent: string }> = ({ kind, accent }) => {
     if (kind === 'none') return null;
@@ -326,9 +336,10 @@ const Ambient: React.FC<{ kind: Ambient; accent: string }> = ({ kind, accent }) 
 };
 
 // ============================================================
-//  CUT-UP — 拼贴诗的精髓：一句话里每个字/词都像从不同地方剪来——
-//  字体 / 字号 / 粗细 / 角度 / 基线 / 浓淡 / 偶尔的小纸片底色各不相同，
-//  却恰好拼成完整的一句。
+//  CUT-UP — the essence of collage poetry: every character/word in a sentence
+//  looks like it was cut from somewhere different — font / size / weight / angle /
+//  baseline / opacity / occasional little paper-scrap background color all vary,
+//  yet they piece together into one complete sentence.
 // ============================================================
 const CUT_FONTS = [
     "'Shippori Mincho','Noto Serif SC',serif",
@@ -337,7 +348,7 @@ const CUT_FONTS = [
     "'SF Mono','Roboto Mono',ui-monospace,monospace",
     "'Songti SC','Shippori Mincho',serif",
 ];
-// 切成可独立造型的小片：中文按字、西文按词、换行单列、标点/空格保留
+// Split into independently-styleable pieces: CJK by character, Latin by word, newlines on their own, punctuation/spaces kept
 const cutTokens = (text: string): string[] =>
     text.match(/[一-鿿]|[A-Za-z0-9'’]+|\n|[^\s]|[ \t]+/g) || [text];
 
@@ -375,18 +386,19 @@ const Cut: React.FC<{ text: string; theme: DreamTheme; seed?: number; base?: num
     );
 
 // ============================================================
-//  COLLAGE — 碎片各自不同的对齐 / 角度 / 大小 / 浓淡，逐个浮现并「累积」
-//  在同一张可滚动画布上，靠并置与留白产生意义。
+//  COLLAGE — fragments each get their own alignment / angle / size / opacity,
+//  appearing one by one and "accumulating" on the same scrollable canvas,
+//  producing meaning through juxtaposition and blank space.
 // ============================================================
 const emphOpacity = (e?: DreamFragment['emphasis']): number =>
     e === 'whisper' ? 0.52 : e === 'fade' ? 0.32 : e === 'loud' ? 1 : 0.85;
 
 const CollageItem: React.FC<{ frag: DreamFragment; theme: DreamTheme; index: number }> = ({ frag, theme, index }) => {
     const i = index;
-    const ff = SERIF;                  // 梦以衬线诗体为主；剧本用等宽
+    const ff = SERIF;                  // Dreams are mostly serif poetic type; screenplay uses monospace
     const tint = theme.accent;
 
-    // silence = 纯留白（负空间），偶尔留一点极淡的痕迹——而不是一整屏「啥也没有」
+    // silence = pure blank space (negative space), occasionally leaving a very faint trace — rather than a whole screen of "nothing at all"
     if (frag.kind === 'silence') {
         const h = 52 + Math.floor(rnd(i + 1) * 78);
         return (
@@ -396,7 +408,7 @@ const CollageItem: React.FC<{ frag: DreamFragment; theme: DreamTheme; index: num
         );
     }
 
-    // 拼贴摆位：左/中/右散布 + 轻微旋转 + 不等的上间距（负空间）
+    // Collage placement: left/center/right scatter + slight rotation + uneven top spacing (negative space)
     const kindForcesLeft = frag.kind === 'list' || frag.kind === 'screenplay' || frag.kind === 'dialogue' || frag.kind === 'diary';
     const align: 'left' | 'center' | 'right' =
         frag.kind === 'message' ? 'right'
@@ -447,7 +459,7 @@ const CollageItem: React.FC<{ frag: DreamFragment; theme: DreamTheme; index: num
             ))}
         </span>;
     } else if (frag.kind === 'screenplay') {
-        // 做成一张「剧本场景卡」：胶片齿孔 + slug 场景头 + 角色名居中/台词在下，动作行作旁白
+        // Rendered as a "screenplay scene card": film sprocket holes + slug scene header + character name centered/dialogue below, action lines as narration
         const ls = frag.lines || [];
         const slug = ls[0] || '';
         const body = ls.slice(1);
@@ -455,14 +467,14 @@ const CollageItem: React.FC<{ frag: DreamFragment; theme: DreamTheme; index: num
             <span className="inline-block w-full text-left" style={{ maxWidth: 300 }}>
                 <span className="block relative rounded-2xl overflow-hidden border pt-4 pb-4 px-4"
                     style={{ borderColor: `${tint}33`, background: 'linear-gradient(165deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012))', boxShadow: `0 10px 34px ${tint}16` }}>
-                    {/* 顶部一道光 + 胶片齿孔 */}
+                    {/* A streak of light along the top + film sprocket holes */}
                     <span className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${tint}66, transparent)` }} />
                     <span className="absolute inset-x-0 top-1.5 flex justify-between px-3 pointer-events-none" aria-hidden>
                         {Array.from({ length: 9 }).map((_, d) => (
                             <span key={d} className="block rounded-[1px]" style={{ width: 5, height: 3, background: `${tint}2e` }} />
                         ))}
                     </span>
-                    {/* slug：内景/外景 · 地点 — 时间 */}
+                    {/* slug: INT/EXT · location — time */}
                     <span className="block text-[9.5px] tracking-[0.28em] uppercase mt-2 mb-2.5 pb-1.5 border-b"
                         style={{ color: tint, borderColor: `${tint}24`, fontFamily: MONO }}>▸ {slug}</span>
                     <span className="flex flex-col gap-2.5 items-stretch">
@@ -483,7 +495,7 @@ const CollageItem: React.FC<{ frag: DreamFragment; theme: DreamTheme; index: num
                                     </span>
                                 );
                             }
-                            // 动作 / 舞台指示行
+                            // Action / stage direction line
                             return <span key={k} className="text-[12px] text-white/45 italic text-center leading-relaxed" style={{ fontFamily: ff }}>— {l} —</span>;
                         })}
                     </span>
@@ -500,14 +512,14 @@ const CollageItem: React.FC<{ frag: DreamFragment; theme: DreamTheme; index: num
         inner = <span className="inline-flex flex-col items-end gap-1">
             {frag.date && <span className="text-[9.5px] text-white/30 pr-1">{frag.date}</span>}
             <span className="px-3.5 py-2 rounded-2xl rounded-br-md text-[13.5px] leading-relaxed text-[#15121c]" style={{ background: tint, maxWidth: 230 }}>{frag.text}</span>
-            <span className="text-[8.5px] text-white/25 pr-1">· 未送达 ·</span>
+            <span className="text-[8.5px] text-white/25 pr-1">· Undelivered ·</span>
         </span>;
-    } else { // image — 不画图片占位框，配文本身就是诗：只渲染拼贴诗，留一点点色调点缀
+    } else { // image — no image placeholder drawn; the caption itself is the poem: renders only the collage poetry, with a hint of tint
         const it = frag.tint || tint;
         const cap = frag.caption || frag.text || '';
         inner = cap ? (
             <span className="inline-flex flex-col items-center gap-1.5">
-                {/* 一道极细的色调短线，作为「这是一帧画面」的暗示，而非空白占位框 */}
+                {/* A very thin tinted line, hinting "this is a frame of a picture" rather than a blank placeholder box */}
                 <span className="block rounded-full" style={{ width: 26, height: 2, background: `${it}`, boxShadow: `0 0 10px ${it}aa` }} />
                 <span className="leading-relaxed text-center" style={{ maxWidth: 232 }}>
                     <Cut text={cap} theme={theme} seed={i + 99} base={15} intensity={0.95} />
@@ -531,9 +543,11 @@ const Shell: React.FC<{ children: React.ReactNode; bg: string }> = ({ children, 
 );
 
 const TopBar: React.FC<{ onBack: () => void; right?: React.ReactNode }> = ({ onBack, right }) => (
-    // 顶栏自己接管安全区：统一用全局 --chrome-top（= --safe-top + SullyOS 状态栏高度，
-    // 状态栏隐藏时自动退化为 --safe-top），与「彼方 / 交换日记 / 剧场」等全屏面板一致。
-    // 之前用裸 env(safe-area-inset-top) 少让了状态栏那一段，返回键顶得太高。
+    // The top bar handles the safe area itself: uses the global --chrome-top uniformly
+    // (= --safe-top + SullyOS status bar height, automatically falling back to --safe-top
+    // when the status bar is hidden), matching full-screen panels like Beyond / Exchange
+    // Diary / Theater. Previously used bare env(safe-area-inset-top), which didn't account
+    // for the status bar and pushed the back button too high.
     <div className="flex items-center justify-between px-4 shrink-0 pb-2 z-30"
         style={{ paddingTop: 'calc(var(--chrome-top) + 0.25rem)' }}>
         <button onClick={onBack} className="w-9 h-9 -ml-1 rounded-full flex items-center justify-center text-white/70 bg-white/[0.05] border border-white/[0.08] active:scale-90 transition">
@@ -543,7 +557,7 @@ const TopBar: React.FC<{ onBack: () => void; right?: React.ReactNode }> = ({ onB
     </div>
 );
 
-// 梦境系统内统一的小弹窗（不用浏览器原生 confirm/alert）——暗色玻璃，居中浮起。
+// The dream system's own unified small popup (not the browser's native confirm/alert) — dark glass, floats centered.
 const DreamPopup: React.FC<{ title: string; onClose: () => void; children: React.ReactNode; actions?: React.ReactNode }> =
     ({ title, onClose, children, actions }) => (
     <div className="absolute inset-0 z-[60] flex items-center justify-center p-7" onClick={onClose}>
@@ -563,12 +577,12 @@ const DreamPopup: React.FC<{ title: string; onClose: () => void; children: React
 // ============================================================
 type Phase = 'idle' | 'loading' | 'play' | 'end' | 'error' | 'archive' | 'collection';
 
-/** 同一日历日判定（每日梦境限制用） */
+/** Same calendar day check (used for the daily dream limit) */
 const isSameDay = (a: number, b: number): boolean => {
     const da = new Date(a), db = new Date(b);
     return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate();
 };
-/** 每个角色每天最多看到的梦境「种类」数 */
+/** Max number of distinct dream "types" any one character can show per day */
 const DREAM_DAILY_TYPE_CAP = 3;
 
 const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = ({ char, onExit }) => {
@@ -576,20 +590,20 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
 
     const [phase, setPhase] = useState<Phase>('idle');
     const [script, setScript] = useState<DreamScript | null>(null);
-    const [revealed, setRevealed] = useState(1);   // 已浮现的碎片数（拼贴累积，纯轻触推进）
-    // 仅本地测试：强制指定原型（null = 让模型自动选）
+    const [revealed, setRevealed] = useState(1);   // Number of fragments revealed so far (collage accumulation, pure tap-to-advance)
+    // Local testing only: force a specific archetype (null = let the model choose automatically)
     const [forcedArchetype, setForcedArchetype] = useState<DreamArchetype | null>(null);
     const devAvailable = isDevDebugAvailable();
-    // 盲盒收藏册（账号级）+ 本场抽到的盲盒结果
+    // Blind box collection (account-level) + this session's blind box result
     const [collection, setCollection] = useState<DreamCollection>(() => loadCollection());
     const [boxReveal, setBoxReveal] = useState<{ archetype: DreamArchetype; isNew: boolean; count: number } | null>(null);
     const savedRef = useRef(false);
     const scrollRef = useRef<HTMLDivElement | null>(null);
-    // 长按检测（梦的残页删除）：计时 + 已触发标记（防止松手时又触发 replay）
+    // Long-press detection (deleting a dream page): timer + a "fired" flag (prevents releasing from also triggering replay)
     const lpTimerRef = useRef<number | null>(null);
     const lpFiredRef = useRef(false);
     const clearLp = () => { if (lpTimerRef.current) { window.clearTimeout(lpTimerRef.current); lpTimerRef.current = null; } };
-    // 弹窗：规则说明（？）/ 每日限制提醒 / 删除残页确认
+    // Popups: rules explainer (?) / daily limit reminder / delete-page confirmation
     const [showHelp, setShowHelp] = useState(false);
     const [dayPrompt, setDayPrompt] = useState<'seen' | 'limit' | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<DreamLog | null>(null);
@@ -600,46 +614,48 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
 
     const dreamSim = useDreamSim();
 
-    // ----- generate（后台进行：生成期间用户可离开小屋，好了全局提示 + 深链回来）-----
+    // ----- generate (runs in the background: the user can leave the Dwelling while it generates, a global toast + deep link brings them back) -----
     const start = useCallback(async (opts?: { override?: boolean }) => {
         if (!apiConfig?.baseUrl || !apiConfig?.apiKey || !apiConfig?.model) {
-            addToast('请先在设置里配置 API', 'error'); return;
+            addToast('Please configure the API in Settings first', 'error'); return;
         }
-        // 每日限制：一天原则上只看一个梦；重复生成会提醒，可「少管我！」强行再看；
-        // 但同一天对同一角色最多只能看到 DREAM_DAILY_TYPE_CAP 种不同类型的梦。
-        // （dev 强制指定原型时跳过限制，方便本地测试。）
+        // Daily limit: in principle only one dream per day; generating again triggers a
+        // reminder, which can be overridden with "Leave me alone!"; but the same character
+        // can show at most DREAM_DAILY_TYPE_CAP distinct dream types per day.
+        // (Skipped when a dev forces a specific archetype, for easier local testing.)
         if (!forcedArchetype) {
             const today = (char.dreamLogs || []).filter(l => isSameDay(l.timestamp, Date.now()));
             const distinctTypes = new Set(today.map(l => l.archetype)).size;
             if (today.length >= DREAM_DAILY_TYPE_CAP || distinctTypes >= DREAM_DAILY_TYPE_CAP) {
-                setDayPrompt('limit'); return;   // 到顶了，硬拦，不给 override
+                setDayPrompt('limit'); return;   // Hit the cap, hard block, no override
             }
             if (today.length >= 1 && !opts?.override) {
-                setDayPrompt('seen'); return;    // 已看过，软提醒，可 override
+                setDayPrompt('seen'); return;    // Already seen one, soft reminder, can override
             }
         }
         setDayPrompt(null);
         const cid = char.id, cname = char.name;
         savedRef.current = false; setRevealed(1); setBoxReveal(null);
         setPhase('loading');
-        trackEvent('生成一场梦境');
+        trackEvent('Generate a Dream');
         dreamSimStore.set({ status: 'loading', charId: cid, charName: cname });
-        // 原型由应用端抽（dev 强制时优先 dev）：保证多样、不老 roll 同一种、隐藏款按掉率出
+        // Archetype is drawn by the app side (dev-forced value takes priority): guarantees variety, avoids repeatedly rolling the same one, hidden entry appears at its drop rate
         const chosenArchetype = forcedArchetype || rollArchetype(char.dreamLogs);
         try {
-            // 注意：不在 await 后直接 setState 播放，交给下方 consume effect 统一消费
-            // （这样即使用户已离开、组件卸载，生成照常完成、全局指示条接管）
+            // Note: doesn't setState to play right after await — that's handled uniformly by
+            // the consume effect below (so generation still completes even if the user has
+            // left and the component unmounted, and the global indicator bar takes over)
             const s = await generateDreamScript({ char, userProfile, apiConfig, forcedArchetype: chosenArchetype });
             dreamSimStore.set({ status: 'ready', charId: cid, charName: cname, script: s });
-            addToast('梦已成形', 'success');
+            addToast('The dream has taken shape', 'success');
         } catch (e) {
             console.error('dream gen failed', e);
             dreamSimStore.set({ status: 'error', charId: cid, charName: cname });
-            addToast('梦没能成形，请重试', 'error');
+            addToast('The dream failed to take shape, please try again', 'error');
         }
     }, [apiConfig, char, userProfile, addToast, forcedArchetype]);
 
-    // ----- consume：把全局生成结果落到本地播放（含深链回来后的首次消费）-----
+    // ----- consume: lands the globally generated result into local playback (including first consumption after returning via deep link) -----
     useEffect(() => {
         if (dreamSim.status === 'ready' && dreamSim.charId === char.id && dreamSim.script) {
             savedRef.current = false; setBoxReveal(null);
@@ -652,7 +668,7 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
         }
     }, [dreamSim, char.id]);
 
-    // ----- persist + buff on reaching the end -----
+    // ----- persist + buff when reaching the end -----
     const persist = useCallback((s: DreamScript) => {
         if (savedRef.current) return;
         savedRef.current = true;
@@ -667,7 +683,7 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
             script: s,
         };
 
-        // 情绪 buff —— 与 PersonaSim 一致，仅在该角色开启了日程/情绪系统时写入
+        // Emotion buff — consistent with PersonaSim, only written when this character has the schedule/emotion system enabled
         const scheduleOn = isScheduleFeatureOn(char);
         const newBuff: CharacterBuff | null = (scheduleOn && s.buff?.label) ? {
             id: `buff_${Date.now()}`,
@@ -689,8 +705,8 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                 dispatchBuffs = nextBuffs;
                 return {
                     activeBuffs: nextBuffs,
-                    // 角色不记得梦，但残留一层情绪底色 —— 注入时点明「说不清来由」
-                    buffInjection: s.buff.description ? `（${newBuff.emoji || ''}${newBuff.label}·一场记不清的梦留下的）${s.buff.description}` : '',
+                    // The character doesn't remember the dream, but a layer of emotional residue lingers — spell out "can't say where it came from" when injecting
+                    buffInjection: s.buff.description ? `(${newBuff.emoji || ''}${newBuff.label} · left behind by a dream that's already faded) ${s.buff.description}` : '',
                     dreamLogs,
                 };
             }
@@ -703,74 +719,75 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
         }
     }, [char, updateCharacter, theme.accent]);
 
-    // ----- 收束：落库 + buff + 开盲盒 → end（双触发安全：savedRef 守卫，不重复抽/不覆盖揭晓） -----
+    // ----- wrap-up: save to DB + buff + open blind box → end (double-trigger safe: guarded by savedRef, no re-draw / no overwriting the reveal) -----
     const finishDream = useCallback(() => {
         if (!script) return;
-        if (savedRef.current) { setPhase('end'); return; } // 已收束过（含 replay）→ 只去结束页
-        persist(script);                                   // 内部置 savedRef=true
+        if (savedRef.current) { setPhase('end'); return; } // Already wrapped up (including replay) → just go to the end page
+        persist(script);                                   // Sets savedRef=true internally
         const r = unlockCollectible(script.archetype);
         setCollection(r.collection);
         setBoxReveal({ archetype: script.archetype, isNew: r.isNew, count: r.count });
         setPhase('end');
     }, [script, persist]);
 
-    // 纯轻触推进：不再自动播放、也不自动收束——读完由用户点「醒来」或轻触收束，
-    // 让人可以在最后那页拼贴诗上停留多久都行。
+    // Pure tap-to-advance: no more auto-play, no auto wrap-up either — the user taps
+    // "Wake up" or taps to finish once they're done reading, letting them linger on
+    // that last collage-poem page for as long as they want.
 
-    // ----- 新碎片浮现时平滑滚到底，让最新的进入视野 -----
+    // ----- smooth-scroll to the bottom whenever a new fragment appears, so the latest one enters view -----
     useEffect(() => {
         if (phase !== 'play' || !scrollRef.current) return;
         const el = scrollRef.current;
         requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }));
     }, [revealed, phase]);
 
-    // 轻触：让下一片浮现；都浮现完则收束
+    // Tap: reveal the next fragment; wrap up once all are revealed
     const revealNextOrFinish = () => {
         if (revealed < frags.length) setRevealed(r => Math.min(frags.length, r + 1));
         else finishDream();
     };
 
-    const restart = () => { savedRef.current = true; setRevealed(1); setPhase('play'); trackEvent('重看一遍刚做完的梦'); };
+    const restart = () => { savedRef.current = true; setRevealed(1); setPhase('play'); trackEvent('Replay Just-Finished Dream'); };
 
     // ----- replay a saved dream -----
     const replay = (s: DreamScript) => {
-        savedRef.current = true; // 重看不再写库 / 不再叠 buff / 不再抽盲盒
+        savedRef.current = true; // Replaying doesn't write to DB again / doesn't stack another buff / doesn't draw another blind box
         setBoxReveal(null);
         setScript(s); setRevealed(1); setPhase('play');
     };
 
-    // ----- 删除一页「梦的残页」（长按触发，走自定义确认弹窗，不用原生 confirm）-----
+    // ----- delete a "dream page" (triggered by long-press, uses a custom confirm popup, not the native confirm) -----
     const handleDeleteLog = (log: DreamLog) => {
         updateCharacter(char.id, (cur) => ({ dreamLogs: (cur.dreamLogs || []).filter(l => l.id !== log.id) }));
         setConfirmDelete(null);
-        addToast('已撕掉这页梦', 'success');
-        trackEvent('撕掉一页梦的残页');
+        addToast('This dream page has been torn out', 'success');
+        trackEvent('Tear Out a Dream Page');
     };
 
     const dreamLogs = char.dreamLogs || [];
     const collectedCount = ALL_ARCHETYPES.filter(a => collection[a]).length;
 
-    // 每日限制提醒弹窗（idle 与 end 两处都可能触发「再生成」，共用同一份）
+    // Daily limit reminder popup (both idle and end can trigger "generate again," shared across both)
     const dayPromptPopups = (<>
         {dayPrompt === 'seen' && (
-            <DreamPopup title={`今天已经看过 ${char.name} 的梦了哦`} onClose={() => setDayPrompt(null)}
+            <DreamPopup title={`Already saw ${char.name}'s dream today`} onClose={() => setDayPrompt(null)}
                 actions={<>
-                    <button onClick={() => setDayPrompt(null)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white/70 bg-white/[0.06] border border-white/[0.1]">好的</button>
-                    <button onClick={() => { setDayPrompt(null); trackEvent('无视今日提醒再看一场梦'); start({ override: true }); }} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-[#15121c]" style={{ background: '#cdd6ff' }}>少管我！</button>
+                    <button onClick={() => setDayPrompt(null)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white/70 bg-white/[0.06] border border-white/[0.1]">OK</button>
+                    <button onClick={() => { setDayPrompt(null); trackEvent('Dismiss Daily Reminder and Watch Another Dream'); start({ override: true }); }} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-[#15121c]" style={{ background: '#cdd6ff' }}>Leave me alone!</button>
                 </>}>
-                一天看太多梦，就不灵了。<br />真要再看一场吗？（今天最多 {DREAM_DAILY_TYPE_CAP} 种）
+                Watching too many dreams in one day dulls the magic.<br />Really want to see another? (Up to {DREAM_DAILY_TYPE_CAP} kinds today)
             </DreamPopup>
         )}
         {dayPrompt === 'limit' && (
-            <DreamPopup title={`今天 ${char.name} 的梦看满啦`} onClose={() => setDayPrompt(null)}
-                actions={<button onClick={() => setDayPrompt(null)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-[#15121c]" style={{ background: '#cdd6ff' }}>好吧，明天见</button>}>
-                同一天最多只能窥见 {DREAM_DAILY_TYPE_CAP} 种不同的梦。<br />剩下的，留给明晚。🌙
+            <DreamPopup title={`Hit today's dream limit for ${char.name}`} onClose={() => setDayPrompt(null)}
+                actions={<button onClick={() => setDayPrompt(null)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-[#15121c]" style={{ background: '#cdd6ff' }}>OK, see you tomorrow</button>}>
+                You can only peek at {DREAM_DAILY_TYPE_CAP} different dreams in one day.<br />The rest are saved for tomorrow night. 🌙
             </DreamPopup>
         )}
     </>);
 
     // ========================================================
-    //  IDLE — 入口
+    //  IDLE — entry screen
     // ========================================================
     if (phase === 'idle' || phase === 'error') {
         return (
@@ -778,10 +795,10 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                 <Ambient kind="stars" accent="#cdd6ff" />
                 <TopBar onBack={onExit} right={
                     <div className="flex items-center gap-2.5">
-                        <button onClick={() => { setPhase('collection'); trackEvent('打开梦境盲盒收藏册'); }} className="flex items-center gap-1 text-[11px] text-white/55 active:scale-95 transition">
-                            🐾 收藏册 <span className="tabular-nums opacity-70">{collectedCount}/{ALL_ARCHETYPES.length}</span>
+                        <button onClick={() => { setPhase('collection'); trackEvent('Open Dream Blind Box Collection'); }} className="flex items-center gap-1 text-[11px] text-white/55 active:scale-95 transition">
+                            🐾 Collection <span className="tabular-nums opacity-70">{collectedCount}/{ALL_ARCHETYPES.length}</span>
                         </button>
-                        <button onClick={() => { setShowHelp(true); trackEvent('打开梦境规则说明'); }} aria-label="梦境规则"
+                        <button onClick={() => { setShowHelp(true); trackEvent('Open Dream Rules'); }} aria-label="Dream Rules"
                             className="w-7 h-7 rounded-full flex items-center justify-center text-white/55 bg-white/[0.05] border border-white/[0.1] active:scale-90 transition">
                             <Question size={15} weight="bold" />
                         </button>
@@ -794,49 +811,49 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                     </div>
                     <div className="text-[10px] tracking-[0.4em] uppercase mb-3" style={{ color: '#cdd6ff' }}>Dream Theater</div>
                     <h1 className="text-[24px] font-light text-white leading-snug mb-4" style={{ fontFamily: SERIF }}>
-                        偷看一场<br />{char.name} 已经忘记的梦
+                        Sneak a peek at<br />a dream {char.name} has already forgotten
                     </h1>
                     <p className="text-[12px] text-white/45 leading-relaxed max-w-[270px] mb-1" style={{ fontFamily: SERIF }}>
-                        ta 睡着了。<br />
-                        梦不讲道理，也不必当真——<br />
-                        散落的画面、矛盾的时间、不可能的人。<br />
-                        看完，ta 不会记得，但你会。
+                        they're asleep.<br />
+                        Dreams don't have to make sense, or be taken seriously --<br />
+                        scattered images, contradictory timelines, impossible people.<br />
+                        When it's over, they won't remember, but you will.
                     </p>
 
                     {phase === 'error' && (
-                        <div className="mt-5 text-[12px] text-rose-300/80">梦没能成形…… 再试一次？</div>
+                        <div className="mt-5 text-[12px] text-rose-300/80">The dream failed to take shape... try again?</div>
                     )}
 
                     <button onClick={() => start()}
                         className="mt-9 w-full max-w-[280px] py-3.5 rounded-2xl text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition"
                         style={{ background: '#cdd6ff', color: '#15121c' }}>
-                        <Eye size={16} weight="fill" /> {forcedArchetype ? `测试：${THEMES[forcedArchetype].label}` : '走进 ta 的梦'}
+                        <Eye size={16} weight="fill" /> {forcedArchetype ? `Test: ${THEMES[forcedArchetype].label}` : "Step into their dream"}
                     </button>
                     <p className="text-[10px] text-white/25 mt-3 max-w-[250px] leading-relaxed">
-                        将读取 ta 的设定、记忆与最近的对话，编织成一场梦。可能需要一点时间。
+                        Reads their profile, memories, and recent conversation, and weaves them into a dream. May take a moment.
                     </p>
 
-                    {/* 入口：盲盒收藏册 / 梦的残页 */}
+                    {/* Entry points: blind box collection / dream pages */}
                     <div className="flex items-center gap-2.5 mt-7">
-                        <button onClick={() => { setPhase('collection'); trackEvent('打开梦境盲盒收藏册'); }}
+                        <button onClick={() => { setPhase('collection'); trackEvent('Open Dream Blind Box Collection'); }}
                             className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] border border-white/[0.1] bg-white/[0.04] text-white/75 active:scale-95 transition">
-                            🐾 盲盒收藏册 <span className="tabular-nums" style={{ color: '#cdd6ff' }}>{collectedCount}/{ALL_ARCHETYPES.length}</span>
+                            🐾 Blind Box Collection <span className="tabular-nums" style={{ color: '#cdd6ff' }}>{collectedCount}/{ALL_ARCHETYPES.length}</span>
                         </button>
                         {dreamLogs.length > 0 && (
-                            <button onClick={() => { setPhase('archive'); trackEvent('打开梦的残页存档'); }}
+                            <button onClick={() => { setPhase('archive'); trackEvent('Open Dream Page Archive'); }}
                                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] border border-white/[0.1] bg-white/[0.04] text-white/75 active:scale-95 transition">
-                                <MoonStars size={13} /> 梦的残页 <span className="tabular-nums opacity-70">{dreamLogs.length}</span>
+                                <MoonStars size={13} /> Dream Pages <span className="tabular-nums opacity-70">{dreamLogs.length}</span>
                             </button>
                         )}
                     </div>
 
-                    {/* 仅本地测试：指定梦境（管理员调试指令，正式版不显示） */}
+                    {/* Local testing only: force a dream archetype (admin debug directive, hidden in production) */}
                     {devAvailable && (
                         <div className="mt-8 w-full max-w-[300px] rounded-2xl border border-amber-300/20 bg-amber-300/[0.04] p-3.5">
                             <div className="flex items-center justify-between mb-2.5">
-                                <span className="text-[10px] tracking-wider text-amber-200/80 font-semibold">🛠 指定梦境 · 仅本地测试</span>
+                                <span className="text-[10px] tracking-wider text-amber-200/80 font-semibold">🛠 Force Dream Archetype · Local Testing Only</span>
                                 {forcedArchetype && (
-                                    <button onClick={() => setForcedArchetype(null)} className="text-[9px] text-white/40 underline active:scale-95">清除·改回自动</button>
+                                    <button onClick={() => setForcedArchetype(null)} className="text-[9px] text-white/40 underline active:scale-95">Clear · Back to Auto</button>
                                 )}
                             </div>
                             <div className="grid grid-cols-3 gap-1.5">
@@ -854,34 +871,34 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                                 })}
                             </div>
                             <p className="text-[9px] text-white/30 mt-2.5 leading-relaxed">
-                                勾一个则注入「管理员调试指令」，强制本次生成该原型（含隐藏·深眠）；不勾 = 模型自动选。
+                                Checking one injects an "admin debug directive," forcing this generation to use that archetype (including the hidden Deep Sleep); leave unchecked = the model chooses automatically.
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* 规则说明（右上角 ? 按钮） */}
+                {/* Rules explainer (top-right ? button) */}
                 {showHelp && (
-                    <DreamPopup title="🌙 梦境规则" onClose={() => setShowHelp(false)}
-                        actions={<button onClick={() => setShowHelp(false)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-[#15121c]" style={{ background: '#cdd6ff' }}>明白了</button>}>
+                    <DreamPopup title="🌙 Dream Rules" onClose={() => setShowHelp(false)}
+                        actions={<button onClick={() => setShowHelp(false)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-[#15121c]" style={{ background: '#cdd6ff' }}>Got it</button>}>
                         <div className="text-left space-y-2">
-                            <p>· 一天原则上只看 <b className="text-white/80">一个</b> {char.name} 的梦。重复生成会被提醒，你仍可选「少管我！」继续。</p>
-                            <p>· 但同一天对同一个人，最多只能看到 <b className="text-white/80">{DREAM_DAILY_TYPE_CAP} 种</b>不同类型的梦——看满了就明天再来。</p>
-                            <p>· 一共有 <b className="text-white/80">{ALL_ARCHETYPES.length}</b> 种梦，其中含 <b style={{ color: '#ffe08a' }}>1 个隐藏款 · 深眠</b>，小概率才会遇到。</p>
-                            <p>· 做完一场梦会抽到对应的梦境小猫，集进收藏册。</p>
-                            <p>· ta 不会记得这些梦，但醒来会残留一层说不清的情绪。「梦的残页」里可长按删除某一页。</p>
+                            <p>· In principle you only get <b className="text-white/80">one</b> {char.name} dream per day. Generating again triggers a reminder, but you can still pick "Leave me alone!" to continue.</p>
+                            <p>· But for the same person on the same day, you can see at most <b className="text-white/80">{DREAM_DAILY_TYPE_CAP} kinds</b> of dreams -- once you hit the cap, come back tomorrow.</p>
+                            <p>· There are <b className="text-white/80">{ALL_ARCHETYPES.length}</b> dream types in total, including <b style={{ color: '#ffe08a' }}>1 hidden entry · Deep Sleep</b>, which only shows up rarely.</p>
+                            <p>· Finishing a dream draws the matching dream cat, added to the collection.</p>
+                            <p>· they won't remember these dreams, but a hard-to-name feeling lingers after waking. You can long-press a page in "Dream Pages" to delete it.</p>
                         </div>
                     </DreamPopup>
                 )}
 
-                {/* 每日限制提醒 */}
+                {/* Daily limit reminder */}
                 {dayPromptPopups}
             </Shell>
         );
     }
 
     // ========================================================
-    //  ARCHIVE — 梦的残页
+    //  ARCHIVE — dream pages
     // ========================================================
     if (phase === 'archive') {
         return (
@@ -889,15 +906,15 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                 <Ambient kind="stars" accent="#cdd6ff" />
                 <TopBar onBack={() => setPhase('idle')} />
                 <div className="px-7 pb-3 shrink-0">
-                    <h2 className="text-[18px] font-light text-white" style={{ fontFamily: SERIF }}>梦的残页</h2>
-                    <p className="text-[11px] text-white/40 mt-1 leading-relaxed">那些你偷看到、而 ta 早已忘记的梦。<span className="text-white/30">长按一页可撕掉。</span></p>
+                    <h2 className="text-[18px] font-light text-white" style={{ fontFamily: SERIF }}>Dream Pages</h2>
+                    <p className="text-[11px] text-white/40 mt-1 leading-relaxed">Dreams you peeked at, that they have long since forgotten. <span className="text-white/30">Long-press a page to tear it out.</span></p>
                 </div>
                 <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-10 space-y-3">
                     {dreamLogs.map(log => {
                         const lt = THEMES[log.archetype] || THEMES.starry;
                         return (
                             <button key={log.id}
-                                onClick={() => { if (lpFiredRef.current) { lpFiredRef.current = false; return; } trackEvent('重看一场存档梦境'); log.script && replay(log.script); }}
+                                onClick={() => { if (lpFiredRef.current) { lpFiredRef.current = false; return; } trackEvent('Replay a Saved Dream'); log.script && replay(log.script); }}
                                 disabled={!log.script}
                                 onContextMenu={(e) => { e.preventDefault(); setConfirmDelete(log); }}
                                 onTouchStart={() => { lpFiredRef.current = false; clearLp(); lpTimerRef.current = window.setTimeout(() => { lpFiredRef.current = true; setConfirmDelete(log); }, 500); }}
@@ -910,10 +927,10 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                                         {lt.label}
                                     </span>
                                     <span className="text-[9px] text-white/30 tabular-nums">
-                                        {new Date(log.timestamp).toLocaleString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(log.timestamp).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
-                                <div className="text-[15px] font-light text-white mb-1" style={{ fontFamily: SERIF }}>{log.title || '无题的梦'}</div>
+                                <div className="text-[15px] font-light text-white mb-1" style={{ fontFamily: SERIF }}>{log.title || 'Untitled Dream'}</div>
                                 {log.afterglow && <p className="text-[12px] text-white/55 leading-relaxed" style={{ fontFamily: SERIF }}>{log.afterglow}</p>}
                                 {log.buff?.label && (
                                     <div className="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-full border text-[10px]"
@@ -926,14 +943,14 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                     })}
                 </div>
 
-                {/* 删除残页 · 自定义确认弹窗（不用浏览器原生 confirm）*/}
+                {/* Tear out a page · custom confirm popup (not the browser's native confirm) */}
                 {confirmDelete && (
-                    <DreamPopup title="撕掉这页梦？" onClose={() => setConfirmDelete(null)}
+                    <DreamPopup title="Tear out this dream page?" onClose={() => setConfirmDelete(null)}
                         actions={<>
-                            <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white/70 bg-white/[0.06] border border-white/[0.1]">留着</button>
-                            <button onClick={() => handleDeleteLog(confirmDelete)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5" style={{ background: '#e5566b' }}><Trash size={13} weight="bold" /> 撕掉</button>
+                            <button onClick={() => setConfirmDelete(null)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white/70 bg-white/[0.06] border border-white/[0.1]">Keep it</button>
+                            <button onClick={() => handleDeleteLog(confirmDelete)} className="flex-1 py-2.5 rounded-xl text-[12px] font-semibold text-white flex items-center justify-center gap-1.5" style={{ background: '#e5566b' }}><Trash size={13} weight="bold" /> Tear out</button>
                         </>}>
-                        「{confirmDelete.title || '无题的梦'}」<br />撕掉后这页残梦就再也找不回来了。
+                        "{confirmDelete.title || 'Untitled Dream'}"<br />Once torn out, this dream page is gone for good.
                     </DreamPopup>
                 )}
             </Shell>
@@ -941,7 +958,7 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
     }
 
     // ========================================================
-    //  COLLECTION — 盲盒收藏册（图鉴）
+    //  COLLECTION — blind box collection (album)
     // ========================================================
     if (phase === 'collection') {
         const total = ALL_ARCHETYPES.length;
@@ -954,7 +971,7 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                 <div className="px-7 pb-3 shrink-0">
                     <div className="text-[9px] tracking-[0.3em] uppercase" style={{ color: '#cdd6ff' }}>{DREAM_BOX_SERIES.sub} · Blind Box</div>
                     <h2 className="text-[19px] font-light text-white mt-1" style={{ fontFamily: SERIF }}>{DREAM_BOX_SERIES.title}</h2>
-                    <p className="text-[11px] text-white/40 mt-1 leading-relaxed">做完一场梦，就抽到那种梦的小猫。集齐它们。</p>
+                    <p className="text-[11px] text-white/40 mt-1 leading-relaxed">Finish a dream and draw that dream's cat. Collect them all.</p>
                     <div className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden mt-3">
                         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(collectedCount / total) * 100}%`, background: '#cdd6ff' }} />
                     </div>
@@ -964,7 +981,7 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                         {ALL_ARCHETYPES.map(a => {
                             const owned = collection[a];
                             const t = THEMES[a];
-                            const isSecret = a === 'deepsleep';   // 隐藏款 · 深眠 —— 要让人一眼看出「这格不一样」
+                            const isSecret = a === 'deepsleep';   // Hidden entry · Deep Sleep -- should read as "this tile is different" at a glance
                             const GOLD = '#ffe08a';
                             return (
                                 <div key={a} className={`relative rounded-2xl border overflow-hidden flex flex-col ${isSecret ? 'col-span-3 mx-auto' : ''}`}
@@ -973,10 +990,10 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                                         : owned
                                             ? { borderColor: `${t.accent}40`, background: `linear-gradient(160deg, ${t.accent}14, rgba(255,255,255,0.02))` }
                                             : { borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-                                    {/* 隐藏款角标：无论解锁与否都标出来，制造「特别款」的存在感 */}
+                                    {/* Hidden-entry badge: shown whether unlocked or not, to establish a "special edition" presence */}
                                     {isSecret && (
                                         <span className="absolute top-0 left-0 z-10 px-1.5 py-0.5 text-[7.5px] font-bold tracking-wider rounded-br-lg"
-                                            style={{ background: GOLD, color: '#15121c' }}>✦ 隐藏款</span>
+                                            style={{ background: GOLD, color: '#15121c' }}>✦ Hidden</span>
                                     )}
                                     {owned ? (
                                         <>
@@ -993,11 +1010,11 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                                             </div>
                                         </>
                                     ) : isSecret ? (
-                                        // 未解锁的隐藏款：金色问号 + 神秘提示，明显区别于普通锁
+                                        // Not-yet-unlocked hidden entry: gold question mark + mysterious hint, clearly distinct from a normal lock
                                         <div className="aspect-square flex flex-col items-center justify-center gap-2"
                                             style={{ background: `radial-gradient(circle at 50% 42%, ${GOLD}1f, transparent 70%)` }}>
                                             <Sparkle size={22} weight="fill" style={{ color: GOLD }} />
-                                            <span className="text-[8px] tracking-wider" style={{ color: `${GOLD}aa` }}>某种很罕见的梦</span>
+                                            <span className="text-[8px] tracking-wider" style={{ color: `${GOLD}aa` }}>Some very rare dream</span>
                                         </div>
                                     ) : (
                                         <div className="aspect-square flex flex-col items-center justify-center gap-2 text-white/20"
@@ -1011,7 +1028,7 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                         })}
                     </div>
                     <p className="text-[10px] text-white/25 mt-6 text-center leading-relaxed px-4">
-                        🐾 {DREAM_BOX_SERIES.title}<br />未解锁的梦境小猫，藏在还没做过的那种梦里。
+                        🐾 {DREAM_BOX_SERIES.title}<br />Locked dream cats are hiding inside dream types you haven't had yet.
                     </p>
                 </div>
             </Shell>
@@ -1031,14 +1048,14 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                         <MoonStars size={42} weight="light" style={{ color: '#cdd6ff' }} className="animate-pulse" />
                         <div className="absolute inset-0 blur-2xl rounded-full" style={{ background: '#cdd6ff55' }} />
                     </div>
-                    <div className="text-[13px] text-white/70" style={{ fontFamily: SERIF }}>ta 正在坠入梦里…</div>
+                    <div className="text-[13px] text-white/70" style={{ fontFamily: SERIF }}>they're drifting into a dream...</div>
                     <div className="text-[11px] text-white/35 leading-relaxed" style={{ fontFamily: SERIF }}>
-                        把记忆、对话与情绪揉成一场<br />说不清的梦，可能需要一点时间。
+                        Kneading memories, conversation, and emotion into<br />a dream that's hard to put into words. May take a moment.
                     </div>
                     <button onClick={onExit} className="mt-2 px-5 py-2.5 rounded-xl text-[12px] text-white/70 bg-white/[0.06] border border-white/[0.08] active:scale-95 transition">
-                        先离开 · 好了通知我
+                        Leave for now · Notify me when it's ready
                     </button>
-                    <p className="text-[10px] text-white/30 leading-relaxed">梦在后台继续编织，<br />成形后顶部会出现提示，点一下就能回来。</p>
+                    <p className="text-[10px] text-white/30 leading-relaxed">The dream keeps weaving in the background,<br />a prompt will appear at the top once it's ready -- tap it to come back.</p>
                 </div>
             </Shell>
         );
@@ -1053,8 +1070,8 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                 <Ambient kind={theme.ambient} accent={theme.accent} />
                 <div className="flex-1 flex flex-col items-center justify-center px-9 text-center animate-fade-in">
                     <MoonStars size={isDeepSleep ? 28 : 26} weight="light" className="text-white/30 mb-5" />
-                    <div className="text-[10px] tracking-[0.3em] uppercase text-white/35 mb-3">{isDeepSleep ? '一夜无梦' : '梦醒了'}</div>
-                    <h2 className="text-[21px] font-light text-white mb-3" style={{ fontFamily: SERIF }}>{script?.title || (isDeepSleep ? '深眠' : '无题的梦')}</h2>
+                    <div className="text-[10px] tracking-[0.3em] uppercase text-white/35 mb-3">{isDeepSleep ? 'A Night Without Dreams' : 'The Dream Has Ended'}</div>
+                    <h2 className="text-[21px] font-light text-white mb-3" style={{ fontFamily: SERIF }}>{script?.title || (isDeepSleep ? 'Deep Sleep' : 'Untitled Dream')}</h2>
                     <div className="text-[10px] mb-4 px-3 py-1 rounded-full" style={{ color: theme.accent, background: `${theme.accent}1f` }}>{theme.label}</div>
                     {script?.afterglow && (
                         <p className="text-[14px] text-white/65 leading-loose max-w-[280px]" style={{ fontFamily: SERIF }}>{script.afterglow}</p>
@@ -1065,16 +1082,16 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                             <span className="text-base">{script.buff.emoji || '✨'}</span>
                             <div className="text-left">
                                 <div className="text-[12px] font-semibold text-white">{script.buff.label}</div>
-                                <div className="text-[9px] text-white/45">一层说不清来由的情绪，留在了 ta 身上</div>
+                                <div className="text-[9px] text-white/45">A feeling they can't quite place has stayed with them</div>
                             </div>
                         </div>
                     )}
 
-                    {/* 盲盒揭晓 —— 这场梦抽到的小猫 */}
+                    {/* Blind box reveal -- the cat drawn from this dream */}
                     {boxReveal && (
                         <div className="mt-7 flex flex-col items-center animate-pop-in">
                             <div className="relative">
-                                {/* sparkle 环 */}
+                                {/* sparkle ring */}
                                 <Sparkle size={16} weight="fill" className="absolute -top-1 -left-2 animate-pulse" style={{ color: theme.accent }} />
                                 <Sparkle size={12} weight="fill" className="absolute top-3 -right-3 animate-pulse" style={{ color: theme.accent, animationDelay: '300ms' }} />
                                 <BoxCat archetype={boxReveal.archetype} size={128} />
@@ -1082,30 +1099,30 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                             <div className="mt-1 flex items-center gap-2">
                                 {boxReveal.isNew
                                     ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider" style={{ background: theme.accent, color: '#15121c' }}>NEW ✦</span>
-                                    : <span className="px-2 py-0.5 rounded-full text-[10px] text-white/60 border border-white/15">已有 · 再抽到 ×{boxReveal.count}</span>}
-                                <span className="text-[12px] text-white/80" style={{ fontFamily: SERIF }}>{THEMES[boxReveal.archetype].label}喵</span>
+                                    : <span className="px-2 py-0.5 rounded-full text-[10px] text-white/60 border border-white/15">Already have it · drawn again ×{boxReveal.count}</span>}
+                                <span className="text-[12px] text-white/80" style={{ fontFamily: SERIF }}>{THEMES[boxReveal.archetype].label} kitty</span>
                             </div>
-                            <button onClick={() => { setPhase('collection'); trackEvent('打开梦境盲盒收藏册'); }} className="mt-2 text-[11px] text-white/45 underline active:scale-95">
-                                {boxReveal.isNew ? '已收入收藏册 · 去看看' : '查看收藏册'}
+                            <button onClick={() => { setPhase('collection'); trackEvent('Open Dream Blind Box Collection'); }} className="mt-2 text-[11px] text-white/45 underline active:scale-95">
+                                {boxReveal.isNew ? 'Added to collection · Take a look' : 'View collection'}
                             </button>
                         </div>
                     )}
 
                     <p className="text-[10px] text-white/30 mt-6 max-w-[260px] leading-relaxed">
-                        ta 醒来后不会记得这场梦，<br />但梦与小猫，都被你悄悄收下了。
+                        they won't remember this dream after waking,<br />but you've quietly kept both the dream and the cat.
                     </p>
 
                     <div className="flex gap-3 mt-6">
                         <button onClick={restart} className="px-5 py-2.5 rounded-xl text-[12px] text-white/70 bg-white/[0.06] border border-white/[0.08] flex items-center gap-1.5 active:scale-95 transition">
-                            <ArrowClockwise size={14} /> 再看一遍
+                            <ArrowClockwise size={14} /> Watch again
                         </button>
                         <button onClick={() => start()} className="px-5 py-2.5 rounded-xl text-[12px] font-semibold flex items-center gap-1.5 active:scale-95 transition" style={{ background: theme.accent, color: '#15121c' }}>
-                            <MoonStars size={14} weight="fill" /> 再做一个梦
+                            <MoonStars size={14} weight="fill" /> Dream again
                         </button>
                     </div>
-                    <button onClick={onExit} className="mt-4 text-[11px] text-white/30">离开</button>
+                    <button onClick={onExit} className="mt-4 text-[11px] text-white/30">Leave</button>
                 </div>
-                {/* 「再做一个梦」也会触发每日限制提醒 */}
+                {/* "Dream again" also triggers the daily limit reminder */}
                 {dayPromptPopups}
             </Shell>
         );
@@ -1119,27 +1136,27 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
             <Shell bg={theme.bg}>
                 <div className="flex-1 flex flex-col items-center justify-center px-12 text-center select-none" onClick={finishDream}>
                     <div className="w-3 h-3 rounded-full bg-white/40 animate-dot-pulse" style={{ boxShadow: '0 0 30px rgba(255,255,255,0.3)' }} />
-                    <p className="text-[12px] text-white/20 mt-12 tracking-[0.3em]" style={{ fontFamily: SERIF }}>……</p>
-                    <p className="absolute bottom-12 text-[10px] text-white/20">轻触，醒来</p>
+                    <p className="text-[12px] text-white/20 mt-12 tracking-[0.3em]" style={{ fontFamily: SERIF }}>......</p>
+                    <p className="absolute bottom-12 text-[10px] text-white/20">Tap to wake up</p>
                 </div>
             </Shell>
         );
     }
 
     // ========================================================
-    //  PLAY — collage canvas（碎片累积，可滚动回看整首拼贴诗）
+    //  PLAY — collage canvas (fragments accumulate, scroll back to reread the whole collage poem)
     // ========================================================
     return (
         <Shell bg={theme.bg}>
             <Ambient kind={theme.ambient} accent={theme.accent} />
 
-            {/* exit（放弃，不收束） */}
+            {/* exit (abandon, don't wrap up) */}
             <button onClick={onExit} className="absolute top-0 left-0 m-3 w-9 h-9 rounded-full flex items-center justify-center text-white/40 bg-white/[0.04] border border-white/[0.06] active:scale-90 transition z-30"
                 style={{ marginTop: 'max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))' }}>
                 <X size={16} />
             </button>
 
-            {/* 拼贴画布：轻触让下一片浮现；可上下滚动回看 */}
+            {/* Collage canvas: tap to reveal the next fragment; scroll up/down to reread */}
             <div ref={scrollRef} onClick={revealNextOrFinish}
                 className="flex-1 relative z-10 overflow-y-auto no-scrollbar select-none">
                 <div className="min-h-full flex flex-col px-7 pt-20 pb-44">
@@ -1148,23 +1165,23 @@ const DreamTheater: React.FC<{ char: CharacterProfile; onExit: () => void }> = (
                     ))}
                     {revealed >= frags.length && (
                         <div className="self-center mt-14 mb-4 flex flex-col items-center gap-3 animate-fade-in">
-                            <span className="text-white/25 tracking-[0.45em] text-[11px]" style={{ fontFamily: SERIF }}>梦在这里散了</span>
+                            <span className="text-white/25 tracking-[0.45em] text-[11px]" style={{ fontFamily: SERIF }}>The dream scatters here</span>
                             <button onClick={(e) => { e.stopPropagation(); finishDream(); }}
                                 className="px-6 py-2.5 rounded-full text-[12px] font-semibold active:scale-95 transition"
-                                style={{ background: theme.accent, color: '#15121c' }}>醒来</button>
+                                style={{ background: theme.accent, color: '#15121c' }}>Wake up</button>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* 底部：进度 + 提示 + 醒来（纯轻触推进，无自动播放） */}
+            {/* Bottom: progress + hint + wake up (pure tap-to-advance, no auto-play) */}
             <div className="shrink-0 z-30 px-6 pb-7 pt-2 bg-gradient-to-t from-black/40 to-transparent">
                 <div className="h-[2px] rounded-full bg-white/[0.06] overflow-hidden mb-3">
                     <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(revealed / Math.max(1, frags.length)) * 100}%`, background: `${theme.accent}88` }} />
                 </div>
                 <div className="flex items-center justify-between">
-                    <button onClick={(e) => { e.stopPropagation(); finishDream(); }} className="text-[11px] text-white/45 active:scale-95">醒来</button>
-                    <span className={`text-[10px] text-white/25 transition-opacity duration-1000 ${revealed > 2 ? 'opacity-0' : 'opacity-100'}`}>轻触，让梦一片片浮现</span>
+                    <button onClick={(e) => { e.stopPropagation(); finishDream(); }} className="text-[11px] text-white/45 active:scale-95">Wake up</button>
+                    <span className={`text-[10px] text-white/25 transition-opacity duration-1000 ${revealed > 2 ? 'opacity-0' : 'opacity-100'}`}>Tap to let the dream unfold, one fragment at a time</span>
                     <span className="text-[10px] text-white/25 tabular-nums">{Math.min(revealed, frags.length)}/{frags.length}</span>
                 </div>
             </div>
