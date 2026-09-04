@@ -231,12 +231,12 @@ describe('小红书：worker 够不着的服务器不写进 fire_pack', () => {
     };
 
     it('本机地址：前台照常教，打包时整段不进', async () => {
-        expect(await withServer('http://localhost:18060', false)).toContain('小红书');
-        expect(await withServer('http://localhost:18060', true)).not.toContain('小红书');
-        expect(await withServer('http://192.168.1.7:18060', true)).not.toContain('小红书');
+        expect(await withServer('http://localhost:18060', false)).toContain('Xiaohongshu');
+        expect(await withServer('http://localhost:18060', true)).not.toContain('Xiaohongshu');
+        expect(await withServer('http://192.168.1.7:18060', true)).not.toContain('Xiaohongshu');
     });
 
     it('公网地址：打包时照常带上', async () => {
-        expect(await withServer('https://xhs.example.com', true)).toContain('小红书');
+        expect(await withServer('https://xhs.example.com', true)).toContain('Xiaohongshu');
     });
 });
