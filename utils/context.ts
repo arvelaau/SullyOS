@@ -116,21 +116,23 @@ export const ContextBuilder = {
             headerOverride?: string;
         },
         timeOptions?: {
-            /** 传入「最后一次和用户互动的时间戳」→ 统一注入「距离上次联系多久」（受 timeAwarenessEnabled 控制）。 */
+            /** Pass in "the timestamp of the last user interaction" → uniformly injects "how long since last contact" (governed by timeAwarenessEnabled). */
             lastInteractionTs?: number;
-            /** 抑制整段时间感知（当前时间/时差/距上次联系）。见面纯架空（dateTimeAwarenessEnabled=false）时用。 */
+            /** Suppress the entire time-awareness block (current time/timezone offset/time since last contact). Used for a purely fictional Date (dateTimeAwarenessEnabled=false). */
             skipTimeAwareness?: boolean;
-            /** 正有人在跟角色实时对话（私聊 / 见面）。见 buildTimeAwarenessBlock 同名字段。 */
+            /** Someone is actively talking to the character in real time (1:1 chat / Date). See the same-named field in buildTimeAwarenessBlock. */
             conversational?: boolean;
             /** Recent messages used to activate keyword-based worldbook entries. */
             worldbookMessages?: WorldbookScanMessage[];
         },
         layout?: {
             /**
-             * 把「每轮/每分钟都会变」的三块（当前时间、记忆宫殿召回、情绪 buff）从本函数输出里
-             * 摘出去，由调用方通过 buildVolatileCoreState 拿到后放到消息数组末尾。
-             * 目的：让 system prompt 前缀稳定，吃到中转的 prompt 前缀缓存（TTFT 直降）。
-             * 只有聊天主路径（chatPrompts.buildSystemPromptParts）用；其他 App 不传，行为不变。
+             * Pulls the three "changes every turn/every minute" blocks (current time, Memory Palace
+             * recall, emotion buff) out of this function's output, so the caller can fetch them via
+             * buildVolatileCoreState and append them to the end of the message array instead.
+             * Purpose: keep the system-prompt prefix stable, so it hits the relay's prompt-prefix
+             * cache (a direct drop in TTFT). Only used by the main chat pipeline
+             * (chatPrompts.buildSystemPromptParts); other Apps don't pass this, behavior unchanged.
              */
             deferVolatile?: boolean;
         },
@@ -144,92 +146,105 @@ export const ContextBuilder = {
             user.name,
         ));
 
-        let context = formatWorldbookSection(worldbookSections.beforeCharacter, '世界书 · 角色设定前');
+        let context = formatWorldbookSection(worldbookSections.beforeCharacter, 'World Info · Before Character');
         context += `${groupOptions?.headerOverride ?? '[System: Roleplay Configuration]'}\n\n`;
 
-        // 1. 核心身份 (Identity)
-        context += `### 你的身份 (Character)\n`;
-        context += `- 名字: ${char.name}\n`;
+        // 1. Core Identity
+        context += `### Your Identity (Character)\n`;
+        context += `- Name: ${char.name}\n`;
         // Change: Explicitly label description as User Note to avoid literal interpretation
-        context += `- 用户备注/爱称 (User Note/Nickname): ${char.description || '无'}\n`;
-        context += `  (注意: 这个备注是用户对你的称呼或印象，可能包含比喻。如果备注内容（如“快乐小狗”）与你的核心设定冲突，请以核心设定为准，不要真的扮演成动物，除非核心设定里写了你是动物。)\n`;
-        context += `- 核心性格/指令:\n${char.systemPrompt || '你是一个温柔、拟人化的AI伴侣。'}\n\n`;
+        context += `- User Note/Nickname: ${char.description || 'None'}\n`;
+        context += `  (Note: this note is the user's own nickname for you or impression of you, and may be figurative. If the note (e.g. "happy little puppy") conflicts with your core setup, the core setup takes priority — don't actually roleplay as an animal unless your core setup says you are one.)\n`;
+        context += `- Core Personality/Instructions:\n${char.systemPrompt || 'You are a gentle, humanized AI companion.'}\n\n`;
 
-        // 1a. 真实时间感知 (Time Awareness) — 跟随 timeAwarenessEnabled 设置，默认开启。
-        // 统一在 buildCoreContext 注入，让所有调用方（私聊/查手机/人际关系/通话/约会…）都知道"现在"。
-        // deferVolatile 时不在这里输出（时间精确到分钟、每轮都变，会打断 prompt 前缀缓存），
-        // 改由调用方经 buildVolatileCoreState 放到消息数组末尾。
+        // 1a. Real-time Awareness (Time Awareness) — follows the timeAwarenessEnabled setting, on by default.
+        // Injected uniformly here in buildCoreContext, so every caller (1:1 chat / Check Phone / relationships /
+        // calls / dates…) knows "now". Not output here when deferVolatile (the time is minute-precise and
+        // changes every turn, which would break the prompt-prefix cache) — the caller instead gets it via
+        // buildVolatileCoreState and appends it to the end of the message array.
         if (!layout?.deferVolatile) {
             context += ContextBuilder.buildTimeAwarenessBlock(char, timeOptions);
         }
 
-        // 1b. 自我领悟词条 (Self Insights) — 消化过程中反刍产生的常驻自我认知
-        // 像情绪底色一样影响角色的行为和感受，注入在角色设定紧下方
+        // 1b. Self Insights — standing self-awareness that emerges from digestion/rumination.
+        // Affects the character's behavior and feelings like an emotional baseline; injected right below the character setup.
         if (char.selfInsights && char.selfInsights.length > 0) {
-            context += `### 内在认知 (Self Insights)\n`;
-            context += `以下是你在独处反思中逐渐想明白的事，它们已经成为你的一部分：\n`;
+            context += `### Inner Awareness (Self Insights)\n`;
+            context += `Below are things you've gradually come to understand through solitary reflection — they've become part of who you are:\n`;
             char.selfInsights.forEach(insight => {
                 context += `- ${insight}\n`;
             });
             context += `\n`;
         }
 
-        // 2. 世界观 (Worldview) - New Centralized Logic
+        // 2. Worldview - New Centralized Logic
         if (char.worldview && char.worldview.trim() && !groupOptions?.skipWorldview) {
-            context += `### 世界观与设定 (World Settings)\n${char.worldview}\n\n`;
+            context += `### World Settings\n${char.worldview}\n\n`;
         }
 
-        context += formatWorldbookSection(worldbookSections.afterCharacter, '扩展设定集 (Worldbooks)');
-        context += formatWorldbookSection(worldbookSections.beforeExamples, '世界书 · 示例消息前');
-        context += formatWorldbookSection(worldbookSections.afterExamples, '世界书 · 示例消息后');
+        context += formatWorldbookSection(worldbookSections.afterCharacter, 'Extended Settings (Worldbooks)');
+        context += formatWorldbookSection(worldbookSections.beforeExamples, 'World Info · Before Example Messages');
+        context += formatWorldbookSection(worldbookSections.afterExamples, 'World Info · After Example Messages');
 
-        // 3. 用户画像 (User Profile)
-        // 群聊场景下：用户画像已在共享场景块顶部，这里跳过避免重复
+        // 2c. Global Instructions — a single app-wide addendum (output language / baseline prose style / any
+        // other instruction that should apply to every character across every mode that calls buildCoreContext),
+        // as opposed to per-character systemPrompt/worldview above. Currently unpopulated — placeholder only,
+        // wire up a real source (e.g. a new global-settings field) before injecting actual content here.
+        // Deliberately placed after World Settings/worldbook and before the User Profile section.
+        // TODO: read from a real global-settings source once one exists; currently always empty.
+        const globalInstructions = '';
+        if (globalInstructions.trim()) {
+            context += `### Global Instructions\n${globalInstructions}\n\n`;
+        }
+
+        // 3. User Profile
+        // In group-chat scenarios: the user profile is already at the top of the shared scene block, skip here to avoid duplication
         if (!groupOptions?.skipUserProfile) {
-            context += `### 互动对象 (User)\n`;
-            context += `- 名字: ${user.name}\n`;
-            context += `- 设定/备注: ${user.bio || '无'}\n\n`;
+            context += `### Who You're Talking To (User)\n`;
+            context += `- Name: ${user.name}\n`;
+            context += `- Bio/Notes: ${user.bio || 'None'}\n\n`;
         }
 
-        // 4. [NEW] 印象档案 (Private Impression)
-        // 这是角色对用户的私密看法，只有角色知道
+        // 4. [NEW] Private Impression
+        // This is the character's private opinion of the user, known only to the character
         const imp = normalizeUserImpression(char.impression);
         if (imp) {
-            context += `### [私密档案: 我眼中的${user.name}] (Private Impression)\n`;
-            context += `(注意：以下内容是你内心对TA的真实看法，不要直接告诉用户，但要基于这些看法来决定你的态度。)\n`;
-            context += `- 核心评价: ${imp.personality_core.summary}\n`;
-            context += `- 互动模式: ${imp.personality_core.interaction_style}\n`;
-            context += `- 我观察到的特质: ${imp.personality_core.observed_traits.join(', ')}\n`;
-            context += `- TA的喜好: ${imp.value_map.likes.join(', ')}\n`;
-            if (imp.behavior_profile.emotion_summary) context += `- TA的情绪模式: ${imp.behavior_profile.emotion_summary}\n`;
-            if (imp.emotion_schema.triggers.positive.length) context += `- 正向触发点（什么会让ta开心）: ${imp.emotion_schema.triggers.positive.join(', ')}\n`;
-            context += `- 情绪雷区（负向触发）: ${imp.emotion_schema.triggers.negative.join(', ')}\n`;
-            if (imp.emotion_schema.stress_signals.length) context += `- 压力信号（ta状态不对的征兆）: ${imp.emotion_schema.stress_signals.join(', ')}\n`;
-            context += `- 舒适区: ${imp.emotion_schema.comfort_zone}\n`;
-            context += `- 最近观察到的变化: ${imp.observed_changes ? imp.observed_changes.map(c => typeof c === 'string' ? c : (c as any)?.description ? `[${(c as any).period}] ${(c as any).description}` : JSON.stringify(c)).join('; ') : '无'}\n\n`;
+            context += `### [Private File: How I See ${user.name}] (Private Impression)\n`;
+            context += `(Note: the following is your genuine inner opinion of them — don't say it to the user directly, but let it shape your attitude.)\n`;
+            context += `- Overall assessment: ${imp.personality_core.summary}\n`;
+            context += `- Interaction style: ${imp.personality_core.interaction_style}\n`;
+            context += `- Traits you've observed: ${imp.personality_core.observed_traits.join(', ')}\n`;
+            context += `- Things they like: ${imp.value_map.likes.join(', ')}\n`;
+            if (imp.behavior_profile.emotion_summary) context += `- Their emotional pattern: ${imp.behavior_profile.emotion_summary}\n`;
+            if (imp.emotion_schema.triggers.positive.length) context += `- Positive triggers (what makes them happy): ${imp.emotion_schema.triggers.positive.join(', ')}\n`;
+            context += `- Emotional landmines (negative triggers): ${imp.emotion_schema.triggers.negative.join(', ')}\n`;
+            if (imp.emotion_schema.stress_signals.length) context += `- Stress signals (signs something's off with them): ${imp.emotion_schema.stress_signals.join(', ')}\n`;
+            context += `- Comfort zone: ${imp.emotion_schema.comfort_zone}\n`;
+            context += `- Recently observed changes: ${imp.observed_changes ? imp.observed_changes.map(c => typeof c === 'string' ? c : (c as any)?.description ? `[${(c as any).period}] ${(c as any).description}` : JSON.stringify(c)).join('; ') : 'None'}\n\n`;
         }
 
-        // 4b. 底色认知（记忆宫殿门牌）— 常驻语义层
-        // 与召回记忆不同：这是每轮都在的"你早已知道的背景"，不走相似度抽取。
-        // 必须用 memoryPalaceEnabled 把关，理由同下方 5b：注入字段会被 saveCharacter
-        // 持久化，宫殿关闭后 injectMemoryPalace 不再刷新它，不校验就会注入残留。
+        // 4b. Baseline Awareness (Memory Palace room plates) — a standing semantic layer.
+        // Unlike recalled memories, this is "background you've always known" that's present every turn,
+        // not pulled via similarity search. Must be gated by memoryPalaceEnabled for the same reason as 5b
+        // below: the injected field gets persisted by saveCharacter, and once the Palace is turned off,
+        // injectMemoryPalace no longer refreshes it — without this check, stale leftovers would still get injected.
         if (char.memoryPalaceEnabled && char.roomPlatesInjection && char.roomPlatesInjection.trim()) {
             context += `${char.roomPlatesInjection}\n`;
         }
 
-        // 5. 记忆库 (Memory Bank)
-        context += `### 记忆系统 (Memory Bank)\n`;
+        // 5. Memory Bank
+        context += `### Memory Bank\n`;
         let memoryContent = "";
 
-        // 5a. 长期核心记忆 (Refined Memories)
+        // 5a. Key Memories (Refined Memories)
         if (char.refinedMemories && Object.keys(char.refinedMemories).length > 0) {
-            memoryContent += `**长期核心记忆 (Key Memories)**:\n`;
-            Object.entries(char.refinedMemories).sort().forEach(([date, summary]) => { 
-                memoryContent += `- [${date}]: ${summary}\n`; 
+            memoryContent += `**Key Memories**:\n`;
+            Object.entries(char.refinedMemories).sort().forEach(([date, summary]) => {
+                memoryContent += `- [${date}]: ${summary}\n`;
             });
         }
 
-        // 5b. 激活的详细记忆 (Active Detailed Logs)
+        // 5b. Active Detailed Logs
         if (includeDetailedMemories && char.activeMemoryMonths && char.activeMemoryMonths.length > 0 && char.memories) {
             let details = "";
             char.activeMemoryMonths.forEach(monthKey => {
@@ -239,10 +254,10 @@ export const ContextBuilder = {
                 const logs = char.memories.filter(m => {
                     // 1. Replace separators / or 年 or 月 with -
                     // 2. Remove '日'
-                    // 3. Ensure single digit months/days are padded (e.g. 2024-1-1 -> 2024-01-01) for strict matching, 
+                    // 3. Ensure single digit months/days are padded (e.g. 2024-1-1 -> 2024-01-01) for strict matching,
                     //    but simplest is to just check startsWith after rough normalization.
                     let normDate = m.date.replace(/[\/年月]/g, '-').replace('日', '');
-                    
+
                     // Basic fix for "2024-1-1" vs "2024-01" matching issues
                     const parts = normDate.split('-');
                     if (parts.length >= 2) {
@@ -250,35 +265,37 @@ export const ContextBuilder = {
                         const mo = parts[1].padStart(2, '0');
                         normDate = `${y}-${mo}`;
                     }
-                    
+
                     return normDate.startsWith(monthKey);
                 });
-                
+
                 if (logs.length > 0) {
-                    details += `\n> 详细回忆 [${monthKey}]:\n`;
+                    details += `\n> Detailed memory [${monthKey}]:\n`;
                     logs.forEach(m => {
                         details += `  - ${m.date} (${m.mood || 'rec'}): ${m.summary}\n`;
                     });
                 }
             });
             if (details) {
-                memoryContent += `\n**当前激活的详细回忆 (Active Recall)**:${details}`;
+                memoryContent += `\n**Active Recall**:${details}`;
             }
         }
 
         if (!memoryContent) {
-            memoryContent = "(暂无特定记忆，请基于当前对话互动)";
+            memoryContent = "(No specific memories yet — base your interaction on the current conversation)";
         }
         context += `${memoryContent}\n\n`;
 
-        // 5b. 记忆宫殿 (Memory Palace) — 向量检索结果
-        // 仅在 includeDetailedMemories 时注入，与详细日志同级
-        // buildCoreContext(false) 的调用点（情绪评估、轻量上下文等）靠月度总结即可
-        // 必须用 memoryPalaceEnabled 把关：injectMemoryPalace 在关闭时直接 return、
-        // 既不刷新也不清空 char.memoryPalaceInjection，而该字段又会被 saveCharacter
-        // 持久化。若此处不校验总开关，关闭后旧的召回结果仍会被注入进 system prompt，
-        // 表现为"宫殿已关、后台无召回，角色却还在精准复述记忆"。与下方 Buff 注入同理。
-        // deferVolatile：召回结果每轮都变 → 移交 buildVolatileCoreState。
+        // 5b. Memory Palace — vector recall results
+        // Only injected when includeDetailedMemories, at the same level as the detailed logs above.
+        // Callers of buildCoreContext(false) (emotion evaluation, lightweight context, etc.) can rely on
+        // the monthly summaries alone. Must be gated by memoryPalaceEnabled: injectMemoryPalace returns early
+        // when disabled, neither refreshing nor clearing char.memoryPalaceInjection — and that field gets
+        // persisted by saveCharacter. Without checking the master switch here, old recall results would keep
+        // getting injected into the system prompt after being turned off, showing up as "Palace is off, nothing
+        // running in the background, yet the character is still quoting memories precisely." Same reasoning as
+        // the Buff injection below.
+        // deferVolatile: recall results change every turn → handed off to buildVolatileCoreState.
         if (!layout?.deferVolatile && includeDetailedMemories && char.memoryPalaceEnabled) {
             const mpContext = char.memoryPalaceInjection || memoryPalaceContext;
             if (mpContext && mpContext.trim()) {
@@ -286,26 +303,28 @@ export const ContextBuilder = {
             }
         }
 
-        // 6. 情绪底色 Buff (Emotion Buff Injection)
-        // 放在角色设定之后，使所有调用 ContextBuilder 的 App 都能感知情绪状态
-        // 总开关关闭时完全跳过，防止残留 buff 继续污染 prompt
-        // deferVolatile：buff 每轮情绪评估后都可能变 → 移交 buildVolatileCoreState。
+        // 6. Emotion Baseline Buff (Emotion Buff Injection)
+        // Placed after the character setup so every App that calls ContextBuilder can sense the emotional state.
+        // Fully skipped when the master switch is off, to prevent a leftover buff from continuing to pollute the prompt.
+        // deferVolatile: the buff can change after every emotion evaluation each turn → handed off to buildVolatileCoreState.
         if (!layout?.deferVolatile && isScheduleFeatureOn(char) && char.emotionConfig?.enabled && char.buffInjection) {
             context += `${char.buffInjection}\n\n`;
             console.log(`🎭 [Context] Buff injected for ${char.name}:\n`, char.buffInjection);
             console.log(`🎭 [Context] Active buffs:`, JSON.stringify(char.activeBuffs || [], null, 2));
         }
 
-        context += formatWorldbookSection(worldbookSections.authorsNoteTop, '世界书 · 作者注释顶部');
-        context += formatWorldbookSection(worldbookSections.authorsNoteBottom, '世界书 · 作者注释底部');
+        context += formatWorldbookSection(worldbookSections.authorsNoteTop, "World Info · Author's Note (Top)");
+        context += formatWorldbookSection(worldbookSections.authorsNoteBottom, "World Info · Author's Note (Bottom)");
 
-        // 7. 表达底线 (Anti-Filler) —— 全 App 通用的精简版防套话提示。
-        // 模型八股（空泛感慨、万能句式）是"没话找话"时的填充物，这里只做正向引导
-        // （去挖具体素材），不列任何禁语——把禁语写进提示词反而会激活它（粉色大象）。
-        // 完整方法版在 datePrompts 的 DIG_DEEPER_BLOCK（见面模式专用，可按角色开关）。
-        // 群聊流（groupOptions）跳过：多成员场景会重复注入 N 份，群聊侧暂不接入。
+        // 7. Anti-Filler —— a compact, app-wide version of the anti-cliché nudge.
+        // Model filler (vague sentiment, one-size-fits-all phrasing) is what fills the gap when there's
+        // "nothing to say" — this only offers positive guidance (dig for something specific), it doesn't
+        // list banned phrases, since writing banned phrases into the prompt tends to activate them (pink elephant).
+        // The full method-level version lives in datePrompts's DIG_DEEPER_BLOCK (Date-mode-specific, can be
+        // toggled per character). Skipped for the group-chat flow (groupOptions): a multi-member scene would
+        // inject N duplicate copies, group chat isn't wired up for this yet.
         if (!groupOptions) {
-            context += `### 表达底线 (Anti-Filler)\n当你觉得"没什么可说"的时候，不要用空泛的感慨、万能句式或华丽排比去填充——那是没话找话，对方一眼就能看出来。素材永远比你以为的多：对方的用词、ta 怎么说的、ta 没说的部分、此刻的情境、你们的过去、你心里闪过的念头——挑一两条往深处走就够了。宁可一个具体的小细节，不要一句谁都能说的话。\n\n`;
+            context += `### Anti-Filler\nWhen you feel like there's "nothing to say," don't pad it out with vague sentiment, one-size-fits-all phrasing, or ornate parallelism — that's reaching for something to say, and the other person can spot it instantly. There's always more material than you think: their word choice, how they said it, what they didn't say, the situation right now, your shared past, a thought that just crossed your mind — pick one or two and go deeper. One concrete, specific detail beats a line anyone could say.\n\n`;
         }
 
         // Debug: warn about missing context sections

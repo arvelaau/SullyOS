@@ -36,7 +36,7 @@ describe('buildCoreContext deferVolatile 分层', () => {
         expect(core).not.toContain('【测试buff】');
         // 稳定内容仍在
         expect(core).toContain('你是测试角色。');
-        expect(core).toContain('### 记忆系统 (Memory Bank)');
+        expect(core).toContain('### Memory Bank');
     });
 
     it('buildVolatileCoreState 恰好补齐三块，顺序为 时间→召回→buff', () => {

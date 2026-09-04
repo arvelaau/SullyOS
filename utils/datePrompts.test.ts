@@ -87,8 +87,8 @@ describe('DatePrompts.buildSessionPayload', () => {
         const off = await DatePrompts.buildSessionPayload(baseInput(makeChar({ dateStyleConfig: { digDeeper: false } })));
         expect(sysOf(off.messages)).not.toContain('深挖，别填充');
         expect(off.messages[off.messages.length - 1].content).not.toContain('本轮线索');
-        // ContextBuilder 的全 App 通用精简版（表达底线）不受 digDeeper 开关影响，常驻
-        expect(sysOf(off.messages)).toContain('表达底线');
+        // ContextBuilder's app-wide compact version (Anti-Filler) isn't affected by the digDeeper toggle, always present
+        expect(sysOf(off.messages)).toContain('Anti-Filler');
     });
 
     it('消息结构为 [system, ...history, user]，末尾带 System Note；reroll 的 note 不同', async () => {
