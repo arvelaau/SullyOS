@@ -34,7 +34,7 @@ describe('打脏入口接线（保存后调 markAmsgStateDirty）', () => {
     for (const [start, end] of [
       ['const handleDeleteMessage', 'const confirmEditMessage'],
       ['const confirmEditMessage', 'const handleQuickReply'],
-      ['const handleClearHistory', "trackEvent('清空聊天记录');\n        setModalType"],
+      ['const handleClearHistory', "trackEvent('Clear Chat History');\n        setModalType"],
       ['const handleReroll', 'const handleImageSelect'],
     ] as const) {
       expect(sliceBetween(src, start, end), `${start} 里少了打脏调用`).toContain('markAmsgStateDirty(');
@@ -102,7 +102,7 @@ describe('删角色阻塞接线（云端任务清不掉先不删本地）', () =
   it('角色 App 对 cloud-cleanup-failed 弹「重试 / 仍然删除」', () => {
     const src = read('../apps/Character.tsx');
     expect(src).toContain("cloud-cleanup-failed");
-    expect(src).toContain('仍然删除');
+    expect(src).toContain('Delete Anyway');
     expect(src).toMatch(/runDeleteCharacter\(cloudCleanupFailTarget, true\)/);
   });
 });
