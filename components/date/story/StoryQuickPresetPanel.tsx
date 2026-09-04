@@ -10,9 +10,24 @@ interface Props {
     onApply: (document: StoryTheaterPresetDocument) => Promise<void> | void;
     onReset: () => Promise<void> | void;
     onClose: () => void;
+    /** True when this story's saved override is still pinned to the old (pre-English-default)
+     * language choice. Only meaningful alongside hasOverride -- a story with no override at all
+     * already reads the live, current default and never needs this. */
+    needsLanguageMigration?: boolean;
+    /** Flips just the 2 language-group ids inside the existing override, leaving every other
+     * saved customization (Scene Tension, Theater, Length, etc) untouched. */
+    onMigrateLanguage?: () => Promise<void> | void;
 }
 
-const StoryQuickPresetPanel: React.FC<Props> = ({ document, hasOverride, onApply, onReset, onClose }) => {
+const StoryQuickPresetPanel: React.FC<Props> = ({ document, hasOverride, onApply, onReset, onClose, needsLanguageMigration, onMigrateLanguage }) => {
+    const [migrating, setMigrating] = useState(false);
+    const migrateLanguage = async () => {
+        setMigrating(true);
+        // Closes afterward, same as Restore: this panel's own `draft` state was captured at open
+        // time and won't pick up the migrated document, so keeping it open would show stale state.
+        try { await onMigrateLanguage?.(); onClose(); }
+        finally { setMigrating(false); }
+    };
     const [draft, setDraft] = useState<StoryTheaterPresetDocument>(() => ({ ...document, generation: { ...document.generation }, prompts: document.prompts.map(prompt => ({ ...prompt })) }));
     const [page, setPage] = useState(0);
     const [saving, setSaving] = useState(false);
@@ -53,7 +68,8 @@ const StoryQuickPresetPanel: React.FC<Props> = ({ document, hasOverride, onApply
 
             <footer className='story-safe-sheet shrink-0 px-5 pt-3 border-t border-slate-200'>
                 <div className='flex items-center justify-between'><button disabled={page === 0} onClick={() => setPage(value => Math.max(0, value - 1))} className='w-10 h-10 rounded-full border border-slate-200 bg-white grid place-items-center disabled:opacity-25'><CaretLeft size={17} /></button><div className='flex gap-1'>{pages.map((_item, index) => <button key={index} onClick={() => setPage(index)} className={`h-1.5 rounded-full transition-all ${index === page ? 'w-5 bg-violet-600' : 'w-1.5 bg-slate-300'}`} />)}</div><button disabled={page >= pages.length - 1} onClick={() => setPage(value => Math.min(pages.length - 1, value + 1))} className='w-10 h-10 rounded-full border border-slate-200 bg-white grid place-items-center disabled:opacity-25'><CaretRight size={17} /></button></div>
-                <div className='mt-3 flex gap-2'>{hasOverride && <button onClick={async () => { await onReset(); onClose(); }} className='px-4 py-3 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-500'>Restore original preset</button>}<button disabled={saving || !current} onClick={apply} className='flex-1 py-3 rounded-xl bg-slate-900 text-white text-xs font-bold disabled:opacity-40'>{saving ? 'Applying' : 'Apply to this story'}</button></div>
+                {hasOverride && needsLanguageMigration && <p className='mt-3 text-[10px] leading-4 text-violet-600'>This story's saved language choice predates the preset's English default. Update it without touching your other saved choices here.</p>}
+                <div className='mt-3 flex gap-2'>{hasOverride && needsLanguageMigration && <button disabled={migrating} onClick={migrateLanguage} className='px-4 py-3 rounded-xl border border-violet-200 bg-violet-50 text-[10px] font-bold text-violet-600 disabled:opacity-40'>{migrating ? 'Updating' : 'Update to English'}</button>}{hasOverride && <button onClick={async () => { await onReset(); onClose(); }} className='px-4 py-3 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-500'>Restore original preset</button>}<button disabled={saving || !current} onClick={apply} className='flex-1 py-3 rounded-xl bg-slate-900 text-white text-xs font-bold disabled:opacity-40'>{saving ? 'Applying' : 'Apply to this story'}</button></div>
             </footer>
         </section>
     </div>;

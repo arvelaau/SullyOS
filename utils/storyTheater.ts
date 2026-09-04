@@ -651,6 +651,35 @@ export const applyStoryPresetChoice = (
     prompts: document.prompts.map(prompt => optionIds.includes(prompt.id) ? { ...prompt, enabled: prompt.id === selectedId } : prompt),
 });
 
+// A session's presetOverride is a full snapshot of every prompt's enabled state taken the
+// moment any single Quick Preset choice was applied -- so it freezes the Language group's
+// enabled-state too, even if the user only ever meant to change something unrelated (Scene
+// Tension, Theater, etc). When the built-in preset's own default later changes (as it did when
+// the language default flipped from Chinese to English), any session with an older override
+// keeps reading its frozen old language choice forever, never picking up the new live default.
+const OLD_DEFAULT_LANGUAGE_ID = 'nmj-v3-language-cn';
+const NEW_DEFAULT_LANGUAGE_ID = 'romcom-language-en';
+
+/** True when a story session's presetOverride is still pinned to the pre-English-default
+ * language state, despite the built-in preset's live default having since changed. */
+export const overrideNeedsLanguageMigration = (override?: StoryTheaterPresetDocument): boolean => {
+    if (!override) return false; // no override at all -- already reads the live document, nothing to migrate
+    const oldDefault = override.prompts.find(prompt => prompt.id === OLD_DEFAULT_LANGUAGE_ID);
+    const newDefault = override.prompts.find(prompt => prompt.id === NEW_DEFAULT_LANGUAGE_ID);
+    return oldDefault?.enabled === true || newDefault?.enabled === false;
+};
+
+/** Narrowly flips just the 2 language-group ids inside an existing presetOverride to the
+ * current English default -- every other customization already captured in the override
+ * (Scene Tension, Theater, Length, etc) is left completely untouched. */
+export const migrateStoryPresetOverrideLanguage = (override: StoryTheaterPresetDocument): StoryTheaterPresetDocument => ({
+    ...override,
+    prompts: override.prompts.map(prompt =>
+        prompt.id === OLD_DEFAULT_LANGUAGE_ID ? { ...prompt, enabled: false }
+        : prompt.id === NEW_DEFAULT_LANGUAGE_ID ? { ...prompt, enabled: true }
+        : prompt),
+});
+
 const macroReplace = (text: string, userName: string, characterNames: string[]): string => text
     .replace(/\{\{user\}\}/gi, userName || '你')
     .replace(/\{\{char\}\}/gi, characterNames.join('、') || '角色')

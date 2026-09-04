@@ -35,6 +35,8 @@ import {
     makeStoryTheaterId,
     makeStoryTheaterFileName,
     memoryTimestampForCharacter,
+    migrateStoryPresetOverrideLanguage,
+    overrideNeedsLanguageMigration,
     parseStoryDisplayBlocks,
     REAL_COMPANION_MEMORY_GUARD,
     RELATIONSHIP_TEXTURE_GUIDE,
@@ -1021,6 +1023,12 @@ const StoryTheaterSession: React.FC<Props> = ({ entry, preset, masks, onBack, on
         {showQuickPreset && <StoryQuickPresetPanel
             document={effectivePreset.document}
             hasOverride={Boolean(entry.presetOverride)}
+            needsLanguageMigration={overrideNeedsLanguageMigration(entry.presetOverride)}
+            onMigrateLanguage={async () => {
+                if (!entry.presetOverride) return;
+                await onEntryChange({ ...entry, presetOverride: migrateStoryPresetOverrideLanguage(entry.presetOverride), updatedAt: Date.now() });
+                addToast("Updated this story's language default to English", 'success');
+            }}
             onApply={async document => { await onEntryChange({ ...entry, presetOverride: document, updatedAt: Date.now() }); addToast('Quick preset applied to this story', 'success'); }}
             onReset={async () => { await onEntryChange({ ...entry, presetOverride: undefined, updatedAt: Date.now() }); addToast('Restored the original preset for this story', 'info'); }}
             onClose={() => setShowQuickPreset(false)}
