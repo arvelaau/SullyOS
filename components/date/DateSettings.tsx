@@ -56,6 +56,7 @@ const DateSettings: React.FC<DateSettingsProps> = ({ char, onBack }) => {
         { id: 'third-name', label: 'Third person · by name', example: `${char.name} looks at ${userName}` },
         { id: 'third-you', label: 'Third person · as "you"', example: `${char.name} looks at you` },
         { id: 'first-you', label: 'First person', example: 'I look at you' },
+        { id: 'first-heshe', label: 'First person · other as "he/she"', example: 'I look at him/her' },
     ];
 
     const [uploadTarget, setUploadTarget] = useState<'bg' | 'sprite' | 'skin-sprite'>('bg');

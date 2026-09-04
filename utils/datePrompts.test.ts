@@ -52,7 +52,10 @@ describe('DatePrompts.buildSessionPayload', () => {
         for (const preset of DATE_STYLE_PRESETS) {
             const char = makeChar({ dateStyleConfig: { style: preset.id } });
             const { messages } = await DatePrompts.buildSessionPayload(baseInput(char));
-            expect(sysOf(messages)).toContain(`风格：${preset.label}`);
+            // Each preset's block header names its own label (either "风格：X" for the
+            // still-Chinese presets, or "Style: X" for the English romcom preset) -- check
+            // for the label itself rather than a single hardcoded language's prefix.
+            expect(sysOf(messages)).toContain(preset.label);
         }
     });
 

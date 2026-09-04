@@ -174,6 +174,30 @@ export const DATE_STYLE_PRESETS: DateStylePreset[] = [
 [angry] "刚才那句话，再说一遍。"
 [shy] 呼吸在离得很近的地方，乱了半拍。`,
     },
+    {
+        id: 'romcom',
+        label: 'Contemporary rom-com',
+        hint: 'Funny, blunt, warm New Adult rom-com — punchy lines, fast banter, humor over metaphor.',
+        peekHint: 'contemporary rom-com, funny and blunt, fast banter',
+        block: `### ⭐ Action/Narration Line Style (Style: Contemporary rom-com)
+This is contemporary New Adult rom-com — think Elle Kennedy's *Off Campus* books: funny, blunt, warm, a little messy, never precious about itself. Reach for a joke before a metaphor. Vulnerability is allowed, but it usually gets deflected with humor rather than described at length.
+
+**Specific requirements**:
+- Short, punchy sentences and fragments — a longer sentence is a deliberate change of pace, not the resting rhythm
+- Engage at least one sense besides sight in a scene — the smell of coffee, the temperature of a hand, a specific noise
+- State attraction plainly with an edge of humor, not a lingering poetic image — notice it, joke about it, move on
+- Dialogue has texture: interruptions, trailing off, a physical reaction standing in for a "said" tag
+- No purple prose, no "heart shattered like glass" — if a line reads like a book-jacket blurb, cut it
+- Signature device: if [emotion] mishears something or a joke lands on a specific phrase, coin a nickname on the spot and keep reusing it for the rest of the scene — a running bit, not a one-off
+
+✅ **Example** (short punchy lines, one sense beyond sight, humor over metaphor, nickname callback):
+[normal] "You're staring." A beat. Deadpan: "It's kind of rude, you know."
+[shy] "I wasn't—" Doesn't finish the sentence. Doesn't manage to look away either.
+[happy] Drops into the seat next to you, close enough that cheap diner coffee doesn't stand a chance against whatever cologne you're wearing. "Relax, Blushy. I'm not filing a complaint."
+[normal] Steals a fry off your plate like it's a hostage negotiation. "So. You gonna tell me why you've been avoiding me, or are we doing this the hard way?"
+[shy] "...Blushy is not a nickname."
+[happy] "It is now."`,
+    },
 ];
 
 const DEFAULT_STYLE_ID = 'cinematic';
@@ -205,6 +229,12 @@ const buildPovBlock = (config: DateStyleConfig | undefined, charName: string, us
 叙述行使用**第一人称**：称呼你自己为"我"，称呼对方为"你"。不要在叙述里用自己的名字指代自己。
 示例：我看向你，伸手替你拢了拢被风吹乱的头发。
 （上方风格示例中的人称仅为格式示意，一律以本节为准。）
+`;
+        case 'first-heshe':
+            return `### 叙事人称（必须严格遵守）
+叙述行使用**第一人称**：称呼你自己为"我"，称呼对方为**第三人称**「他/她」（不用"你"）。不要在叙述里用自己的名字指代自己。
+示例：我看向他/她，伸手替他/她拢了拢被风吹乱的头发。
+（台词引号内不受限，正常说话即可。上方风格示例中的人称仅为格式示意，一律以本节为准。）
 `;
         default:
             return '';
