@@ -293,6 +293,13 @@ const storyThinkingHeaderStyle: React.CSSProperties = {
     fontSize: '10px',
 };
 
+// Client-side safety net: strip stray HTML-comment-wrapped meta-commentary (a model narrating
+// its own retry/self-correction process mid-output, e.g. "<!-- Let me try again... -->") that
+// can slip through despite nmj-v6-gemini-format-lock's explicit ban on it. Applied to every
+// callCompletion result before it's saved or rendered, not just the main story continuation.
+const STORY_META_COMMENT_REGEX = /<!--[\s\S]*?-->/g;
+const stripStoryMetaComments = (text: string): string => text.replace(STORY_META_COMMENT_REGEX, '').replace(/\n{3,}/g, '\n\n').trim();
+
 const StoryOutput: React.FC<{ content: string; onChoose?: (text: string) => void; affinityInputs: StoryAffinityInput[] }> = ({ content, onChoose, affinityInputs }) => {
     const blocks = parseStoryDisplayBlocks(content);
     const relationshipSceneIndex = blocks.findIndex(block => block.kind === 'scene');
@@ -571,7 +578,9 @@ const StoryTheaterSession: React.FC<Props> = ({ entry, preset, masks, onBack, on
         if (!response.ok) throw new Error(describeStoryApiError(response.status, data));
         const reportedPromptTokens = Number(data?.usage?.prompt_tokens);
         if (Number.isFinite(reportedPromptTokens) && reportedPromptTokens > 0) onPromptTokens?.(reportedPromptTokens);
-        const content = extractContent(data).trim();
+        const rawContent = extractContent(data).trim();
+        if (!rawContent) throw new Error(describeEmptyStoryCompletion(data));
+        const content = stripStoryMetaComments(rawContent);
         if (!content) throw new Error(describeEmptyStoryCompletion(data));
         return content;
     }, [apiConfig, entry.omitSamplingParams]);
