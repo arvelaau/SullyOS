@@ -188,11 +188,10 @@ export const ContextBuilder = {
 
         // 2c. Global Instructions — a single app-wide addendum (output language / baseline prose style / any
         // other instruction that should apply to every character across every mode that calls buildCoreContext),
-        // as opposed to per-character systemPrompt/worldview above. Currently unpopulated — placeholder only,
-        // wire up a real source (e.g. a new global-settings field) before injecting actual content here.
-        // Deliberately placed after World Settings/worldbook and before the User Profile section.
-        // TODO: read from a real global-settings source once one exists; currently always empty.
-        const globalInstructions = '';
+        // as opposed to per-character systemPrompt/worldview above. Only the output-language mandate is
+        // populated for now; baseline prose style/tone is still pending a separate decision. Deliberately
+        // placed after World Settings/worldbook and before the User Profile section.
+        const globalInstructions = "Write in natural, contemporary English with standard English punctuation, no matter what language the surrounding context or the user's own message uses. Keep proper nouns from the character profile and world info exactly as written — don't translate or anglicize them.";
         if (globalInstructions.trim()) {
             context += `### Global Instructions\n${globalInstructions}\n\n`;
         }
