@@ -200,6 +200,72 @@ const StorySceneRelationships: React.FC<{ inputs: StoryAffinityInput[] }> = ({ i
     })}</div>
 </div>;
 
+// Highlight styling for spoken-dialogue text (subtle gray background over the quoted span) --
+// same convention as Date mode's dialogue highlight, adapted to Story's prose-paragraph layout.
+const storyDialogueHighlightStyle: React.CSSProperties = {
+    background: 'rgba(0,0,0,0.05)',
+    color: '#000',
+    padding: '1px 4px',
+    WebkitBoxDecorationBreak: 'clone',
+    boxDecorationBreak: 'clone',
+};
+
+// Story narration mixes action and dialogue within the same paragraph (unlike Date mode's
+// one-line-per-turn format), so this matches quoted pairs anywhere in the text rather than
+// anchoring to the start of a line the way Date mode's isDialogueLine does.
+const STORY_DIALOGUE_QUOTE_REGEX = /["“][^"”]*["”]|「[^」]*」/g;
+
+// Wraps every quoted dialogue span found in a block of story prose in a highlighted span;
+// action/narration text between quotes is left plain.
+const renderStoryTextWithDialogueHighlight = (text: string): React.ReactNode => {
+    const segments: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    STORY_DIALOGUE_QUOTE_REGEX.lastIndex = 0;
+    let key = 0;
+    while ((match = STORY_DIALOGUE_QUOTE_REGEX.exec(text))) {
+        if (match.index > lastIndex) segments.push(text.slice(lastIndex, match.index));
+        segments.push(<span key={key++} style={storyDialogueHighlightStyle}>{match[0]}</span>);
+        lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex === 0) return text;
+    if (lastIndex < text.length) segments.push(text.slice(lastIndex));
+    return segments;
+};
+
+// Highlight styling for {{user}}'s own manually-bolded (**...**) text -- their own turn only.
+const userBoldHighlightStyle: React.CSSProperties = {
+    background: 'rgba(196,101,122,0.28)',
+    color: '#6b2a3a',
+    fontWeight: 600,
+    padding: '1px 4px',
+    borderRadius: '4px',
+    WebkitBoxDecorationBreak: 'clone',
+    boxDecorationBreak: 'clone',
+};
+
+const USER_BOLD_REGEX = /\*\*([^*]+)\*\*/g;
+
+// Renders {{user}}'s own message with **bold** markers converted into a highlighted span
+// (the ** markers themselves are stripped, same as normal markdown bold). Only ever called
+// on message.role === 'user' text -- {{char}}'s side never runs through this function, so
+// there's no risk of it touching or stripping anything on the character's side.
+const renderUserTextWithBoldHighlight = (text: string): React.ReactNode => {
+    const segments: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    USER_BOLD_REGEX.lastIndex = 0;
+    let key = 0;
+    while ((match = USER_BOLD_REGEX.exec(text))) {
+        if (match.index > lastIndex) segments.push(text.slice(lastIndex, match.index));
+        segments.push(<span key={key++} style={userBoldHighlightStyle}>{match[1]}</span>);
+        lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex === 0) return text;
+    if (lastIndex < text.length) segments.push(text.slice(lastIndex));
+    return segments;
+};
+
 const StoryOutput: React.FC<{ content: string; onChoose?: (text: string) => void; affinityInputs: StoryAffinityInput[] }> = ({ content, onChoose, affinityInputs }) => {
     const blocks = parseStoryDisplayBlocks(content);
     const relationshipSceneIndex = blocks.findIndex(block => block.kind === 'scene');
@@ -217,7 +283,7 @@ const StoryOutput: React.FC<{ content: string; onChoose?: (text: string) => void
         {!hasScene && relationship}
         {blocks.map((block, index) => {
             const lines = splitDisplayLines(block.text);
-            if (block.kind === 'story') return <p key={index} className='font-serif text-[15px] leading-8 text-slate-800 whitespace-pre-wrap'>{block.text}</p>;
+            if (block.kind === 'story') return <p key={index} className='font-serif text-[15px] leading-8 text-slate-800 whitespace-pre-wrap'>{renderStoryTextWithDialogueHighlight(block.text)}</p>;
             if (block.kind === 'scene') return <section key={index} className='py-4 border-y border-slate-300'>
                 <div className='flex items-center gap-2 text-[9px] tracking-[.22em] uppercase font-bold text-violet-600'><FilmSlate size={14} weight='fill' />{block.title}</div>
                 <div className='mt-3 grid grid-cols-2 gap-x-5 gap-y-3'>{lines.map((line, lineIndex) => <div key={lineIndex} className={line.label === '场面' ? 'col-span-2' : ''}><div className='flex items-center gap-1 text-[9px] font-bold text-slate-400'>{line.label === '时间' ? <Clock size={11} /> : line.label === '地点' ? <MapPin size={11} /> : null}{line.label || 'Scene'}</div><div className='mt-1 text-[12px] leading-5 text-slate-700'>{line.value}</div></div>)}</div>
@@ -858,12 +924,12 @@ const StoryTheaterSession: React.FC<Props> = ({ entry, preset, masks, onBack, on
                                 </summary>
                                 {isExpanded && <div className='pb-5 pl-7'>
                                     {message.role === 'user'
-                                        ? <p className='text-sm leading-7 text-slate-600 whitespace-pre-wrap'>{message.content}</p>
+                                        ? <p className='text-sm leading-7 text-slate-600 whitespace-pre-wrap'>{renderUserTextWithBoldHighlight(message.content)}</p>
                                         : <StoryOutput content={message.content} affinityInputs={affinityInputsFromMessage(message, actors)} />}
                                 </div>}
                             </details>;
                         }
-                        if (message.role === 'user') return <section key={message.id} {...pressHandlersFor(message)} className='pl-4 border-l-2 border-violet-300'><div className='text-[9px] tracking-[.16em] font-bold text-violet-500'>You wrote</div><p className='mt-2 text-sm leading-7 text-slate-600 whitespace-pre-wrap'>{message.content}</p></section>;
+                        if (message.role === 'user') return <section key={message.id} {...pressHandlersFor(message)} className='pl-4 border-l-2 border-violet-300'><div className='text-[9px] tracking-[.16em] font-bold text-violet-500'>You wrote</div><p className='mt-2 text-sm leading-7 text-slate-600 whitespace-pre-wrap'>{renderUserTextWithBoldHighlight(message.content)}</p></section>;
                         const isLatest = message.id === messages[messages.length - 1]?.id;
                         return <article key={message.id} {...pressHandlersFor(message)}><StoryOutput content={message.content} onChoose={choice => setInput(choice)} affinityInputs={affinityInputsFromMessage(message, actors)} />{isLatest && <div className='mt-4 flex items-center justify-end gap-2'><span className='w-1.5 h-1.5 rounded-full bg-violet-400' /><button disabled={sending} onClick={() => void send(message)} className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 bg-white text-[10px] font-bold text-slate-500 disabled:opacity-40'>{rerollingId === message.id ? <SpinnerGap size={12} className='animate-spin' /> : <ArrowClockwise size={12} />}Try a different take</button></div>}</article>;
                     })}

@@ -79,6 +79,41 @@ const extractDialogueText = (text: string): string => {
     return clean;
 };
 
+// Highlight styling for spoken-dialogue text (subtle gray background over the quoted span).
+const dialogueHighlightStyle: React.CSSProperties = {
+    background: 'rgba(0,0,0,0.05)',
+    color: '#000',
+    padding: '1px 4px',
+    WebkitBoxDecorationBreak: 'clone',
+    boxDecorationBreak: 'clone',
+};
+
+// Same quote-pair matching as extractDialogueText, but keeps each match's position so text
+// attached to the same line (before/after the quotes) can stay unwrapped.
+const DIALOGUE_QUOTE_SPAN_REGEX = /["\u201C][^"\u201D]*["\u201D]|\u300C[^\u300D]*\u300D/g;
+
+// Wraps only the quoted portion(s) of a dialogue line in a highlighted span; lines that don't
+// start with a quote (per isDialogueLine) are returned unchanged. Narration/action text on the
+// same line as the quote (before or after it) is left as plain, unwrapped text.
+const renderLineWithDialogueHighlight = (line: string): React.ReactNode => {
+    if (!isDialogueLine(line)) return line;
+    const segments: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    DIALOGUE_QUOTE_SPAN_REGEX.lastIndex = 0;
+    let key = 0;
+    while ((match = DIALOGUE_QUOTE_SPAN_REGEX.exec(line))) {
+        if (match.index > lastIndex) segments.push(line.slice(lastIndex, match.index));
+        segments.push(<span key={key++} style={dialogueHighlightStyle}>{match[0]}</span>);
+        lastIndex = match.index + match[0].length;
+    }
+    // isDialogueLine matched (line starts with an opening quote) but no closed pair was found
+    // (e.g. an unclosed quote) \u2014 don't wrap anything rather than guessing where it ends.
+    if (lastIndex === 0) return line;
+    if (lastIndex < line.length) segments.push(line.slice(lastIndex));
+    return segments;
+};
+
 const parseDialogue = (fullText: string, initialEmotion: string = 'normal'): DialogueItem[] => {
     if (!fullText) return [];
     const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
@@ -1216,7 +1251,7 @@ const DateSession: React.FC<DateSessionProps> = ({
                                                         onMouseDown={voiceEnabled && lineIsDialogue && !isOpeningMsg ? (e) => e.stopPropagation() : undefined}
                                                         onContextMenu={voiceEnabled && lineIsDialogue && !isOpeningMsg ? (e) => { e.preventDefault(); e.stopPropagation(); void openDateVoiceFavorite(voiceTarget); } : undefined}
                                                     >
-                                                        <p className={`flex-1 whitespace-pre-wrap font-serif text-[18px] text-justify leading-loose tracking-wide pl-4 ${char.dateLightReading ? 'text-stone-700 border-l-2 border-stone-200' : 'text-slate-200 drop-shadow-md border-l-2 border-white/10'}`}>{cleanLine}</p>
+                                                        <p className={`flex-1 whitespace-pre-wrap font-serif text-[18px] text-justify leading-loose tracking-wide pl-4 ${char.dateLightReading ? 'text-stone-700 border-l-2 border-stone-200' : 'text-slate-200 drop-shadow-md border-l-2 border-white/10'}`}>{renderLineWithDialogueHighlight(cleanLine)}</p>
                                                         {/* Voice button: only for dialogue lines, not opening */}
                                                         {voiceEnabled && lineIsDialogue && !isOpeningMsg && (
                                                             <button
