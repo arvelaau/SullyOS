@@ -29,8 +29,8 @@ export interface StoryPresetSimpleChoice {
 export const STORY_PRESET_SIMPLE_CHOICES: StoryPresetSimpleChoice[] = [
     {
         label: 'Writing style', hint: 'Determines the overall feel of the writing',
-        ids: ['nmj-v3-style-custom', 'nmj-v3-style-soda', 'nmj-v3-style-corridor', 'nmj-v3-style-comedy', 'nmj-v3-style-darkcomedy', 'nmj-v3-style-syrup', 'nmj-v3-style-dullknife', 'nmj-v3-style-drama'],
-        options: [{ label: 'Default feel' }, { id: 'nmj-v3-style-soda', label: 'Soda-pop everyday' }, { id: 'nmj-v3-style-corridor', label: 'Rainy corridor' }, { id: 'nmj-v3-style-comedy', label: 'Absurdist comedy' }, { id: 'nmj-v3-style-darkcomedy', label: 'Dark comedy' }, { id: 'nmj-v3-style-syrup', label: 'Straightforward sweet' }, { id: 'nmj-v3-style-dullknife', label: 'Dull-blade angst' }, { id: 'nmj-v3-style-drama', label: 'Somber drama' }],
+        ids: ['nmj-v3-style-custom', 'nmj-v3-style-soda', 'nmj-v3-style-corridor', 'nmj-v3-style-comedy', 'nmj-v3-style-darkcomedy', 'nmj-v3-style-syrup', 'nmj-v3-style-dullknife', 'nmj-v3-style-drama', 'romcom-style-contemporary'],
+        options: [{ label: 'Default feel' }, { id: 'nmj-v3-style-soda', label: 'Soda-pop everyday' }, { id: 'nmj-v3-style-corridor', label: 'Rainy corridor' }, { id: 'nmj-v3-style-comedy', label: 'Absurdist comedy' }, { id: 'nmj-v3-style-darkcomedy', label: 'Dark comedy' }, { id: 'nmj-v3-style-syrup', label: 'Straightforward sweet' }, { id: 'nmj-v3-style-dullknife', label: 'Dull-blade angst' }, { id: 'nmj-v3-style-drama', label: 'Somber drama' }, { id: 'romcom-style-contemporary', label: 'Contemporary rom-com' }],
     },
     {
         label: 'Point of view', hint: 'Determines how the narration addresses the identity you are currently writing as',
@@ -58,14 +58,14 @@ export const STORY_PRESET_SIMPLE_CHOICES: StoryPresetSimpleChoice[] = [
         options: [{ label: 'Off' }, { id: 'nmj-v3-theater-ai', label: 'Character & you' }, { id: 'nmj-v3-theater-user-sim', label: 'Your reflection' }, { id: 'nmj-v3-theater-group', label: 'You and the characters' }, { id: 'nmj-v3-theater-random', label: 'Random channel' }, { id: 'nmj-v6-side-channel-terminal', label: 'Terminal echoes' }, { id: 'nmj-v6-side-channel-evidence', label: 'Lost items & evidence' }, { id: 'nmj-v6-side-channel-public', label: 'Public frequency' }, { id: 'nmj-v6-side-channel-wrong-reel', label: 'Wrong-reel screening' }],
     },
     {
-        label: 'Language', hint: 'Which Chinese variant the story text uses',
-        ids: ['nmj-v3-language-cn', 'nmj-v3-language-tw'],
-        options: [{ id: 'nmj-v3-language-cn', label: 'Simplified Chinese' }, { id: 'nmj-v3-language-tw', label: 'Traditional Chinese' }],
+        label: 'Language', hint: 'Which language/variant the story text uses',
+        ids: ['nmj-v3-language-cn', 'nmj-v3-language-tw', 'romcom-language-en'],
+        options: [{ id: 'nmj-v3-language-cn', label: 'Simplified Chinese' }, { id: 'nmj-v3-language-tw', label: 'Traditional Chinese' }, { id: 'romcom-language-en', label: 'English' }],
     },
     {
         label: 'Length', hint: 'Roughly how long each continuation is',
-        ids: ['nmj-v3-length-short', 'nmj-v3-length-medium', 'nmj-v3-length-long'],
-        options: [{ id: 'nmj-v3-length-short', label: 'Short' }, { id: 'nmj-v3-length-medium', label: 'Medium' }, { id: 'nmj-v3-length-long', label: 'Long' }],
+        ids: ['nmj-v3-length-short', 'nmj-v3-length-medium', 'nmj-v3-length-long', 'romcom-length-proportional'],
+        options: [{ id: 'nmj-v3-length-short', label: 'Short' }, { id: 'nmj-v3-length-medium', label: 'Medium' }, { id: 'nmj-v3-length-long', label: 'Long' }, { id: 'romcom-length-proportional', label: "Proportional to your message" }],
     },
 ];
 
